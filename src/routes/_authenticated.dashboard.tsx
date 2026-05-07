@@ -46,7 +46,26 @@ function Dashboard() {
   const { data: categories = [] } = useCategories();
   const month = monthKey();
   const { data: budgets = [] } = useBudgets(month);
+  const { data: loans = [] } = useLoans();
   const currency = profile?.currency ?? "USD";
+
+  const loanStats = useMemo(() => {
+    const debt = loans.reduce((s, l) => s + l.remaining_balance, 0);
+    const monthlyEmi = loans.reduce((s, l) => s + (l.remaining_balance > 0 ? l.emi_amount : 0), 0);
+    const totalBorrowed = loans.reduce((s, l) => s + l.total_amount, 0);
+    const pct = totalBorrowed > 0 ? ((totalBorrowed - debt) / totalBorrowed) * 100 : 0;
+    const active = loans.filter(l => l.remaining_balance > 0).length;
+    const upcoming = [...loans]
+      .filter(l => l.remaining_balance > 0)
+      .map(l => {
+        const today = new Date();
+        const d = new Date(today.getFullYear(), today.getMonth(), Math.min(l.due_day, 28));
+        if (d < today) d.setMonth(d.getMonth() + 1);
+        return { loan: l, due: d };
+      })
+      .sort((a, b) => a.due.getTime() - b.due.getTime())[0];
+    return { debt, monthlyEmi, pct, active, upcoming };
+  }, [loans]);
 
   const stats = useMemo(() => {
     const now = new Date();
