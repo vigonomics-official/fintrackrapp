@@ -129,6 +129,42 @@ function Dashboard() {
           <StatCard label="Net Savings" value={formatCurrency(stats.savings, currency)} icon={TrendingUp} accent="gold" />
         </div>
 
+        {loans.length > 0 && (
+          <Card className="overflow-hidden shadow-soft">
+            <CardContent className="grid gap-4 p-5 md:grid-cols-4 md:items-center">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-elegant">
+                  <Landmark className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Outstanding debt</p>
+                  <p className="font-display text-xl font-bold">{formatCurrency(loanStats.debt, currency)}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Monthly EMI</p>
+                <p className="font-display text-lg font-semibold">{formatCurrency(loanStats.monthlyEmi, currency)}</p>
+                <p className="text-xs text-muted-foreground">{loanStats.active} active loan{loanStats.active === 1 ? "" : "s"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Debt-free progress</p>
+                <Progress value={loanStats.pct} className="mt-2" />
+                <p className="mt-1 text-xs text-muted-foreground">{loanStats.pct.toFixed(0)}% paid off</p>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                {loanStats.upcoming ? (
+                  <div className="text-sm">
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground"><Calendar className="h-3 w-3" />Next EMI</p>
+                    <p className="font-medium">{loanStats.upcoming.loan.loan_name}</p>
+                    <p className="text-xs text-muted-foreground">{loanStats.upcoming.due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}</p>
+                  </div>
+                ) : <span className="text-sm text-success">All caught up</span>}
+                <Link to="/loans" className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">View<ChevronRight className="h-3 w-3" /></Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-2 shadow-soft">
             <CardHeader>
