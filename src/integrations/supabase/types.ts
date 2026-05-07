@@ -93,6 +93,98 @@ export type Database = {
           },
         ]
       }
+      loan_payments: {
+        Row: {
+          created_at: string
+          id: string
+          loan_id: string
+          payment_amount: number
+          payment_date: string
+          payment_status: Database["public"]["Enums"]["loan_payment_status"]
+          remaining_balance: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loan_id: string
+          payment_amount: number
+          payment_date?: string
+          payment_status?: Database["public"]["Enums"]["loan_payment_status"]
+          remaining_balance: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loan_id?: string
+          payment_amount?: number
+          payment_date?: string
+          payment_status?: Database["public"]["Enums"]["loan_payment_status"]
+          remaining_balance?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_payments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loans: {
+        Row: {
+          created_at: string
+          due_day: number
+          emi_amount: number
+          id: string
+          interest_rate: number
+          loan_name: string
+          loan_type: Database["public"]["Enums"]["loan_type"]
+          notes: string | null
+          remaining_balance: number
+          start_date: string
+          tenure_months: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          due_day?: number
+          emi_amount: number
+          id?: string
+          interest_rate?: number
+          loan_name: string
+          loan_type?: Database["public"]["Enums"]["loan_type"]
+          notes?: string | null
+          remaining_balance: number
+          start_date?: string
+          tenure_months: number
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          due_day?: number
+          emi_amount?: number
+          id?: string
+          interest_rate?: number
+          loan_name?: string
+          loan_type?: Database["public"]["Enums"]["loan_type"]
+          notes?: string | null
+          remaining_balance?: number
+          start_date?: string
+          tenure_months?: number
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -182,6 +274,16 @@ export type Database = {
     }
     Enums: {
       category_type: "income" | "expense"
+      loan_payment_status: "paid" | "pending" | "missed"
+      loan_type:
+        | "home"
+        | "personal"
+        | "vehicle"
+        | "education"
+        | "gold"
+        | "credit_card"
+        | "informal"
+        | "other"
       payment_method:
         | "cash"
         | "bank"
@@ -318,6 +420,17 @@ export const Constants = {
   public: {
     Enums: {
       category_type: ["income", "expense"],
+      loan_payment_status: ["paid", "pending", "missed"],
+      loan_type: [
+        "home",
+        "personal",
+        "vehicle",
+        "education",
+        "gold",
+        "credit_card",
+        "informal",
+        "other",
+      ],
       payment_method: [
         "cash",
         "bank",

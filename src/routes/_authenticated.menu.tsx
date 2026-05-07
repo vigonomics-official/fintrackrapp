@@ -24,7 +24,7 @@ const GROUPS: Group[] = [
       { label: "Budgets", icon: Wallet, to: "/budgets" },
       { label: "Categories", icon: Tag, to: "/categories" },
       { label: "Goals", icon: Target, badge: "Soon" },
-      { label: "Loan Management", icon: Landmark, badge: "Soon" },
+      { label: "Loan Management", icon: Landmark, to: "/loans" },
       { label: "Investment Settings", icon: LineChart, to: "/investments" },
     ],
   },
