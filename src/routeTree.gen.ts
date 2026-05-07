@@ -18,6 +18,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
+import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
+import { Route as AuthenticatedInvestmentsRouteImport } from './routes/_authenticated.investments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
@@ -67,6 +69,17 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMenuRoute = AuthenticatedMenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedInvestmentsRoute =
+  AuthenticatedInvestmentsRouteImport.update({
+    id: '/investments',
+    path: '/investments',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -92,6 +105,8 @@ export interface FileRoutesByFullPath {
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/investments': typeof AuthenticatedInvestmentsRoute
+  '/menu': typeof AuthenticatedMenuRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -105,6 +120,8 @@ export interface FileRoutesByTo {
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/investments': typeof AuthenticatedInvestmentsRoute
+  '/menu': typeof AuthenticatedMenuRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -120,6 +137,8 @@ export interface FileRoutesById {
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/investments': typeof AuthenticatedInvestmentsRoute
+  '/_authenticated/menu': typeof AuthenticatedMenuRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
@@ -135,6 +154,8 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/dashboard'
+    | '/investments'
+    | '/menu'
     | '/reports'
     | '/settings'
     | '/transactions'
@@ -148,6 +169,8 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/dashboard'
+    | '/investments'
+    | '/menu'
     | '/reports'
     | '/settings'
     | '/transactions'
@@ -162,6 +185,8 @@ export interface FileRouteTypes {
     | '/_authenticated/budgets'
     | '/_authenticated/categories'
     | '/_authenticated/dashboard'
+    | '/_authenticated/investments'
+    | '/_authenticated/menu'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/transactions'
@@ -241,6 +266,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/menu': {
+      id: '/_authenticated/menu'
+      path: '/menu'
+      fullPath: '/menu'
+      preLoaderRoute: typeof AuthenticatedMenuRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/investments': {
+      id: '/_authenticated/investments'
+      path: '/investments'
+      fullPath: '/investments'
+      preLoaderRoute: typeof AuthenticatedInvestmentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -269,6 +308,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedInvestmentsRoute: typeof AuthenticatedInvestmentsRoute
+  AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
@@ -278,6 +319,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedInvestmentsRoute: AuthenticatedInvestmentsRoute,
+  AuthenticatedMenuRoute: AuthenticatedMenuRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
@@ -298,3 +341,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
