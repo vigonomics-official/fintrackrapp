@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import {
-  LayoutDashboard, ArrowLeftRight, Tag, Wallet, BarChart3, Settings as Cog, LogOut, Plus,
+  LayoutDashboard, ArrowLeftRight, TrendingUp, BarChart3, Menu as MenuIcon, LogOut, Plus,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
