@@ -1,13 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-import { ArrowDown, ArrowUp, Wallet, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowDown, ArrowUp, Wallet, TrendingUp, Sparkles, Landmark, Calendar, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell,
 } from "recharts";
-import { useTransactions, useCategories, useBudgets, monthKey, useProfile } from "@/hooks/use-finance";
+import { useTransactions, useCategories, useBudgets, monthKey, useProfile, useLoans } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 
