@@ -16,10 +16,9 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { to: "/categories", label: "Categories", icon: Tag },
-  { to: "/budgets", label: "Budgets", icon: Wallet },
+  { to: "/investments", label: "Investments", icon: TrendingUp },
   { to: "/reports", label: "Reports", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: Cog },
+  { to: "/menu", label: "Menu", icon: MenuIcon },
 ] as const;
 
 function AuthenticatedLayout() {
