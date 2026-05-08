@@ -40,7 +40,7 @@ const GROUPS: Group[] = [
   {
     title: "Data",
     items: [
-      { label: "Import CSV", icon: Upload, to: "/transactions" },
+      { label: "Import CSV", icon: Upload, to: "/import" },
       { label: "Export Data", icon: Download, to: "/transactions" },
       { label: "Backup & Restore", icon: DatabaseBackup, badge: "Soon" },
     ],
