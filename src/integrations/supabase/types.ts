@@ -93,6 +93,92 @@ export type Database = {
           },
         ]
       }
+      import_errors: {
+        Row: {
+          created_at: string
+          id: string
+          import_id: string
+          raw_data: Json | null
+          reason: string
+          row_number: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          import_id: string
+          raw_data?: Json | null
+          reason: string
+          row_number: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          import_id?: string
+          raw_data?: Json | null
+          reason?: string
+          row_number?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_errors_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "import_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_history: {
+        Row: {
+          created_at: string
+          duplicate_count: number
+          error_count: number
+          error_message: string | null
+          file_name: string
+          file_type: string
+          id: string
+          imported_count: number
+          source: string
+          status: string
+          total_amount: number
+          total_rows: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duplicate_count?: number
+          error_count?: number
+          error_message?: string | null
+          file_name: string
+          file_type: string
+          id?: string
+          imported_count?: number
+          source?: string
+          status?: string
+          total_amount?: number
+          total_rows?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duplicate_count?: number
+          error_count?: number
+          error_message?: string | null
+          file_name?: string
+          file_type?: string
+          id?: string
+          imported_count?: number
+          source?: string
+          status?: string
+          total_amount?: number
+          total_rows?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       loan_payments: {
         Row: {
           created_at: string
