@@ -21,6 +21,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
 import { Route as AuthenticatedLoansRouteImport } from './routes/_authenticated.loans'
 import { Route as AuthenticatedInvestmentsRouteImport } from './routes/_authenticated.investments'
+import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated.import'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
@@ -86,6 +87,11 @@ const AuthenticatedInvestmentsRoute =
     path: '/investments',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/import': typeof AuthenticatedImportRoute
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
   '/menu': typeof AuthenticatedMenuRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/import': typeof AuthenticatedImportRoute
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
   '/menu': typeof AuthenticatedMenuRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/investments': typeof AuthenticatedInvestmentsRoute
   '/_authenticated/loans': typeof AuthenticatedLoansRoute
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/dashboard'
+    | '/import'
     | '/investments'
     | '/loans'
     | '/menu'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/dashboard'
+    | '/import'
     | '/investments'
     | '/loans'
     | '/menu'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/_authenticated/budgets'
     | '/_authenticated/categories'
     | '/_authenticated/dashboard'
+    | '/_authenticated/import'
     | '/_authenticated/investments'
     | '/_authenticated/loans'
     | '/_authenticated/menu'
@@ -299,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestmentsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/import': {
+      id: '/_authenticated/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof AuthenticatedImportRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -327,6 +346,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedInvestmentsRoute: typeof AuthenticatedInvestmentsRoute
   AuthenticatedLoansRoute: typeof AuthenticatedLoansRoute
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
@@ -339,6 +359,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedInvestmentsRoute: AuthenticatedInvestmentsRoute,
   AuthenticatedLoansRoute: AuthenticatedLoansRoute,
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,

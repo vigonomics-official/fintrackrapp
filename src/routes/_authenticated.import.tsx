@@ -215,7 +215,7 @@ function ImportPage() {
           type: r.type,
           amount: r.amount,
           category_id: r.category_id,
-          payment_method: r.payment_method,
+          payment_method: r.payment_method as any,
           notes: [r.merchant, r.notes].filter(Boolean).join(" — ").slice(0, 500),
           tags: [`import:${source}`],
           transaction_date: r.date,
