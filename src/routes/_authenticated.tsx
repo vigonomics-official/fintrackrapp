@@ -71,14 +71,14 @@ function AuthenticatedLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="flex-1 pb-24 md:pb-0">
         <Outlet />
       </main>
 
       {/* Floating Action Button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow transition-transform hover:scale-105 md:bottom-8 md:right-8"
+        className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow ring-4 ring-background transition-transform active:scale-95 hover:scale-105 md:bottom-8 md:right-8"
         aria-label="Add transaction"
       >
         <Plus className="h-6 w-6" />
@@ -86,19 +86,22 @@ function AuthenticatedLayout() {
       <TransactionDialog open={open} onOpenChange={setOpen} />
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-20 grid grid-cols-5 border-t bg-card/95 backdrop-blur md:hidden">
-        {NAV.slice(0, 5).map((item) => {
-          const Icon = item.icon;
-          const active = path === item.to || path.startsWith(item.to + "/");
-          return (
-            <Link key={item.to} to={item.to}
-              className={cn("flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium",
-                active ? "text-primary" : "text-muted-foreground")}>
-              <Icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/60 bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+        <div className="grid grid-cols-5">
+          {NAV.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            const active = path === item.to || path.startsWith(item.to + "/");
+            return (
+              <Link key={item.to} to={item.to}
+                className={cn("relative flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground")}>
+                {active && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />}
+                <Icon className={cn("h-5 w-5 transition-transform", active && "scale-110")} strokeWidth={active ? 2.4 : 2} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </div>
   );
