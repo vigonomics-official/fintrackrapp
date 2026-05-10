@@ -55,10 +55,24 @@ function SplitSettle() {
   const [q, setQ] = useState("");
   const [openFriend, setOpenFriend] = useState(false);
   const [openSplit, setOpenSplit] = useState(false);
+  const [splitDirection, setSplitDirection] = useState<"owes" | "owe">("owes");
+  const [fabSheet, setFabSheet] = useState(false);
 
   useEffect(() => { setFriends(load(KEY_F, [])); setSplits(load(KEY_S, [])); }, []);
   useEffect(() => { save(KEY_F, friends); }, [friends]);
   useEffect(() => { save(KEY_S, splits); }, [splits]);
+
+  // Context-aware FAB: open quick actions sheet
+  useEffect(() => {
+    const h = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { intent?: string } | undefined;
+      if (detail?.intent === "lend" && friends.length > 0) { setSplitDirection("owes"); setOpenSplit(true); }
+      else if (detail?.intent === "split" && friends.length > 0) { setSplitDirection("owes"); setOpenSplit(true); }
+      else setFabSheet(true);
+    };
+    window.addEventListener("fintrackr:fab", h);
+    return () => window.removeEventListener("fintrackr:fab", h);
+  }, [friends.length]);
 
   const balances = useMemo(() => {
     const map = new Map<string, number>();
