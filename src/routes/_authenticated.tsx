@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import {
-  LayoutDashboard, ArrowLeftRight, TrendingUp, BarChart3, Menu as MenuIcon, LogOut, Plus,
+  Home, ArrowLeftRight, Target, Users, Menu as MenuIcon, LogOut, Plus,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,10 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Home", icon: Home },
   { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { to: "/investments", label: "Investments", icon: TrendingUp },
-  { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/goals", label: "Goals", icon: Target },
+  { to: "/split-settle", label: "Split", icon: Users },
   { to: "/menu", label: "Menu", icon: MenuIcon },
 ] as const;
 

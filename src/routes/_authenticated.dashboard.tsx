@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-import { ArrowDown, ArrowUp, TrendingUp, Sparkles, Landmark, Calendar, ChevronRight, Activity } from "lucide-react";
+import { ArrowDown, ArrowUp, TrendingUp, Sparkles, Landmark, Calendar, ChevronRight, Activity, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -100,7 +100,7 @@ function Dashboard() {
     return [...map.values()].sort((a, b) => b.value - a.value).slice(0, 6);
   }, [transactions, categories]);
 
-  const recent = transactions.slice(0, 6);
+  
   const greeting = (() => {
     const h = new Date().getHours();
     return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -238,39 +238,43 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Recent + Budgets */}
+        {/* Goals progress + Budgets */}
         <div className="grid gap-5 lg:grid-cols-3">
           <Card className="shadow-soft lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="font-display text-base">Recent activity</CardTitle>
-              <Link to="/transactions" className="text-xs font-medium text-primary hover:underline">View all</Link>
+              <CardTitle className="flex items-center gap-2 font-display text-base">
+                <Target className="h-4 w-4 text-primary" /> Financial freedom progress
+              </CardTitle>
+              <Link to="/goals" className="text-xs font-medium text-primary hover:underline">View goals</Link>
             </CardHeader>
-            <CardContent className="px-2 md:px-4">
-              {recent.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">No transactions yet. Tap + to add one.</p>
-              ) : (
-                <ul className="divide-y">
-                  {recent.map((t) => {
-                    const c = categories.find(x => x.id === t.category_id);
-                    return (
-                      <li key={t.id} className="flex items-center justify-between gap-3 px-2 py-2.5">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: (c?.color ?? "#94a3b8") + "22", color: c?.color ?? "#64748b" }}>
-                            {t.type === "income" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{c?.name ?? "Uncategorized"}</p>
-                            <p className="text-[11px] text-muted-foreground">{new Date(t.transaction_date).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {t.payment_method.replace("_", " ")}</p>
-                          </div>
-                        </div>
-                        <p className={`font-display text-sm font-semibold tabular-nums ${t.type === "income" ? "text-success" : "text-foreground"}`}>
-                          {t.type === "income" ? "+" : "−"}{formatCurrency(t.amount, currency)}
-                        </p>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <p className="text-xs text-muted-foreground">Savings rate</p>
+                  <p className="font-display text-sm font-semibold tabular-nums">{stats.savingsRate.toFixed(0)}%</p>
+                </div>
+                <Progress value={Math.min(100, Math.max(0, stats.savingsRate))} className="mt-1.5 h-2" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Target ≥ 30% for freedom track</p>
+              </div>
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <p className="text-xs text-muted-foreground">Health score</p>
+                  <p className="font-display text-sm font-semibold tabular-nums">{health}/100</p>
+                </div>
+                <Progress value={health} className="mt-1.5 h-2" />
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <p className="flex items-center gap-1.5 text-xs font-medium">
+                  <Sparkles className="h-3.5 w-3.5 text-gold" /> AI insight
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {stats.savingsRate >= 30
+                    ? "Excellent — you're on the financial freedom track. Consider deploying surplus into investments."
+                    : stats.savingsRate >= 15
+                      ? "Solid start. Trim 1–2 discretionary categories to push savings rate above 30%."
+                      : "Cashflow is tight this month. Review top spending categories and set a budget."}
+                </p>
+              </div>
             </CardContent>
           </Card>
 

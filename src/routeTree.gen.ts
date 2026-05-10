@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
+import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
@@ -23,6 +24,7 @@ import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.m
 import { Route as AuthenticatedLoansRouteImport } from './routes/_authenticated.loans'
 import { Route as AuthenticatedInvestmentsRouteImport } from './routes/_authenticated.investments'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated.import'
+import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated.goals'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
@@ -62,6 +64,12 @@ const AuthenticatedTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedSplitSettleRoute =
+  AuthenticatedSplitSettleRouteImport.update({
+    id: '/split-settle',
+    path: '/split-settle',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSmsIntelligenceRoute =
   AuthenticatedSmsIntelligenceRouteImport.update({
     id: '/sms-intelligence',
@@ -99,6 +107,11 @@ const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   path: '/import',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -124,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/goals': typeof AuthenticatedGoalsRoute
   '/import': typeof AuthenticatedImportRoute
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
@@ -131,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
+  '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRoutesByTo {
@@ -142,6 +157,7 @@ export interface FileRoutesByTo {
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/goals': typeof AuthenticatedGoalsRoute
   '/import': typeof AuthenticatedImportRoute
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
@@ -149,6 +165,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
+  '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRoutesById {
@@ -162,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/investments': typeof AuthenticatedInvestmentsRoute
   '/_authenticated/loans': typeof AuthenticatedLoansRoute
@@ -169,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
+  '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRouteTypes {
@@ -182,6 +201,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/dashboard'
+    | '/goals'
     | '/import'
     | '/investments'
     | '/loans'
@@ -189,6 +209,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/sms-intelligence'
+    | '/split-settle'
     | '/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -200,6 +221,7 @@ export interface FileRouteTypes {
     | '/budgets'
     | '/categories'
     | '/dashboard'
+    | '/goals'
     | '/import'
     | '/investments'
     | '/loans'
@@ -207,6 +229,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/sms-intelligence'
+    | '/split-settle'
     | '/transactions'
   id:
     | '__root__'
@@ -219,6 +242,7 @@ export interface FileRouteTypes {
     | '/_authenticated/budgets'
     | '/_authenticated/categories'
     | '/_authenticated/dashboard'
+    | '/_authenticated/goals'
     | '/_authenticated/import'
     | '/_authenticated/investments'
     | '/_authenticated/loans'
@@ -226,6 +250,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/sms-intelligence'
+    | '/_authenticated/split-settle'
     | '/_authenticated/transactions'
   fileRoutesById: FileRoutesById
 }
@@ -289,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/split-settle': {
+      id: '/_authenticated/split-settle'
+      path: '/split-settle'
+      fullPath: '/split-settle'
+      preLoaderRoute: typeof AuthenticatedSplitSettleRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/sms-intelligence': {
       id: '/_authenticated/sms-intelligence'
       path: '/sms-intelligence'
@@ -338,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/goals': {
+      id: '/_authenticated/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof AuthenticatedGoalsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -366,6 +405,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedInvestmentsRoute: typeof AuthenticatedInvestmentsRoute
   AuthenticatedLoansRoute: typeof AuthenticatedLoansRoute
@@ -373,6 +413,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSmsIntelligenceRoute: typeof AuthenticatedSmsIntelligenceRoute
+  AuthenticatedSplitSettleRoute: typeof AuthenticatedSplitSettleRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
 }
 
@@ -380,6 +421,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedInvestmentsRoute: AuthenticatedInvestmentsRoute,
   AuthenticatedLoansRoute: AuthenticatedLoansRoute,
@@ -387,6 +429,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSmsIntelligenceRoute: AuthenticatedSmsIntelligenceRoute,
+  AuthenticatedSplitSettleRoute: AuthenticatedSplitSettleRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
 }
 
