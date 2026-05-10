@@ -100,7 +100,7 @@ function Dashboard() {
     return [...map.values()].sort((a, b) => b.value - a.value).slice(0, 6);
   }, [transactions, categories]);
 
-  const recent = transactions.slice(0, 6);
+  void transactions;
   const greeting = (() => {
     const h = new Date().getHours();
     return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
