@@ -128,7 +128,7 @@ function SplitSettle() {
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1.5" disabled={friends.length === 0}><Plus className="h-4 w-4" /> Split</Button>
               </DialogTrigger>
-              <AddSplitDialog friends={friends} onAdd={(s) => { addSplit(s); setOpenSplit(false); }} currency={currency} />
+              <AddSplitDialog friends={friends} onAdd={(s) => { addSplit(s); setOpenSplit(false); }} currency={currency} initialDirection={splitDirection} />
             </Dialog>
           </div>
         }
