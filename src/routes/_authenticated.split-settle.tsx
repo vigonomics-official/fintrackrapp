@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
   Users, Plus, Trash2, MessageCircle, ArrowUpRight, ArrowDownLeft, Receipt, CheckCircle2, Search,
+  HandCoins, Split as SplitIcon, Wallet,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,9 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { useProfile } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
