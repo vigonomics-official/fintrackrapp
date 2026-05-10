@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-import { ArrowDown, ArrowUp, TrendingUp, Sparkles, Landmark, Calendar, ChevronRight, Activity } from "lucide-react";
+import { ArrowDown, ArrowUp, TrendingUp, Sparkles, Landmark, Calendar, ChevronRight, Activity, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
