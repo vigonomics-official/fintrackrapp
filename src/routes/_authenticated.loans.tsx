@@ -317,6 +317,14 @@ function LoansPage() {
   const currency = profile?.currency ?? "USD";
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Loan | null>(null);
+  const [fabSheet, setFabSheet] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const h = () => setFabSheet(true);
+    window.addEventListener("fintrackr:fab", h);
+    return () => window.removeEventListener("fintrackr:fab", h);
+  }, []);
 
   const totals = useMemo(() => {
     const debt = loans.reduce((s, l) => s + l.remaining_balance, 0);
