@@ -14,10 +14,10 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Home", icon: Home },
   { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { to: "/investments", label: "Investments", icon: TrendingUp },
-  { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/goals", label: "Goals", icon: Target },
+  { to: "/split-settle", label: "Split", icon: Users },
   { to: "/menu", label: "Menu", icon: MenuIcon },
 ] as const;
 
