@@ -258,7 +258,39 @@ function SplitSettle() {
           </Card>
         )}
       </div>
+
+      {/* FAB quick actions sheet */}
+      <Sheet open={fabSheet} onOpenChange={setFabSheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Settlement actions</SheetTitle>
+            <SheetDescription>Track lending, borrowing & shared expenses.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <FabTile icon={ArrowDownLeft} label="Add Lending" tone="bg-success/10 text-success"
+              onClick={() => { setFabSheet(false); if (friends.length === 0) { setOpenFriend(true); return; } setSplitDirection("owes"); setOpenSplit(true); }} />
+            <FabTile icon={ArrowUpRight} label="Add Borrowing" tone="bg-destructive/10 text-destructive"
+              onClick={() => { setFabSheet(false); if (friends.length === 0) { setOpenFriend(true); return; } setSplitDirection("owe"); setOpenSplit(true); }} />
+            <FabTile icon={SplitIcon} label="Split Expense" tone="bg-primary/10 text-primary"
+              onClick={() => { setFabSheet(false); if (friends.length === 0) { setOpenFriend(true); return; } setSplitDirection("owes"); setOpenSplit(true); }} />
+            <FabTile icon={Wallet} label="Record Repayment" tone="bg-gold/15 text-gold-foreground"
+              onClick={() => { setFabSheet(false); if (friends.length === 0) { setOpenFriend(true); return; } setSplitDirection("owe"); setOpenSplit(true); }} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
+  );
+}
+
+function FabTile({ icon: Icon, label, tone, onClick }: { icon: typeof Plus; label: string; tone: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick}
+      className="flex flex-col items-start gap-3 rounded-2xl border bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-soft active:scale-[0.98]">
+      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tone}`}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="text-sm font-medium">{label}</span>
+    </button>
   );
 }
 
