@@ -80,6 +80,13 @@ function Goals() {
   useEffect(() => { setGoals(loadGoals()); }, []);
   useEffect(() => { saveGoals(goals); }, [goals]);
 
+  // Context-aware FAB: open Create Goal dialog
+  useEffect(() => {
+    const h = () => setOpen(true);
+    window.addEventListener("fintrackr:fab", h);
+    return () => window.removeEventListener("fintrackr:fab", h);
+  }, []);
+
   const totals = useMemo(() => {
     const target = goals.reduce((s, g) => s + g.target, 0);
     const current = goals.reduce((s, g) => s + g.current, 0);

@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -22,6 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -314,6 +317,14 @@ function LoansPage() {
   const currency = profile?.currency ?? "USD";
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Loan | null>(null);
+  const [fabSheet, setFabSheet] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const h = () => setFabSheet(true);
+    window.addEventListener("fintrackr:fab", h);
+    return () => window.removeEventListener("fintrackr:fab", h);
+  }, []);
 
   const totals = useMemo(() => {
     const debt = loans.reduce((s, l) => s + l.remaining_balance, 0);
@@ -553,6 +564,33 @@ function LoansPage() {
       </div>
 
       {selected && <LoanDetailDialog loan={selected} currency={currency} onClose={() => setSelected(null)} />}
+
+      {/* FAB quick actions sheet */}
+      <Sheet open={fabSheet} onOpenChange={setFabSheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Loan actions</SheetTitle>
+            <SheetDescription>Manage your debt & repayments.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {[
+              { label: "Add Loan", icon: Wallet, tone: "bg-primary/10 text-primary", onClick: () => { setFabSheet(false); setOpen(true); } },
+              { label: "Add EMI", icon: Calendar, tone: "bg-info/15 text-info", onClick: () => { setFabSheet(false); setOpen(true); } },
+              { label: "Record Payment", icon: CheckCircle2, tone: "bg-success/10 text-success", onClick: () => { setFabSheet(false); if (loans[0]) setSelected(loans[0]); else setOpen(true); } },
+              { label: "Add Borrowed Money", icon: TrendingDown, tone: "bg-destructive/10 text-destructive", onClick: () => { setFabSheet(false); setOpen(true); } },
+              { label: "Add Lending Entry", icon: User, tone: "bg-gold/15 text-gold-foreground", onClick: () => { setFabSheet(false); navigate({ to: "/split-settle" }); } },
+            ].map((a) => (
+              <button key={a.label} onClick={a.onClick}
+                className="flex flex-col items-start gap-3 rounded-2xl border bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-soft active:scale-[0.98]">
+                <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${a.tone}`}>
+                  <a.icon className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">{a.label}</span>
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

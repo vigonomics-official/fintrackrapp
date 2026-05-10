@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
   Users, Plus, Trash2, MessageCircle, ArrowUpRight, ArrowDownLeft, Receipt, CheckCircle2, Search,
+  HandCoins, Split as SplitIcon, Wallet,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,9 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { useProfile } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
@@ -51,10 +55,24 @@ function SplitSettle() {
   const [q, setQ] = useState("");
   const [openFriend, setOpenFriend] = useState(false);
   const [openSplit, setOpenSplit] = useState(false);
+  const [splitDirection, setSplitDirection] = useState<"owes" | "owe">("owes");
+  const [fabSheet, setFabSheet] = useState(false);
 
   useEffect(() => { setFriends(load(KEY_F, [])); setSplits(load(KEY_S, [])); }, []);
   useEffect(() => { save(KEY_F, friends); }, [friends]);
   useEffect(() => { save(KEY_S, splits); }, [splits]);
+
+  // Context-aware FAB: open quick actions sheet
+  useEffect(() => {
+    const h = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { intent?: string } | undefined;
+      if (detail?.intent === "lend" && friends.length > 0) { setSplitDirection("owes"); setOpenSplit(true); }
+      else if (detail?.intent === "split" && friends.length > 0) { setSplitDirection("owes"); setOpenSplit(true); }
+      else setFabSheet(true);
+    };
+    window.addEventListener("fintrackr:fab", h);
+    return () => window.removeEventListener("fintrackr:fab", h);
+  }, [friends.length]);
 
   const balances = useMemo(() => {
     const map = new Map<string, number>();
@@ -110,7 +128,7 @@ function SplitSettle() {
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1.5" disabled={friends.length === 0}><Plus className="h-4 w-4" /> Split</Button>
               </DialogTrigger>
-              <AddSplitDialog friends={friends} onAdd={(s) => { addSplit(s); setOpenSplit(false); }} currency={currency} />
+              <AddSplitDialog friends={friends} onAdd={(s) => { addSplit(s); setOpenSplit(false); }} currency={currency} initialDirection={splitDirection} />
             </Dialog>
           </div>
         }
@@ -240,7 +258,39 @@ function SplitSettle() {
           </Card>
         )}
       </div>
+
+      {/* FAB quick actions sheet */}
+      <Sheet open={fabSheet} onOpenChange={setFabSheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Settlement actions</SheetTitle>
+            <SheetDescription>Track lending, borrowing & shared expenses.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <FabTile icon={ArrowDownLeft} label="Add Lending" tone="bg-success/10 text-success"
+              onClick={() => { setFabSheet(false); if (friends.length === 0) { setOpenFriend(true); return; } setSplitDirection("owes"); setOpenSplit(true); }} />
+            <FabTile icon={ArrowUpRight} label="Add Borrowing" tone="bg-destructive/10 text-destructive"
+              onClick={() => { setFabSheet(false); if (friends.length === 0) { setOpenFriend(true); return; } setSplitDirection("owe"); setOpenSplit(true); }} />
+            <FabTile icon={SplitIcon} label="Split Expense" tone="bg-primary/10 text-primary"
+              onClick={() => { setFabSheet(false); if (friends.length === 0) { setOpenFriend(true); return; } setSplitDirection("owes"); setOpenSplit(true); }} />
+            <FabTile icon={Wallet} label="Record Repayment" tone="bg-gold/15 text-gold-foreground"
+              onClick={() => { setFabSheet(false); if (friends.length === 0) { setOpenFriend(true); return; } setSplitDirection("owe"); setOpenSplit(true); }} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
+  );
+}
+
+function FabTile({ icon: Icon, label, tone, onClick }: { icon: typeof Plus; label: string; tone: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick}
+      className="flex flex-col items-start gap-3 rounded-2xl border bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-soft active:scale-[0.98]">
+      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tone}`}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="text-sm font-medium">{label}</span>
+    </button>
   );
 }
 
@@ -267,11 +317,12 @@ function AddFriendDialog({ onAdd }: { onAdd: (name: string, phone?: string) => v
   );
 }
 
-function AddSplitDialog({ friends, onAdd, currency }: { friends: Friend[]; onAdd: (s: Omit<Split, "id" | "settled">) => void; currency: string }) {
+function AddSplitDialog({ friends, onAdd, currency, initialDirection = "owes" }: { friends: Friend[]; onAdd: (s: Omit<Split, "id" | "settled">) => void; currency: string; initialDirection?: "owes" | "owe" }) {
   const [friendId, setFriendId] = useState(friends[0]?.id ?? "");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [direction, setDirection] = useState<"owes" | "owe">("owes");
+  const [direction, setDirection] = useState<"owes" | "owe">(initialDirection);
+  useEffect(() => { setDirection(initialDirection); }, [initialDirection]);
 
   return (
     <DialogContent>
