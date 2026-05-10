@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
+import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
@@ -61,6 +62,12 @@ const AuthenticatedTransactionsRoute =
   AuthenticatedTransactionsRouteImport.update({
     id: '/transactions',
     path: '/transactions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSplitSettleRoute =
+  AuthenticatedSplitSettleRouteImport.update({
+    id: '/split-settle',
+    path: '/split-settle',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSmsIntelligenceRoute =
@@ -138,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
+  '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRoutesByTo {
@@ -157,6 +165,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
+  '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRoutesById {
@@ -178,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
+  '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRouteTypes {
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/sms-intelligence'
+    | '/split-settle'
     | '/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/sms-intelligence'
+    | '/split-settle'
     | '/transactions'
   id:
     | '__root__'
@@ -238,6 +250,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/sms-intelligence'
+    | '/_authenticated/split-settle'
     | '/_authenticated/transactions'
   fileRoutesById: FileRoutesById
 }
@@ -299,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/transactions'
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/split-settle': {
+      id: '/_authenticated/split-settle'
+      path: '/split-settle'
+      fullPath: '/split-settle'
+      preLoaderRoute: typeof AuthenticatedSplitSettleRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/sms-intelligence': {
@@ -393,6 +413,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSmsIntelligenceRoute: typeof AuthenticatedSmsIntelligenceRoute
+  AuthenticatedSplitSettleRoute: typeof AuthenticatedSplitSettleRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
 }
 
@@ -408,6 +429,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSmsIntelligenceRoute: AuthenticatedSmsIntelligenceRoute,
+  AuthenticatedSplitSettleRoute: AuthenticatedSplitSettleRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
 }
 
