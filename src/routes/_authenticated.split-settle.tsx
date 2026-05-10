@@ -285,11 +285,12 @@ function AddFriendDialog({ onAdd }: { onAdd: (name: string, phone?: string) => v
   );
 }
 
-function AddSplitDialog({ friends, onAdd, currency }: { friends: Friend[]; onAdd: (s: Omit<Split, "id" | "settled">) => void; currency: string }) {
+function AddSplitDialog({ friends, onAdd, currency, initialDirection = "owes" }: { friends: Friend[]; onAdd: (s: Omit<Split, "id" | "settled">) => void; currency: string; initialDirection?: "owes" | "owe" }) {
   const [friendId, setFriendId] = useState(friends[0]?.id ?? "");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [direction, setDirection] = useState<"owes" | "owe">("owes");
+  const [direction, setDirection] = useState<"owes" | "owe">(initialDirection);
+  useEffect(() => { setDirection(initialDirection); }, [initialDirection]);
 
   return (
     <DialogContent>
