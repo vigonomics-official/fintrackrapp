@@ -1,116 +1,207 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import {
-  Wallet, Tag, Target, Landmark, LineChart,
-  Globe, Palette, Bell, ShieldCheck,
-  Upload, Download, DatabaseBackup,
-  HelpCircle, MessageSquare, Info,
-  ChevronRight, LogOut,
+  Wallet, Tag, Landmark, Repeat,
+  TrendingUp, Coins, PieChart,
+  Users, Share2, Target,
+  Upload, Download, DatabaseBackup, ShieldCheck,
+  Palette, Globe, Bell,
+  HelpCircle, Info, MessageSquare,
+  MessageSquareText, Sparkles, Bot, BellRing,
+  ChevronRight, ChevronDown, LogOut, Search,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/menu")({ component: MenuPage });
 
-type Item = { label: string; icon: typeof Wallet; to?: string; badge?: string };
-type Group = { title: string; items: Item[] };
+type Item = { label: string; icon: typeof Wallet; to?: string; badge?: string; description?: string };
+type Group = { title: string; tone?: "smart" | "default"; items: Item[] };
 
 const GROUPS: Group[] = [
+  {
+    title: "Smart Features",
+    tone: "smart",
+    items: [
+      { label: "SMS Intelligence", icon: MessageSquareText, to: "/sms-intelligence", badge: "New", description: "Auto-detect UPI & SMS spends" },
+      { label: "Smart Financial Insights", icon: Sparkles, badge: "Soon", description: "AI insights on your money" },
+      { label: "WhatsApp Expense Assistant", icon: Bot, badge: "Soon", description: "Log spends via WhatsApp" },
+      { label: "Smart Notifications", icon: BellRing, badge: "Soon", description: "Bills, EMIs, anomalies" },
+    ],
+  },
   {
     title: "Financial Management",
     items: [
       { label: "Budgets", icon: Wallet, to: "/budgets" },
       { label: "Categories", icon: Tag, to: "/categories" },
-      { label: "Goals", icon: Target, badge: "Soon" },
       { label: "Loan Management", icon: Landmark, to: "/loans" },
-      { label: "Investment Settings", icon: LineChart, to: "/investments" },
+      { label: "Subscription Tracker", icon: Repeat, badge: "Soon" },
     ],
   },
   {
-    title: "Preferences",
+    title: "Wealth & Investments",
     items: [
-      { label: "Currency & Localization", icon: Globe, to: "/settings" },
-      { label: "Appearance", icon: Palette, to: "/settings" },
-      { label: "Notifications", icon: Bell, badge: "Soon" },
-      { label: "Security & Privacy", icon: ShieldCheck, badge: "Soon" },
+      { label: "SIP Tracker", icon: TrendingUp, to: "/investments" },
+      { label: "Gold", icon: Coins, badge: "Soon" },
+      { label: "Portfolio Analytics", icon: PieChart, to: "/reports" },
     ],
   },
   {
-    title: "Data",
+    title: "Social & Family",
+    items: [
+      { label: "Family Finance", icon: Users, badge: "Soon" },
+      { label: "Shared Budgets", icon: Share2, badge: "Soon" },
+      { label: "Shared Goals", icon: Target, badge: "Soon" },
+    ],
+  },
+  {
+    title: "Data & Privacy",
     items: [
       { label: "Import CSV", icon: Upload, to: "/import" },
       { label: "Export Data", icon: Download, to: "/transactions" },
       { label: "Backup & Restore", icon: DatabaseBackup, badge: "Soon" },
+      { label: "Security & Privacy", icon: ShieldCheck, badge: "Soon" },
+    ],
+  },
+  {
+    title: "App Settings",
+    items: [
+      { label: "Appearance", icon: Palette, to: "/settings" },
+      { label: "Currency & Localization", icon: Globe, to: "/settings" },
+      { label: "Notifications", icon: Bell, badge: "Soon" },
     ],
   },
   {
     title: "Support",
     items: [
       { label: "Help Center", icon: HelpCircle, badge: "Soon" },
-      { label: "Feedback", icon: MessageSquare, badge: "Soon" },
       { label: "About App", icon: Info, badge: "v1.0" },
+      { label: "Feedback", icon: MessageSquare, badge: "Soon" },
     ],
   },
 ];
 
 function MenuPage() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  const q = query.trim().toLowerCase();
+  const filtered = GROUPS.map((g) => ({
+    ...g,
+    items: q ? g.items.filter((i) => i.label.toLowerCase().includes(q)) : g.items,
+  })).filter((g) => g.items.length > 0);
 
   return (
     <div>
-      <PageHeader title="Menu" subtitle="Manage settings, preferences and more." />
-      <div className="space-y-8 px-6 py-6 md:px-10">
-        {GROUPS.map((group, gi) => (
-          <motion.section
-            key={group.title}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: gi * 0.05 }}
-          >
-            <h2 className="mb-3 px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              {group.title}
-            </h2>
-            <Card className="overflow-hidden shadow-soft">
-              <ul className="divide-y">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const inner = (
-                    <div className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40">
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                          <Icon className="h-4.5 w-4.5" />
-                        </span>
-                        <span className="text-sm font-medium">{item.label}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {item.badge && (
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                            {item.badge}
-                          </span>
-                        )}
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </div>
-                  );
-                  return (
-                    <li key={item.label}>
-                      {item.to ? (
-                        <Link to={item.to}>{inner}</Link>
-                      ) : (
-                        <button type="button" className="block w-full text-left" disabled>
-                          {inner}
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </Card>
-          </motion.section>
-        ))}
+      <PageHeader title="Menu" subtitle="Smart tools, settings and more." />
+
+      <div className="space-y-6 px-6 py-6 md:px-10">
+        {/* Profile chip */}
+        <Card className="flex items-center gap-3 p-4 shadow-soft">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground font-semibold">
+            {(user?.email?.[0] ?? "U").toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{user?.email ?? "Your account"}</p>
+            <p className="text-xs text-muted-foreground">Privacy-first · India</p>
+          </div>
+          <Link to="/settings" className="text-xs font-medium text-primary">Edit</Link>
+        </Card>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search settings, tools, features…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="h-11 rounded-xl pl-9"
+          />
+        </div>
+
+        {filtered.map((group, gi) => {
+          const isCollapsed = collapsed[group.title];
+          return (
+            <motion.section
+              key={group.title}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: gi * 0.04 }}
+            >
+              <button
+                type="button"
+                onClick={() => setCollapsed((c) => ({ ...c, [group.title]: !c[group.title] }))}
+                className="mb-2.5 flex w-full items-center justify-between px-1"
+              >
+                <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  {group.title}
+                </h2>
+                <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isCollapsed && "-rotate-90")} />
+              </button>
+
+              {!isCollapsed && (
+                <Card className={cn(
+                  "overflow-hidden shadow-soft",
+                  group.tone === "smart" && "border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent"
+                )}>
+                  <ul className="divide-y">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      const isSmart = group.tone === "smart";
+                      const inner = (
+                        <div className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className={cn(
+                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                              isSmart ? "bg-primary/15 text-primary" : "bg-muted text-foreground/80"
+                            )}>
+                              <Icon className="h-4.5 w-4.5" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{item.label}</p>
+                              {item.description && (
+                                <p className="truncate text-xs text-muted-foreground">{item.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            {item.badge && (
+                              <span className={cn(
+                                "rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+                                item.badge === "New" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                              )}>
+                                {item.badge}
+                              </span>
+                            )}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </div>
+                      );
+                      return (
+                        <li key={item.label}>
+                          {item.to ? (
+                            <Link to={item.to}>{inner}</Link>
+                          ) : (
+                            <button type="button" className="block w-full text-left opacity-80" disabled>
+                              {inner}
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </Card>
+              )}
+            </motion.section>
+          );
+        })}
 
         <div className="pt-2">
           <Button

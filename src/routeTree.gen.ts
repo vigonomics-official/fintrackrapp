@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
+import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
@@ -59,6 +60,12 @@ const AuthenticatedTransactionsRoute =
   AuthenticatedTransactionsRouteImport.update({
     id: '/transactions',
     path: '/transactions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSmsIntelligenceRoute =
+  AuthenticatedSmsIntelligenceRouteImport.update({
+    id: '/sms-intelligence',
+    path: '/sms-intelligence',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof AuthenticatedMenuRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRoutesByTo {
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/menu': typeof AuthenticatedMenuRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRoutesById {
@@ -159,6 +168,7 @@ export interface FileRoutesById {
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRouteTypes {
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/reports'
     | '/settings'
+    | '/sms-intelligence'
     | '/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/reports'
     | '/settings'
+    | '/sms-intelligence'
     | '/transactions'
   id:
     | '__root__'
@@ -213,6 +225,7 @@ export interface FileRouteTypes {
     | '/_authenticated/menu'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/sms-intelligence'
     | '/_authenticated/transactions'
   fileRoutesById: FileRoutesById
 }
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/transactions'
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/sms-intelligence': {
+      id: '/_authenticated/sms-intelligence'
+      path: '/sms-intelligence'
+      fullPath: '/sms-intelligence'
+      preLoaderRoute: typeof AuthenticatedSmsIntelligenceRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings': {
@@ -352,6 +372,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSmsIntelligenceRoute: typeof AuthenticatedSmsIntelligenceRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
 }
 
@@ -365,6 +386,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSmsIntelligenceRoute: AuthenticatedSmsIntelligenceRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
 }
 
