@@ -220,23 +220,25 @@ function TransactionsPage() {
                       <ul className="divide-y">
                         {items.map((t) => {
                           const c = categories.find(x => x.id === t.category_id);
+                          const when = new Date(t.created_at);
+                          const compactTime = isNaN(when.getTime())
+                            ? ""
+                            : `${when.toLocaleDateString(undefined, { day: "numeric", month: "short" })} • ${when.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+                          const meta = [compactTime, t.payment_method.replace("_", " "), t.notes].filter(Boolean).join(" · ");
                           return (
-                            <li key={t.id} className="group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40">
+                            <li key={t.id} className="group flex items-center gap-2 px-3 py-2.5 transition-colors hover:bg-muted/40">
                               <button
                                 onClick={() => { setEditing(t); setDialogOpen(true); }}
-                                className="flex flex-1 items-center gap-3 text-left"
+                                className="flex min-w-0 flex-1 items-center gap-3 text-left"
                               >
                                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold" style={{ background: (c?.color ?? "#94a3b8") + "22", color: c?.color ?? "#64748b" }}>
                                   {(c?.name ?? "?").charAt(0)}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-sm font-medium">
-                                    {c?.name ?? "Uncategorized"}
-                                    {t.notes && <span className="font-normal text-muted-foreground"> · {t.notes}</span>}
-                                  </p>
-                                  <p className="text-[11px] text-muted-foreground">{t.payment_method.replace("_", " ")}</p>
+                                  <p className="truncate text-sm font-medium">{c?.name ?? "Uncategorized"}</p>
+                                  <p className="truncate text-[11px] text-muted-foreground">{meta}</p>
                                 </div>
-                                <p className={`font-display text-sm font-semibold tabular-nums ${t.type === "income" ? "text-success" : t.type === "expense" ? "text-foreground" : "text-muted-foreground"}`}>
+                                <p className={`shrink-0 whitespace-nowrap font-display text-sm font-semibold tabular-nums ${t.type === "income" ? "text-success" : t.type === "expense" ? "text-foreground" : "text-muted-foreground"}`}>
                                   {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}{formatCurrency(t.amount, currency)}
                                 </p>
                               </button>
