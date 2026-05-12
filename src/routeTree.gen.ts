@@ -83,12 +83,6 @@ const AuthenticatedSmartCategorizationRoute =
     path: '/smart-categorization',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedSmartCategorizationRoute =
-  AuthenticatedSmartCategorizationRouteImport.update({
-    id: '/smart-categorization',
-    path: '/smart-categorization',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
