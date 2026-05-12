@@ -99,20 +99,20 @@ function MenuPage() {
   })).filter((g) => g.items.length > 0);
 
   return (
-    <div>
+    <div className="w-full overflow-x-hidden">
       <PageHeader title="Menu" subtitle="Smart tools, settings and more." />
 
-      <div className="space-y-6 px-6 py-6 md:px-10">
+      <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5 sm:space-y-6 sm:px-6 sm:py-6 md:px-10">
         {/* Profile chip */}
-        <Card className="flex items-center gap-3 p-4 shadow-soft">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground font-semibold">
+        <Card className="flex items-center gap-3 p-3 shadow-soft sm:p-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground font-semibold">
             {(user?.email?.[0] ?? "U").toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{user?.email ?? "Your account"}</p>
-            <p className="text-xs text-muted-foreground">Privacy-first · India</p>
+            <p className="truncate text-xs text-muted-foreground">Privacy-first · India</p>
           </div>
-          <Link to="/settings" className="text-xs font-medium text-primary">Edit</Link>
+          <Link to="/settings" className="shrink-0 text-xs font-medium text-primary">Edit</Link>
         </Card>
 
         {/* Search */}
@@ -122,7 +122,7 @@ function MenuPage() {
             placeholder="Search settings, tools, features…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="h-11 rounded-xl pl-9"
+            className="h-11 w-full rounded-xl pl-9"
           />
         </div>
 
@@ -138,12 +138,12 @@ function MenuPage() {
               <button
                 type="button"
                 onClick={() => setCollapsed((c) => ({ ...c, [group.title]: !c[group.title] }))}
-                className="mb-2.5 flex w-full items-center justify-between px-1"
+                className="mb-2.5 flex w-full items-center justify-between gap-2 px-1"
               >
-                <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <h2 className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">
                   {group.title}
                 </h2>
-                <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isCollapsed && "-rotate-90")} />
+                <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isCollapsed && "-rotate-90")} />
               </button>
 
               {!isCollapsed && (
@@ -156,25 +156,25 @@ function MenuPage() {
                       const Icon = item.icon;
                       const isSmart = group.tone === "smart";
                       const inner = (
-                        <div className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40">
-                          <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex items-center justify-between gap-2 px-3 py-3 transition-colors hover:bg-muted/40 sm:gap-3 sm:px-4">
+                          <div className="flex min-w-0 flex-1 items-center gap-3">
                             <span className={cn(
                               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
                               isSmart ? "bg-primary/15 text-primary" : "bg-muted text-foreground/80"
                             )}>
-                              <Icon className="h-4.5 w-4.5" />
+                              <Icon className="h-[18px] w-[18px]" />
                             </span>
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <p className="truncate text-sm font-medium">{item.label}</p>
                               {item.description && (
                                 <p className="truncate text-xs text-muted-foreground">{item.description}</p>
                               )}
                             </div>
                           </div>
-                          <div className="flex shrink-0 items-center gap-2">
+                          <div className="flex shrink-0 items-center gap-1.5">
                             {item.badge && (
                               <span className={cn(
-                                "rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+                                "rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap",
                                 item.badge === "New" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                               )}>
                                 {item.badge}
