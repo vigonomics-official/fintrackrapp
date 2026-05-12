@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
 import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
+import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_authenticated.smart-categorization'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
@@ -74,6 +75,12 @@ const AuthenticatedSmsIntelligenceRoute =
   AuthenticatedSmsIntelligenceRouteImport.update({
     id: '/sms-intelligence',
     path: '/sms-intelligence',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSmartCategorizationRoute =
+  AuthenticatedSmartCategorizationRouteImport.update({
+    id: '/smart-categorization',
+    path: '/smart-categorization',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof AuthenticatedMenuRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/menu': typeof AuthenticatedMenuRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/reports'
     | '/settings'
+    | '/smart-categorization'
     | '/sms-intelligence'
     | '/split-settle'
     | '/transactions'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/reports'
     | '/settings'
+    | '/smart-categorization'
     | '/sms-intelligence'
     | '/split-settle'
     | '/transactions'
@@ -249,6 +261,7 @@ export interface FileRouteTypes {
     | '/_authenticated/menu'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/smart-categorization'
     | '/_authenticated/sms-intelligence'
     | '/_authenticated/split-settle'
     | '/_authenticated/transactions'
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: '/sms-intelligence'
       fullPath: '/sms-intelligence'
       preLoaderRoute: typeof AuthenticatedSmsIntelligenceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/smart-categorization': {
+      id: '/_authenticated/smart-categorization'
+      path: '/smart-categorization'
+      fullPath: '/smart-categorization'
+      preLoaderRoute: typeof AuthenticatedSmartCategorizationRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings': {
@@ -412,6 +432,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSmartCategorizationRoute: typeof AuthenticatedSmartCategorizationRoute
   AuthenticatedSmsIntelligenceRoute: typeof AuthenticatedSmsIntelligenceRoute
   AuthenticatedSplitSettleRoute: typeof AuthenticatedSplitSettleRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
@@ -428,6 +449,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSmartCategorizationRoute: AuthenticatedSmartCategorizationRoute,
   AuthenticatedSmsIntelligenceRoute: AuthenticatedSmsIntelligenceRoute,
   AuthenticatedSplitSettleRoute: AuthenticatedSplitSettleRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
