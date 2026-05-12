@@ -19,7 +19,6 @@ import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authent
 import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
 import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_authenticated.smart-categorization'
-import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_authenticated.smart-categorization'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
@@ -76,6 +75,12 @@ const AuthenticatedSmsIntelligenceRoute =
   AuthenticatedSmsIntelligenceRouteImport.update({
     id: '/sms-intelligence',
     path: '/sms-intelligence',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSmartCategorizationRoute =
+  AuthenticatedSmartCategorizationRouteImport.update({
+    id: '/smart-categorization',
+    path: '/smart-categorization',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSmartCategorizationRoute =
