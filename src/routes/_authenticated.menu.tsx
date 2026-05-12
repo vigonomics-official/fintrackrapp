@@ -29,6 +29,7 @@ const GROUPS: Group[] = [
     tone: "smart",
     items: [
       { label: "SMS Intelligence", icon: MessageSquareText, to: "/sms-intelligence", badge: "New", description: "Auto-detect UPI & SMS spends" },
+      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", badge: "New", description: "Self-learning rules & merchants" },
       { label: "Smart Financial Insights", icon: Sparkles, badge: "Soon", description: "AI insights on your money" },
       { label: "WhatsApp Expense Assistant", icon: Bot, badge: "Soon", description: "Log spends via WhatsApp" },
       { label: "Smart Notifications", icon: BellRing, badge: "Soon", description: "Bills, EMIs, anomalies" },
