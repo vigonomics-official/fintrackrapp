@@ -49,6 +49,110 @@ const RULES_SEED = [
   { match: "AMAZON", category: "Shopping" },
 ];
 
+// ---------- SMS runtime bridge (Capacitor / Cordova / Web fallback) ----------
+type PermState = "granted" | "denied" | "prompt" | "unsupported";
+type Platform = "android-native" | "ios-native" | "web";
+
+function detectPlatform(): Platform {
+  if (typeof window === "undefined") return "web";
+  const w = window as any;
+  const cap = w.Capacitor;
+  if (cap?.isNativePlatform?.()) {
+    return cap.getPlatform?.() === "ios" ? "ios-native" : "android-native";
+  }
+  return "web";
+}
+
+function getSmsBridge(): any | null {
+  if (typeof window === "undefined") return null;
+  const w = window as any;
+  return (
+    w.SMSInboxReader ||
+    w.SMSReceive ||
+    w.cordova?.plugins?.smsRetriever ||
+    w.Capacitor?.Plugins?.SmsInboxReader ||
+    w.Capacitor?.Plugins?.CapacitorSMS ||
+    null
+  );
+}
+
+function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: string) => void) {
+  const platform = detectPlatform();
+  const bridge = getSmsBridge();
+  const [permission, setPermission] = useState<PermState>(
+    platform === "web" || !bridge ? "unsupported" : "prompt",
+  );
+  const [listening, setListening] = useState(false);
+  const [lastEventAt, setLastEventAt] = useState<number | null>(null);
+  const [batteryRestricted, setBatteryRestricted] = useState<boolean | null>(null);
+  const subRef = useRef<{ remove?: () => void } | null>(null);
+  const seenRef = useRef<Set<string>>(new Set());
+
+  const requestPermission = async () => {
+    if (!bridge) {
+      setPermission("unsupported");
+      toast.info("SMS auto-detect needs the FinTrackr Android app.");
+      return;
+    }
+    try {
+      const res = await (bridge.requestPermission?.({ permissions: ["READ_SMS", "RECEIVE_SMS"] })
+        ?? bridge.checkPermissions?.());
+      const granted = res?.read === "granted" || res?.receive === "granted" || res === true;
+      setPermission(granted ? "granted" : "denied");
+      if (!granted) toast.error("Permission denied — enable SMS access in Settings.");
+    } catch {
+      setPermission("denied");
+    }
+  };
+
+  const checkBattery = async () => {
+    try {
+      const w = window as any;
+      const opt = await w.Capacitor?.Plugins?.BatteryOptimization?.isIgnoringBatteryOptimizations?.();
+      if (typeof opt?.value === "boolean") setBatteryRestricted(!opt.value);
+    } catch { /* noop */ }
+  };
+
+  const startListener = () => {
+    if (!bridge || permission !== "granted" || subRef.current) return;
+    try {
+      const handler = (msg: any) => {
+        const raw: string = msg?.body ?? msg?.message ?? String(msg ?? "");
+        const key = `${msg?.address ?? ""}|${msg?.date ?? ""}|${raw.slice(0, 64)}`;
+        if (seenRef.current.has(key)) return; // dedupe
+        seenRef.current.add(key);
+        setLastEventAt(Date.now());
+        if (autoCat) onMessage(raw);
+      };
+      const sub = bridge.addListener?.("smsReceived", handler)
+        ?? bridge.startWatch?.(handler)
+        ?? bridge.watchSMS?.(handler);
+      subRef.current = sub && typeof sub.then === "function" ? null : sub ?? { remove: () => bridge.stopWatch?.() };
+      Promise.resolve(sub).then((s) => { if (s?.remove) subRef.current = s; });
+      setListening(true);
+    } catch (e) {
+      setListening(false);
+      toast.error("Could not start SMS listener.");
+    }
+  };
+
+  const stopListener = () => {
+    try { subRef.current?.remove?.(); } catch { /* noop */ }
+    subRef.current = null;
+    setListening(false);
+  };
+
+  useEffect(() => {
+    if (!enabled) { stopListener(); return; }
+    if (permission === "granted") startListener();
+    checkBattery();
+    return () => stopListener();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, permission, autoCat]);
+
+  return { platform, permission, listening, lastEventAt, batteryRestricted, requestPermission, startListener, stopListener };
+}
+
 function SmsIntelligencePage() {
   const [enabled, setEnabled] = useState(false);
   const [autoCat, setAutoCat] = useState(true);
@@ -57,6 +161,16 @@ function SmsIntelligencePage() {
   const [draft, setDraft] = useState("");
   const [rules, setRules] = useState(RULES_SEED);
   const [newRule, setNewRule] = useState({ match: "", category: "" });
+
+  const sms = useSmsListener(enabled, autoCat, (raw) => {
+    // Hook into existing SMS Intelligence parser; fallback: prepend lightweight item.
+    setItems((prev) => [
+      { id: `live-${Date.now()}`, merchant: "Live SMS", amount: 0, category: "Uncategorized",
+        icon: MessageSquareText as any, tint: "text-primary bg-primary/10",
+        channel: "Bank", confidence: 70, raw, time: "just now" },
+      ...prev,
+    ]);
+  });
 
   const total = items.reduce((s, i) => s + i.amount, 0);
 
