@@ -195,16 +195,25 @@ function SmsIntelligencePage() {
                   We parse only financial SMS locally. No bank login, no data leaves your phone.
                 </p>
                 <div className="mt-4 flex items-center justify-between rounded-xl border bg-card/60 px-4 py-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">SMS permission</p>
-                    <p className="text-xs text-muted-foreground">Required to read transaction alerts.</p>
+                    <p className="truncate text-xs text-muted-foreground">Required to read transaction alerts.</p>
                   </div>
-                  <Switch checked={enabled} onCheckedChange={setEnabled} />
+                  <Switch
+                    checked={enabled && sms.permission === "granted"}
+                    onCheckedChange={async (v) => {
+                      setEnabled(v);
+                      if (v && sms.permission !== "granted") await sms.requestPermission();
+                    }}
+                  />
                 </div>
               </div>
             </div>
           </Card>
         </motion.div>
+
+        {/* Permission & Listener Status */}
+        <PermissionStatusPanel sms={sms} enabled={enabled} onRetry={sms.requestPermission} />
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
