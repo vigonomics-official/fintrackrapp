@@ -16,8 +16,9 @@ export interface ParsedSms {
   confidence: number; // 0-100
 }
 
+// Match Indian-style "1,23,456.78" OR plain "2500" / "2500.00" — longer alt first.
 const AMOUNT_RE =
-  /(?:rs\.?|inr|₹)\s*([0-9]{1,3}(?:[,\s][0-9]{2,3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)/i;
+  /(?:rs\.?|inr|₹)\s*((?:[0-9]{1,3}(?:,[0-9]{2,3})+(?:\.[0-9]{1,2})?)|(?:[0-9]+(?:\.[0-9]{1,2})?))/i;
 
 const DEBIT_HINTS =
   /\b(debited|debit|spent|paid|sent|withdrawn|purchase|charged|payment of|txn of|transferred to|deducted)\b/i;
