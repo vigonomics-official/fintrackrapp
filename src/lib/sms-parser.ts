@@ -33,9 +33,9 @@ const UPI_REF_RE = /(?:upi(?:\s*ref(?:\.|erence)?(?:\s*no\.?)?)?[:\s-]*|ref(?:\.
 
 const VPA_RE = /\b([a-z0-9._-]{2,}@[a-z][a-z0-9.\-]+)\b/i;
 
-// "to ACME PVT LTD on 30-04-25", "to SWIGGY UPI/123/...", "at AMAZON"
+// "to ACME PVT LTD on 30-04-25", "at AMAZON.IN", "at ZOMATO ORDERS"
 const MERCHANT_RE =
-  /(?:to|at|towards|in favor of|from)\s+([A-Z0-9][A-Z0-9 &._'\-/]{2,40}?)(?=\s+(?:on|via|upi|ref|info|avl|a\/c|acct|trf|dt|date|on\b|\.|,|$))/i;
+  /(?:to|at|towards|in favor of|from)\s+([A-Z0-9][A-Z0-9 &._'\-/]{2,40}?)(?=\s+(?:on|via|upi|ref|info|avl|a\/c|acct|trf|dt|date)\b|[.,]|$)/i;
 
 const BANK_PATTERNS: Array<[RegExp, string]> = [
   [/\bhdfc\b/i, "HDFC"], [/\bicici\b/i, "ICICI"], [/\bsbi\b/i, "SBI"],
