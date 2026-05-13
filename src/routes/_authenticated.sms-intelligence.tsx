@@ -7,6 +7,9 @@ import {
   RadioTower, BatteryCharging, Smartphone, RefreshCw, AlertTriangle, CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { parseSms, txnSignature, formatCompactDateTime } from "@/lib/sms-parser";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
