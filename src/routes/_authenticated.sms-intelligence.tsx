@@ -157,6 +157,7 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
 }
 
 function SmsIntelligencePage() {
+  const { user } = useAuth();
   const [enabled, setEnabled] = useState(false);
   const [autoCat, setAutoCat] = useState(true);
   const [items, setItems] = useState(SAMPLE);
@@ -164,16 +165,52 @@ function SmsIntelligencePage() {
   const [draft, setDraft] = useState("");
   const [rules, setRules] = useState(RULES_SEED);
   const [newRule, setNewRule] = useState({ match: "", category: "" });
+  const insertedRef = useRef<Set<string>>(new Set());
 
-  const sms = useSmsListener(enabled, autoCat, (raw) => {
-    // Hook into existing SMS Intelligence parser; fallback: prepend lightweight item.
+  const handleIncomingSms = async (raw: string) => {
+    const parsed = parseSms(raw, new Date());
+    if (!parsed) return; // not financial — skip silently
+    const sig = txnSignature(parsed);
+    if (insertedRef.current.has(sig)) return; // dedupe in-session
+    insertedRef.current.add(sig);
+
     setItems((prev) => [
-      { id: `live-${Date.now()}`, merchant: "Live SMS", amount: 0, category: "Uncategorized",
-        icon: MessageSquareText as any, tint: "text-primary bg-primary/10",
-        channel: "Bank", confidence: 70, raw, time: "just now" },
+      {
+        id: `live-${Date.now()}`,
+        merchant: parsed.merchant,
+        amount: parsed.amount,
+        category: "Uncategorized",
+        icon: MessageSquareText as any,
+        tint: "text-primary bg-primary/10",
+        channel: parsed.paymentMethod === "upi" ? "UPI" : parsed.paymentMethod.includes("card") ? "Card" : "Bank",
+        confidence: parsed.confidence,
+        raw: parsed.raw,
+        time: formatCompactDateTime(parsed.occurredAt),
+      },
       ...prev,
     ]);
-  });
+
+    if (!user) return;
+    try {
+      const { error } = await supabase.from("transactions").insert({
+        user_id: user.id,
+        type: parsed.type,
+        amount: parsed.amount,
+        payment_method: parsed.paymentMethod,
+        transaction_date: parsed.occurredAt.toISOString().slice(0, 10),
+        notes: [parsed.bank, parsed.upiRef ? `Ref ${parsed.upiRef}` : null, parsed.raw]
+          .filter(Boolean).join(" · ").slice(0, 500),
+        tags: ["sms", parsed.paymentMethod],
+      });
+      if (error) throw error;
+      toast.success(`${parsed.type === "income" ? "Received" : "Spent"} ₹${parsed.amount} · ${parsed.merchant}`);
+    } catch (e: any) {
+      insertedRef.current.delete(sig); // allow retry
+      toast.error(`Couldn't save SMS txn: ${e?.message ?? "unknown"}`);
+    }
+  };
+
+  const sms = useSmsListener(enabled, autoCat, handleIncomingSms);
 
   const total = items.reduce((s, i) => s + i.amount, 0);
 
