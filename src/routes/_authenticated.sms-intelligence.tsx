@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ShieldCheck, MessageSquareText, Sparkles, Pencil, Check, X,
   UtensilsCrossed, Pizza, Car, ShoppingBag, ArrowLeftRight, Receipt, Plus,
+  RadioTower, BatteryCharging, Smartphone, RefreshCw, AlertTriangle, CheckCircle2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -47,6 +49,110 @@ const RULES_SEED = [
   { match: "AMAZON", category: "Shopping" },
 ];
 
+// ---------- SMS runtime bridge (Capacitor / Cordova / Web fallback) ----------
+type PermState = "granted" | "denied" | "prompt" | "unsupported";
+type Platform = "android-native" | "ios-native" | "web";
+
+function detectPlatform(): Platform {
+  if (typeof window === "undefined") return "web";
+  const w = window as any;
+  const cap = w.Capacitor;
+  if (cap?.isNativePlatform?.()) {
+    return cap.getPlatform?.() === "ios" ? "ios-native" : "android-native";
+  }
+  return "web";
+}
+
+function getSmsBridge(): any | null {
+  if (typeof window === "undefined") return null;
+  const w = window as any;
+  return (
+    w.SMSInboxReader ||
+    w.SMSReceive ||
+    w.cordova?.plugins?.smsRetriever ||
+    w.Capacitor?.Plugins?.SmsInboxReader ||
+    w.Capacitor?.Plugins?.CapacitorSMS ||
+    null
+  );
+}
+
+function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: string) => void) {
+  const platform = detectPlatform();
+  const bridge = getSmsBridge();
+  const [permission, setPermission] = useState<PermState>(
+    platform === "web" || !bridge ? "unsupported" : "prompt",
+  );
+  const [listening, setListening] = useState(false);
+  const [lastEventAt, setLastEventAt] = useState<number | null>(null);
+  const [batteryRestricted, setBatteryRestricted] = useState<boolean | null>(null);
+  const subRef = useRef<{ remove?: () => void } | null>(null);
+  const seenRef = useRef<Set<string>>(new Set());
+
+  const requestPermission = async () => {
+    if (!bridge) {
+      setPermission("unsupported");
+      toast.info("SMS auto-detect needs the FinTrackr Android app.");
+      return;
+    }
+    try {
+      const res = await (bridge.requestPermission?.({ permissions: ["READ_SMS", "RECEIVE_SMS"] })
+        ?? bridge.checkPermissions?.());
+      const granted = res?.read === "granted" || res?.receive === "granted" || res === true;
+      setPermission(granted ? "granted" : "denied");
+      if (!granted) toast.error("Permission denied — enable SMS access in Settings.");
+    } catch {
+      setPermission("denied");
+    }
+  };
+
+  const checkBattery = async () => {
+    try {
+      const w = window as any;
+      const opt = await w.Capacitor?.Plugins?.BatteryOptimization?.isIgnoringBatteryOptimizations?.();
+      if (typeof opt?.value === "boolean") setBatteryRestricted(!opt.value);
+    } catch { /* noop */ }
+  };
+
+  const startListener = () => {
+    if (!bridge || permission !== "granted" || subRef.current) return;
+    try {
+      const handler = (msg: any) => {
+        const raw: string = msg?.body ?? msg?.message ?? String(msg ?? "");
+        const key = `${msg?.address ?? ""}|${msg?.date ?? ""}|${raw.slice(0, 64)}`;
+        if (seenRef.current.has(key)) return; // dedupe
+        seenRef.current.add(key);
+        setLastEventAt(Date.now());
+        if (autoCat) onMessage(raw);
+      };
+      const sub = bridge.addListener?.("smsReceived", handler)
+        ?? bridge.startWatch?.(handler)
+        ?? bridge.watchSMS?.(handler);
+      subRef.current = sub && typeof sub.then === "function" ? null : sub ?? { remove: () => bridge.stopWatch?.() };
+      Promise.resolve(sub).then((s) => { if (s?.remove) subRef.current = s; });
+      setListening(true);
+    } catch (e) {
+      setListening(false);
+      toast.error("Could not start SMS listener.");
+    }
+  };
+
+  const stopListener = () => {
+    try { subRef.current?.remove?.(); } catch { /* noop */ }
+    subRef.current = null;
+    setListening(false);
+  };
+
+  useEffect(() => {
+    if (!enabled) { stopListener(); return; }
+    if (permission === "granted") startListener();
+    checkBattery();
+    return () => stopListener();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, permission, autoCat]);
+
+  return { platform, permission, listening, lastEventAt, batteryRestricted, requestPermission, startListener, stopListener };
+}
+
 function SmsIntelligencePage() {
   const [enabled, setEnabled] = useState(false);
   const [autoCat, setAutoCat] = useState(true);
@@ -55,6 +161,16 @@ function SmsIntelligencePage() {
   const [draft, setDraft] = useState("");
   const [rules, setRules] = useState(RULES_SEED);
   const [newRule, setNewRule] = useState({ match: "", category: "" });
+
+  const sms = useSmsListener(enabled, autoCat, (raw) => {
+    // Hook into existing SMS Intelligence parser; fallback: prepend lightweight item.
+    setItems((prev) => [
+      { id: `live-${Date.now()}`, merchant: "Live SMS", amount: 0, category: "Uncategorized",
+        icon: MessageSquareText as any, tint: "text-primary bg-primary/10",
+        channel: "Bank", confidence: 70, raw, time: "just now" },
+      ...prev,
+    ]);
+  });
 
   const total = items.reduce((s, i) => s + i.amount, 0);
 
@@ -79,16 +195,25 @@ function SmsIntelligencePage() {
                   We parse only financial SMS locally. No bank login, no data leaves your phone.
                 </p>
                 <div className="mt-4 flex items-center justify-between rounded-xl border bg-card/60 px-4 py-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">SMS permission</p>
-                    <p className="text-xs text-muted-foreground">Required to read transaction alerts.</p>
+                    <p className="truncate text-xs text-muted-foreground">Required to read transaction alerts.</p>
                   </div>
-                  <Switch checked={enabled} onCheckedChange={setEnabled} />
+                  <Switch
+                    checked={enabled && sms.permission === "granted"}
+                    onCheckedChange={async (v) => {
+                      setEnabled(v);
+                      if (v && sms.permission !== "granted") await sms.requestPermission();
+                    }}
+                  />
                 </div>
               </div>
             </div>
           </Card>
         </motion.div>
+
+        {/* Permission & Listener Status */}
+        <PermissionStatusPanel sms={sms} enabled={enabled} onRetry={sms.requestPermission} />
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
@@ -213,6 +338,96 @@ function ConfidenceBar({ value }: { value: number }) {
   return (
     <div className="flex h-1.5 w-20 overflow-hidden rounded-full bg-muted">
       <div className="bg-primary transition-all" style={{ width: `${value}%` }} />
+    </div>
+  );
+}
+
+function PermissionStatusPanel({
+  sms, enabled, onRetry,
+}: {
+  sms: ReturnType<typeof useSmsListener>;
+  enabled: boolean;
+  onRetry: () => void;
+}) {
+  const isWeb = sms.platform === "web";
+  const permLabel: Record<string, string> = {
+    granted: "Granted", denied: "Denied", prompt: "Not requested", unsupported: "Unavailable on web",
+  };
+  const permTone: Record<string, string> = {
+    granted: "text-emerald-600 bg-emerald-500/10",
+    denied: "text-red-600 bg-red-500/10",
+    prompt: "text-amber-600 bg-amber-500/10",
+    unsupported: "text-muted-foreground bg-muted",
+  };
+  const listenerOn = enabled && sms.listening;
+  return (
+    <Card className="overflow-hidden p-4 shadow-soft">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <RadioTower className={cn("h-4 w-4", listenerOn ? "text-emerald-500" : "text-muted-foreground")} />
+          <h3 className="text-sm font-semibold">Listener status</h3>
+        </div>
+        <Badge variant="outline" className={cn("text-[10px]", listenerOn ? "border-emerald-500/40 text-emerald-600" : "")}>
+          {listenerOn ? "Active" : "Idle"}
+        </Badge>
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <StatusRow
+          icon={<Smartphone className="h-4 w-4" />}
+          label="Platform"
+          value={sms.platform === "android-native" ? "Android (native)" : sms.platform === "ios-native" ? "iOS (native)" : "Web browser"}
+        />
+        <StatusRow
+          icon={sms.permission === "granted" ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+          label="READ_SMS / RECEIVE_SMS"
+          value={permLabel[sms.permission]}
+          tone={permTone[sms.permission]}
+        />
+        <StatusRow
+          icon={<RadioTower className="h-4 w-4" />}
+          label="Background listener"
+          value={listenerOn ? "Running" : enabled ? "Waiting for permission" : "Off"}
+        />
+        <StatusRow
+          icon={<BatteryCharging className="h-4 w-4" />}
+          label="Battery optimization"
+          value={sms.batteryRestricted == null ? "Unknown" : sms.batteryRestricted ? "Restricted" : "Unrestricted"}
+          tone={sms.batteryRestricted ? "text-amber-600 bg-amber-500/10" : ""}
+        />
+      </div>
+      {(isWeb || sms.permission !== "granted" || sms.batteryRestricted) && (
+        <div className="mt-3 rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground">
+          {isWeb ? (
+            <p>Real-time SMS detection requires the FinTrackr Android app. The web preview shows sample data only.</p>
+          ) : sms.permission !== "granted" ? (
+            <p>Grant SMS access so FinTrackr can detect bank & UPI alerts the moment they arrive.</p>
+          ) : (
+            <p>Battery optimization may pause the listener in the background. Disable it for FinTrackr to keep detection reliable.</p>
+          )}
+          <div className="mt-2 flex gap-2">
+            <Button size="sm" variant="outline" onClick={onRetry}>
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-check permissions
+            </Button>
+          </div>
+        </div>
+      )}
+      {sms.lastEventAt && (
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          Last SMS event: {new Date(sms.lastEventAt).toLocaleTimeString()}
+        </p>
+      )}
+    </Card>
+  );
+}
+
+function StatusRow({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: string }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border bg-card/60 px-3 py-2.5">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">{icon}</span>
+        <p className="truncate text-xs font-medium">{label}</p>
+      </div>
+      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", tone || "bg-muted text-muted-foreground")}>{value}</span>
     </div>
   );
 }
