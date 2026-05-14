@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Home, ArrowLeftRight, Target, Users, Menu as MenuIcon, LogOut, Plus,
   TrendingUp, TrendingDown, Flag, HandCoins, Split,
@@ -8,6 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
+import { TXN_EVENT } from "@/lib/sms-background";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
