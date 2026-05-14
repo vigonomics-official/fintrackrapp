@@ -231,7 +231,7 @@ function SmsIntelligencePage() {
     const insert = async () => {
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
-        type: parsed.type,
+        type: txnType,
         amount: parsed.amount,
         payment_method: parsed.paymentMethod,
         transaction_date: parsed.occurredAt.toISOString().slice(0, 10),
