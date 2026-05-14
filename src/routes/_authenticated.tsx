@@ -33,9 +33,21 @@ function matchRoute(path: string, route: string) {
 function AuthenticatedLayout() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [txOpen, setTxOpen] = useState(false);
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
+
+  // Real-time refresh: any SMS-detected transaction invalidates relevant queries
+  // so Dashboard, Transactions and Budgets reflect the new entry instantly.
+  useEffect(() => {
+    const handler = () => {
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["budgets"] });
+    };
+    window.addEventListener(TXN_EVENT, handler);
+    return () => window.removeEventListener(TXN_EVENT, handler);
+  }, [qc]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
