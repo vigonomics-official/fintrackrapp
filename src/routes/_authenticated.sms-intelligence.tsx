@@ -195,6 +195,11 @@ function SmsIntelligencePage() {
       smsDebug("parse", "warn", "SMS skipped — not financial", { sample: raw.slice(0, 60) });
       return;
     }
+    if (parsed.type !== "income" && parsed.type !== "expense") {
+      smsDebug("parse", "info", "SMS skipped — non-cash transfer", { type: parsed.type });
+      return;
+    }
+    const txnType: "income" | "expense" = parsed.type;
     smsDebug("parse", "success", `Parsed ₹${parsed.amount} → ${parsed.merchant}`,
       { type: parsed.type, method: parsed.paymentMethod, conf: parsed.confidence });
 
