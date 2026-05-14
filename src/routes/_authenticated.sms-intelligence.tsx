@@ -535,3 +535,44 @@ function StatusRow({ icon, label, value, tone }: { icon: React.ReactNode; label:
     </div>
   );
 }
+
+function DebugLogPanel() {
+  const [entries, setEntries] = useState<DebugEntry[]>(() => getSmsLogs());
+  const [open, setOpen] = useState(false);
+  useEffect(() => subscribeSmsLogs((e) => setEntries((prev) => [e, ...prev].slice(0, 200))), []);
+  const toneFor = (lvl: DebugEntry["level"]) =>
+    lvl === "error" ? "text-red-600" :
+    lvl === "warn" ? "text-amber-600" :
+    lvl === "success" ? "text-emerald-600" : "text-muted-foreground";
+  return (
+    <Card className="overflow-hidden p-4 shadow-soft">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between"
+      >
+        <div className="flex items-center gap-2">
+          <RadioTower className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">Debug log</h3>
+          <Badge variant="secondary" className="text-[10px]">{entries.length}</Badge>
+        </div>
+        <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show"}</span>
+      </button>
+      {open && (
+        <ul className="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg bg-muted/30 p-2 font-mono text-[11px]">
+          {entries.length === 0 && (
+            <li className="text-muted-foreground">No events yet — enable the listener to start capturing.</li>
+          )}
+          {entries.map((e, i) => (
+            <li key={i} className={cn("flex gap-2", toneFor(e.level))}>
+              <span className="shrink-0 text-muted-foreground">
+                {new Date(e.ts).toLocaleTimeString([], { hour12: false })}
+              </span>
+              <span className="shrink-0 uppercase tracking-wider opacity-70">[{e.tag}]</span>
+              <span className="truncate">{e.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
