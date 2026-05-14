@@ -501,9 +501,16 @@ function PermissionStatusPanel({
           ) : (
             <p>Battery optimization may pause the listener in the background. Disable it for FinTrackr to keep detection reliable.</p>
           )}
+          {(() => {
+            const hint = oemAutostartHint(detectOem());
+            return hint ? <p className="mt-1.5">{hint}</p> : null;
+          })()}
           <div className="mt-2 flex gap-2">
             <Button size="sm" variant="outline" onClick={onRetry}>
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-check permissions
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => requestIgnoreBatteryOptimizations()}>
+              <BatteryCharging className="mr-1.5 h-3.5 w-3.5" /> Disable battery limits
             </Button>
           </div>
         </div>
