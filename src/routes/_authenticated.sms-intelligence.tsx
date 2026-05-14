@@ -191,17 +191,27 @@ function SmsIntelligencePage() {
 
   const handleIncomingSms = async (raw: string) => {
     const parsed = parseSms(raw, new Date());
-    if (!parsed) return; // not financial — skip silently
+    if (!parsed) {
+      smsDebug("parse", "warn", "SMS skipped — not financial", { sample: raw.slice(0, 60) });
+      return;
+    }
+    smsDebug("parse", "success", `Parsed ₹${parsed.amount} → ${parsed.merchant}`,
+      { type: parsed.type, method: parsed.paymentMethod, conf: parsed.confidence });
+
     const sig = txnSignature(parsed);
     if (insertedRef.current.has(sig)) return; // dedupe in-session
     insertedRef.current.add(sig);
+
+    // Apply user rule for instant categorisation.
+    const matched = rules.find((r) => parsed.merchant.toUpperCase().includes(r.match));
+    const category = matched?.category ?? "Uncategorized";
 
     setItems((prev) => [
       {
         id: `live-${Date.now()}`,
         merchant: parsed.merchant,
         amount: parsed.amount,
-        category: "Uncategorized",
+        category,
         icon: MessageSquareText as any,
         tint: "text-primary bg-primary/10",
         channel: parsed.paymentMethod === "upi" ? "UPI" : parsed.paymentMethod.includes("card") ? "Card" : "Bank",
@@ -213,7 +223,7 @@ function SmsIntelligencePage() {
     ]);
 
     if (!user) return;
-    try {
+    const insert = async () => {
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
         type: parsed.type,
@@ -222,13 +232,29 @@ function SmsIntelligencePage() {
         transaction_date: parsed.occurredAt.toISOString().slice(0, 10),
         notes: [parsed.bank, parsed.upiRef ? `Ref ${parsed.upiRef}` : null, parsed.raw]
           .filter(Boolean).join(" · ").slice(0, 500),
-        tags: ["sms", parsed.paymentMethod],
+        tags: ["sms", parsed.paymentMethod, category].filter(Boolean) as string[],
       });
       if (error) throw error;
-      toast.success(`${parsed.type === "income" ? "Received" : "Spent"} ₹${parsed.amount} · ${parsed.merchant}`);
+      smsDebug("insert", "success", `Inserted ₹${parsed.amount} (${parsed.merchant})`);
+      broadcastTxn({
+        amount: parsed.amount, type: parsed.type,
+        merchant: parsed.merchant, category,
+      });
+      toast.success(
+        `${parsed.type === "income" ? "Received" : "Spent"} ₹${parsed.amount} · ${parsed.merchant}`,
+        { description: `Categorized as ${category}` },
+      );
+    };
+    try {
+      await insert();
     } catch (e: any) {
-      insertedRef.current.delete(sig); // allow retry
-      toast.error(`Couldn't save SMS txn: ${e?.message ?? "unknown"}`);
+      smsDebug("insert", "error", "Insert failed — queued for retry", { error: e?.message });
+      insertedRef.current.delete(sig); // allow retry path to re-add
+      enqueueRetry(`txn:${sig}`, async () => {
+        insertedRef.current.add(sig);
+        await insert();
+      });
+      toast.error(`Saving SMS txn failed — will retry. ${e?.message ?? ""}`);
     }
   };
 
