@@ -308,6 +308,10 @@ function SmsIntelligencePage() {
         {/* Permission & Listener Status */}
         <PermissionStatusPanel sms={sms} enabled={enabled} onRetry={sms.requestPermission} />
 
+        {/* Debug log stream */}
+        <DebugLogPanel />
+
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <Stat label="Detected" value={String(items.length)} />
