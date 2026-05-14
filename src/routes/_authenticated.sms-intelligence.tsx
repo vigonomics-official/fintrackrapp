@@ -10,6 +10,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { parseSms, txnSignature, formatCompactDateTime } from "@/lib/sms-parser";
+import {
+  smsDebug, enqueueRetry, broadcastTxn, enableBackgroundMode, disableBackgroundMode,
+  requestIgnoreBatteryOptimizations, detectOem, oemAutostartHint,
+  subscribeSmsLogs, getSmsLogs, type DebugEntry,
+} from "@/lib/sms-background";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -94,6 +99,7 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
   const requestPermission = async () => {
     if (!bridge) {
       setPermission("unsupported");
+      smsDebug("permission", "warn", "No native SMS bridge available");
       toast.info("SMS auto-detect needs the FinTrackr Android app.");
       return;
     }
@@ -102,9 +108,13 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
         ?? bridge.checkPermissions?.());
       const granted = res?.read === "granted" || res?.receive === "granted" || res === true;
       setPermission(granted ? "granted" : "denied");
+      smsDebug("permission", granted ? "success" : "warn",
+        granted ? "SMS permission granted" : "SMS permission denied", { res });
       if (!granted) toast.error("Permission denied — enable SMS access in Settings.");
-    } catch {
+      else await requestIgnoreBatteryOptimizations();
+    } catch (e: any) {
       setPermission("denied");
+      smsDebug("permission", "error", "Permission request threw", { error: e?.message });
     }
   };
 
@@ -112,7 +122,11 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
     try {
       const w = window as any;
       const opt = await w.Capacitor?.Plugins?.BatteryOptimization?.isIgnoringBatteryOptimizations?.();
-      if (typeof opt?.value === "boolean") setBatteryRestricted(!opt.value);
+      if (typeof opt?.value === "boolean") {
+        setBatteryRestricted(!opt.value);
+        smsDebug("battery", opt.value ? "info" : "warn",
+          opt.value ? "Battery optimization disabled for app" : "Battery optimization is restricting app");
+      }
     } catch { /* noop */ }
   };
 
@@ -125,6 +139,8 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
         if (seenRef.current.has(key)) return; // dedupe
         seenRef.current.add(key);
         setLastEventAt(Date.now());
+        smsDebug("sms", "info", `SMS received from ${msg?.address ?? "unknown"}`,
+          { len: raw.length });
         if (autoCat) onMessage(raw);
       };
       const sub = bridge.addListener?.("smsReceived", handler)
@@ -133,8 +149,12 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
       subRef.current = sub && typeof sub.then === "function" ? null : sub ?? { remove: () => bridge.stopWatch?.() };
       Promise.resolve(sub).then((s) => { if (s?.remove) subRef.current = s; });
       setListening(true);
-    } catch (e) {
+      smsDebug("listener", "success", "SMS listener started");
+      // Best-effort: keep the process alive when the screen is locked.
+      enableBackgroundMode();
+    } catch (e: any) {
       setListening(false);
+      smsDebug("listener", "error", "Failed to start SMS listener", { error: e?.message });
       toast.error("Could not start SMS listener.");
     }
   };
@@ -143,6 +163,8 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
     try { subRef.current?.remove?.(); } catch { /* noop */ }
     subRef.current = null;
     setListening(false);
+    disableBackgroundMode();
+    smsDebug("listener", "info", "SMS listener stopped");
   };
 
   useEffect(() => {
@@ -169,17 +191,32 @@ function SmsIntelligencePage() {
 
   const handleIncomingSms = async (raw: string) => {
     const parsed = parseSms(raw, new Date());
-    if (!parsed) return; // not financial — skip silently
+    if (!parsed) {
+      smsDebug("parse", "warn", "SMS skipped — not financial", { sample: raw.slice(0, 60) });
+      return;
+    }
+    if (parsed.type !== "income" && parsed.type !== "expense") {
+      smsDebug("parse", "info", "SMS skipped — non-cash transfer", { type: parsed.type });
+      return;
+    }
+    const txnType: "income" | "expense" = parsed.type;
+    smsDebug("parse", "success", `Parsed ₹${parsed.amount} → ${parsed.merchant}`,
+      { type: parsed.type, method: parsed.paymentMethod, conf: parsed.confidence });
+
     const sig = txnSignature(parsed);
     if (insertedRef.current.has(sig)) return; // dedupe in-session
     insertedRef.current.add(sig);
+
+    // Apply user rule for instant categorisation.
+    const matched = rules.find((r) => parsed.merchant.toUpperCase().includes(r.match));
+    const category = matched?.category ?? "Uncategorized";
 
     setItems((prev) => [
       {
         id: `live-${Date.now()}`,
         merchant: parsed.merchant,
         amount: parsed.amount,
-        category: "Uncategorized",
+        category,
         icon: MessageSquareText as any,
         tint: "text-primary bg-primary/10",
         channel: parsed.paymentMethod === "upi" ? "UPI" : parsed.paymentMethod.includes("card") ? "Card" : "Bank",
@@ -191,22 +228,38 @@ function SmsIntelligencePage() {
     ]);
 
     if (!user) return;
-    try {
+    const insert = async () => {
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
-        type: parsed.type,
+        type: txnType,
         amount: parsed.amount,
         payment_method: parsed.paymentMethod,
         transaction_date: parsed.occurredAt.toISOString().slice(0, 10),
         notes: [parsed.bank, parsed.upiRef ? `Ref ${parsed.upiRef}` : null, parsed.raw]
           .filter(Boolean).join(" · ").slice(0, 500),
-        tags: ["sms", parsed.paymentMethod],
+        tags: ["sms", parsed.paymentMethod, category].filter(Boolean) as string[],
       });
       if (error) throw error;
-      toast.success(`${parsed.type === "income" ? "Received" : "Spent"} ₹${parsed.amount} · ${parsed.merchant}`);
+      smsDebug("insert", "success", `Inserted ₹${parsed.amount} (${parsed.merchant})`);
+      broadcastTxn({
+        amount: parsed.amount, type: txnType,
+        merchant: parsed.merchant, category,
+      });
+      toast.success(
+        `${parsed.type === "income" ? "Received" : "Spent"} ₹${parsed.amount} · ${parsed.merchant}`,
+        { description: `Categorized as ${category}` },
+      );
+    };
+    try {
+      await insert();
     } catch (e: any) {
-      insertedRef.current.delete(sig); // allow retry
-      toast.error(`Couldn't save SMS txn: ${e?.message ?? "unknown"}`);
+      smsDebug("insert", "error", "Insert failed — queued for retry", { error: e?.message });
+      insertedRef.current.delete(sig); // allow retry path to re-add
+      enqueueRetry(`txn:${sig}`, async () => {
+        insertedRef.current.add(sig);
+        await insert();
+      });
+      toast.error(`Saving SMS txn failed — will retry. ${e?.message ?? ""}`);
     }
   };
 
@@ -254,6 +307,10 @@ function SmsIntelligencePage() {
 
         {/* Permission & Listener Status */}
         <PermissionStatusPanel sms={sms} enabled={enabled} onRetry={sms.requestPermission} />
+
+        {/* Debug log stream */}
+        <DebugLogPanel />
+
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
@@ -444,9 +501,16 @@ function PermissionStatusPanel({
           ) : (
             <p>Battery optimization may pause the listener in the background. Disable it for FinTrackr to keep detection reliable.</p>
           )}
+          {(() => {
+            const hint = oemAutostartHint(detectOem());
+            return hint ? <p className="mt-1.5">{hint}</p> : null;
+          })()}
           <div className="mt-2 flex gap-2">
             <Button size="sm" variant="outline" onClick={onRetry}>
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-check permissions
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => requestIgnoreBatteryOptimizations()}>
+              <BatteryCharging className="mr-1.5 h-3.5 w-3.5" /> Disable battery limits
             </Button>
           </div>
         </div>
@@ -469,5 +533,46 @@ function StatusRow({ icon, label, value, tone }: { icon: React.ReactNode; label:
       </div>
       <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", tone || "bg-muted text-muted-foreground")}>{value}</span>
     </div>
+  );
+}
+
+function DebugLogPanel() {
+  const [entries, setEntries] = useState<DebugEntry[]>(() => getSmsLogs());
+  const [open, setOpen] = useState(false);
+  useEffect(() => subscribeSmsLogs((e) => setEntries((prev) => [e, ...prev].slice(0, 200))), []);
+  const toneFor = (lvl: DebugEntry["level"]) =>
+    lvl === "error" ? "text-red-600" :
+    lvl === "warn" ? "text-amber-600" :
+    lvl === "success" ? "text-emerald-600" : "text-muted-foreground";
+  return (
+    <Card className="overflow-hidden p-4 shadow-soft">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between"
+      >
+        <div className="flex items-center gap-2">
+          <RadioTower className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">Debug log</h3>
+          <Badge variant="secondary" className="text-[10px]">{entries.length}</Badge>
+        </div>
+        <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show"}</span>
+      </button>
+      {open && (
+        <ul className="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg bg-muted/30 p-2 font-mono text-[11px]">
+          {entries.length === 0 && (
+            <li className="text-muted-foreground">No events yet — enable the listener to start capturing.</li>
+          )}
+          {entries.map((e, i) => (
+            <li key={i} className={cn("flex gap-2", toneFor(e.level))}>
+              <span className="shrink-0 text-muted-foreground">
+                {new Date(e.ts).toLocaleTimeString([], { hour12: false })}
+              </span>
+              <span className="shrink-0 uppercase tracking-wider opacity-70">[{e.tag}]</span>
+              <span className="truncate">{e.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }

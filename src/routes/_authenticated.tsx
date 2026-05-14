@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Home, ArrowLeftRight, Target, Users, Menu as MenuIcon, LogOut, Plus,
   TrendingUp, TrendingDown, Flag, HandCoins, Split,
@@ -8,6 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
+import { TXN_EVENT } from "@/lib/sms-background";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -31,9 +33,21 @@ function matchRoute(path: string, route: string) {
 function AuthenticatedLayout() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [txOpen, setTxOpen] = useState(false);
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
+
+  // Real-time refresh: any SMS-detected transaction invalidates relevant queries
+  // so Dashboard, Transactions and Budgets reflect the new entry instantly.
+  useEffect(() => {
+    const handler = () => {
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["budgets"] });
+    };
+    window.addEventListener(TXN_EVENT, handler);
+    return () => window.removeEventListener(TXN_EVENT, handler);
+  }, [qc]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
