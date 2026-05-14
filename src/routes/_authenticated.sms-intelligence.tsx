@@ -242,7 +242,7 @@ function SmsIntelligencePage() {
       if (error) throw error;
       smsDebug("insert", "success", `Inserted ₹${parsed.amount} (${parsed.merchant})`);
       broadcastTxn({
-        amount: parsed.amount, type: parsed.type,
+        amount: parsed.amount, type: txnType,
         merchant: parsed.merchant, category,
       });
       toast.success(
