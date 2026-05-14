@@ -99,6 +99,7 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
   const requestPermission = async () => {
     if (!bridge) {
       setPermission("unsupported");
+      smsDebug("permission", "warn", "No native SMS bridge available");
       toast.info("SMS auto-detect needs the FinTrackr Android app.");
       return;
     }
@@ -107,9 +108,13 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
         ?? bridge.checkPermissions?.());
       const granted = res?.read === "granted" || res?.receive === "granted" || res === true;
       setPermission(granted ? "granted" : "denied");
+      smsDebug("permission", granted ? "success" : "warn",
+        granted ? "SMS permission granted" : "SMS permission denied", { res });
       if (!granted) toast.error("Permission denied — enable SMS access in Settings.");
-    } catch {
+      else await requestIgnoreBatteryOptimizations();
+    } catch (e: any) {
       setPermission("denied");
+      smsDebug("permission", "error", "Permission request threw", { error: e?.message });
     }
   };
 
@@ -117,7 +122,11 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
     try {
       const w = window as any;
       const opt = await w.Capacitor?.Plugins?.BatteryOptimization?.isIgnoringBatteryOptimizations?.();
-      if (typeof opt?.value === "boolean") setBatteryRestricted(!opt.value);
+      if (typeof opt?.value === "boolean") {
+        setBatteryRestricted(!opt.value);
+        smsDebug("battery", opt.value ? "info" : "warn",
+          opt.value ? "Battery optimization disabled for app" : "Battery optimization is restricting app");
+      }
     } catch { /* noop */ }
   };
 
@@ -130,6 +139,8 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
         if (seenRef.current.has(key)) return; // dedupe
         seenRef.current.add(key);
         setLastEventAt(Date.now());
+        smsDebug("sms", "info", `SMS received from ${msg?.address ?? "unknown"}`,
+          { len: raw.length });
         if (autoCat) onMessage(raw);
       };
       const sub = bridge.addListener?.("smsReceived", handler)
@@ -138,8 +149,12 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
       subRef.current = sub && typeof sub.then === "function" ? null : sub ?? { remove: () => bridge.stopWatch?.() };
       Promise.resolve(sub).then((s) => { if (s?.remove) subRef.current = s; });
       setListening(true);
-    } catch (e) {
+      smsDebug("listener", "success", "SMS listener started");
+      // Best-effort: keep the process alive when the screen is locked.
+      enableBackgroundMode();
+    } catch (e: any) {
       setListening(false);
+      smsDebug("listener", "error", "Failed to start SMS listener", { error: e?.message });
       toast.error("Could not start SMS listener.");
     }
   };
@@ -148,6 +163,8 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
     try { subRef.current?.remove?.(); } catch { /* noop */ }
     subRef.current = null;
     setListening(false);
+    disableBackgroundMode();
+    smsDebug("listener", "info", "SMS listener stopped");
   };
 
   useEffect(() => {
