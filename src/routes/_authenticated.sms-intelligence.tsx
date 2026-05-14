@@ -10,6 +10,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { parseSms, txnSignature, formatCompactDateTime } from "@/lib/sms-parser";
+import {
+  smsDebug, enqueueRetry, broadcastTxn, enableBackgroundMode, disableBackgroundMode,
+  requestIgnoreBatteryOptimizations, detectOem, oemAutostartHint,
+  subscribeSmsLogs, getSmsLogs, type DebugEntry,
+} from "@/lib/sms-background";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
