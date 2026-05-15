@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, Plus, Trash2, ShieldCheck, Brain, Store, Lightbulb,
   Check, X, Pencil, TrendingUp, Receipt, Search,
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,15 @@ function SmartCategorizationPage() {
   const [newRule, setNewRule] = useState({ match: "", category: "" });
   const [editing, setEditing] = useState<MerchantMemory | null>(null);
   const [editingCat, setEditingCat] = useState("");
+  const [activeTab, setActiveTab] = useState("suggestions");
+  const [fabSheetOpen, setFabSheetOpen] = useState(false);
+
+  // Open quick-action sheet when the global FAB is tapped on this screen.
+  useEffect(() => {
+    const handler = () => setFabSheetOpen(true);
+    window.addEventListener("fintrackr:fab", handler);
+    return () => window.removeEventListener("fintrackr:fab", handler);
+  }, []);
 
   // Merge stored memory with derived merchants from real transactions
   const catNameById = useMemo(() => {
@@ -174,7 +184,7 @@ function SmartCategorizationPage() {
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search merchants, rules, categories" className="h-11 w-full rounded-xl pl-9" />
         </div>
 
-        <Tabs defaultValue="suggestions" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="suggestions" className="text-xs">Suggest</TabsTrigger>
             <TabsTrigger value="rules" className="text-xs">Rules</TabsTrigger>
@@ -339,6 +349,50 @@ function SmartCategorizationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* FAB quick actions */}
+      <Sheet open={fabSheetOpen} onOpenChange={setFabSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Smart actions</SheetTitle>
+            <SheetDescription>Teach FinTrackr how to categorize faster.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                setFabSheetOpen(false);
+                setActiveTab("rules");
+                setTimeout(() => {
+                  document.querySelector<HTMLInputElement>('input[placeholder^="Keyword"]')?.focus();
+                }, 120);
+              }}
+              className="flex flex-col items-start gap-2 rounded-2xl border bg-card p-4 text-left transition-colors hover:bg-muted/50 active:scale-[0.98]"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Plus className="h-5 w-5" />
+              </span>
+              <p className="text-sm font-semibold">Add Rule</p>
+              <p className="text-xs text-muted-foreground">Match keyword → category</p>
+            </button>
+            <button
+              onClick={() => {
+                setFabSheetOpen(false);
+                setActiveTab("merchants");
+                setTimeout(() => {
+                  document.querySelector<HTMLInputElement>('input[placeholder^="Search merchants"]')?.focus();
+                }, 120);
+              }}
+              className="flex flex-col items-start gap-2 rounded-2xl border bg-card p-4 text-left transition-colors hover:bg-muted/50 active:scale-[0.98]"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 text-gold-foreground">
+                <Store className="h-5 w-5" />
+              </span>
+              <p className="text-sm font-semibold">Train Merchant</p>
+              <p className="text-xs text-muted-foreground">Confirm a category</p>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
