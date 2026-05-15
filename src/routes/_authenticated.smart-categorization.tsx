@@ -349,6 +349,50 @@ function SmartCategorizationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* FAB quick actions */}
+      <Sheet open={fabSheetOpen} onOpenChange={setFabSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Smart actions</SheetTitle>
+            <SheetDescription>Teach FinTrackr how to categorize faster.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <button
+              onClick={() => {
+                setFabSheetOpen(false);
+                setActiveTab("rules");
+                setTimeout(() => {
+                  document.querySelector<HTMLInputElement>('input[placeholder^="Keyword"]')?.focus();
+                }, 120);
+              }}
+              className="flex flex-col items-start gap-2 rounded-2xl border bg-card p-4 text-left transition-colors hover:bg-muted/50 active:scale-[0.98]"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Plus className="h-5 w-5" />
+              </span>
+              <p className="text-sm font-semibold">Add Rule</p>
+              <p className="text-xs text-muted-foreground">Match keyword → category</p>
+            </button>
+            <button
+              onClick={() => {
+                setFabSheetOpen(false);
+                setActiveTab("merchants");
+                setTimeout(() => {
+                  document.querySelector<HTMLInputElement>('input[placeholder^="Search merchants"]')?.focus();
+                }, 120);
+              }}
+              className="flex flex-col items-start gap-2 rounded-2xl border bg-card p-4 text-left transition-colors hover:bg-muted/50 active:scale-[0.98]"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 text-gold-foreground">
+                <Store className="h-5 w-5" />
+              </span>
+              <p className="text-sm font-semibold">Train Merchant</p>
+              <p className="text-xs text-muted-foreground">Confirm a category</p>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
