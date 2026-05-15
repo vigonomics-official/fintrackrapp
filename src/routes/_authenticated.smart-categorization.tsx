@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, Plus, Trash2, ShieldCheck, Brain, Store, Lightbulb,
   Check, X, Pencil, TrendingUp, Receipt, Search,
