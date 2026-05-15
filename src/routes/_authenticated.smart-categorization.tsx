@@ -41,6 +41,15 @@ function SmartCategorizationPage() {
   const [newRule, setNewRule] = useState({ match: "", category: "" });
   const [editing, setEditing] = useState<MerchantMemory | null>(null);
   const [editingCat, setEditingCat] = useState("");
+  const [activeTab, setActiveTab] = useState("suggestions");
+  const [fabSheetOpen, setFabSheetOpen] = useState(false);
+
+  // Open quick-action sheet when the global FAB is tapped on this screen.
+  useEffect(() => {
+    const handler = () => setFabSheetOpen(true);
+    window.addEventListener("fintrackr:fab", handler);
+    return () => window.removeEventListener("fintrackr:fab", handler);
+  }, []);
 
   // Merge stored memory with derived merchants from real transactions
   const catNameById = useMemo(() => {
