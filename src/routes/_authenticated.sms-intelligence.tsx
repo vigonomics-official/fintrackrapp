@@ -305,6 +305,45 @@ function SmsIntelligencePage() {
           </Card>
         </motion.div>
 
+        {/* Inline quick actions (replaces FAB) */}
+        <div className="-mt-2 flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-1.5"
+            onClick={() => sms.requestPermission()}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Re-check Permissions
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-1.5"
+            onClick={() => {
+              const sample = `Sent Rs.${(Math.floor(Math.random() * 400) + 50)}.00 to TEST-MERCHANT@upi via UPI Ref ${Date.now().toString().slice(-8)}`;
+              smsDebug("sms", "info", "Test SMS injected", { sample });
+              handleIncomingSms(sample);
+            }}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Test SMS Detection
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-1.5"
+            onClick={() => {
+              sms.stopListener();
+              setTimeout(() => sms.startListener(), 120);
+              toast.success("Listener refreshed");
+            }}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh Listener
+          </Button>
+        </div>
+
         {/* Permission & Listener Status */}
         <PermissionStatusPanel sms={sms} enabled={enabled} onRetry={sms.requestPermission} />
 
