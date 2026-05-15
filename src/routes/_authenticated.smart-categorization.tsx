@@ -184,7 +184,7 @@ function SmartCategorizationPage() {
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search merchants, rules, categories" className="h-11 w-full rounded-xl pl-9" />
         </div>
 
-        <Tabs defaultValue="suggestions" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="suggestions" className="text-xs">Suggest</TabsTrigger>
             <TabsTrigger value="rules" className="text-xs">Rules</TabsTrigger>
