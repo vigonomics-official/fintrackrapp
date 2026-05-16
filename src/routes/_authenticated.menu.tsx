@@ -134,18 +134,13 @@ function MenuPage() {
           />
         </div>
 
-        {filtered.map((group, gi) => {
+        {filtered.map((group) => {
           const isCollapsed = collapsed[group.title];
           return (
-            <motion.section
-              key={group.title}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: gi * 0.04 }}
-            >
+            <section key={group.title}>
               <button
                 type="button"
-                onClick={() => setCollapsed((c) => ({ ...c, [group.title]: !c[group.title] }))}
+                onClick={() => toggleGroup(group.title)}
                 className="mb-2.5 flex w-full items-center justify-between gap-2 px-1"
               >
                 <h2 className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">
@@ -164,7 +159,7 @@ function MenuPage() {
                       const Icon = item.icon;
                       const isSmart = group.tone === "smart";
                       const inner = (
-                        <div className="flex items-center justify-between gap-2 px-3 py-3 transition-colors hover:bg-muted/40 sm:gap-3 sm:px-4">
+                        <div className="flex items-center justify-between gap-2 px-3 py-3 transition-colors hover:bg-muted/40 active:bg-muted/60 sm:gap-3 sm:px-4">
                           <div className="flex min-w-0 flex-1 items-center gap-3">
                             <span className={cn(
                               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
@@ -195,7 +190,7 @@ function MenuPage() {
                       return (
                         <li key={item.label}>
                           {item.to ? (
-                            <Link to={item.to}>{inner}</Link>
+                            <Link to={item.to} preload="intent">{inner}</Link>
                           ) : (
                             <button type="button" className="block w-full text-left opacity-80" disabled>
                               {inner}
@@ -207,7 +202,7 @@ function MenuPage() {
                   </ul>
                 </Card>
               )}
-            </motion.section>
+            </section>
           );
         })}
 
