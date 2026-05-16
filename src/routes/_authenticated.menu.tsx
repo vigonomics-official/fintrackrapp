@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useCallback } from "react";
 import {
   Wallet, Tag, Landmark, Repeat,
-  TrendingUp, Coins, PieChart,
+  TrendingUp, Coins, PieChart, BarChart3,
   Users, Share2, Target,
   Upload, Download, DatabaseBackup, ShieldCheck,
   Palette, Globe, Bell,
