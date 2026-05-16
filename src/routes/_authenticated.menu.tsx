@@ -93,10 +93,18 @@ function MenuPage() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const q = query.trim().toLowerCase();
-  const filtered = GROUPS.map((g) => ({
-    ...g,
-    items: q ? g.items.filter((i) => i.label.toLowerCase().includes(q)) : g.items,
-  })).filter((g) => g.items.length > 0);
+  const filtered = useMemo(
+    () =>
+      GROUPS.map((g) => ({
+        ...g,
+        items: q ? g.items.filter((i) => i.label.toLowerCase().includes(q)) : g.items,
+      })).filter((g) => g.items.length > 0),
+    [q],
+  );
+
+  const toggleGroup = useCallback((title: string) => {
+    setCollapsed((c) => ({ ...c, [title]: !c[title] }));
+  }, []);
 
   return (
     <div className="w-full overflow-x-hidden">
