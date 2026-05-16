@@ -46,6 +46,7 @@ const GROUPS: Group[] = [
   {
     title: "Wealth & Investments",
     items: [
+      { label: "Investment Tracker", icon: BarChart3, to: "/investments" },
       { label: "SIP Tracker", icon: TrendingUp, to: "/investments" },
       { label: "Gold", icon: Coins, badge: "Soon" },
       { label: "Portfolio Analytics", icon: PieChart, to: "/reports" },
