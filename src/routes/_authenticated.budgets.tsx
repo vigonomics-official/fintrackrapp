@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/error-utils";
 import { Plus, Trash2, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,7 @@ function BudgetsPage() {
     const { error } = await supabase.from("budgets").upsert({
       user_id: user.id, category_id: categoryId, monthly_limit: num, month,
     }, { onConflict: "user_id,category_id,month" });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Budget saved");
     setOpen(false); setLimit(""); setCategoryId("");
     qc.invalidateQueries({ queryKey: ["budgets"] });
@@ -54,7 +55,7 @@ function BudgetsPage() {
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("budgets").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries({ queryKey: ["budgets"] });
   };
 

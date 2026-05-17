@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
 import { Search, Pencil, Trash2, Download, Upload, MoreVertical, Filter } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/error-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,7 @@ function TransactionsPage() {
   const onDelete = async (id: string) => {
     if (!confirm("Delete this transaction?")) return;
     const { error } = await supabase.from("transactions").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Deleted");
     qc.invalidateQueries({ queryKey: ["transactions"] });
   };
@@ -115,7 +116,7 @@ function TransactionsPage() {
         }).filter(r => r.amount > 0);
         if (rows.length === 0) return toast.error("No valid rows.");
         const { error } = await supabase.from("transactions").insert(rows);
-        if (error) return toast.error(error.message);
+        if (error) return toast.error(friendlyError(error));
         toast.success(`Imported ${rows.length} transactions`);
         qc.invalidateQueries({ queryKey: ["transactions"] });
       },

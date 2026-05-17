@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/error-utils";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ function CategoriesPage() {
     const { error } = await supabase.from("categories").insert({
       user_id: user.id, name: name.trim(), type, color,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Category added");
     setName(""); setOpen(false);
     qc.invalidateQueries({ queryKey: ["categories"] });
@@ -46,7 +47,7 @@ function CategoriesPage() {
   const remove = async (id: string) => {
     if (!confirm("Delete this category? Transactions will be uncategorized.")) return;
     const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Deleted");
     qc.invalidateQueries({ queryKey: ["categories"] });
   };

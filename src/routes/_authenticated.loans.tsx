@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/error-utils";
 import {
   Plus, Trash2, CheckCircle2, Calendar, TrendingDown,
   Wallet, AlertTriangle, Sparkles, ArrowLeft, Home, Car,
@@ -97,7 +98,7 @@ function LoanForm({ onClose, initial }: { onClose: () => void; initial?: Loan })
     const { error } = initial
       ? await supabase.from("loans" as any).update(payload).eq("id", initial.id)
       : await supabase.from("loans" as any).insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success(initial ? "Loan updated" : "Loan added");
     qc.invalidateQueries({ queryKey: ["loans"] });
     onClose();
@@ -193,10 +194,10 @@ function LoanDetailDialog({ loan, currency, onClose }: { loan: Loan; currency: s
       remaining_balance: newBal,
       payment_status: "paid",
     });
-    if (e1) return toast.error(e1.message);
+    if (e1) return toast.error(friendlyError(e1));
     const { error: e2 } = await supabase.from("loans" as any)
       .update({ remaining_balance: newBal }).eq("id", loan.id);
-    if (e2) return toast.error(e2.message);
+    if (e2) return toast.error(friendlyError(e2));
     toast.success("EMI marked as paid");
     qc.invalidateQueries({ queryKey: ["loans"] });
     qc.invalidateQueries({ queryKey: ["loan_payments"] });
@@ -205,7 +206,7 @@ function LoanDetailDialog({ loan, currency, onClose }: { loan: Loan; currency: s
   const remove = async () => {
     if (!confirm("Delete this loan and its payment history?")) return;
     const { error } = await supabase.from("loans" as any).delete().eq("id", loan.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Loan deleted");
     qc.invalidateQueries({ queryKey: ["loans"] });
     onClose();
