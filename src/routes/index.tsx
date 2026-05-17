@@ -418,12 +418,14 @@ function ProblemSection() {
 
 function Features() {
   const items = [
-    { icon: Wallet, title: "Track every rupee", desc: "Auto-categorize UPI spends across food, travel, bills, shopping." },
-    { icon: Target, title: "Smart monthly budgets", desc: "Set limits per category and stay in control without effort." },
-    { icon: PiggyBank, title: "Save without thinking", desc: "Goals, savings buckets and gentle nudges built for salary cycles." },
-    { icon: CalendarClock, title: "Salary countdown", desc: "Always know how many days till your next paycheck — and your runway." },
-    { icon: Bell, title: "Bill & EMI reminders", desc: "Never miss a rent, EMI or subscription due date again." },
-    { icon: TrendingDown, title: "Spot leaks instantly", desc: "See exactly where your money is quietly leaking each week." },
+    { icon: Zap, title: "Quick Expense Entry", desc: "Log a spend in under 3 seconds — amount, tap, done." },
+    { icon: PieChart, title: "Spending Insights", desc: "See where your money flows with clean weekly and monthly breakdowns." },
+    { icon: Bell, title: "Budget Alerts", desc: "Gentle nudges before you overshoot a category — no nasty surprises." },
+    { icon: CalendarClock, title: "Salary Countdown", desc: "Always know how many days till your next paycheck and your runway." },
+    { icon: Flame, title: "Daily Streak", desc: "Build a daily tracking habit. Watch your streak — and savings — grow." },
+    { icon: FileDown, title: "CSV Export", desc: "Export every transaction in one tap. Your data, your file." },
+    { icon: MessageSquare, title: "SMS Intelligence", desc: "Reads bank and UPI alerts automatically — no manual entry needed." },
+    { icon: Tags, title: "Smart Categorization", desc: "Learns your habits and labels Swiggy, Uber, EMIs the right way." },
   ];
   return (
     <section id="features" className="mx-auto max-w-6xl px-5 py-14 md:py-20">
@@ -433,14 +435,14 @@ function Features() {
           Everything you need to take control of your salary, spends and savings — in one calm dashboard.
         </p>
       </div>
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((it, i) => (
           <motion.div
             key={it.title}
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ delay: i * 0.04 }}
             className="rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
           >
             <div
@@ -453,6 +455,398 @@ function Features() {
             <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
           </motion.div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function SmartFeatures() {
+  const cards = [
+    {
+      icon: MessageSquare,
+      title: "SMS Intelligence",
+      desc: "Automatically detects bank and UPI transaction messages — so you don't have to type a thing.",
+    },
+    {
+      icon: Tags,
+      title: "Smart Categorization",
+      desc: "Learns and categorizes your spending automatically — Swiggy is food, HP is fuel, HDFC is EMI.",
+    },
+    {
+      icon: Brain,
+      title: "Self-Learning Engine",
+      desc: "The more you use FinTrackr, the smarter your expense tracking becomes. It adapts to your habits.",
+    },
+  ];
+  const examples = [
+    { icon: Utensils, from: "Swiggy", to: "Food" },
+    { icon: Fuel, from: "HP Petrol", to: "Fuel" },
+    { icon: Landmark, from: "EMI HDFC", to: "EMI" },
+    { icon: PhoneIcon, from: "Recharge", to: "Utilities" },
+  ];
+  return (
+    <section className="relative overflow-hidden bg-white py-14 md:py-20">
+      <div
+        className="absolute inset-x-0 top-0 -z-10 h-72"
+        style={{
+          background:
+            "radial-gradient(50% 60% at 50% 0%, rgba(26,86,219,0.07), transparent 70%)",
+        }}
+      />
+      <div className="mx-auto max-w-6xl px-5">
+        <div className="mx-auto max-w-xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-[11px] font-medium text-gray-700">
+            <Brain className="h-3 w-3" style={{ color: BRAND.primary }} /> Smarter over time
+          </span>
+          <h2 className="mt-4 font-display text-3xl font-bold text-gray-900 md:text-4xl">
+            Built to learn your habits.
+          </h2>
+          <p className="mt-3 text-sm text-gray-600">
+            FinTrackr reads your transaction messages and quietly organizes them — no setup, no spreadsheets.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {cards.map((c, i) => (
+            <motion.div
+              key={c.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-6 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+            >
+              <div
+                className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
+                style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
+              >
+                <c.icon className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900">{c.title}</h3>
+              <p className="mt-2 text-sm text-gray-600">{c.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mt-10 rounded-3xl border border-gray-100 bg-gray-50/70 p-6 md:p-8">
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-gray-500">
+            How it learns
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {examples.map((ex, i) => (
+              <motion.div
+                key={ex.from}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                    style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+                  >
+                    <ex.icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">{ex.from}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ArrowRight className="h-3.5 w-3.5 text-gray-400" />
+                  <span
+                    className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                    style={{ background: "rgba(16,185,129,0.12)", color: BRAND.accent }}
+                  >
+                    {ex.to}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DashboardShowcase() {
+  const txns = [
+    { icon: Utensils, name: "Swiggy", tag: "Food", amt: 340 },
+    { icon: Utensils, name: "Zomato", tag: "Food", amt: 220 },
+    { icon: Fuel, name: "HP Petrol", tag: "Fuel", amt: 1200 },
+    { icon: Landmark, name: "EMI HDFC", tag: "EMI", amt: 4500 },
+    { icon: Home, name: "Rent", tag: "Housing", amt: 8000 },
+    { icon: PhoneIcon, name: "Jio Recharge", tag: "Utilities", amt: 299 },
+    { icon: TrendingUp, name: "SIP – Nifty 50", tag: "Invest", amt: 2000 },
+  ];
+  const pie = [
+    { label: "Food", pct: 28, color: "#1A56DB" },
+    { label: "EMI", pct: 32, color: "#10B981" },
+    { label: "Rent", pct: 22, color: "#6366F1" },
+    { label: "Other", pct: 18, color: "#F59E0B" },
+  ];
+  // Build pie offsets
+  let acc = 0;
+  const pieSegs = pie.map((p) => {
+    const seg = { ...p, offset: acc };
+    acc += p.pct;
+    return seg;
+  });
+
+  return (
+    <section className="relative overflow-hidden py-16 md:py-24">
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(60% 60% at 20% 10%, rgba(26,86,219,0.10), transparent 60%), radial-gradient(50% 50% at 90% 80%, rgba(16,185,129,0.10), transparent 60%)",
+        }}
+      />
+      <div className="mx-auto max-w-6xl px-5">
+        <div className="mx-auto max-w-xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium text-gray-700 shadow-sm">
+            <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinTrackr
+          </span>
+          <h2 className="mt-4 font-display text-3xl font-bold text-gray-900 md:text-4xl">
+            One calm dashboard for your whole salary.
+          </h2>
+          <p className="mt-3 text-sm text-gray-600">
+            Budget rings, spending pies, salary countdowns and smart insights — built for the way Indians actually spend.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-5 lg:grid-cols-12">
+          {/* Main analytics card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500">November · Spending</p>
+                <p className="font-display text-2xl font-bold text-gray-900">₹ 16,559</p>
+              </div>
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-600">
+                ↓ 12% vs Oct
+              </span>
+            </div>
+
+            <div className="mt-6 grid gap-6 sm:grid-cols-2">
+              {/* Pie chart */}
+              <div className="flex items-center gap-5">
+                <div className="relative h-32 w-32">
+                  <svg viewBox="0 0 36 36" className="h-32 w-32 -rotate-90">
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F3F4F6" strokeWidth="4" />
+                    {pieSegs.map((s) => (
+                      <circle
+                        key={s.label}
+                        cx="18"
+                        cy="18"
+                        r="15.9"
+                        fill="none"
+                        stroke={s.color}
+                        strokeWidth="4"
+                        strokeDasharray={`${s.pct} ${100 - s.pct}`}
+                        strokeDashoffset={-s.offset}
+                      />
+                    ))}
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-medium text-gray-500">Total</span>
+                    <span className="text-sm font-bold text-gray-900">₹16.5k</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {pie.map((p) => (
+                    <div key={p.label} className="flex items-center gap-2 text-xs">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: p.color }} />
+                      <span className="font-medium text-gray-700">{p.label}</span>
+                      <span className="text-gray-400">{p.pct}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Animated bar chart */}
+              <div className="rounded-2xl bg-gray-50/70 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-semibold text-gray-700">Weekly trend</p>
+                  <p className="text-[10px] text-gray-400">Last 7 days</p>
+                </div>
+                <div className="mt-3 flex h-24 items-end gap-1.5">
+                  {[35, 60, 45, 80, 50, 95, 55].map((h, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ height: 0 }}
+                      whileInView={{ height: `${h}%` }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.05, duration: 0.5 }}
+                      className="flex-1 rounded-md"
+                      style={{
+                        background:
+                          i === 5
+                            ? `linear-gradient(180deg, ${BRAND.primary}, ${BRAND.accent})`
+                            : "#E5E7EB",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Transactions */}
+            <div className="mt-6">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold text-gray-700">Recent transactions</p>
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                  <MessageSquare className="h-3 w-3" /> Auto-detected from SMS
+                </span>
+              </div>
+              <div className="divide-y divide-gray-100 rounded-2xl ring-1 ring-gray-100">
+                {txns.map((t) => (
+                  <div key={t.name} className="flex items-center justify-between px-3 py-2.5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-8 w-8 items-center justify-center rounded-lg"
+                        style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+                      >
+                        <t.icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-900">{t.name}</p>
+                        <p className="text-[10px] text-gray-500">{t.tag} · UPI</p>
+                      </div>
+                    </div>
+                    <p className="text-xs font-bold text-gray-900">− ₹ {t.amt.toLocaleString("en-IN")}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Side column */}
+          <div className="lg:col-span-5 space-y-5">
+            {/* Budget ring + Salary countdown */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            >
+              <div className="flex items-center gap-5">
+                <div className="relative h-24 w-24">
+                  <svg viewBox="0 0 36 36" className="h-24 w-24 -rotate-90">
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3.5" />
+                    <motion.circle
+                      cx="18"
+                      cy="18"
+                      r="15.9"
+                      fill="none"
+                      stroke={BRAND.primary}
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      initial={{ strokeDasharray: "0 100" }}
+                      whileInView={{ strokeDasharray: "72 100" }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1 }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-medium text-gray-500">Budget</span>
+                    <span className="text-sm font-bold text-gray-900">72%</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Remaining</p>
+                  <p className="font-display text-2xl font-bold text-gray-900">₹ 9,441</p>
+                  <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-600">
+                    <CalendarClock className="h-3 w-3" /> Salary in 5 days
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Savings tracker */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.05 }}
+              className="rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-500">Savings goal · Goa trip</p>
+                  <p className="font-display text-xl font-bold text-gray-900">₹ 38,200 <span className="text-sm font-medium text-gray-400">/ 50,000</span></p>
+                </div>
+                <PiggyBank className="h-6 w-6" style={{ color: BRAND.accent }} />
+              </div>
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: "76%" }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  className="h-full rounded-full"
+                  style={{ background: `linear-gradient(90deg, ${BRAND.primary}, ${BRAND.accent})` }}
+                />
+              </div>
+              <p className="mt-2 text-[11px] text-gray-500">On track — at this pace you'll hit it by Dec 18.</p>
+            </motion.div>
+
+            {/* Streak + Subscription alerts */}
+            <div className="grid grid-cols-2 gap-5">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+              >
+                <div className="flex items-center gap-2">
+                  <Flame className="h-5 w-5 text-orange-500" />
+                  <p className="text-xs font-semibold text-gray-700">Daily streak</p>
+                </div>
+                <p className="mt-2 font-display text-2xl font-bold text-gray-900">28 <span className="text-sm font-medium text-gray-400">days</span></p>
+                <p className="text-[11px] text-gray-500">Keep it going!</p>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.15 }}
+                className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+              >
+                <div className="flex items-center gap-2">
+                  <Repeat className="h-5 w-5" style={{ color: BRAND.primary }} />
+                  <p className="text-xs font-semibold text-gray-700">Subscriptions</p>
+                </div>
+                <p className="mt-2 font-display text-2xl font-bold text-gray-900">₹ 1,196</p>
+                <p className="text-[11px] text-gray-500">Netflix renews in 3d</p>
+              </motion.div>
+            </div>
+
+            {/* Smart insight */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="rounded-3xl p-5 text-white shadow-[0_20px_50px_-20px_rgba(26,86,219,0.45)]"
+              style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #1e40af)` }}
+            >
+              <div className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                <p className="text-[11px] font-semibold uppercase tracking-widest opacity-90">Smart insight</p>
+              </div>
+              <p className="mt-2 text-sm font-medium leading-snug">
+                Food orders are up <span className="font-bold">₹ 1,240</span> this week. Cooking 2 nights could save you ~₹ 800.
+              </p>
+            </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   );
