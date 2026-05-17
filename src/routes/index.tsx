@@ -1,6 +1,21 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart3, PiggyBank, Sparkles, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowDown,
+  Wallet,
+  TrendingDown,
+  CalendarClock,
+  PiggyBank,
+  ShieldCheck,
+  Smartphone,
+  Cpu,
+  Target,
+  Bell,
+  Receipt,
+  Sparkles,
+  CheckCircle2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,88 +25,540 @@ export const Route = createFileRoute("/")({
     const { data } = await supabase.auth.getSession();
     if (data.session) throw redirect({ to: "/dashboard" });
   },
+  head: () => ({
+    meta: [
+      { title: "FinTrackr — Know exactly where your ₹ goes" },
+      {
+        name: "description",
+        content:
+          "FinTrackr is an intelligent money control center built for Indian salary life. Track UPI spends, set budgets, and beat month-end stress.",
+      },
+    ],
+  }),
   component: Landing,
 });
 
-function Feature({ icon: Icon, title, desc }: { icon: typeof Wallet; title: string; desc: string }) {
+const BRAND = {
+  primary: "#1A56DB",
+  accent: "#10B981",
+  bg: "#F9FAFB",
+  text: "#111827",
+};
+
+function Logo() {
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-bold shadow-sm"
+        style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
+      >
+        ₹
+      </div>
+      <span className="font-display text-lg font-bold tracking-tight" style={{ color: BRAND.text }}>
+        FinTrackr
+      </span>
+    </div>
+  );
+}
+
+function Navbar() {
+  return (
+    <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-md">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
+        <Logo />
+        <div className="hidden items-center gap-7 md:flex">
+          <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900">Features</a>
+          <a href="#how" className="text-sm font-medium text-gray-600 hover:text-gray-900">How it Works</a>
+          <a href="#early" className="text-sm font-medium text-gray-600 hover:text-gray-900">Early Access</a>
+        </div>
+        <a href="#early">
+          <Button
+            className="rounded-xl text-white shadow-sm hover:opacity-90"
+            style={{ backgroundColor: BRAND.primary }}
+          >
+            Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+        </a>
+      </nav>
+    </header>
+  );
+}
+
+function FloatingCTA() {
+  return (
+    <a
+      href="#early"
+      className="fixed bottom-5 right-5 z-50 md:hidden"
+    >
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 20 }}
+        className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg"
+        style={{ backgroundColor: BRAND.primary, boxShadow: "0 10px 30px -10px rgba(26,86,219,0.55)" }}
+      >
+        Get Early Access <ArrowRight className="h-4 w-4" />
+      </motion.div>
+    </a>
+  );
+}
+
+function HeroMockup() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="glass rounded-2xl p-6 shadow-soft"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2, duration: 0.6 }}
+      className="relative mx-auto mt-12 w-full max-w-sm"
     >
-      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-elegant">
-        <Icon className="h-6 w-6" />
+      {/* Phone frame */}
+      <div className="relative rounded-[2.2rem] border border-gray-200 bg-white p-3 shadow-[0_30px_60px_-20px_rgba(17,24,39,0.25)]">
+        <div className="rounded-[1.7rem] bg-gradient-to-br from-gray-50 to-white p-5">
+          {/* Top row */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-medium text-gray-500">Good morning, Aarav</p>
+              <p className="text-base font-semibold text-gray-900">November Budget</p>
+            </div>
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white"
+              style={{ background: BRAND.primary }}
+            >
+              A
+            </div>
+          </div>
+
+          {/* Budget ring */}
+          <div className="mt-5 flex items-center gap-4">
+            <div className="relative h-24 w-24">
+              <svg viewBox="0 0 36 36" className="h-24 w-24 -rotate-90">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3.2" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.9"
+                  fill="none"
+                  stroke={BRAND.primary}
+                  strokeWidth="3.2"
+                  strokeDasharray="68 100"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-[10px] font-medium text-gray-500">Spent</span>
+                <span className="text-sm font-bold text-gray-900">68%</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-gray-500">Remaining this month</p>
+              <p className="text-2xl font-bold text-gray-900">₹ 12,840</p>
+              <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: BRAND.accent }}>
+                <TrendingDown className="h-3 w-3" /> Spending down 18%
+              </p>
+            </div>
+          </div>
+
+          {/* Mini chart */}
+          <div className="mt-5 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-gray-100">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[11px] font-semibold text-gray-700">Weekly spend</p>
+              <p className="text-[10px] text-gray-400">Mon – Sun</p>
+            </div>
+            <div className="flex h-16 items-end gap-1.5">
+              {[40, 65, 30, 80, 55, 90, 45].map((h, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-md"
+                  style={{
+                    height: `${h}%`,
+                    background:
+                      i === 5
+                        ? `linear-gradient(180deg, ${BRAND.primary}, ${BRAND.accent})`
+                        : "#E5E7EB",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* UPI list */}
+          <div className="mt-4 space-y-2">
+            {[
+              { name: "Swiggy", tag: "Food", amt: "− ₹ 348" },
+              { name: "Uber", tag: "Transport", amt: "− ₹ 142" },
+              { name: "Salary credited", tag: "Income", amt: "+ ₹ 62,000", income: true },
+            ].map((t) => (
+              <div key={t.name} className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5">
+                <div>
+                  <p className="text-xs font-semibold text-gray-900">{t.name}</p>
+                  <p className="text-[10px] text-gray-500">{t.tag} · UPI</p>
+                </div>
+                <p
+                  className="text-xs font-bold"
+                  style={{ color: t.income ? BRAND.accent : "#111827" }}
+                >
+                  {t.amt}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      <h3 className="font-display text-lg font-semibold">{title}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
+
+      {/* Floating cards */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.6 }}
+        className="absolute -left-3 top-24 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+      >
+        <p className="text-[10px] text-gray-500">Saved this month</p>
+        <p className="text-sm font-bold" style={{ color: BRAND.accent }}>₹ 2,340</p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.8 }}
+        className="absolute -right-3 top-56 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+      >
+        <p className="flex items-center gap-1 text-[10px] text-gray-500">
+          <CalendarClock className="h-3 w-3" /> Salary in
+        </p>
+        <p className="text-sm font-bold text-gray-900">5 days</p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1 }}
+        className="absolute -bottom-4 left-1/2 hidden -translate-x-1/2 rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+      >
+        <p className="text-[10px] text-gray-500">Food spending</p>
+        <p className="text-sm font-bold" style={{ color: BRAND.accent }}>↓ 18% this week</p>
+      </motion.div>
     </motion.div>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="relative overflow-hidden">
+      <div
+        className="absolute inset-x-0 top-0 h-[520px] -z-10"
+        style={{
+          background:
+            "radial-gradient(60% 60% at 50% 0%, rgba(26,86,219,0.10) 0%, rgba(16,185,129,0.05) 40%, rgba(249,250,251,0) 80%)",
+        }}
+      />
+      <div className="mx-auto max-w-6xl px-5 pb-8 pt-12 text-center md:pt-20">
+        <motion.span
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium text-gray-700 shadow-sm"
+        >
+          <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} />
+          Built for Indian salary life
+        </motion.span>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mx-auto mt-5 max-w-3xl font-display text-[2.1rem] font-bold leading-[1.1] tracking-tight text-gray-900 md:text-6xl"
+        >
+          Know exactly where your{" "}
+          <span style={{ color: BRAND.primary }}>₹</span> goes.
+          <br />
+          <span className="text-gray-500">Every day. Every rupee.</span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mx-auto mt-5 max-w-xl text-base text-gray-600 md:text-lg"
+        >
+          FinTrackr helps salary earners and families track expenses, set budgets, and save more — without the confusion.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row"
+        >
+          <a href="#early" className="w-full sm:w-auto">
+            <Button
+              size="lg"
+              className="w-full rounded-xl text-white shadow-md hover:opacity-90 sm:w-auto"
+              style={{ backgroundColor: BRAND.primary }}
+            >
+              Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </a>
+          <a href="#how" className="w-full sm:w-auto">
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full rounded-xl border-gray-200 bg-white text-gray-800 hover:bg-gray-50 sm:w-auto"
+            >
+              See how it works
+            </Button>
+          </a>
+        </motion.div>
+
+        {/* Trust row */}
+        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium text-gray-500 md:text-xs">
+          {["No bank login needed", "Built for India", "Early access users unlock premium features"].map((t) => (
+            <div key={t} className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
+              {t}
+            </div>
+          ))}
+        </div>
+
+        <HeroMockup />
+      </div>
+    </section>
+  );
+}
+
+function TrustSection() {
+  const items = [
+    { icon: ShieldCheck, title: "Privacy-first finance tracking", desc: "Your data stays yours. No selling, no snooping." },
+    { icon: Smartphone, title: "Built for UPI-first India", desc: "Designed for how you actually spend — PhonePe, GPay, Paytm." },
+    { icon: Cpu, title: "Smart categorization on-device", desc: "Transactions sorted instantly, right on your phone." },
+  ];
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
+      <div className="grid gap-4 md:grid-cols-3">
+        {items.map((it, i) => (
+          <motion.div
+            key={it.title}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.08 }}
+            className="rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+          >
+            <div
+              className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+            >
+              <it.icon className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900">{it.title}</h3>
+            <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ProblemSection() {
+  const items = [
+    { icon: Wallet, title: "Salary disappears quickly", desc: "Credit hits, and somehow it's gone by the 15th." },
+    { icon: Receipt, title: "UPI spending confusion", desc: "Tiny ₹50–₹200 spends silently drain your balance." },
+    { icon: CalendarClock, title: "Month-end stress", desc: "Rent, EMIs, bills — and barely anything left." },
+    { icon: PiggyBank, title: "Don’t know how to save", desc: "You want to save, but never know where to start." },
+  ];
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
+      <div className="text-center">
+        <h2 className="font-display text-3xl font-bold text-gray-900 md:text-4xl">Sound familiar?</h2>
+        <p className="mx-auto mt-3 max-w-md text-sm text-gray-600">
+          You're not alone. Millions of Indians live paycheck to paycheck — not because they earn less, but because no one shows them where it goes.
+        </p>
+      </div>
+      <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        {items.map((it, i) => (
+          <motion.div
+            key={it.title}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.06 }}
+            className="flex items-start gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+          >
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style={{ background: "rgba(16,185,129,0.10)", color: BRAND.accent }}
+            >
+              <it.icon className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">{it.title}</h3>
+              <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      <p className="mt-8 text-center text-base font-semibold text-gray-900">
+        FinTrackr was built exactly for this.
+      </p>
+    </section>
+  );
+}
+
+function Features() {
+  const items = [
+    { icon: Wallet, title: "Track every rupee", desc: "Auto-categorize UPI spends across food, travel, bills, shopping." },
+    { icon: Target, title: "Smart monthly budgets", desc: "Set limits per category and stay in control without effort." },
+    { icon: PiggyBank, title: "Save without thinking", desc: "Goals, savings buckets and gentle nudges built for salary cycles." },
+    { icon: CalendarClock, title: "Salary countdown", desc: "Always know how many days till your next paycheck — and your runway." },
+    { icon: Bell, title: "Bill & EMI reminders", desc: "Never miss a rent, EMI or subscription due date again." },
+    { icon: TrendingDown, title: "Spot leaks instantly", desc: "See exactly where your money is quietly leaking each week." },
+  ];
+  return (
+    <section id="features" className="mx-auto max-w-6xl px-5 py-14 md:py-20">
+      <div className="mx-auto max-w-xl text-center">
+        <h2 className="font-display text-3xl font-bold text-gray-900 md:text-4xl">Your money, finally clear.</h2>
+        <p className="mt-3 text-sm text-gray-600">
+          Everything you need to take control of your salary, spends and savings — in one calm dashboard.
+        </p>
+      </div>
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((it, i) => (
+          <motion.div
+            key={it.title}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.05 }}
+            className="rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+          >
+            <div
+              className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+            >
+              <it.icon className="h-5 w-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900">{it.title}</h3>
+            <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function HowItWorks() {
+  const steps = [
+    { n: "01", title: "Add your salary cycle", desc: "Tell FinTrackr when your salary hits. We do the rest." },
+    { n: "02", title: "Track UPI & expenses", desc: "Log spends in seconds — categories are auto-suggested." },
+    { n: "03", title: "Save more, stress less", desc: "Stay within budget, hit goals, breathe at month-end." },
+  ];
+  return (
+    <section id="how" className="bg-white py-14 md:py-20">
+      <div className="mx-auto max-w-6xl px-5">
+        <div className="mx-auto max-w-xl text-center">
+          <h2 className="font-display text-3xl font-bold text-gray-900 md:text-4xl">How it works</h2>
+          <p className="mt-3 text-sm text-gray-600">Three steps. No spreadsheets. No bank logins.</p>
+        </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {steps.map((s, i) => (
+            <motion.div
+              key={s.n}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="relative rounded-2xl border border-gray-100 bg-gray-50/60 p-6"
+            >
+              <span className="text-xs font-bold tracking-widest" style={{ color: BRAND.primary }}>
+                {s.n}
+              </span>
+              <h3 className="mt-2 text-base font-semibold text-gray-900">{s.title}</h3>
+              <p className="mt-1 text-sm text-gray-600">{s.desc}</p>
+              {i < steps.length - 1 && (
+                <ArrowDown className="absolute -bottom-3 left-1/2 hidden h-5 w-5 -translate-x-1/2 text-gray-300 md:block md:rotate-[-90deg]" />
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EarlyAccess() {
+  return (
+    <section id="early" className="mx-auto max-w-6xl px-5 py-16 md:py-24">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative overflow-hidden rounded-3xl p-8 text-center text-white shadow-xl md:p-14"
+        style={{
+          background: `linear-gradient(135deg, ${BRAND.primary} 0%, #1e40af 60%, ${BRAND.accent} 130%)`,
+        }}
+      >
+        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_80%,white,transparent_40%)]" />
+        <div className="relative">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium backdrop-blur">
+            <Sparkles className="h-3 w-3" /> Limited early access
+          </span>
+          <h2 className="mx-auto mt-4 max-w-2xl font-display text-3xl font-bold leading-tight md:text-5xl">
+            Take back control of your salary.
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-sm text-white/85 md:text-base">
+            Join the FinTrackr early access list. Be among the first Indians to experience calmer money.
+          </p>
+          <div className="mx-auto mt-6 flex max-w-md flex-col gap-2 sm:flex-row">
+            <Link to="/signup" className="flex-1">
+              <Button
+                size="lg"
+                className="w-full rounded-xl bg-white font-semibold text-gray-900 hover:bg-gray-100"
+              >
+                Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/login" className="flex-1">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full rounded-xl border-white/40 bg-white/10 text-white hover:bg-white/20"
+              >
+                Sign in
+              </Button>
+            </Link>
+          </div>
+          <p className="mt-3 text-[11px] text-white/70">Free during early access · No card required</p>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-gray-100 bg-white">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-6 sm:flex-row">
+        <Logo />
+        <p className="text-xs text-gray-500">
+          © {new Date().getFullYear()} FinTrackr · Made in India 🇮🇳
+        </p>
+      </div>
+    </footer>
   );
 }
 
 function Landing() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero */}
-      <header className="relative overflow-hidden bg-gradient-hero text-primary-foreground">
-        <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_60%,oklch(0.78_0.12_85),transparent_40%)]" />
-        <nav className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-          <div className="flex items-center gap-2 font-display text-xl font-bold">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-gold-foreground">₣</div>
-            FinTrackr
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/login"><Button variant="ghost" className="text-primary-foreground hover:bg-white/10">Sign in</Button></Link>
-            <Link to="/signup"><Button className="bg-gradient-gold text-gold-foreground hover:opacity-90">Get started</Button></Link>
-          </div>
-        </nav>
-
-        <div className="relative mx-auto max-w-6xl px-6 pb-32 pt-20 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5 text-gold" /> Premium personal finance, reimagined
-            </span>
-            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl">
-              Master your money,<br />
-              <span className="bg-gradient-gold bg-clip-text text-transparent">effortlessly.</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg text-primary-foreground/80">
-              Track every expense, set smart budgets, hit your savings goals — all in a beautifully simple dashboard.
-            </p>
-            <div className="mt-10 flex flex-wrap justify-center gap-3">
-              <Link to="/signup">
-                <Button size="lg" className="bg-gradient-gold text-gold-foreground shadow-glow hover:opacity-90">
-                  Start free <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button size="lg" variant="outline" className="border-white/30 bg-white/5 text-primary-foreground hover:bg-white/10">
-                  I have an account
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </header>
-
-      {/* Features */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-4xl font-bold">Everything you need.</h2>
-          <p className="mt-3 text-muted-foreground">Built for clarity. Designed for delight.</p>
-        </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <Feature icon={Wallet} title="Smart transactions" desc="Add income, expenses & transfers in seconds with categories, tags and notes." />
-          <Feature icon={BarChart3} title="Beautiful insights" desc="Spending breakdowns, monthly trends, and category analysis at a glance." />
-          <Feature icon={PiggyBank} title="Budgets that work" desc="Set monthly limits per category. Visual progress and gentle alerts." />
-          <Feature icon={Sparkles} title="CSV import & export" desc="Bring your data in, take it with you. Your finances, always portable." />
-        </div>
-      </section>
-
-      <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} FinTrackr · Crafted with care
-      </footer>
+    <div className="min-h-screen" style={{ backgroundColor: BRAND.bg, color: BRAND.text }}>
+      <Navbar />
+      <main>
+        <Hero />
+        <TrustSection />
+        <ProblemSection />
+        <Features />
+        <HowItWorks />
+        <EarlyAccess />
+      </main>
+      <Footer />
+      <FloatingCTA />
     </div>
   );
 }
