@@ -15,6 +15,20 @@ import {
   Receipt,
   Sparkles,
   CheckCircle2,
+  Zap,
+  PieChart,
+  Flame,
+  FileDown,
+  MessageSquare,
+  Tags,
+  Brain,
+  Utensils,
+  Fuel,
+  Landmark,
+  Smartphone as PhoneIcon,
+  Home,
+  TrendingUp,
+  Repeat,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
