@@ -962,6 +962,8 @@ function Landing() {
         <TrustSection />
         <ProblemSection />
         <Features />
+        <SmartFeatures />
+        <DashboardShowcase />
         <HowItWorks />
         <EarlyAccess />
       </main>
