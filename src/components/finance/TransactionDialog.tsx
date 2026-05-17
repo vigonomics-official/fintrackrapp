@@ -4,6 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/error-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useCategories, type Transaction } from "@/hooks/use-finance";
@@ -97,7 +98,7 @@ export function TransactionDialog({
       : supabase.from("transactions").insert(payload);
     const { error } = await op;
     setSubmitting(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success(edit ? "Transaction updated" : "Transaction added");
     qc.invalidateQueries({ queryKey: ["transactions"] });
     onOpenChange(false);

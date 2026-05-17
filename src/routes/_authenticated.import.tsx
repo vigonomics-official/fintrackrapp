@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/error-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Smartphone, Wallet, Landmark, CreditCard, FileSpreadsheet, FileText,
@@ -100,7 +101,7 @@ function ImportPage() {
       setMapping(autoMapColumns(hdrs));
       setStep("mapping");
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to parse file");
+      toast.error(friendlyError(err, "Failed to parse file"));
     } finally {
       setLoading(null);
     }
@@ -250,7 +251,7 @@ function ImportPage() {
       setStep("success");
       toast.success(`Imported ${toImport.length} transactions`);
     } catch (err: any) {
-      toast.error(err?.message ?? "Import failed");
+      toast.error(friendlyError(err, "Import failed"));
     } finally {
       setLoading(null);
     }
