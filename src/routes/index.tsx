@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowDown,
@@ -29,6 +30,9 @@ import {
   Home,
   TrendingUp,
   Repeat,
+  Quote,
+  Heart,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -891,34 +895,182 @@ function HowItWorks() {
   );
 }
 
+function useCountUp(target: number, duration = 1400) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let raf = 0;
+    const start = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setVal(Math.round(target * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, target, duration]);
+  return { ref, val };
+}
+
+function Counter({ to, prefix = "", suffix = "" }: { to: number; prefix?: string; suffix?: string }) {
+  const { ref, val } = useCountUp(to);
+  return (
+    <span ref={ref}>
+      {prefix}
+      {val.toLocaleString("en-IN")}
+      {suffix}
+    </span>
+  );
+}
+
+function StatsStrip() {
+  const stats = [
+    { to: 12000, suffix: "+", label: "Indians on waitlist" },
+    { to: 6400, prefix: "₹", label: "Avg. saved / month" },
+    { to: 98, suffix: "%", label: "Love the SMS auto-detect" },
+  ];
+  return (
+    <section className="mx-auto max-w-6xl px-5 pb-2 pt-2">
+      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-gray-100 bg-white/70 p-4 shadow-sm backdrop-blur md:gap-6 md:p-6">
+        {stats.map((s) => (
+          <div key={s.label} className="text-center">
+            <p className="font-display text-xl font-bold text-gray-900 md:text-3xl" style={{ color: BRAND.primary }}>
+              <Counter to={s.to} prefix={s.prefix} suffix={s.suffix} />
+            </p>
+            <p className="mt-1 text-[10px] font-medium text-gray-500 md:text-xs">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  const cards = [
+    {
+      name: "Aarav S.",
+      role: "Software Engineer · Bengaluru",
+      grad: "from-blue-50 to-indigo-50",
+      ring: "ring-blue-100",
+      quote:
+        "I used to wonder where my ₹23,000 salary disappears every month. FinTrackr showed me ₹6,000 was just on food delivery.",
+    },
+    {
+      name: "Priya M.",
+      role: "Marketing Lead · Pune",
+      grad: "from-emerald-50 to-teal-50",
+      ring: "ring-emerald-100",
+      quote: "Finally an app that understands Indian expenses.",
+    },
+    {
+      name: "Rahul K.",
+      role: "Student · Delhi",
+      grad: "from-amber-50 to-orange-50",
+      ring: "ring-amber-100",
+      quote: "Simple. Clean. No confusion.",
+    },
+  ];
+  return (
+    <section className="relative mx-auto max-w-6xl px-5 py-16 md:py-24">
+      <div className="mx-auto max-w-xl text-center">
+        <h2 className="font-display text-3xl font-bold text-gray-900 md:text-4xl">What our users say</h2>
+        <p className="mt-3 text-sm text-gray-600">
+          Real stories from real salary earners across India.
+        </p>
+      </div>
+      <div className="mt-10 grid gap-5 md:grid-cols-3">
+        {cards.map((c, i) => {
+          const initials = c.name
+            .split(" ")
+            .map((p) => p[0])
+            .join("")
+            .slice(0, 2);
+          return (
+            <motion.div
+              key={c.name}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              whileHover={{ y: -6 }}
+              className={`group relative rounded-3xl bg-gradient-to-br ${c.grad} p-6 ring-1 ${c.ring} shadow-[0_10px_40px_-20px_rgba(17,24,39,0.18)] transition-shadow hover:shadow-[0_24px_60px_-20px_rgba(17,24,39,0.25)]`}
+            >
+              <Quote className="absolute right-5 top-5 h-7 w-7 text-white/60" />
+              <p className="text-sm leading-relaxed text-gray-800">"{c.quote}"</p>
+              <div className="mt-6 flex items-center gap-3">
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm"
+                  style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
+                >
+                  {initials}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{c.name}</p>
+                  <p className="text-[11px] text-gray-500">{c.role}</p>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function EarlyAccess() {
+  const benefits = [
+    { icon: MessageSquare, label: "SMS Intelligence" },
+    { icon: Tags, label: "Smart Categorization" },
+    { icon: Target, label: "Budget Tracking" },
+    { icon: CalendarClock, label: "Salary Countdown" },
+    { icon: TrendingUp, label: "Investment Tracking" },
+  ];
   return (
     <section id="early" className="mx-auto max-w-6xl px-5 py-16 md:py-24">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="relative overflow-hidden rounded-3xl p-8 text-center text-white shadow-xl md:p-14"
+        className="relative overflow-hidden rounded-3xl p-8 text-center text-white shadow-2xl md:p-14"
         style={{
-          background: `linear-gradient(135deg, ${BRAND.primary} 0%, #1e40af 60%, ${BRAND.accent} 130%)`,
+          background: `linear-gradient(135deg, ${BRAND.primary} 0%, #1e40af 55%, ${BRAND.accent} 135%)`,
         }}
       >
-        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_80%,white,transparent_40%)]" />
+        {/* Floating glow blobs */}
+        <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -right-10 h-72 w-72 rounded-full bg-emerald-300/30 blur-3xl" />
+
         <div className="relative">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium backdrop-blur">
-            <Sparkles className="h-3 w-3" /> Limited early access
+            <Sparkles className="h-3 w-3" /> Limited early access now open
           </span>
           <h2 className="mx-auto mt-4 max-w-2xl font-display text-3xl font-bold leading-tight md:text-5xl">
-            Take back control of your salary.
+            Limited early access now open.
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm text-white/85 md:text-base">
-            Join the FinTrackr early access list. Be among the first Indians to experience calmer money.
+            Join our first users and unlock all premium features during the early access phase.
           </p>
-          <div className="mx-auto mt-6 flex max-w-md flex-col gap-2 sm:flex-row">
+
+          <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-2">
+            {benefits.map((b) => (
+              <div
+                key={b.label}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur transition-colors hover:bg-white/25"
+              >
+                <b.icon className="h-3.5 w-3.5" />
+                {b.label}
+              </div>
+            ))}
+          </div>
+
+          <div className="mx-auto mt-7 flex max-w-md flex-col gap-2 sm:flex-row">
             <Link to="/signup" className="flex-1">
               <Button
                 size="lg"
-                className="w-full rounded-xl bg-white font-semibold text-gray-900 hover:bg-gray-100"
+                className="w-full rounded-xl bg-white font-semibold text-gray-900 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-gray-100"
               >
                 Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
@@ -933,21 +1085,116 @@ function EarlyAccess() {
               </Button>
             </Link>
           </div>
-          <p className="mt-3 text-[11px] text-white/70">Free during early access · No card required</p>
+          <p className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-white/80">
+            <Lock className="h-3 w-3" /> Built with real Indian salary earners.
+          </p>
         </div>
       </motion.div>
     </section>
   );
 }
 
+function FinalCTA() {
+  return (
+    <section className="relative overflow-hidden">
+      <div className="pointer-events-none absolute left-1/4 top-10 -z-10 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
+      <div className="pointer-events-none absolute right-10 bottom-10 -z-10 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
+      <div className="mx-auto max-w-3xl px-5 py-20 text-center md:py-28">
+        <motion.h2
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="font-display text-3xl font-bold text-gray-900 md:text-5xl"
+        >
+          Start tracking your money today.
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.05 }}
+          className="mx-auto mt-4 max-w-lg text-base text-gray-600"
+        >
+          Join hundreds of Indians who finally understand where their money goes.
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          className="mt-7 flex justify-center"
+        >
+          <Link to="/signup">
+            <Button
+              size="lg"
+              className="rounded-xl px-7 text-white shadow-lg transition-transform hover:-translate-y-0.5"
+              style={{
+                backgroundColor: BRAND.primary,
+                boxShadow: "0 20px 50px -15px rgba(26,86,219,0.55)",
+              }}
+            >
+              Create Free Account <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 function Footer() {
+  const cols = [
+    {
+      title: "Product",
+      links: [
+        { label: "Features", href: "#features" },
+        { label: "Early Access", href: "#early" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "Privacy Policy", href: "#" },
+        { label: "Contact", href: "mailto:hello@fintrackr.app" },
+      ],
+    },
+  ];
   return (
     <footer className="border-t border-gray-100 bg-white">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-6 sm:flex-row">
-        <Logo />
-        <p className="text-xs text-gray-500">
-          © {new Date().getFullYear()} FinTrackr · Made in India 🇮🇳
-        </p>
+      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 md:grid-cols-4">
+        <div className="md:col-span-2">
+          <Logo />
+          <p className="mt-3 max-w-xs text-xs text-gray-500">
+            An intelligent money control center built for Indian salary life.
+          </p>
+        </div>
+        {cols.map((c) => (
+          <div key={c.title}>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">{c.title}</p>
+            <ul className="mt-3 space-y-2">
+              {c.links.map((l) => (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    className="text-sm text-gray-700 transition-colors hover:text-gray-900"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-gray-100">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-5 sm:flex-row">
+          <p className="text-xs text-gray-500">
+            © {new Date().getFullYear()} FinTrackr
+          </p>
+          <p className="inline-flex items-center gap-1 text-xs text-gray-500">
+            Made with <Heart className="h-3 w-3 fill-red-500 text-red-500" /> in India
+          </p>
+        </div>
       </div>
     </footer>
   );
@@ -959,13 +1206,16 @@ function Landing() {
       <Navbar />
       <main>
         <Hero />
+        <StatsStrip />
         <TrustSection />
         <ProblemSection />
         <Features />
         <SmartFeatures />
         <DashboardShowcase />
+        <Testimonials />
         <HowItWorks />
         <EarlyAccess />
+        <FinalCTA />
       </main>
       <Footer />
       <FloatingCTA />
