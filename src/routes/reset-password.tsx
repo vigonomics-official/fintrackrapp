@@ -19,7 +19,7 @@ function ResetPage() {
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error("Could not update password. Please try again.");
     toast.success("Password updated.");
     navigate({ to: "/dashboard" });
   };
