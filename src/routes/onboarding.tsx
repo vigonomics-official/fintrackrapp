@@ -3,7 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, Wallet, Bell, Sparkles, ArrowRight, Check,
-  MessageSquareText, PieChart, Target, IndianRupee,
+  MessageSquareText, PieChart, Target, IndianRupee, Lock, Globe, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,6 +125,7 @@ function OnboardingPage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
+              className="h-full"
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -24 }}
@@ -155,7 +156,7 @@ function OnboardingPage() {
             className="h-12 w-full rounded-2xl text-base font-semibold shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
             style={{ background: BRAND.accent, color: "white" }}
           >
-            {step === totalSteps - 1 ? "Enter FinTrackr" : "Continue"}
+            {step === 0 ? "Get Started" : step === totalSteps - 1 ? "Enter FinTrackr" : "Continue"}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
           <p className="mt-3 text-center text-[11px] text-gray-500">
@@ -169,41 +170,111 @@ function OnboardingPage() {
 
 function WelcomeStep() {
   return (
-    <div className="pt-2">
-      <div
-        className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg"
-        style={{ background: BRAND.primary }}
-      >
-        <Wallet className="h-7 w-7" />
+    <div className="relative flex h-full flex-col items-center justify-center text-center">
+      {/* Soft blue gradient background */}
+      <div className="pointer-events-none absolute inset-0 -mx-5 -mt-6 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-50/80 via-white/40 to-transparent" />
+        <div
+          className="absolute -top-16 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full opacity-60 blur-3xl"
+          style={{ background: "radial-gradient(circle, #BFDBFE 0%, #DBEAFE 50%, transparent 100%)" }}
+        />
       </div>
-      <h1 className="font-display text-3xl font-bold leading-tight tracking-tight">
-        Welcome to FinTrackr
-      </h1>
-      <p className="mt-3 text-base leading-relaxed text-gray-600">
-        Your calm, simple money control center — built for Indian salary life.
-        Let's set you up in a few taps.
-      </p>
 
-      <div className="mt-8 space-y-3">
-        {[
-          { icon: MessageSquareText, t: "Auto-tracks UPI & bank SMS" },
-          { icon: PieChart,          t: "See where money really goes" },
-          { icon: ShieldCheck,       t: "Private. On-device. Yours." },
-        ].map((row) => (
-          <div
-            key={row.t}
-            className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
-          >
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-xl"
-              style={{ background: `${BRAND.primary}14`, color: BRAND.primary }}
-            >
-              <row.icon className="h-5 w-5" />
-            </div>
-            <p className="text-sm font-medium">{row.t}</p>
+      {/* Floating rupee insight cards */}
+      <motion.div
+        className="pointer-events-none absolute top-6 right-2 z-0 rounded-2xl bg-white/95 p-3 shadow-elegant backdrop-blur-sm"
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
+            <IndianRupee className="h-4 w-4" />
           </div>
-        ))}
-      </div>
+          <div className="text-left">
+            <p className="text-xs font-bold text-gray-900">₹2,340 saved</p>
+            <p className="text-[10px] text-gray-500">this month</p>
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        className="pointer-events-none absolute top-24 left-2 z-0 rounded-2xl bg-white/95 p-3 shadow-elegant backdrop-blur-sm"
+        animate={{ y: [0, 7, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+            <PieChart className="h-4 w-4" />
+          </div>
+          <div className="text-left">
+            <p className="text-xs font-bold text-gray-900">Food ↓ 18%</p>
+            <p className="text-[10px] text-gray-500">vs last month</p>
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        className="pointer-events-none absolute bottom-36 right-2 z-0 rounded-2xl bg-white/95 p-3 shadow-elegant backdrop-blur-sm"
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+            <Clock className="h-4 w-4" />
+          </div>
+          <div className="text-left">
+            <p className="text-xs font-bold text-gray-900">Salary in 5 days</p>
+            <p className="text-[10px] text-gray-500">₹45,000 incoming</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Main content */}
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: "easeOut" }}
+        className="relative z-10 flex flex-col items-center"
+      >
+        <div
+          className="mb-8 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.5rem] text-white"
+          style={{
+            background: "linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)",
+            boxShadow: "0 12px 40px -8px rgba(26, 86, 219, 0.35)",
+          }}
+        >
+          <Wallet className="h-9 w-9" />
+        </div>
+
+        <h1 className="max-w-[17rem] text-[1.75rem] font-bold leading-[1.15] tracking-tight text-gray-900">
+          Finally understand where your money goes.
+        </h1>
+
+        <p className="mt-4 max-w-[18rem] text-[0.95rem] leading-relaxed text-gray-500">
+          FinTrackr helps Indian salary earners track spending, reduce stress, and save more.
+        </p>
+      </motion.div>
+
+      {/* Trust row */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
+        className="relative z-10 mt-10 flex flex-wrap items-center justify-center gap-x-3 gap-y-2"
+      >
+        <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-soft">
+          <Lock className="h-3.5 w-3.5 text-emerald-500" />
+          No bank login needed
+        </div>
+        <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-soft">
+          <Globe className="h-3.5 w-3.5 text-blue-500" />
+          Built for India
+        </div>
+        <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-soft">
+          <Clock className="h-3.5 w-3.5 text-amber-500" />
+          Setup takes less than 60 seconds
+        </div>
+      </motion.div>
     </div>
   );
 }
