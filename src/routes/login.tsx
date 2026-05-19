@@ -29,7 +29,7 @@ function LoginPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error("Invalid email or password.");
     toast.success("Welcome back!");
     navigate({ to: "/dashboard" });
   });
