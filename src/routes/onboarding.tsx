@@ -3,7 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, Wallet, Bell, Sparkles, ArrowRight, Check,
-  MessageSquareText, PieChart, Target, IndianRupee,
+  MessageSquareText, PieChart, Target, IndianRupee, Lock, Globe, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,6 +125,7 @@ function OnboardingPage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
+              className="h-full"
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -24 }}
@@ -155,7 +156,7 @@ function OnboardingPage() {
             className="h-12 w-full rounded-2xl text-base font-semibold shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
             style={{ background: BRAND.accent, color: "white" }}
           >
-            {step === totalSteps - 1 ? "Enter FinTrackr" : "Continue"}
+            {step === 0 ? "Get Started" : step === totalSteps - 1 ? "Enter FinTrackr" : "Continue"}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
           <p className="mt-3 text-center text-[11px] text-gray-500">
