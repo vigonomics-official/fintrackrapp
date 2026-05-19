@@ -259,7 +259,7 @@ function SmsIntelligencePage() {
         insertedRef.current.add(sig);
         await insert();
       });
-      toast.error(`Saving SMS txn failed — will retry. ${e?.message ?? ""}`);
+      toast.error("Saving transaction failed — will retry automatically.");
     }
   };
 
