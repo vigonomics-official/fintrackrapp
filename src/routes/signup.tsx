@@ -36,7 +36,7 @@ function SignupPage() {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error("Could not create account. Please try again.");
     toast.success("Check your inbox to confirm your email.");
     navigate({ to: "/login" });
   });
