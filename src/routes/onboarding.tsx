@@ -2,8 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ShieldCheck, Wallet, Bell, Sparkles, ArrowRight, Check,
-  MessageSquareText, PieChart, Target, IndianRupee, Lock, Globe, Clock,
+  ShieldCheck, Wallet, Sparkles, ArrowRight, Check,
+  PiggyBank, TrendingDown, Eye, CreditCard,
+  PieChart, IndianRupee, Lock, Globe, Clock, Plus, BarChart3, Calendar,
+  MessageSquareText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +16,7 @@ export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
       { title: "Get started — FinTrackr" },
-      { name: "description", content: "Set up your FinTrackr account in under 30 seconds." },
+      { name: "description", content: "Set up your FinTrackr account in under 60 seconds." },
     ],
   }),
   component: OnboardingPage,
@@ -27,44 +29,32 @@ const BRAND = {
   text: "#111827",
 };
 
-type Goal = "save" | "budget" | "track" | "invest";
+const PAY_DATES = [1, 5, 10, 15, 25, 30];
 
-const GOALS: { id: Goal; label: string; sub: string; icon: typeof Target }[] = [
-  { id: "save",   label: "Save more",        sub: "Build the habit",          icon: Target },
-  { id: "budget", label: "Stick to a budget", sub: "Control monthly spend",   icon: PieChart },
-  { id: "track",  label: "Track UPI spends",  sub: "Auto from SMS",           icon: MessageSquareText },
-  { id: "invest", label: "Grow wealth",       sub: "SIPs, gold, stocks",      icon: Sparkles },
-];
+type Goal = "save" | "stop" | "understand" | "debt";
 
-const PERMS = [
-  { icon: MessageSquareText, title: "Read transaction SMS", desc: "Auto-detect UPI & bank alerts. Stays on your device." },
-  { icon: Bell,              title: "Smart notifications",  desc: "Budget alerts, salary countdown, bill reminders." },
-  { icon: ShieldCheck,       title: "Private by default",   desc: "Your data is encrypted. We never sell it." },
+const GOALS: { id: Goal; label: string; sub: string; icon: typeof PiggyBank; tint: string }[] = [
+  { id: "save",       label: "Save more every month",       sub: "Build a healthy savings habit",          icon: PiggyBank,    tint: "#10B981" },
+  { id: "stop",       label: "Stop overspending",           sub: "Catch leaks before they grow",           icon: TrendingDown, tint: "#F59E0B" },
+  { id: "understand", label: "Understand where money goes", sub: "Clear, simple spend breakdown",          icon: Eye,          tint: "#1A56DB" },
+  { id: "debt",       label: "Pay off EMI / debt faster",   sub: "Plan and track repayments",              icon: CreditCard,   tint: "#8B5CF6" },
 ];
 
 function OnboardingPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
   const [salary, setSalary] = useState("");
-  const [goals, setGoals] = useState<Set<Goal>>(new Set());
+  const [payDate, setPayDate] = useState<number | null>(null);
+  const [goal, setGoal] = useState<Goal | null>(null);
 
   const totalSteps = 4;
   const progress = ((step + 1) / totalSteps) * 100;
 
   const canContinue =
     (step === 0) ||
-    (step === 1 && name.trim().length > 0) ||
-    (step === 2 && goals.size > 0) ||
+    (step === 1 && salary.trim().length > 0 && payDate !== null) ||
+    (step === 2 && goal !== null) ||
     (step === 3);
-
-  function toggleGoal(g: Goal) {
-    setGoals((prev) => {
-      const n = new Set(prev);
-      n.has(g) ? n.delete(g) : n.add(g);
-      return n;
-    });
-  }
 
   function next() {
     if (step < totalSteps - 1) setStep(step + 1);
@@ -75,19 +65,21 @@ function OnboardingPage() {
     try {
       localStorage.setItem(
         "fintrackr:onboarding",
-        JSON.stringify({ name, salary, goals: [...goals], completedAt: Date.now() }),
+        JSON.stringify({ salary, payDate, goal, completedAt: Date.now() }),
       );
     } catch {}
     navigate({ to: "/dashboard" });
   }
 
+  const ctaLabel =
+    step === 0 ? "Get Started" :
+    step === 1 ? "Next" :
+    step === 2 ? "Take me to my dashboard" :
+    "Add First Expense";
+
   return (
-    <div
-      className="min-h-screen w-full"
-      style={{ background: BRAND.bg, color: BRAND.text }}
-    >
+    <div className="min-h-screen w-full" style={{ background: BRAND.bg, color: BRAND.text }}>
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pt-6 pb-32">
-        {/* Header / progress */}
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
@@ -133,21 +125,20 @@ function OnboardingPage() {
             >
               {step === 0 && <WelcomeStep />}
               {step === 1 && (
-                <ProfileStep
-                  name={name}
-                  setName={setName}
+                <SalaryStep
                   salary={salary}
                   setSalary={setSalary}
+                  payDate={payDate}
+                  setPayDate={setPayDate}
                 />
               )}
-              {step === 2 && <GoalsStep goals={goals} toggle={toggleGoal} />}
-              {step === 3 && <PermissionsStep />}
+              {step === 2 && <GoalStep goal={goal} setGoal={setGoal} />}
+              {step === 3 && <FirstDashboardStep />}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Sticky bottom CTA */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white/90 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
         <div className="mx-auto max-w-md">
           <Button
@@ -156,11 +147,11 @@ function OnboardingPage() {
             className="h-12 w-full rounded-2xl text-base font-semibold shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
             style={{ background: BRAND.accent, color: "white" }}
           >
-            {step === 0 ? "Get Started" : step === totalSteps - 1 ? "Enter FinTrackr" : "Continue"}
+            {ctaLabel}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
           <p className="mt-3 text-center text-[11px] text-gray-500">
-            Takes under 30 seconds · No card required
+            Takes under 60 seconds · No card required
           </p>
         </div>
       </div>
@@ -171,7 +162,6 @@ function OnboardingPage() {
 function WelcomeStep() {
   return (
     <div className="relative flex h-full flex-col items-center justify-center text-center">
-      {/* Soft blue gradient background */}
       <div className="pointer-events-none absolute inset-0 -mx-5 -mt-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-50/80 via-white/40 to-transparent" />
         <div
@@ -180,7 +170,6 @@ function WelcomeStep() {
         />
       </div>
 
-      {/* Floating rupee insight cards */}
       <motion.div
         className="pointer-events-none absolute top-6 right-2 z-0 rounded-2xl bg-white/95 p-3 shadow-elegant backdrop-blur-sm"
         animate={{ y: [0, -6, 0] }}
@@ -229,7 +218,6 @@ function WelcomeStep() {
         </div>
       </motion.div>
 
-      {/* Main content */}
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
@@ -255,7 +243,6 @@ function WelcomeStep() {
         </p>
       </motion.div>
 
-      {/* Trust row */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -279,106 +266,148 @@ function WelcomeStep() {
   );
 }
 
-function ProfileStep({
-  name, setName, salary, setSalary,
+function SalaryStep({
+  salary, setSalary, payDate, setPayDate,
 }: {
-  name: string; setName: (v: string) => void;
   salary: string; setSalary: (v: string) => void;
+  payDate: number | null; setPayDate: (d: number) => void;
 }) {
   return (
     <div className="pt-2">
       <h1 className="font-display text-2xl font-bold tracking-tight">
-        A little about you
+        Let's set up your salary profile
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        Just the basics — so we can personalize your dashboard.
+        Two quick details power your countdown, budgets, and insights.
       </p>
 
-      <div className="mt-7 space-y-5">
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Your name</Label>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="mt-7 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+      >
+        <Label className="text-sm font-medium text-gray-700">Monthly salary</Label>
+        <div className="relative mt-2">
+          <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
-            placeholder="e.g. Aarav"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-12 rounded-xl border-gray-200 bg-white text-base"
+            inputMode="numeric"
+            placeholder="25,000"
+            value={salary}
+            onChange={(e) => setSalary(e.target.value.replace(/[^\d]/g, ""))}
+            className="h-12 rounded-xl border-gray-200 bg-gray-50 pl-9 text-base font-medium"
             autoFocus
           />
         </div>
+      </motion.div>
 
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">
-            Monthly salary <span className="text-gray-400">(optional)</span>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.08 }}
+        className="mt-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+      >
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-gray-500" />
+          <Label className="text-sm font-medium text-gray-700">
+            When do you usually get paid?
           </Label>
-          <div className="relative">
-            <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              inputMode="numeric"
-              placeholder="50,000"
-              value={salary}
-              onChange={(e) => setSalary(e.target.value.replace(/[^\d]/g, ""))}
-              className="h-12 rounded-xl border-gray-200 bg-white pl-9 text-base"
-            />
-          </div>
-          <p className="text-xs text-gray-500">
-            Used to power salary countdown & savings insights.
-          </p>
         </div>
-      </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {PAY_DATES.map((d) => {
+            const active = payDate === d;
+            return (
+              <button
+                key={d}
+                onClick={() => setPayDate(d)}
+                className={cn(
+                  "relative h-12 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97]",
+                  active
+                    ? "border-transparent text-white shadow-md"
+                    : "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300",
+                )}
+                style={active ? { background: BRAND.primary } : undefined}
+              >
+                {d}
+                <span className={cn("ml-0.5 text-[10px] font-normal", active ? "opacity-80" : "text-gray-400")}>
+                  {ordinal(d)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mt-3 text-xs text-gray-500">
+          Used only for salary countdown and budget insights.
+        </p>
+      </motion.div>
     </div>
   );
 }
 
-function GoalsStep({
-  goals, toggle,
-}: { goals: Set<Goal>; toggle: (g: Goal) => void }) {
+function ordinal(n: number) {
+  if (n === 1) return "st";
+  if (n === 5 || n === 25) return "th";
+  if (n === 10 || n === 15 || n === 30) return "th";
+  return "th";
+}
+
+function GoalStep({
+  goal, setGoal,
+}: { goal: Goal | null; setGoal: (g: Goal) => void }) {
   return (
     <div className="pt-2">
       <h1 className="font-display text-2xl font-bold tracking-tight">
-        What matters most?
+        What would you like help with first?
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        Pick one or more. We'll tune your dashboard around them.
+        Pick one — you can change this anytime.
       </p>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        {GOALS.map((g) => {
-          const active = goals.has(g.id);
+      <div className="mt-6 space-y-3">
+        {GOALS.map((g, i) => {
+          const active = goal === g.id;
           const Icon = g.icon;
           return (
-            <button
+            <motion.button
               key={g.id}
-              onClick={() => toggle(g.id)}
+              onClick={() => setGoal(g.id)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, delay: i * 0.05 }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
               className={cn(
-                "relative flex flex-col items-start gap-3 rounded-2xl border bg-white p-4 text-left shadow-sm transition-all active:scale-[0.98]",
-                active
-                  ? "border-transparent ring-2 shadow-md"
-                  : "border-gray-100 hover:border-gray-200",
+                "relative flex w-full items-center gap-4 rounded-2xl border bg-white p-4 text-left shadow-sm transition-all",
+                active ? "border-transparent shadow-md" : "border-gray-100 hover:border-gray-200",
               )}
-              style={active ? { boxShadow: `0 0 0 2px ${BRAND.primary}` } : undefined}
+              style={active ? { boxShadow: `0 0 0 2px ${BRAND.primary}, 0 8px 24px -10px ${BRAND.primary}55` } : undefined}
             >
               <span
-                className="flex h-10 w-10 items-center justify-center rounded-xl"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
                 style={{
-                  background: active ? BRAND.primary : `${BRAND.primary}14`,
-                  color: active ? "white" : BRAND.primary,
+                  background: active ? g.tint : `${g.tint}1a`,
+                  color: active ? "white" : g.tint,
                 }}
               >
                 <Icon className="h-5 w-5" />
               </span>
-              <div>
-                <p className="text-sm font-semibold">{g.label}</p>
-                <p className="text-xs text-gray-500">{g.sub}</p>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">{g.label}</p>
+                <p className="mt-0.5 text-xs text-gray-500">{g.sub}</p>
               </div>
               {active && (
-                <span
-                  className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full"
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
                   style={{ background: BRAND.accent }}
                 >
-                  <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                </span>
+                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                </motion.span>
               )}
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -386,49 +415,148 @@ function GoalsStep({
   );
 }
 
-function PermissionsStep() {
+function FirstDashboardStep() {
   return (
     <div className="pt-2">
-      <h1 className="font-display text-2xl font-bold tracking-tight">
-        You're in control
-      </h1>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        Here's what FinTrackr uses — and what stays private. You can change
-        anything later in Settings.
-      </p>
-
-      <div className="mt-6 space-y-3">
-        {PERMS.map((p) => (
-          <div
-            key={p.title}
-            className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
-          >
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: `${BRAND.accent}1a`, color: BRAND.accent }}
-            >
-              <p.icon className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">{p.title}</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{p.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div
-        className="mt-6 rounded-2xl p-4 text-sm"
-        style={{ background: `${BRAND.primary}0d`, color: BRAND.primary }}
+      {/* Welcome card */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg"
+        style={{
+          background: "linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)",
+          boxShadow: "0 12px 32px -10px rgba(26, 86, 219, 0.4)",
+        }}
       >
-        <div className="flex items-center gap-2 font-semibold">
-          <ShieldCheck className="h-4 w-4" /> Privacy-first promise
-        </div>
-        <p className="mt-1 text-xs leading-relaxed text-gray-600">
-          SMS parsing happens on your device. We never read message content on
-          our servers.
+        <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
+        <h2 className="text-lg font-bold">You're all set 🎉</h2>
+        <p className="mt-1 text-sm text-white/85">
+          Let's start understanding your money better.
         </p>
+      </motion.div>
+
+      {/* Salary + Budget ring */}
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+        >
+          <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+            <IndianRupee className="h-3.5 w-3.5" /> Salary
+          </div>
+          <p className="mt-2 text-lg font-bold text-gray-900">₹--,---</p>
+          <Shimmer className="mt-2 h-2 w-16 rounded-full" />
+          <p className="mt-2 text-[11px] text-gray-400">Next pay in --d</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+        >
+          <BudgetRing />
+          <p className="mt-2 text-[11px] font-medium text-gray-500">Budget</p>
+        </motion.div>
       </div>
+
+      {/* Empty insights */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
+        className="mt-3 rounded-2xl border border-dashed border-gray-200 bg-white p-5 text-center"
+      >
+        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+          <Sparkles className="h-5 w-5" />
+        </div>
+        <p className="mt-2 text-sm font-semibold text-gray-900">No insights yet</p>
+        <p className="mt-1 text-xs text-gray-500">
+          Add a few expenses and we'll surface smart patterns here.
+        </p>
+      </motion.div>
+
+      {/* Analytics placeholder */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        className="mt-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+            <BarChart3 className="h-3.5 w-3.5" /> Spending analytics
+          </div>
+          <span className="text-[10px] font-medium text-gray-400">This week</span>
+        </div>
+        <div className="mt-3 flex h-20 items-end gap-2">
+          {[35, 60, 25, 80, 45, 70, 50].map((h, i) => (
+            <Shimmer key={i} className="flex-1 rounded-md" style={{ height: `${h}%` }} />
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Motivational insight */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.25 }}
+        className="mt-4 flex items-start gap-3 rounded-2xl p-4"
+        style={{ background: `${BRAND.accent}10` }}
+      >
+        <div
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: BRAND.accent, color: "white" }}
+        >
+          <Plus className="h-4 w-4" />
+        </div>
+        <p className="text-xs leading-relaxed text-gray-700">
+          <span className="font-semibold text-gray-900">Pro tip:</span> If you track expenses daily,
+          most users save <span className="font-semibold">₹2,000–₹5,000</span> monthly.
+        </p>
+      </motion.div>
+    </div>
+  );
+}
+
+function BudgetRing() {
+  const r = 22;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
+      <circle cx="32" cy="32" r={r} stroke="#E5E7EB" strokeWidth="6" fill="none" />
+      <motion.circle
+        cx="32" cy="32" r={r}
+        stroke={BRAND.primary}
+        strokeWidth="6"
+        strokeLinecap="round"
+        fill="none"
+        strokeDasharray={c}
+        initial={{ strokeDashoffset: c }}
+        animate={{ strokeDashoffset: c * 0.35 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+      />
+    </svg>
+  );
+}
+
+function Shimmer({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div
+      className={cn("relative overflow-hidden bg-gray-100", className)}
+      style={style}
+    >
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)",
+        }}
+        animate={{ x: ["-100%", "100%"] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      />
     </div>
   );
 }
