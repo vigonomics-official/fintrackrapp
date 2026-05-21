@@ -612,7 +612,7 @@ function DashboardShowcase() {
   });
 
   return (
-    <section className="relative overflow-hidden py-16 md:py-24">
+    <section id="dashboard" className="relative overflow-hidden py-16 md:py-24">
       <div
         className="absolute inset-0 -z-10"
         style={{
