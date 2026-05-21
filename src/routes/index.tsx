@@ -391,45 +391,35 @@ function TrustSection() {
 
 function ProblemSection() {
   const items = [
-    { icon: Wallet, title: "Salary disappears quickly", desc: "Credit hits, and somehow it's gone by the 15th." },
-    { icon: Receipt, title: "UPI spending confusion", desc: "Tiny ₹50–₹200 spends silently drain your balance." },
-    { icon: CalendarClock, title: "Month-end stress", desc: "Rent, EMIs, bills — and barely anything left." },
-    { icon: PiggyBank, title: "Don’t know how to save", desc: "You want to save, but never know where to start." },
+    { icon: Wallet, title: "Salary disappears quickly", desc: "Gone by the 15th. No idea where." },
+    { icon: Receipt, title: "UPI spending confusion", desc: "₹50–₹200 spends silently drain you." },
+    { icon: CalendarClock, title: "Month-end stress", desc: "Rent, EMIs, bills — barely anything left." },
+    { icon: PiggyBank, title: "Don't know how to save", desc: "Want to, but don't know where to start." },
   ];
   return (
-    <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
-      <div className="text-center">
-        <h2 className="font-display text-3xl font-bold text-gray-900 md:text-4xl">Sound familiar?</h2>
-        <p className="mx-auto mt-3 max-w-md text-sm text-gray-600">
-          You're not alone. Millions of Indians live paycheck to paycheck — not because they earn less, but because no one shows them where it goes.
-        </p>
-      </div>
-      <div className="mt-10 grid gap-4 sm:grid-cols-2">
+    <section className="mx-auto max-w-6xl px-5 py-10 md:py-14">
+      <h2 className="text-center font-display text-xl font-bold text-gray-900 md:text-2xl">Sound familiar?</h2>
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((it, i) => (
           <motion.div
             key={it.title}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.06 }}
-            className="flex items-start gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
           >
             <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              className="flex h-9 w-9 items-center justify-center rounded-lg"
               style={{ background: "rgba(16,185,129,0.10)", color: BRAND.accent }}
             >
-              <it.icon className="h-5 w-5" />
+              <it.icon className="h-4 w-4" />
             </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900">{it.title}</h3>
-              <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
-            </div>
+            <h3 className="mt-3 text-sm font-semibold text-gray-900">{it.title}</h3>
+            <p className="mt-1 text-[12px] leading-snug text-gray-500">{it.desc}</p>
           </motion.div>
         ))}
       </div>
-      <p className="mt-8 text-center text-base font-semibold text-gray-900">
-        FinTrackr was built exactly for this.
-      </p>
     </section>
   );
 }
