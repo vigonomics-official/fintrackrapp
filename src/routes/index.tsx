@@ -129,131 +129,131 @@ function HeroMockup() {
       transition={{ delay: 0.2, duration: 0.6 }}
       className="relative mx-auto mt-12 w-full max-w-sm"
     >
+      {/* Soft gradient glow behind phone */}
+      <div
+        className="pointer-events-none absolute -inset-6 -z-10 rounded-[3rem] blur-3xl"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(26,86,219,0.18), rgba(16,185,129,0.18))",
+        }}
+      />
+
       {/* Phone frame */}
-      <div className="relative rounded-[2.2rem] border border-gray-200 bg-white p-3 shadow-[0_30px_60px_-20px_rgba(17,24,39,0.25)]">
-        <div className="rounded-[1.7rem] bg-gradient-to-br from-gray-50 to-white p-5">
-          {/* Top row */}
+      <div className="relative rounded-[2.2rem] border border-gray-200 bg-white p-3 shadow-[0_30px_70px_-25px_rgba(17,24,39,0.35)]">
+        <div
+          className="rounded-[1.7rem] p-5"
+          style={{
+            background:
+              "linear-gradient(160deg, #F5F9FF 0%, #FFFFFF 45%, #F0FBF7 100%)",
+          }}
+        >
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] font-medium text-gray-500">Good morning, Aarav</p>
-              <p className="text-base font-semibold text-gray-900">November Budget</p>
+              <p className="text-base font-semibold text-gray-900">November Overview</p>
             </div>
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: BRAND.primary }}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
+              style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
             >
               A
             </div>
           </div>
 
-          {/* Budget ring */}
-          <div className="mt-5 flex items-center gap-4">
-            <div className="relative h-24 w-24">
-              <svg viewBox="0 0 36 36" className="h-24 w-24 -rotate-90">
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3.2" />
-                <circle
+          {/* Salary countdown pill */}
+          <div
+            className="mt-4 flex items-center justify-between rounded-2xl px-4 py-3 text-white shadow-sm"
+            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #1e40af)` }}
+          >
+            <div className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4" />
+              <p className="text-[11px] font-medium opacity-90">Next salary in</p>
+            </div>
+            <p className="text-sm font-bold">5 days</p>
+          </div>
+
+          {/* Spending ring + remaining */}
+          <div className="mt-5 flex items-center gap-5">
+            <div className="relative h-28 w-28">
+              <svg viewBox="0 0 36 36" className="h-28 w-28 -rotate-90">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EEF2F7" strokeWidth="3.4" />
+                <motion.circle
                   cx="18"
                   cy="18"
                   r="15.9"
                   fill="none"
                   stroke={BRAND.primary}
-                  strokeWidth="3.2"
-                  strokeDasharray="68 100"
+                  strokeWidth="3.4"
                   strokeLinecap="round"
+                  initial={{ strokeDasharray: "0 100" }}
+                  animate={{ strokeDasharray: "68 100" }}
+                  transition={{ duration: 1.1, delay: 0.4, ease: "easeOut" }}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-[10px] font-medium text-gray-500">Spent</span>
-                <span className="text-sm font-bold text-gray-900">68%</span>
+                <span className="text-base font-bold text-gray-900">68%</span>
               </div>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-gray-500">Remaining this month</p>
-              <p className="text-2xl font-bold text-gray-900">₹ 12,840</p>
-              <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: BRAND.accent }}>
-                <TrendingDown className="h-3 w-3" /> Spending down 18%
+              <p className="text-[11px] font-medium text-gray-500">Remaining balance</p>
+              <p className="font-display text-2xl font-bold text-gray-900">₹ 12,840</p>
+              <p
+                className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold"
+                style={{ color: BRAND.accent }}
+              >
+                <TrendingDown className="h-3 w-3" /> 18% under last month
               </p>
             </div>
           </div>
 
-          {/* Mini chart */}
-          <div className="mt-5 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-gray-100">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-gray-700">Weekly spend</p>
-              <p className="text-[10px] text-gray-400">Mon – Sun</p>
-            </div>
-            <div className="flex h-16 items-end gap-1.5">
-              {[40, 65, 30, 80, 55, 90, 45].map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-md"
-                  style={{
-                    height: `${h}%`,
-                    background:
-                      i === 5
-                        ? `linear-gradient(180deg, ${BRAND.primary}, ${BRAND.accent})`
-                        : "#E5E7EB",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* UPI list */}
-          <div className="mt-4 space-y-2">
-            {[
-              { name: "Swiggy", tag: "Food", amt: "− ₹ 348" },
-              { name: "Uber", tag: "Transport", amt: "− ₹ 142" },
-              { name: "Salary credited", tag: "Income", amt: "+ ₹ 62,000", income: true },
-            ].map((t) => (
-              <div key={t.name} className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2.5">
-                <div>
-                  <p className="text-xs font-semibold text-gray-900">{t.name}</p>
-                  <p className="text-[10px] text-gray-500">{t.tag} · UPI</p>
-                </div>
-                <p
-                  className="text-xs font-bold"
-                  style={{ color: t.income ? BRAND.accent : "#111827" }}
-                >
-                  {t.amt}
+          {/* Smart insight */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="mt-5 rounded-2xl border border-blue-100/70 bg-white/80 p-3 shadow-sm backdrop-blur"
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
+                style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
+              >
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                  Smart insight
+                </p>
+                <p className="mt-0.5 text-[12px] font-medium leading-snug text-gray-800">
+                  Food spends are up <span className="font-bold">₹ 1,240</span> this week. Cook 2 nights to save ~₹ 800.
                 </p>
               </div>
-            ))}
-          </div>
+            </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* Floating cards */}
+      {/* Floating accent cards */}
       <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.6 }}
-        className="absolute -left-3 top-24 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+        initial={{ opacity: 0, x: -16, y: 10 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="absolute -left-4 top-28 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
       >
         <p className="text-[10px] text-gray-500">Saved this month</p>
-        <p className="text-sm font-bold" style={{ color: BRAND.accent }}>₹ 2,340</p>
+        <p className="text-sm font-bold" style={{ color: BRAND.accent }}>+ ₹ 2,340</p>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.8 }}
-        className="absolute -right-3 top-56 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+        initial={{ opacity: 0, x: 16, y: 10 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ delay: 0.9 }}
+        className="absolute -right-4 bottom-20 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
       >
-        <p className="flex items-center gap-1 text-[10px] text-gray-500">
-          <CalendarClock className="h-3 w-3" /> Salary in
-        </p>
-        <p className="text-sm font-bold text-gray-900">5 days</p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        className="absolute -bottom-4 left-1/2 hidden -translate-x-1/2 rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
-      >
-        <p className="text-[10px] text-gray-500">Food spending</p>
-        <p className="text-sm font-bold" style={{ color: BRAND.accent }}>↓ 18% this week</p>
+        <p className="text-[10px] text-gray-500">Daily streak</p>
+        <p className="text-sm font-bold text-gray-900">🔥 28 days</p>
       </motion.div>
     </motion.div>
   );
@@ -262,14 +262,18 @@ function HeroMockup() {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
+      {/* Layered blue-teal background */}
       <div
-        className="absolute inset-x-0 top-0 h-[520px] -z-10"
+        className="absolute inset-x-0 top-0 -z-10 h-[640px]"
         style={{
           background:
-            "radial-gradient(60% 60% at 50% 0%, rgba(26,86,219,0.10) 0%, rgba(16,185,129,0.05) 40%, rgba(249,250,251,0) 80%)",
+            "radial-gradient(60% 55% at 50% 0%, rgba(26,86,219,0.14) 0%, rgba(16,185,129,0.08) 45%, rgba(249,250,251,0) 80%)",
         }}
       />
-      <div className="mx-auto max-w-6xl px-5 pb-8 pt-12 text-center md:pt-20">
+      <div className="pointer-events-none absolute -left-24 top-32 -z-10 h-72 w-72 rounded-full bg-blue-300/25 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 top-48 -z-10 h-72 w-72 rounded-full bg-emerald-300/25 blur-3xl" />
+
+      <div className="mx-auto max-w-6xl px-5 pb-10 pt-12 text-center md:pt-20">
         <motion.span
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -286,9 +290,15 @@ function Hero() {
           className="mx-auto mt-5 max-w-3xl font-display text-[2.1rem] font-bold leading-[1.1] tracking-tight text-gray-900 md:text-6xl"
         >
           Know exactly where your{" "}
-          <span style={{ color: BRAND.primary }}>₹</span> goes.
-          <br />
-          <span className="text-gray-500">Every day. Every rupee.</span>
+          <span
+            className="bg-clip-text text-transparent"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})`,
+            }}
+          >
+            salary
+          </span>{" "}
+          goes.
         </motion.h1>
 
         <motion.p
@@ -297,7 +307,7 @@ function Hero() {
           transition={{ delay: 0.1 }}
           className="mx-auto mt-5 max-w-xl text-base text-gray-600 md:text-lg"
         >
-          FinTrackr helps salary earners and families track expenses, set budgets, and save more — without the confusion.
+          FinTrackr helps Indian salary earners track spending, manage budgets, and save more — without spreadsheets or confusion.
         </motion.p>
 
         <motion.div
@@ -306,29 +316,32 @@ function Hero() {
           transition={{ delay: 0.15 }}
           className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
-          <a href="#early" className="w-full sm:w-auto">
+          <Link to="/signup" className="w-full sm:w-auto">
             <Button
               size="lg"
-              className="w-full rounded-xl text-white shadow-md hover:opacity-90 sm:w-auto"
-              style={{ backgroundColor: BRAND.primary }}
+              className="w-full rounded-xl px-6 text-white shadow-md transition-transform hover:-translate-y-0.5 hover:opacity-95 sm:w-auto"
+              style={{
+                background: `linear-gradient(135deg, ${BRAND.primary}, #1e40af)`,
+                boxShadow: "0 18px 40px -16px rgba(26,86,219,0.55)",
+              }}
             >
               Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
-          </a>
-          <a href="#how" className="w-full sm:w-auto">
+          </Link>
+          <a href="#dashboard" className="w-full sm:w-auto">
             <Button
               size="lg"
               variant="outline"
               className="w-full rounded-xl border-gray-200 bg-white text-gray-800 hover:bg-gray-50 sm:w-auto"
             >
-              See how it works
+              See Demo
             </Button>
           </a>
         </motion.div>
 
         {/* Trust row */}
         <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium text-gray-500 md:text-xs">
-          {["No bank login needed", "Built for India", "Early access users unlock premium features"].map((t) => (
+          {["No bank login needed", "Built for India", "Setup in under 60 seconds"].map((t) => (
             <div key={t} className="inline-flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
               {t}
@@ -341,6 +354,7 @@ function Hero() {
     </section>
   );
 }
+
 
 function TrustSection() {
   const items = [
@@ -598,7 +612,7 @@ function DashboardShowcase() {
   });
 
   return (
-    <section className="relative overflow-hidden py-16 md:py-24">
+    <section id="dashboard" className="relative overflow-hidden py-16 md:py-24">
       <div
         className="absolute inset-0 -z-10"
         style={{
