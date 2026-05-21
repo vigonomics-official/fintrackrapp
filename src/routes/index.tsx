@@ -1206,15 +1206,9 @@ function Landing() {
       <Navbar />
       <main>
         <Hero />
-        <StatsStrip />
-        <TrustSection />
         <ProblemSection />
-        <Features />
-        <SmartFeatures />
         <DashboardShowcase />
-        <Testimonials />
         <HowItWorks />
-        <EarlyAccess />
         <FinalCTA />
       </main>
       <Footer />
