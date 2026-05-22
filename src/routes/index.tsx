@@ -578,31 +578,26 @@ function SmartFeatures() {
 }
 
 function DashboardShowcase() {
+  const categories = [
+    { label: "Food & Dining", pct: 28, amt: 4640, color: "#1A56DB" },
+    { label: "Rent & EMI", pct: 32, amt: 5300, color: "#10B981" },
+    { label: "Fuel & Travel", pct: 18, amt: 2980, color: "#6366F1" },
+    { label: "Bills & Other", pct: 22, amt: 3640, color: "#F59E0B" },
+  ];
   const txns = [
-    { icon: Utensils, name: "Swiggy", tag: "Food", amt: 340 },
-    { icon: Utensils, name: "Zomato", tag: "Food", amt: 220 },
-    { icon: Fuel, name: "HP Petrol", tag: "Fuel", amt: 1200 },
-    { icon: Landmark, name: "EMI HDFC", tag: "EMI", amt: 4500 },
-    { icon: Home, name: "Rent", tag: "Housing", amt: 8000 },
-    { icon: PhoneIcon, name: "Jio Recharge", tag: "Utilities", amt: 299 },
-    { icon: TrendingUp, name: "SIP – Nifty 50", tag: "Invest", amt: 2000 },
+    { icon: Utensils, name: "Swiggy", tag: "Food · UPI", amt: 340 },
+    { icon: Fuel, name: "HP Petrol", tag: "Fuel · Card", amt: 1200 },
+    { icon: Home, name: "Rent", tag: "Housing · NEFT", amt: 8000 },
+    { icon: PhoneIcon, name: "Jio Recharge", tag: "Bills · UPI", amt: 299 },
   ];
-  const pie = [
-    { label: "Food", pct: 28, color: "#1A56DB" },
-    { label: "EMI", pct: 32, color: "#10B981" },
-    { label: "Rent", pct: 22, color: "#6366F1" },
-    { label: "Other", pct: 18, color: "#F59E0B" },
+  const insights = [
+    { icon: Sparkles, text: "Food orders up ₹1,240 this week. Cook 2 nights to save ~₹800." },
+    { icon: Repeat, text: "Netflix renews in 3 days · ₹649" },
+    { icon: TrendingUp, text: "You're spending 12% less than last month." },
   ];
-  // Build pie offsets
-  let acc = 0;
-  const pieSegs = pie.map((p) => {
-    const seg = { ...p, offset: acc };
-    acc += p.pct;
-    return seg;
-  });
 
   return (
-    <section id="dashboard" className="relative overflow-hidden py-16 md:py-24">
+    <section id="dashboard" className="relative overflow-hidden py-14 md:py-20">
       <div
         className="absolute inset-0 -z-10"
         style={{
@@ -619,241 +614,187 @@ function DashboardShowcase() {
             One calm dashboard for your whole salary.
           </h2>
           <p className="mt-3 text-sm text-gray-600">
-            Budget rings, spending pies, salary countdowns and smart insights — built for the way Indians actually spend.
+            A quiet control center — budgets, categories, transactions and gentle nudges. No noise, no spreadsheets.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 lg:grid-cols-12">
-          {/* Main analytics card */}
+        <div className="mt-10 grid gap-4 md:gap-5 lg:grid-cols-12">
+          {/* Budget ring + salary countdown */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-5 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
-            <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-gray-500">November · Budget</p>
+            <div className="mt-4 flex items-center gap-5">
+              <div className="relative h-28 w-28 shrink-0">
+                <svg viewBox="0 0 36 36" className="h-28 w-28 -rotate-90">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EEF2F7" strokeWidth="3.5" />
+                  <motion.circle
+                    cx="18"
+                    cy="18"
+                    r="15.9"
+                    fill="none"
+                    stroke={BRAND.primary}
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    initial={{ strokeDasharray: "0 100" }}
+                    whileInView={{ strokeDasharray: "72 100" }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.1, ease: "easeOut" }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-medium text-gray-500">Spent</span>
+                  <span className="font-display text-lg font-bold text-gray-900">72%</span>
+                </div>
+              </div>
               <div>
-                <p className="text-xs font-medium text-gray-500">November · Spending</p>
-                <p className="font-display text-2xl font-bold text-gray-900">₹ 16,559</p>
-              </div>
-              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-600">
-                ↓ 12% vs Oct
-              </span>
-            </div>
-
-            <div className="mt-6 grid gap-6 sm:grid-cols-2">
-              {/* Pie chart */}
-              <div className="flex items-center gap-5">
-                <div className="relative h-32 w-32">
-                  <svg viewBox="0 0 36 36" className="h-32 w-32 -rotate-90">
-                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F3F4F6" strokeWidth="4" />
-                    {pieSegs.map((s) => (
-                      <circle
-                        key={s.label}
-                        cx="18"
-                        cy="18"
-                        r="15.9"
-                        fill="none"
-                        stroke={s.color}
-                        strokeWidth="4"
-                        strokeDasharray={`${s.pct} ${100 - s.pct}`}
-                        strokeDashoffset={-s.offset}
-                      />
-                    ))}
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-medium text-gray-500">Total</span>
-                    <span className="text-sm font-bold text-gray-900">₹16.5k</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {pie.map((p) => (
-                    <div key={p.label} className="flex items-center gap-2 text-xs">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: p.color }} />
-                      <span className="font-medium text-gray-700">{p.label}</span>
-                      <span className="text-gray-400">{p.pct}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Animated bar chart */}
-              <div className="rounded-2xl bg-gray-50/70 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-semibold text-gray-700">Weekly trend</p>
-                  <p className="text-[10px] text-gray-400">Last 7 days</p>
-                </div>
-                <div className="mt-3 flex h-24 items-end gap-1.5">
-                  {[35, 60, 45, 80, 50, 95, 55].map((h, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ height: 0 }}
-                      whileInView={{ height: `${h}%` }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.05, duration: 0.5 }}
-                      className="flex-1 rounded-md"
-                      style={{
-                        background:
-                          i === 5
-                            ? `linear-gradient(180deg, ${BRAND.primary}, ${BRAND.accent})`
-                            : "#E5E7EB",
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Transactions */}
-            <div className="mt-6">
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-semibold text-gray-700">Recent transactions</p>
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                  <MessageSquare className="h-3 w-3" /> Auto-detected from SMS
-                </span>
-              </div>
-              <div className="divide-y divide-gray-100 rounded-2xl ring-1 ring-gray-100">
-                {txns.map((t) => (
-                  <div key={t.name} className="flex items-center justify-between px-3 py-2.5">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="flex h-8 w-8 items-center justify-center rounded-lg"
-                        style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
-                      >
-                        <t.icon className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-900">{t.name}</p>
-                        <p className="text-[10px] text-gray-500">{t.tag} · UPI</p>
-                      </div>
-                    </div>
-                    <p className="text-xs font-bold text-gray-900">− ₹ {t.amt.toLocaleString("en-IN")}</p>
-                  </div>
-                ))}
+                <p className="text-xs text-gray-500">Remaining</p>
+                <p className="font-display text-3xl font-bold text-gray-900">₹ 9,441</p>
+                <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                  <CalendarClock className="h-3 w-3" /> Salary in 5 days
+                </p>
               </div>
             </div>
           </motion.div>
 
-          {/* Side column */}
-          <div className="lg:col-span-5 space-y-5">
-            {/* Budget ring + Salary countdown */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
-            >
-              <div className="flex items-center gap-5">
-                <div className="relative h-24 w-24">
-                  <svg viewBox="0 0 36 36" className="h-24 w-24 -rotate-90">
-                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3.5" />
-                    <motion.circle
-                      cx="18"
-                      cy="18"
-                      r="15.9"
-                      fill="none"
-                      stroke={BRAND.primary}
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                      initial={{ strokeDasharray: "0 100" }}
-                      whileInView={{ strokeDasharray: "72 100" }}
+          {/* Savings goal */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Savings goal · Goa trip</p>
+                <p className="font-display text-2xl font-bold text-gray-900">
+                  ₹ 38,200 <span className="text-sm font-medium text-gray-400">/ 50,000</span>
+                </p>
+              </div>
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-2xl"
+                style={{ background: "rgba(16,185,129,0.10)", color: BRAND.accent }}
+              >
+                <PiggyBank className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+              <motion.div
+                initial={{ width: 0 }}
+                whileInView={{ width: "76%" }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.1, ease: "easeOut" }}
+                className="h-full rounded-full"
+                style={{ background: `linear-gradient(90deg, ${BRAND.primary}, ${BRAND.accent})` }}
+              />
+            </div>
+            <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500">
+              <span>76% complete</span>
+              <span>On track for Dec 18</span>
+            </div>
+          </motion.div>
+
+          {/* Spending categories */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-5 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-gray-700">Spending by category</p>
+              <span className="text-[10px] text-gray-400">This month</span>
+            </div>
+            <div className="mt-4 space-y-3.5">
+              {categories.map((c, i) => (
+                <div key={c.label}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-2 font-medium text-gray-700">
+                      <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
+                      {c.label}
+                    </span>
+                    <span className="font-semibold text-gray-900">₹ {c.amt.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${c.pct}%` }}
                       viewport={{ once: true }}
-                      transition={{ duration: 1 }}
+                      transition={{ duration: 0.9, delay: 0.1 + i * 0.06, ease: "easeOut" }}
+                      className="h-full rounded-full"
+                      style={{ background: c.color }}
                     />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-medium text-gray-500">Budget</span>
-                    <span className="text-sm font-bold text-gray-900">72%</span>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">Remaining</p>
-                  <p className="font-display text-2xl font-bold text-gray-900">₹ 9,441</p>
-                  <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-600">
-                    <CalendarClock className="h-3 w-3" /> Salary in 5 days
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Savings tracker */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.05 }}
-              className="rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Savings goal · Goa trip</p>
-                  <p className="font-display text-xl font-bold text-gray-900">₹ 38,200 <span className="text-sm font-medium text-gray-400">/ 50,000</span></p>
-                </div>
-                <PiggyBank className="h-6 w-6" style={{ color: BRAND.accent }} />
-              </div>
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                <motion.div
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "76%" }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1 }}
-                  className="h-full rounded-full"
-                  style={{ background: `linear-gradient(90deg, ${BRAND.primary}, ${BRAND.accent})` }}
-                />
-              </div>
-              <p className="mt-2 text-[11px] text-gray-500">On track — at this pace you'll hit it by Dec 18.</p>
-            </motion.div>
-
-            {/* Streak + Subscription alerts */}
-            <div className="grid grid-cols-2 gap-5">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
-              >
-                <div className="flex items-center gap-2">
-                  <Flame className="h-5 w-5 text-orange-500" />
-                  <p className="text-xs font-semibold text-gray-700">Daily streak</p>
-                </div>
-                <p className="mt-2 font-display text-2xl font-bold text-gray-900">28 <span className="text-sm font-medium text-gray-400">days</span></p>
-                <p className="text-[11px] text-gray-500">Keep it going!</p>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.15 }}
-                className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
-              >
-                <div className="flex items-center gap-2">
-                  <Repeat className="h-5 w-5" style={{ color: BRAND.primary }} />
-                  <p className="text-xs font-semibold text-gray-700">Subscriptions</p>
-                </div>
-                <p className="mt-2 font-display text-2xl font-bold text-gray-900">₹ 1,196</p>
-                <p className="text-[11px] text-gray-500">Netflix renews in 3d</p>
-              </motion.div>
+              ))}
             </div>
+          </motion.div>
 
-            {/* Smart insight */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="rounded-3xl p-5 text-white shadow-[0_20px_50px_-20px_rgba(26,86,219,0.45)]"
-              style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #1e40af)` }}
-            >
-              <div className="flex items-center gap-2">
-                <Brain className="h-4 w-4" />
-                <p className="text-[11px] font-semibold uppercase tracking-widest opacity-90">Smart insight</p>
-              </div>
-              <p className="mt-2 text-sm font-medium leading-snug">
-                Food orders are up <span className="font-bold">₹ 1,240</span> this week. Cooking 2 nights could save you ~₹ 800.
-              </p>
-            </motion.div>
-          </div>
+          {/* Recent transactions */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-gray-700">Recent transactions</p>
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                <MessageSquare className="h-3 w-3" /> Auto from SMS
+              </span>
+            </div>
+            <div className="mt-3 divide-y divide-gray-100">
+              {txns.map((t) => (
+                <div key={t.name} className="flex items-center justify-between py-2.5">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-9 w-9 items-center justify-center rounded-xl"
+                      style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+                    >
+                      <t.icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900">{t.name}</p>
+                      <p className="text-[10px] text-gray-500">{t.tag}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs font-bold text-gray-900">− ₹ {t.amt.toLocaleString("en-IN")}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Smart insights */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="lg:col-span-12 rounded-3xl p-6 text-white shadow-[0_20px_50px_-20px_rgba(26,86,219,0.45)]"
+            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #1e40af)` }}
+          >
+            <div className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              <p className="text-[11px] font-semibold uppercase tracking-widest opacity-90">Smart insights</p>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {insights.map((it, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm ring-1 ring-white/15"
+                >
+                  <it.icon className="mt-0.5 h-4 w-4 shrink-0 opacity-90" />
+                  <p className="text-xs leading-snug">{it.text}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
