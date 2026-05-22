@@ -1210,8 +1210,8 @@ function Landing() {
       <Navbar />
       <main>
         <Hero />
-        <ProblemSection />
         <DashboardShowcase />
+        <ProblemSection />
         <HowItWorks />
         <FinalCTA />
       </main>
