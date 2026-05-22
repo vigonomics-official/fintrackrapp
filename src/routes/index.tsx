@@ -803,35 +803,37 @@ function DashboardShowcase() {
 
 function HowItWorks() {
   const steps = [
-    { n: "01", title: "Add your salary cycle", desc: "Tell FinTrackr when your salary hits. We do the rest." },
-    { n: "02", title: "Track UPI & expenses", desc: "Log spends in seconds — categories are auto-suggested." },
-    { n: "03", title: "Save more, stress less", desc: "Stay within budget, hit goals, breathe at month-end." },
+    { n: "1", title: "Add your salary cycle", desc: "Set payday. We build your month around it." },
+    { n: "2", title: "Track UPI & expenses automatically", desc: "Log spends in seconds with auto-categories." },
+    { n: "3", title: "Save more, stress less", desc: "Stay on budget and breathe easy at month-end." },
   ];
   return (
-    <section id="how" className="bg-white py-14 md:py-20">
+    <section id="how" className="bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-5">
-        <div className="mx-auto max-w-xl text-center">
-          <h2 className="font-display text-3xl font-bold text-gray-900 md:text-4xl">How it works</h2>
-          <p className="mt-3 text-sm text-gray-600">Three steps. No spreadsheets. No bank logins.</p>
+        <div className="text-center">
+          <h2 className="font-display text-xl font-bold text-gray-900 md:text-2xl">How it works</h2>
+          <p className="mt-1 text-xs text-gray-500">Three steps. No spreadsheets.</p>
         </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {steps.map((s, i) => (
             <motion.div
               key={s.n}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 1, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="relative rounded-2xl border border-gray-100 bg-gray-50/60 p-6"
+              transition={{ delay: i * 0.06, duration: 0.35 }}
+              className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-4"
             >
-              <span className="text-xs font-bold tracking-widest" style={{ color: BRAND.primary }}>
+              <span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                style={{ backgroundColor: BRAND.primary }}
+              >
                 {s.n}
               </span>
-              <h3 className="mt-2 text-base font-semibold text-gray-900">{s.title}</h3>
-              <p className="mt-1 text-sm text-gray-600">{s.desc}</p>
-              {i < steps.length - 1 && (
-                <ArrowDown className="absolute -bottom-3 left-1/2 hidden h-5 w-5 -translate-x-1/2 text-gray-300 md:block md:rotate-[-90deg]" />
-              )}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">{s.title}</h3>
+                <p className="mt-0.5 text-[12px] leading-snug text-gray-500">{s.desc}</p>
+              </div>
             </motion.div>
           ))}
         </div>
