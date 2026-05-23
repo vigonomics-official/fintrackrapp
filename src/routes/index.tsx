@@ -87,16 +87,8 @@ function Navbar() {
         <div className="hidden items-center gap-7 md:flex">
           <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900">Features</a>
           <a href="#how" className="text-sm font-medium text-gray-600 hover:text-gray-900">How it Works</a>
-          <a href="#early" className="text-sm font-medium text-gray-600 hover:text-gray-900">Early Access</a>
+          <a href="#final" className="text-sm font-medium text-gray-600 hover:text-gray-900">Get Started</a>
         </div>
-        <a href="#early">
-          <Button
-            className="rounded-xl text-white shadow-sm hover:opacity-90"
-            style={{ backgroundColor: BRAND.primary }}
-          >
-            Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </a>
       </nav>
     </header>
   );
@@ -104,8 +96,8 @@ function Navbar() {
 
 function FloatingCTA() {
   return (
-    <a
-      href="#early"
+    <Link
+      to="/signup"
       className="fixed bottom-5 right-5 z-50 md:hidden"
     >
       <motion.div
@@ -117,7 +109,7 @@ function FloatingCTA() {
       >
         Get Early Access <ArrowRight className="h-4 w-4" />
       </motion.div>
-    </a>
+    </Link>
   );
 }
 
