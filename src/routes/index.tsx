@@ -306,7 +306,7 @@ function Hero() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row"
+          className="mt-7 flex justify-center"
         >
           <Link to="/signup" className="w-full sm:w-auto">
             <Button
@@ -320,15 +320,6 @@ function Hero() {
               Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
-          <a href="#dashboard" className="w-full sm:w-auto">
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full rounded-xl border-gray-200 bg-white text-gray-800 hover:bg-gray-50 sm:w-auto"
-            >
-              See Demo
-            </Button>
-          </a>
         </motion.div>
 
         {/* Trust row */}
@@ -788,6 +779,21 @@ function DashboardShowcase() {
             </div>
           </motion.div>
         </div>
+
+        {/* Middle CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 1.2, duration: 0.7 }}
+          className="mt-10 flex justify-center"
+        >
+          <a href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md">
+            <Sparkles className="h-4 w-4" style={{ color: BRAND.primary }} />
+            See Demo
+            <ArrowRight className="h-3.5 w-3.5 text-gray-400" />
+          </a>
+        </motion.div>
       </div>
     </section>
   );
