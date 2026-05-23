@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Smartphone,
   Cpu,
-  Target,
   Bell,
   Receipt,
   Sparkles,
@@ -32,7 +31,6 @@ import {
   Repeat,
   Quote,
   Heart,
-  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
