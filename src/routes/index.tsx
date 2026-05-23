@@ -94,24 +94,6 @@ function Navbar() {
   );
 }
 
-function FloatingCTA() {
-  return (
-    <Link
-      to="/signup"
-      className="fixed bottom-5 right-5 z-50 md:hidden"
-    >
-      <motion.div
-        initial={{ y: 60, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 20 }}
-        className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg"
-        style={{ backgroundColor: BRAND.primary, boxShadow: "0 10px 30px -10px rgba(26,86,219,0.55)" }}
-      >
-        Get Early Access <ArrowRight className="h-4 w-4" />
-      </motion.div>
-    </Link>
-  );
-}
 
 function HeroMockup() {
   return (
