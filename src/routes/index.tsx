@@ -948,15 +948,24 @@ function Testimonials() {
 
 function FinalCTA() {
   return (
-    <section id="final" className="relative overflow-hidden">
-      <div className="pointer-events-none absolute left-1/4 top-10 -z-10 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute right-10 bottom-10 -z-10 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
-      <div className="mx-auto max-w-3xl px-5 py-20 text-center md:py-28">
+    <section
+      id="final"
+      className="relative overflow-hidden"
+      style={{
+        background: `linear-gradient(145deg, #0B4F7C 0%, #0D9488 60%, #10B981 100%)`,
+      }}
+    >
+      {/* Soft radial glows for depth */}
+      <div className="pointer-events-none absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-white/[0.06] blur-[100px]" />
+      <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-teal-300/[0.10] blur-[80px]" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-80 w-80 rounded-full bg-blue-300/[0.10] blur-[80px]" />
+
+      <div className="relative mx-auto max-w-2xl px-5 py-20 text-center md:py-28">
         <motion.h2
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-display text-3xl font-bold text-gray-900 md:text-5xl"
+          className="font-display text-3xl font-bold text-white md:text-5xl"
         >
           Start tracking your money today.
         </motion.h2>
@@ -965,30 +974,47 @@ function FinalCTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.05 }}
-          className="mx-auto mt-4 max-w-lg text-base text-gray-600"
+          className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/80 md:text-base"
         >
-          Join hundreds of Indians who finally understand where their money goes.
+          Join Indian salary earners who finally understand where their money goes.
         </motion.p>
+
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="mt-7 flex justify-center"
+          className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
           <Link to="/signup">
             <Button
               size="lg"
-              className="rounded-xl px-7 text-white shadow-lg transition-transform hover:-translate-y-0.5"
-              style={{
-                backgroundColor: BRAND.primary,
-                boxShadow: "0 20px 50px -15px rgba(26,86,219,0.55)",
-              }}
+              className="rounded-xl bg-white px-7 text-sm font-semibold text-[#0B4F7C] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white/95"
+              style={{ boxShadow: "0 20px 50px -15px rgba(0,0,0,0.25)" }}
             >
               Create Free Account <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
+          <Link to="/login">
+            <Button
+              size="lg"
+              variant="ghost"
+              className="rounded-xl px-7 text-sm font-semibold text-white ring-1 ring-white/30 backdrop-blur-sm transition-transform hover:-translate-y-0.5 hover:bg-white/10 hover:ring-white/40"
+            >
+              Sign In
+            </Button>
+          </Link>
         </motion.div>
+
+        {/* Calm reassurance microcopy */}
+        <motion.p
+          initial={{ opacity: 1 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="mt-5 text-xs font-medium text-white/50"
+        >
+          No credit card required · Takes 30 seconds
+        </motion.p>
       </div>
     </section>
   );
