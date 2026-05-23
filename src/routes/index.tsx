@@ -965,83 +965,10 @@ function Testimonials() {
   );
 }
 
-function EarlyAccess() {
-  const benefits = [
-    { icon: MessageSquare, label: "SMS Intelligence" },
-    { icon: Tags, label: "Smart Categorization" },
-    { icon: Target, label: "Budget Tracking" },
-    { icon: CalendarClock, label: "Salary Countdown" },
-    { icon: TrendingUp, label: "Investment Tracking" },
-  ];
-  return (
-    <section id="early" className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="relative overflow-hidden rounded-3xl p-8 text-center text-white shadow-2xl md:p-14"
-        style={{
-          background: `linear-gradient(135deg, ${BRAND.primary} 0%, #1e40af 55%, ${BRAND.accent} 135%)`,
-        }}
-      >
-        {/* Floating glow blobs */}
-        <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -right-10 h-72 w-72 rounded-full bg-emerald-300/30 blur-3xl" />
-
-        <div className="relative">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium backdrop-blur">
-            <Sparkles className="h-3 w-3" /> Limited early access now open
-          </span>
-          <h2 className="mx-auto mt-4 max-w-2xl font-display text-3xl font-bold leading-tight md:text-5xl">
-            Limited early access now open.
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-white/85 md:text-base">
-            Join our first users and unlock all premium features during the early access phase.
-          </p>
-
-          <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-2">
-            {benefits.map((b) => (
-              <div
-                key={b.label}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur transition-colors hover:bg-white/25"
-              >
-                <b.icon className="h-3.5 w-3.5" />
-                {b.label}
-              </div>
-            ))}
-          </div>
-
-          <div className="mx-auto mt-7 flex max-w-md flex-col gap-2 sm:flex-row">
-            <Link to="/signup" className="flex-1">
-              <Button
-                size="lg"
-                className="w-full rounded-xl bg-white font-semibold text-gray-900 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-gray-100"
-              >
-                Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link to="/login" className="flex-1">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full rounded-xl border-white/40 bg-white/10 text-white hover:bg-white/20"
-              >
-                Sign in
-              </Button>
-            </Link>
-          </div>
-          <p className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-white/80">
-            <Lock className="h-3 w-3" /> Built with real Indian salary earners.
-          </p>
-        </div>
-      </motion.div>
-    </section>
-  );
-}
 
 function FinalCTA() {
   return (
-    <section className="relative overflow-hidden">
+    <section id="final" className="relative overflow-hidden">
       <div className="pointer-events-none absolute left-1/4 top-10 -z-10 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
       <div className="pointer-events-none absolute right-10 bottom-10 -z-10 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
       <div className="mx-auto max-w-3xl px-5 py-20 text-center md:py-28">
@@ -1157,7 +1084,6 @@ function Landing() {
         <FinalCTA />
       </main>
       <Footer />
-      <FloatingCTA />
     </div>
   );
 }
