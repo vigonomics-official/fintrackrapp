@@ -380,8 +380,8 @@ function LoansPage() {
   return (
     <div className="pb-24">
       <PageHeader
-        title="Loan Management"
-        subtitle="Privacy-first manual tracking. No bank connections."
+        title="Loans & EMI"
+        subtitle="Track your EMIs stress-free. Understand how much salary remains after payments."
         action={
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm" className="gap-1">
@@ -501,13 +501,13 @@ function LoansPage() {
 
         {/* Loans list */}
         <div>
-          <h2 className="mb-3 font-display text-lg font-semibold">Your loans</h2>
+          <h2 className="mb-3 font-display text-lg font-semibold">Your loans & EMIs</h2>
           {loans.length === 0 ? (
             <Card className="shadow-soft">
               <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
                 <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Landmark className="h-6 w-6" /></span>
-                <p className="font-display text-lg font-semibold">No loans yet</p>
-                <p className="max-w-sm text-sm text-muted-foreground">Add your first loan manually. FinTrackr never connects to your bank — your data stays with you.</p>
+                <p className="font-display text-lg font-semibold">No loans or EMIs yet</p>
+                <p className="max-w-sm text-sm text-muted-foreground">Add your home, vehicle, or personal loan manually. Your data stays private — no bank connections needed.</p>
                 <Button onClick={() => setOpen(true)} className="bg-gradient-primary"><Plus className="mr-1 h-4 w-4" />Add your first loan</Button>
               </CardContent>
             </Card>
@@ -570,8 +570,8 @@ function LoansPage() {
       <Sheet open={fabSheet} onOpenChange={setFabSheet}>
         <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <SheetHeader className="text-left">
-            <SheetTitle className="font-display">Loan actions</SheetTitle>
-            <SheetDescription>Manage your debt & repayments.</SheetDescription>
+            <SheetTitle className="font-display">EMI & Loan actions</SheetTitle>
+            <SheetDescription>Stay ahead of upcoming EMIs. Track repayments calmly.</SheetDescription>
           </SheetHeader>
           <div className="mt-4 grid grid-cols-2 gap-3">
             {[

@@ -39,7 +39,7 @@ const GROUPS: Group[] = [
     items: [
       { label: "Budgets", icon: Wallet, to: "/budgets" },
       { label: "Categories", icon: Tag, to: "/categories" },
-      { label: "Loan Management", icon: Landmark, to: "/loans" },
+      { label: "Loans & EMI", icon: Landmark, to: "/loans" },
       { label: "Subscription Tracker", icon: Repeat, badge: "Soon" },
     ],
   },
