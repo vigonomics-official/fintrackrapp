@@ -952,7 +952,7 @@ function FinalCTA() {
       id="final"
       className="relative overflow-hidden"
       style={{
-        background: `linear-gradient(145deg, #0B4F7C 0%, #0D9488 60%, #10B981 100%)`,
+        background: `linear-gradient(145deg, #2563EB 0%, #0F766E 55%, #14B8A6 100%)`,
       }}
     >
       {/* Soft radial glows for depth */}
