@@ -645,22 +645,21 @@ function LoansPage() {
                 const due = nextDueDate(l.due_day);
                 const days = Math.ceil((due.getTime() - Date.now()) / 86400000);
                 const overdue = l.remaining_balance > 0 && days <= 3;
+                const emisLeft = Math.max(0, Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount)));
                 return (
-                  <motion.button
+                  <motion.div
                     key={l.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    onClick={() => setSelected(l)}
-                    className="text-left"
                   >
                     <Card className="h-full shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant">
-                      <CardContent className="space-y-3 p-5">
-                        <div className="flex items-start justify-between">
+                      <CardContent className="space-y-4 p-5">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-3">
                             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
                             <div>
-                              <p className="font-display font-semibold">{l.loan_name}</p>
+                              <p className="font-display font-semibold leading-tight">{l.loan_name}</p>
                               <p className="text-xs text-muted-foreground">{typeMeta(l.loan_type).label}</p>
                             </div>
                           </div>
@@ -670,18 +669,54 @@ function LoansPage() {
                             <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Due soon</Badge>
                           ) : null}
                         </div>
+
                         <div>
-                          <p className="text-xs text-muted-foreground">Remaining</p>
-                          <p className="font-display text-xl font-bold">{formatCurrency(l.remaining_balance, currency)}</p>
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Remaining</p>
+                          <p className="font-display text-2xl font-bold leading-tight">{formatCurrency(l.remaining_balance, currency)}</p>
                         </div>
-                        <Progress value={pct} />
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>EMI {formatCurrency(l.emi_amount, currency)}</span>
-                          <span>{pct.toFixed(0)}% paid</span>
+
+                        <div className="space-y-1.5">
+                          <Progress value={pct} />
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                            <span>{pct.toFixed(0)}% paid</span>
+                            <span>{emisLeft} EMIs left</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/40 p-3 text-xs">
+                          <div>
+                            <p className="text-muted-foreground">EMI</p>
+                            <p className="font-semibold text-foreground">{formatCurrency(l.emi_amount, currency)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-muted-foreground">Next due</p>
+                            <p className="font-semibold text-foreground">
+                              {l.remaining_balance > 0 ? due.toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "—"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 gap-1"
+                            onClick={() => setSelected(l)}
+                          >
+                            <Eye className="h-3.5 w-3.5" />View
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 gap-1 bg-gradient-primary"
+                            disabled={l.remaining_balance <= 0}
+                            onClick={(e) => quickMarkPaid(l, e)}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />Mark Paid
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.button>
+                  </motion.div>
                 );
               })}
             </div>
