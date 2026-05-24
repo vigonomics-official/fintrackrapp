@@ -8,6 +8,7 @@ import {
   Plus, Trash2, CheckCircle2, Calendar, TrendingDown,
   Wallet, AlertTriangle, Sparkles, ArrowLeft, Home, Car,
   GraduationCap, CreditCard, Coins, User, Briefcase, Landmark,
+  Clock, IndianRupee, Eye,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip,
@@ -315,6 +316,8 @@ function LoansPage() {
   const { data: profile } = useProfile();
   const { data: loans = [] } = useLoans();
   const { data: txs = [] } = useTransactions();
+  const qc = useQueryClient();
+  const { user } = useAuth();
   const currency = profile?.currency ?? "USD";
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Loan | null>(null);
@@ -344,12 +347,67 @@ function LoansPage() {
     return { debt, monthlyEmi, totalBorrowed, totalPaid, payoffPct, dti, monthIncome };
   }, [loans, txs]);
 
+  // Salary survival assistant computations
+  const survival = useMemo(() => {
+    const incomes = txs
+      .filter((t) => t.type === "income")
+      .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
+    const lastSalary = incomes[0];
+    const today = new Date();
+
+    // next salary date: same day-of-month as last income, next occurrence
+    let daysUntil: number | null = null;
+    let nextDate: Date | null = null;
+    if (lastSalary) {
+      const last = new Date(lastSalary.transaction_date);
+      const d = new Date(today.getFullYear(), today.getMonth(), Math.min(last.getDate(), 28));
+      if (d <= today) d.setMonth(d.getMonth() + 1);
+      nextDate = d;
+      daysUntil = Math.max(1, Math.ceil((d.getTime() - today.getTime()) / 86400000));
+    }
+
+    // spending this month (expense txns)
+    const monthSpend = txs.filter((t) => {
+      const d = new Date(t.transaction_date);
+      return t.type === "expense" && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+    }).reduce((s, t) => s + t.amount, 0);
+
+    const salaryLeft = Math.max(0, totals.monthIncome - totals.monthlyEmi - monthSpend);
+    const safeDaily = daysUntil ? Math.max(0, Math.floor(salaryLeft / daysUntil)) : 0;
+
+    let pressure: "safe" | "moderate" | "high" = "safe";
+    if (totals.dti >= 50) pressure = "high";
+    else if (totals.dti >= 30) pressure = "moderate";
+
+    return { salaryLeft, daysUntil, nextDate, safeDaily, pressure, hasIncome: !!lastSalary };
+  }, [txs, totals]);
+
+  const quickMarkPaid = async (loan: Loan, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) return;
+    const newBal = Math.max(0, loan.remaining_balance - loan.emi_amount);
+    const { error: e1 } = await supabase.from("loan_payments" as any).insert({
+      loan_id: loan.id,
+      user_id: user.id,
+      payment_date: new Date().toISOString().slice(0, 10),
+      payment_amount: Math.min(loan.emi_amount, loan.remaining_balance),
+      remaining_balance: newBal,
+      payment_status: "paid",
+    });
+    if (e1) return toast.error(friendlyError(e1));
+    const { error: e2 } = await supabase.from("loans" as any).update({ remaining_balance: newBal }).eq("id", loan.id);
+    if (e2) return toast.error(friendlyError(e2));
+    toast.success("EMI marked as paid");
+    qc.invalidateQueries({ queryKey: ["loans"] });
+    qc.invalidateQueries({ queryKey: ["loan_payments"] });
+  };
+
   const upcoming = useMemo(() => {
     return [...loans]
       .filter((l) => l.remaining_balance > 0)
       .map((l) => ({ loan: l, due: nextDueDate(l.due_day) }))
       .sort((a, b) => a.due.getTime() - b.due.getTime())
-      .slice(0, 3);
+      .slice(0, 4);
   }, [loans]);
 
   const debtByType = useMemo(() => {
@@ -369,11 +427,11 @@ function LoansPage() {
     const top = [...loans].filter(l => l.total_amount > 0).sort((a, b) => (b.total_amount - b.remaining_balance) / b.total_amount - (a.total_amount - a.remaining_balance) / a.total_amount)[0];
     if (top) {
       const p = ((top.total_amount - top.remaining_balance) / top.total_amount) * 100;
-      out.push(`${top.loan_name} is ${p.toFixed(0)}% completed.`);
+      out.push(`${top.loan_name} is ${p.toFixed(0)}% completed — you're on track.`);
     }
     const high = loans.find((l) => l.interest_rate >= 20);
     if (high) out.push(`${high.loan_name} interest (${high.interest_rate}%) is comparatively high — consider prioritising it.`);
-    if (totals.dti > 40) out.push(`Your EMI-to-income ratio is ${totals.dti.toFixed(0)}% — keep it under 40% for a calmer cash flow.`);
+    if (totals.dti > 40) out.push(`Your EMI pressure is ${totals.dti.toFixed(0)}% of income — keep it under 40% for calmer cash flow.`);
     return out;
   }, [loans, totals]);
 
@@ -401,34 +459,68 @@ function LoansPage() {
       />
 
       <div className="space-y-6 px-6 py-6 md:px-10">
-        {/* Summary stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: "Total Outstanding", value: formatCurrency(totals.debt, currency), icon: Wallet, accent: "bg-gradient-primary text-primary-foreground" },
-            { label: "Monthly EMI", value: formatCurrency(totals.monthlyEmi, currency), icon: Calendar, accent: "bg-gradient-gold text-gold-foreground" },
-            { label: "Active Loans", value: String(loans.filter(l => l.remaining_balance > 0).length), icon: Landmark, accent: "bg-success text-success-foreground" },
-            { label: "Debt-to-Income", value: totals.monthIncome > 0 ? `${totals.dti.toFixed(0)}%` : "—", icon: TrendingDown, accent: totals.dti > 40 ? "bg-destructive/90 text-destructive-foreground" : "bg-secondary text-secondary-foreground" },
-          ].map((s, i) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card className="overflow-hidden shadow-soft">
-                <CardContent className="flex items-start justify-between gap-4 p-5">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{s.label}</p>
-                    <p className="mt-2 font-display text-2xl font-bold">{s.value}</p>
-                  </div>
-                  <div className={`flex h-11 w-11 items-center justify-center rounded-xl shadow-elegant ${s.accent}`}>
-                    <s.icon className="h-5 w-5" />
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        {/* SALARY SURVIVAL HERO */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="overflow-hidden border-none bg-gradient-primary text-primary-foreground shadow-elegant">
+            <CardContent className="space-y-5 p-6 md:p-7">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.14em] opacity-80">Salary left after EMI</p>
+                  <p className="mt-1 font-display text-3xl font-bold md:text-4xl">
+                    {survival.hasIncome ? formatCurrency(survival.salaryLeft, currency) : "—"}
+                  </p>
+                  <p className="mt-1 text-xs opacity-85">
+                    {!survival.hasIncome
+                      ? "Add this month's salary to unlock your survival plan."
+                      : survival.pressure === "high"
+                      ? "Careful spending recommended until next salary."
+                      : survival.pressure === "moderate"
+                      ? "You're managing — pace yourself this month."
+                      : "You're managing well this month."}
+                  </p>
+                </div>
+                <span
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold backdrop-blur-sm ${
+                    survival.pressure === "high"
+                      ? "bg-destructive/90 text-destructive-foreground"
+                      : survival.pressure === "moderate"
+                      ? "bg-gold/90 text-gold-foreground"
+                      : "bg-success/90 text-success-foreground"
+                  }`}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {survival.pressure === "high" ? "High Pressure" : survival.pressure === "moderate" ? "Moderate" : "Safe"}
+                </span>
+              </div>
 
-        {/* Payoff progress + upcoming */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
+                  <div className="flex items-center gap-1.5 text-[11px] opacity-85"><Clock className="h-3 w-3" />Next salary</div>
+                  <p className="mt-1 font-display text-lg font-bold">
+                    {survival.daysUntil ? `${survival.daysUntil} days` : "—"}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
+                  <div className="flex items-center gap-1.5 text-[11px] opacity-85"><IndianRupee className="h-3 w-3" />Safe daily</div>
+                  <p className="mt-1 font-display text-lg font-bold">
+                    {survival.hasIncome && survival.safeDaily > 0 ? `${formatCurrency(survival.safeDaily, currency)}/d` : "—"}
+                  </p>
+                </div>
+                <div className="col-span-2 rounded-2xl bg-white/10 p-3 backdrop-blur-sm sm:col-span-1">
+                  <div className="flex items-center gap-1.5 text-[11px] opacity-85"><Calendar className="h-3 w-3" />Monthly EMI</div>
+                  <p className="mt-1 font-display text-lg font-bold">{formatCurrency(totals.monthlyEmi, currency)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Payoff progress + upcoming timeline */}
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="shadow-soft lg:col-span-2">
-            <CardHeader><CardTitle className="font-display">Debt payoff progress</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="font-display">Total Loan Burden</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-end justify-between">
                 <div>
@@ -457,29 +549,62 @@ function LoansPage() {
           </Card>
 
           <Card className="shadow-soft">
-            <CardHeader><CardTitle className="flex items-center gap-2 font-display"><Calendar className="h-4 w-4 text-primary" />Upcoming EMIs</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-display">
+                <Calendar className="h-4 w-4 text-primary" />Upcoming EMIs
+              </CardTitle>
+            </CardHeader>
             <CardContent>
               {upcoming.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No upcoming EMIs. You're debt-free for now.</p>
+                <p className="text-sm text-muted-foreground">No upcoming EMIs. You're stress-free for now.</p>
               ) : (
-                <ul className="space-y-3">
+                <ol className="relative space-y-4 border-l border-border/70 pl-5">
                   {upcoming.map(({ loan, due }) => {
                     const Icon = typeMeta(loan.loan_type).icon;
                     const days = Math.ceil((due.getTime() - Date.now()) / 86400000);
+                    const overdue = days < 0;
+                    const dueTomorrow = days >= 0 && days <= 1;
+                    const tone = overdue
+                      ? "bg-destructive text-destructive-foreground"
+                      : dueTomorrow
+                      ? "bg-gold text-gold-foreground"
+                      : "bg-success text-success-foreground";
+                    const chipText = overdue
+                      ? "Overdue"
+                      : days === 0
+                      ? "Due Today"
+                      : days === 1
+                      ? "Due Tomorrow"
+                      : `In ${days} days`;
                     return (
-                      <li key={loan.id} className="flex items-center justify-between gap-3 rounded-xl border p-3">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span>
-                          <div>
-                            <p className="text-sm font-medium">{loan.loan_name}</p>
-                            <p className="text-xs text-muted-foreground">{due.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · in {days}d</p>
+                      <li key={loan.id} className="relative">
+                        <span className={`absolute -left-[26px] top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full ring-4 ring-background ${tone}`} />
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold">{loan.loan_name}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${tone}`}>
+                                {chipText}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-display text-sm font-bold">{formatCurrency(loan.emi_amount, currency)}</p>
+                            <button
+                              onClick={(e) => quickMarkPaid(loan, e)}
+                              className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                            >
+                              <CheckCircle2 className="h-3 w-3" />Mark paid
+                            </button>
                           </div>
                         </div>
-                        <p className="font-display text-sm font-semibold">{formatCurrency(loan.emi_amount, currency)}</p>
                       </li>
                     );
                   })}
-                </ul>
+                </ol>
               )}
             </CardContent>
           </Card>
@@ -520,22 +645,21 @@ function LoansPage() {
                 const due = nextDueDate(l.due_day);
                 const days = Math.ceil((due.getTime() - Date.now()) / 86400000);
                 const overdue = l.remaining_balance > 0 && days <= 3;
+                const emisLeft = Math.max(0, Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount)));
                 return (
-                  <motion.button
+                  <motion.div
                     key={l.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    onClick={() => setSelected(l)}
-                    className="text-left"
                   >
                     <Card className="h-full shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant">
-                      <CardContent className="space-y-3 p-5">
-                        <div className="flex items-start justify-between">
+                      <CardContent className="space-y-4 p-5">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-3">
                             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
                             <div>
-                              <p className="font-display font-semibold">{l.loan_name}</p>
+                              <p className="font-display font-semibold leading-tight">{l.loan_name}</p>
                               <p className="text-xs text-muted-foreground">{typeMeta(l.loan_type).label}</p>
                             </div>
                           </div>
@@ -545,18 +669,54 @@ function LoansPage() {
                             <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Due soon</Badge>
                           ) : null}
                         </div>
+
                         <div>
-                          <p className="text-xs text-muted-foreground">Remaining</p>
-                          <p className="font-display text-xl font-bold">{formatCurrency(l.remaining_balance, currency)}</p>
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Remaining</p>
+                          <p className="font-display text-2xl font-bold leading-tight">{formatCurrency(l.remaining_balance, currency)}</p>
                         </div>
-                        <Progress value={pct} />
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>EMI {formatCurrency(l.emi_amount, currency)}</span>
-                          <span>{pct.toFixed(0)}% paid</span>
+
+                        <div className="space-y-1.5">
+                          <Progress value={pct} />
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                            <span>{pct.toFixed(0)}% paid</span>
+                            <span>{emisLeft} EMIs left</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted/40 p-3 text-xs">
+                          <div>
+                            <p className="text-muted-foreground">EMI</p>
+                            <p className="font-semibold text-foreground">{formatCurrency(l.emi_amount, currency)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-muted-foreground">Next due</p>
+                            <p className="font-semibold text-foreground">
+                              {l.remaining_balance > 0 ? due.toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "—"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 gap-1"
+                            onClick={() => setSelected(l)}
+                          >
+                            <Eye className="h-3.5 w-3.5" />View
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 gap-1 bg-gradient-primary"
+                            disabled={l.remaining_balance <= 0}
+                            onClick={(e) => quickMarkPaid(l, e)}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />Mark Paid
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.button>
+                  </motion.div>
                 );
               })}
             </div>
