@@ -316,6 +316,8 @@ function LoansPage() {
   const { data: profile } = useProfile();
   const { data: loans = [] } = useLoans();
   const { data: txs = [] } = useTransactions();
+  const qc = useQueryClient();
+  const { user } = useAuth();
   const currency = profile?.currency ?? "USD";
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Loan | null>(null);
@@ -345,12 +347,67 @@ function LoansPage() {
     return { debt, monthlyEmi, totalBorrowed, totalPaid, payoffPct, dti, monthIncome };
   }, [loans, txs]);
 
+  // Salary survival assistant computations
+  const survival = useMemo(() => {
+    const incomes = txs
+      .filter((t) => t.type === "income")
+      .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
+    const lastSalary = incomes[0];
+    const today = new Date();
+
+    // next salary date: same day-of-month as last income, next occurrence
+    let daysUntil: number | null = null;
+    let nextDate: Date | null = null;
+    if (lastSalary) {
+      const last = new Date(lastSalary.transaction_date);
+      const d = new Date(today.getFullYear(), today.getMonth(), Math.min(last.getDate(), 28));
+      if (d <= today) d.setMonth(d.getMonth() + 1);
+      nextDate = d;
+      daysUntil = Math.max(1, Math.ceil((d.getTime() - today.getTime()) / 86400000));
+    }
+
+    // spending this month (expense txns)
+    const monthSpend = txs.filter((t) => {
+      const d = new Date(t.transaction_date);
+      return t.type === "expense" && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+    }).reduce((s, t) => s + t.amount, 0);
+
+    const salaryLeft = Math.max(0, totals.monthIncome - totals.monthlyEmi - monthSpend);
+    const safeDaily = daysUntil ? Math.max(0, Math.floor(salaryLeft / daysUntil)) : 0;
+
+    let pressure: "safe" | "moderate" | "high" = "safe";
+    if (totals.dti >= 50) pressure = "high";
+    else if (totals.dti >= 30) pressure = "moderate";
+
+    return { salaryLeft, daysUntil, nextDate, safeDaily, pressure, hasIncome: !!lastSalary };
+  }, [txs, totals]);
+
+  const quickMarkPaid = async (loan: Loan, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) return;
+    const newBal = Math.max(0, loan.remaining_balance - loan.emi_amount);
+    const { error: e1 } = await supabase.from("loan_payments" as any).insert({
+      loan_id: loan.id,
+      user_id: user.id,
+      payment_date: new Date().toISOString().slice(0, 10),
+      payment_amount: Math.min(loan.emi_amount, loan.remaining_balance),
+      remaining_balance: newBal,
+      payment_status: "paid",
+    });
+    if (e1) return toast.error(friendlyError(e1));
+    const { error: e2 } = await supabase.from("loans" as any).update({ remaining_balance: newBal }).eq("id", loan.id);
+    if (e2) return toast.error(friendlyError(e2));
+    toast.success("EMI marked as paid");
+    qc.invalidateQueries({ queryKey: ["loans"] });
+    qc.invalidateQueries({ queryKey: ["loan_payments"] });
+  };
+
   const upcoming = useMemo(() => {
     return [...loans]
       .filter((l) => l.remaining_balance > 0)
       .map((l) => ({ loan: l, due: nextDueDate(l.due_day) }))
       .sort((a, b) => a.due.getTime() - b.due.getTime())
-      .slice(0, 3);
+      .slice(0, 4);
   }, [loans]);
 
   const debtByType = useMemo(() => {
@@ -370,11 +427,11 @@ function LoansPage() {
     const top = [...loans].filter(l => l.total_amount > 0).sort((a, b) => (b.total_amount - b.remaining_balance) / b.total_amount - (a.total_amount - a.remaining_balance) / a.total_amount)[0];
     if (top) {
       const p = ((top.total_amount - top.remaining_balance) / top.total_amount) * 100;
-      out.push(`${top.loan_name} is ${p.toFixed(0)}% completed.`);
+      out.push(`${top.loan_name} is ${p.toFixed(0)}% completed — you're on track.`);
     }
     const high = loans.find((l) => l.interest_rate >= 20);
     if (high) out.push(`${high.loan_name} interest (${high.interest_rate}%) is comparatively high — consider prioritising it.`);
-    if (totals.dti > 40) out.push(`Your EMI-to-income ratio is ${totals.dti.toFixed(0)}% — keep it under 40% for a calmer cash flow.`);
+    if (totals.dti > 40) out.push(`Your EMI pressure is ${totals.dti.toFixed(0)}% of income — keep it under 40% for calmer cash flow.`);
     return out;
   }, [loans, totals]);
 
