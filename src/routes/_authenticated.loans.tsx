@@ -8,6 +8,7 @@ import {
   Plus, Trash2, CheckCircle2, Calendar, TrendingDown,
   Wallet, AlertTriangle, Sparkles, ArrowLeft, Home, Car,
   GraduationCap, CreditCard, Coins, User, Briefcase, Landmark,
+  Clock, IndianRupee, Eye,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip,
