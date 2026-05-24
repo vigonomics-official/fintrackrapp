@@ -55,10 +55,10 @@ export const Route = createFileRoute("/")({
 });
 
 const BRAND = {
-  primary: "#1A56DB",
-  accent: "#10B981",
-  bg: "#F9FAFB",
-  text: "#111827",
+  primary: "#0F766E",
+  accent: "#14B8A6",
+  bg: "#F8FAFC",
+  text: "#0F172A",
 };
 
 function Logo() {
@@ -106,7 +106,7 @@ function HeroMockup() {
         className="pointer-events-none absolute -inset-6 -z-10 rounded-[3rem] blur-3xl"
         style={{
           background:
-            "linear-gradient(135deg, rgba(26,86,219,0.18), rgba(16,185,129,0.18))",
+            "linear-gradient(135deg, rgba(37,99,235,0.18), rgba(20,184,166,0.18))",
         }}
       />
 
@@ -116,7 +116,7 @@ function HeroMockup() {
           className="rounded-[1.7rem] p-5"
           style={{
             background:
-              "linear-gradient(160deg, #F5F9FF 0%, #FFFFFF 45%, #F0FBF7 100%)",
+              "linear-gradient(160deg, #F1F5F9 0%, #FFFFFF 45%, #ECFDF5 100%)",
           }}
         >
           {/* Header */}
@@ -136,7 +136,7 @@ function HeroMockup() {
           {/* Salary countdown pill */}
           <div
             className="mt-4 flex items-center justify-between rounded-2xl px-4 py-3 text-white shadow-sm"
-            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #1e40af)` }}
+            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #2563EB)` }}
           >
             <div className="flex items-center gap-2">
               <CalendarClock className="h-4 w-4" />
@@ -239,7 +239,7 @@ function Hero() {
         className="absolute inset-x-0 top-0 -z-10 h-[640px]"
         style={{
           background:
-            "radial-gradient(60% 55% at 50% 0%, rgba(26,86,219,0.14) 0%, rgba(16,185,129,0.08) 45%, rgba(249,250,251,0) 80%)",
+            "radial-gradient(60% 55% at 50% 0%, rgba(37,99,235,0.14) 0%, rgba(20,184,166,0.08) 45%, rgba(249,250,251,0) 80%)",
         }}
       />
       <div className="pointer-events-none absolute -left-24 top-32 -z-10 h-72 w-72 rounded-full bg-blue-300/25 blur-3xl" />
@@ -293,8 +293,8 @@ function Hero() {
               size="lg"
               className="w-full rounded-xl px-6 text-white shadow-md transition-transform hover:-translate-y-0.5 hover:opacity-95 sm:w-auto"
               style={{
-                background: `linear-gradient(135deg, ${BRAND.primary}, #1e40af)`,
-                boxShadow: "0 18px 40px -16px rgba(26,86,219,0.55)",
+                background: `linear-gradient(135deg, ${BRAND.primary}, #2563EB)`,
+                boxShadow: "0 18px 40px -16px rgba(37,99,235,0.55)",
               }}
             >
               Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
@@ -339,7 +339,7 @@ function TrustSection() {
           >
             <div
               className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
-              style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+              style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
             >
               <it.icon className="h-5 w-5" />
             </div>
@@ -374,7 +374,7 @@ function ProblemSection() {
           >
             <div
               className="flex h-9 w-9 items-center justify-center rounded-lg"
-              style={{ background: "rgba(16,185,129,0.10)", color: BRAND.accent }}
+              style={{ background: "rgba(20,184,166,0.10)", color: BRAND.accent }}
             >
               <it.icon className="h-4 w-4" />
             </div>
@@ -418,7 +418,7 @@ function Features() {
           >
             <div
               className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
-              style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+              style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
             >
               <it.icon className="h-5 w-5" />
             </div>
@@ -461,7 +461,7 @@ function SmartFeatures() {
         className="absolute inset-x-0 top-0 -z-10 h-72"
         style={{
           background:
-            "radial-gradient(50% 60% at 50% 0%, rgba(26,86,219,0.07), transparent 70%)",
+            "radial-gradient(50% 60% at 50% 0%, rgba(37,99,235,0.07), transparent 70%)",
         }}
       />
       <div className="mx-auto max-w-6xl px-5">
@@ -516,7 +516,7 @@ function SmartFeatures() {
                 <div className="flex items-center gap-3">
                   <div
                     className="flex h-9 w-9 items-center justify-center rounded-lg"
-                    style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+                    style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
                   >
                     <ex.icon className="h-4 w-4" />
                   </div>
@@ -526,7 +526,7 @@ function SmartFeatures() {
                   <ArrowRight className="h-3.5 w-3.5 text-gray-400" />
                   <span
                     className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                    style={{ background: "rgba(16,185,129,0.12)", color: BRAND.accent }}
+                    style={{ background: "rgba(20,184,166,0.12)", color: BRAND.accent }}
                   >
                     {ex.to}
                   </span>
@@ -542,8 +542,8 @@ function SmartFeatures() {
 
 function DashboardShowcase() {
   const categories = [
-    { label: "Food & Dining", pct: 28, amt: 4640, color: "#1A56DB" },
-    { label: "Rent & EMI", pct: 32, amt: 5300, color: "#10B981" },
+    { label: "Food & Dining", pct: 28, amt: 4640, color: "#0F766E" },
+    { label: "Rent & EMI", pct: 32, amt: 5300, color: "#14B8A6" },
     { label: "Fuel & Travel", pct: 18, amt: 2980, color: "#6366F1" },
     { label: "Bills & Other", pct: 22, amt: 3640, color: "#F59E0B" },
   ];
@@ -565,7 +565,7 @@ function DashboardShowcase() {
         className="absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(60% 60% at 20% 10%, rgba(26,86,219,0.10), transparent 60%), radial-gradient(50% 50% at 90% 80%, rgba(16,185,129,0.10), transparent 60%)",
+            "radial-gradient(60% 60% at 20% 10%, rgba(37,99,235,0.10), transparent 60%), radial-gradient(50% 50% at 90% 80%, rgba(20,184,166,0.10), transparent 60%)",
         }}
       />
       <div className="mx-auto max-w-6xl px-5">
@@ -640,7 +640,7 @@ function DashboardShowcase() {
               </div>
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-2xl"
-                style={{ background: "rgba(16,185,129,0.10)", color: BRAND.accent }}
+                style={{ background: "rgba(20,184,166,0.10)", color: BRAND.accent }}
               >
                 <PiggyBank className="h-5 w-5" />
               </div>
@@ -718,7 +718,7 @@ function DashboardShowcase() {
                   <div className="flex items-center gap-3">
                     <div
                       className="flex h-9 w-9 items-center justify-center rounded-xl"
-                      style={{ background: "rgba(26,86,219,0.08)", color: BRAND.primary }}
+                      style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
                     >
                       <t.icon className="h-4 w-4" />
                     </div>
@@ -739,8 +739,8 @@ function DashboardShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-12 rounded-3xl p-6 text-white shadow-[0_20px_50px_-20px_rgba(26,86,219,0.45)]"
-            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #1e40af)` }}
+            className="lg:col-span-12 rounded-3xl p-6 text-white shadow-[0_20px_50px_-20px_rgba(37,99,235,0.45)]"
+            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #2563EB)` }}
           >
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
@@ -952,7 +952,7 @@ function FinalCTA() {
       id="final"
       className="relative overflow-hidden"
       style={{
-        background: `linear-gradient(145deg, #0B4F7C 0%, #0D9488 60%, #10B981 100%)`,
+        background: `linear-gradient(145deg, #2563EB 0%, #0F766E 55%, #14B8A6 100%)`,
       }}
     >
       {/* Soft radial glows for depth */}
@@ -989,7 +989,7 @@ function FinalCTA() {
           <Link to="/signup">
             <Button
               size="lg"
-              className="rounded-xl bg-white px-7 text-sm font-semibold text-[#0B4F7C] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white/95"
+              className="rounded-xl bg-white px-7 text-sm font-semibold text-[#0F766E] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white/95"
               style={{ boxShadow: "0 20px 50px -15px rgba(0,0,0,0.25)" }}
             >
               Create Free Account <ArrowRight className="ml-1 h-4 w-4" />
