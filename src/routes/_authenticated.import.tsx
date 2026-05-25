@@ -127,7 +127,7 @@ function ImportPage() {
 
       const date = parseDate(dateRaw);
       const amount = parseAmount(amountRaw);
-      const merchant = String(merchantRaw ?? notesRaw ?? "").trim() || "Unknown";
+      const merchant = cleanMerchant(merchantRaw ?? notesRaw) || "Unknown";
       if (!date) errors.push("Invalid date");
       if (amount == null) errors.push("Invalid amount");
 
@@ -149,7 +149,7 @@ function ImportPage() {
         type,
         category_id: cat.category_id,
         payment_method: hint.method,
-        notes: String(notesRaw ?? "").trim(),
+        notes: cleanNotes(notesRaw),
         errors: errors.length ? errors : undefined,
         selected: errors.length === 0,
       };
