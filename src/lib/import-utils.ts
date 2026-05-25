@@ -264,6 +264,13 @@ const MERCHANT_RULES: { match: RegExp; category: string; type?: "income" | "expe
 ];
 
 export function categorize(merchant: string, categories: Category[]): { category_id: string | null; type?: "income" | "expense" } {
+  // Brand registry first (precise)
+  const brand = detectBrand(merchant);
+  if (brand) {
+    const cat = categories.find((c) => c.name.toLowerCase() === brand.category.toLowerCase());
+    if (cat) return { category_id: cat.id, type: brand.type };
+  }
+  // Fuzzy fallback
   for (const rule of MERCHANT_RULES) {
     if (rule.match.test(merchant)) {
       const cat = categories.find((c) => c.name.toLowerCase() === rule.category.toLowerCase());
@@ -273,11 +280,19 @@ export function categorize(merchant: string, categories: Category[]): { category
   return { category_id: null };
 }
 
+/**
+ * Duplicate detection: same date + same amount + same brand/merchant.
+ * Compares against existing transaction notes (which start with merchant name).
+ */
 export function detectDuplicates(staged: StagedRow[], existing: Transaction[]): StagedRow[] {
+  const normMerchant = (s: string) => {
+    const b = detectBrand(s);
+    return (b?.brand ?? s).toLowerCase().trim().slice(0, 24);
+  };
   const key = (date: string, amount: number, merchant: string) =>
-    `${date}|${amount.toFixed(2)}|${merchant.toLowerCase().trim().slice(0, 24)}`;
+    `${date}|${amount.toFixed(2)}|${normMerchant(merchant)}`;
   const set = new Set(
-    existing.map((t) => key(t.transaction_date, t.amount, t.notes ?? "")),
+    existing.map((t) => key(t.transaction_date, t.amount, (t.notes ?? "").split(" — ")[0] ?? "")),
   );
   return staged.map((r) => ({
     ...r,
