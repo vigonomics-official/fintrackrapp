@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
+import { cleanMerchant, cleanNotes, categorize, parseDate, parseAmount } from "@/lib/import-utils";
 
 export const Route = createFileRoute("/_authenticated/transactions")({ component: TransactionsPage });
 
