@@ -100,22 +100,37 @@ function TransactionsPage() {
         if (!user) return;
         const valid = ["income", "expense", "transfer"];
         const validPm = ["cash", "bank", "upi", "credit_card", "debit_card", "wallet"];
+        const seen = new Set(txs.map((t) => `${t.transaction_date}|${t.amount.toFixed(2)}|${(t.notes ?? "").toLowerCase().slice(0, 24)}`));
         const rows = (res.data as any[]).map((r) => {
-          const type = valid.includes(r.type) ? r.type : "expense";
-          const cat = categories.find(c => c.name?.toLowerCase() === String(r.category ?? "").toLowerCase());
-          const pm = validPm.includes(r.payment_method) ? r.payment_method : "cash";
+          const rawMerchant = r.merchant ?? r.description ?? r.narration ?? r.details ?? r.payee ?? r.notes ?? "";
+          const merchant = cleanMerchant(rawMerchant) || "Unknown";
+          let type: "income" | "expense" | "transfer" = valid.includes(r.type) ? r.type : "expense";
+          const auto = categorize(merchant, categories);
+          if (auto.type) type = auto.type;
+          const csvCat = categories.find(c => c.name?.toLowerCase() === String(r.category ?? "").toLowerCase());
+          const category_id = csvCat?.id ?? auto.category_id ?? null;
+          const pm = validPm.includes(r.payment_method) ? r.payment_method : "upi";
+          const amount = parseAmount(r.amount) ?? 0;
+          const date = parseDate(r.date) ?? new Date().toISOString().slice(0, 10);
+          const cleanedNotes = cleanNotes(r.notes);
           return {
             user_id: user.id,
             type,
-            amount: Number(r.amount) || 0,
-            category_id: cat?.id ?? null,
+            amount,
+            category_id,
             payment_method: pm,
-            transaction_date: r.date || new Date().toISOString().slice(0, 10),
-            notes: r.notes || null,
-            tags: r.tags ? String(r.tags).split("|").filter(Boolean) : [],
+            transaction_date: date,
+            notes: [merchant, cleanedNotes].filter(Boolean).join(" — ").slice(0, 500),
+            tags: r.tags ? String(r.tags).split("|").filter(Boolean) : ["import:csv"],
           };
-        }).filter(r => r.amount > 0);
-        if (rows.length === 0) return toast.error("No valid rows.");
+        }).filter(r => {
+          if (r.amount <= 0) return false;
+          const k = `${r.transaction_date}|${r.amount.toFixed(2)}|${r.notes.toLowerCase().slice(0, 24)}`;
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+        if (rows.length === 0) return toast.error("No new transactions to import.");
         const { error } = await supabase.from("transactions").insert(rows);
         if (error) return toast.error(friendlyError(error));
         toast.success(`Imported ${rows.length} transactions`);
