@@ -88,9 +88,116 @@ export function parseDate(input: unknown): string | null {
   return null;
 }
 
+/**
+ * Known Indian merchant brand registry. First match wins.
+ * Maps fuzzy UPI/CSV strings → clean brand name + best category guess.
+ */
+const BRAND_REGISTRY: { match: RegExp; brand: string; category: string; type?: "income" | "expense" }[] = [
+  // Food & Dining
+  { match: /swiggy|swgy|bundl/i, brand: "Swiggy", category: "Food & Dining" },
+  { match: /zomato|zmto/i, brand: "Zomato", category: "Food & Dining" },
+  { match: /dominos|domino'?s/i, brand: "Dominos", category: "Food & Dining" },
+  { match: /mcdonald|mcd\b/i, brand: "McDonald's", category: "Food & Dining" },
+  { match: /\bkfc\b/i, brand: "KFC", category: "Food & Dining" },
+  { match: /starbucks|sbux/i, brand: "Starbucks", category: "Food & Dining" },
+  { match: /pizza\s*hut/i, brand: "Pizza Hut", category: "Food & Dining" },
+  { match: /\bccd\b|cafe\s*coffee\s*day/i, brand: "Cafe Coffee Day", category: "Food & Dining" },
+  // Transport
+  { match: /uber/i, brand: "Uber", category: "Transport" },
+  { match: /\bola\b/i, brand: "Ola", category: "Transport" },
+  { match: /rapido/i, brand: "Rapido", category: "Transport" },
+  { match: /irctc|indian\s*railway/i, brand: "IRCTC", category: "Transport" },
+  { match: /indigo|6e\b/i, brand: "IndiGo", category: "Transport" },
+  { match: /spicejet/i, brand: "SpiceJet", category: "Transport" },
+  { match: /air\s*india/i, brand: "Air India", category: "Transport" },
+  { match: /\bmetro\b/i, brand: "Metro", category: "Transport" },
+  // Fuel → Transport
+  { match: /\bhpcl\b|hindustan\s*petroleum/i, brand: "HPCL", category: "Transport" },
+  { match: /\biocl\b|indian\s*oil/i, brand: "Indian Oil", category: "Transport" },
+  { match: /\bbpcl\b|bharat\s*petroleum/i, brand: "BPCL", category: "Transport" },
+  { match: /reliance\s*petrol|\bjio[\s-]*bp\b/i, brand: "Jio-BP", category: "Transport" },
+  { match: /shell|petrol|fuel|diesel/i, brand: "Fuel", category: "Transport" },
+  // Shopping
+  { match: /amazon\s*pay|amazonpay/i, brand: "Amazon Pay", category: "Shopping" },
+  { match: /amazon|amzn/i, brand: "Amazon", category: "Shopping" },
+  { match: /flipkart|fkrt/i, brand: "Flipkart", category: "Shopping" },
+  { match: /myntra/i, brand: "Myntra", category: "Shopping" },
+  { match: /ajio/i, brand: "Ajio", category: "Shopping" },
+  { match: /nykaa/i, brand: "Nykaa", category: "Shopping" },
+  { match: /meesho/i, brand: "Meesho", category: "Shopping" },
+  { match: /\btata\s*cliq\b/i, brand: "Tata CLiQ", category: "Shopping" },
+  { match: /\bdmart\b|d-?mart/i, brand: "DMart", category: "Shopping" },
+  { match: /bigbasket|big\s*basket/i, brand: "BigBasket", category: "Shopping" },
+  { match: /blinkit|grofers/i, brand: "Blinkit", category: "Shopping" },
+  { match: /zepto/i, brand: "Zepto", category: "Shopping" },
+  // Subscriptions / Entertainment
+  { match: /netflix/i, brand: "Netflix", category: "Subscriptions" },
+  { match: /spotify/i, brand: "Spotify", category: "Subscriptions" },
+  { match: /prime\s*video|amazon\s*prime/i, brand: "Prime Video", category: "Subscriptions" },
+  { match: /hotstar|disney\+?/i, brand: "Disney+ Hotstar", category: "Subscriptions" },
+  { match: /youtube|yt\s*premium/i, brand: "YouTube", category: "Subscriptions" },
+  { match: /sony\s*liv|sonyliv/i, brand: "SonyLIV", category: "Subscriptions" },
+  { match: /zee5/i, brand: "Zee5", category: "Subscriptions" },
+  { match: /bookmyshow|\bbms\b/i, brand: "BookMyShow", category: "Entertainment" },
+  { match: /pvr|inox/i, brand: "PVR Inox", category: "Entertainment" },
+  // Bills & Recharge
+  { match: /airtel/i, brand: "Airtel", category: "Bills & Utilities" },
+  { match: /\bjio\b|reliance\s*jio/i, brand: "Jio", category: "Bills & Utilities" },
+  { match: /\bvi\b|vodafone|idea/i, brand: "Vi", category: "Bills & Utilities" },
+  { match: /\bbsnl\b/i, brand: "BSNL", category: "Bills & Utilities" },
+  { match: /tata\s*power|adani\s*electric|bescom|mseb|kseb|tneb|electricity/i, brand: "Electricity", category: "Bills & Utilities" },
+  { match: /water\s*bill|water\s*supply/i, brand: "Water", category: "Bills & Utilities" },
+  { match: /gas\s*bill|indane|hp\s*gas/i, brand: "Gas", category: "Bills & Utilities" },
+  { match: /broadband|act\s*fibernet|hathway/i, brand: "Broadband", category: "Bills & Utilities" },
+  // Loans & EMI
+  { match: /\bemi\b|loan\s*repay|home\s*loan|car\s*loan|personal\s*loan|bajaj\s*finserv|hdfc.*emi|icici.*emi|sbi.*emi/i, brand: "EMI Payment", category: "Bills & Utilities" },
+  // Healthcare
+  { match: /apollo|apollopharmacy/i, brand: "Apollo Pharmacy", category: "Healthcare" },
+  { match: /pharm?easy|pharmeasy/i, brand: "PharmEasy", category: "Healthcare" },
+  { match: /\b1mg\b|tata\s*1mg/i, brand: "1mg", category: "Healthcare" },
+  { match: /medplus|netmeds/i, brand: "MedPlus", category: "Healthcare" },
+  { match: /practo|cult\.fit|cultfit/i, brand: "Practo", category: "Healthcare" },
+  { match: /hospital|clinic|diagnost|lab\s*test/i, brand: "Hospital", category: "Healthcare" },
+  // Investments
+  { match: /groww/i, brand: "Groww", category: "Investments", type: "income" },
+  { match: /zerodha|kite\b/i, brand: "Zerodha", category: "Investments", type: "income" },
+  { match: /upstox/i, brand: "Upstox", category: "Investments", type: "income" },
+  { match: /coin\s*dcx|coindcx|wazirx/i, brand: "WazirX", category: "Investments", type: "income" },
+  { match: /smallcase|kuvera|et\s*money|paytm\s*money/i, brand: "Mutual Funds", category: "Investments", type: "income" },
+  // Education
+  { match: /byju'?s|byjus/i, brand: "BYJU'S", category: "Education" },
+  { match: /unacademy/i, brand: "Unacademy", category: "Education" },
+  { match: /udemy/i, brand: "Udemy", category: "Education" },
+  { match: /coursera/i, brand: "Coursera", category: "Education" },
+  // Travel
+  { match: /makemytrip|\bmmt\b/i, brand: "MakeMyTrip", category: "Travel" },
+  { match: /goibibo/i, brand: "Goibibo", category: "Travel" },
+  { match: /yatra/i, brand: "Yatra", category: "Travel" },
+  { match: /oyo\s*rooms?|\boyo\b/i, brand: "OYO", category: "Travel" },
+  { match: /airbnb/i, brand: "Airbnb", category: "Travel" },
+  { match: /booking\.com|booking\s*com/i, brand: "Booking.com", category: "Travel" },
+  // Income
+  { match: /salary|payroll|stipend/i, brand: "Salary", category: "Salary", type: "income" },
+  { match: /freelanc|upwork|fiverr/i, brand: "Freelance", category: "Freelance", type: "income" },
+  { match: /rent\s*received|tenant/i, brand: "Rent Received", category: "Rental Income", type: "income" },
+];
+
+/** Detect a known Indian brand from messy merchant/notes text. */
+export function detectBrand(input: unknown): { brand: string; category: string; type?: "income" | "expense" } | null {
+  if (input == null) return null;
+  const s = String(input);
+  for (const rule of BRAND_REGISTRY) {
+    if (rule.match.test(s)) return { brand: rule.brand, category: rule.category, type: rule.type };
+  }
+  return null;
+}
+
 /** Strip UPI refs, VPAs, long digit IDs, dangling separators from merchant text. */
 export function cleanMerchant(input: unknown): string {
   if (input == null) return "";
+  // Fast path: known brand
+  const brand = detectBrand(input);
+  if (brand) return brand.brand;
   let s = String(input);
   // Drop "Sat Dec 30 1899 ... GMT..." style timestamps
   s = s.replace(/\b(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s+\w{3}\s+\d{1,2}\s+\d{4}[^,;|]*/gi, "");
@@ -98,8 +205,8 @@ export function cleanMerchant(input: unknown): string {
   s = s.replace(/\bGMT[+\-]?\d{0,4}.*$/i, "");
   // Drop "UPI Ref ...", "Ref No ...", "Txn ID ..."
   s = s.replace(/\b(?:upi\s*(?:ref|reference)|ref(?:erence)?\s*(?:no\.?|id)?|txn\s*(?:id|no\.?)|transaction\s*id)\s*[:#-]?\s*[A-Z0-9]+/gi, "");
-  // Drop VPAs like name@bank
-  s = s.replace(/\b[\w.\-]+@[\w.\-]+\b/g, "");
+  // Strip VPA suffix (keep handle: "swiggy@ybl" → "swiggy")
+  s = s.replace(/([\w.\-]+)@[\w.\-]+/g, "$1");
   // Drop leading prefixes
   s = s.replace(/^\s*(?:paid to|received from|payment to|payment from|upi[\/\-:])\s*/i, "");
   // Drop long digit runs (UPI ref numbers)
@@ -113,6 +220,9 @@ export function cleanMerchant(input: unknown): string {
   if (s === s.toUpperCase() && /[A-Z]/.test(s)) {
     s = s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   }
+  // Final brand pass on cleaned text
+  const brand2 = detectBrand(s);
+  if (brand2) return brand2.brand;
   return s.slice(0, 60);
 }
 
