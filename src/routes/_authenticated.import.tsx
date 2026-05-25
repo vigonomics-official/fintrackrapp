@@ -26,8 +26,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/currency";
 import { PAYMENT_METHODS } from "@/lib/constants";
 import {
-  autoMapColumns, categorize, detectDuplicates, parseAmount, parseDate,
-  SOURCE_HINTS, TARGET_FIELDS,
+  autoMapColumns, categorize, cleanMerchant, cleanNotes, detectDuplicates,
+  parseAmount, parseDate, SOURCE_HINTS, TARGET_FIELDS,
   type ImportSource, type StagedRow, type TargetField,
 } from "@/lib/import-utils";
 
