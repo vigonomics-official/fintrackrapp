@@ -46,11 +46,33 @@ export function autoMapColumns(headers: string[]): Record<TargetField, string | 
   return map as Record<TargetField, string | null>;
 }
 
+const isSaneDate = (d: Date) => {
+  if (isNaN(d.getTime())) return false;
+  const y = d.getFullYear();
+  return y >= 1990 && y <= 2100;
+};
+
+const toIsoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 export function parseDate(input: unknown): string | null {
   if (input == null) return null;
-  if (input instanceof Date) return input.toISOString().slice(0, 10);
+  if (input instanceof Date) return isSaneDate(input) ? toIsoDay(input) : null;
+  // Excel serial date number (days since 1899-12-30)
+  if (typeof input === "number" && input > 0 && input < 100000) {
+    const d = new Date(Math.round((input - 25569) * 86400 * 1000));
+    return isSaneDate(d) ? toIsoDay(d) : null;
+  }
   const s = String(input).trim();
   if (!s) return null;
+  // Numeric string that looks like an Excel serial
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    const n = parseFloat(s);
+    if (n > 1000 && n < 100000) {
+      const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+      if (isSaneDate(d)) return toIsoDay(d);
+    }
+  }
   // ISO YYYY-MM-DD
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
   if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
@@ -62,8 +84,48 @@ export function parseDate(input: unknown): string | null {
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
   const parsed = new Date(s);
-  if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+  if (isSaneDate(parsed)) return toIsoDay(parsed);
   return null;
+}
+
+/** Strip UPI refs, VPAs, long digit IDs, dangling separators from merchant text. */
+export function cleanMerchant(input: unknown): string {
+  if (input == null) return "";
+  let s = String(input);
+  // Drop "Sat Dec 30 1899 ... GMT..." style timestamps
+  s = s.replace(/\b(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s+\w{3}\s+\d{1,2}\s+\d{4}[^,;|]*/gi, "");
+  // Drop GMT/UTC trailers
+  s = s.replace(/\bGMT[+\-]?\d{0,4}.*$/i, "");
+  // Drop "UPI Ref ...", "Ref No ...", "Txn ID ..."
+  s = s.replace(/\b(?:upi\s*(?:ref|reference)|ref(?:erence)?\s*(?:no\.?|id)?|txn\s*(?:id|no\.?)|transaction\s*id)\s*[:#-]?\s*[A-Z0-9]+/gi, "");
+  // Drop VPAs like name@bank
+  s = s.replace(/\b[\w.\-]+@[\w.\-]+\b/g, "");
+  // Drop leading prefixes
+  s = s.replace(/^\s*(?:paid to|received from|payment to|payment from|upi[\/\-:])\s*/i, "");
+  // Drop long digit runs (UPI ref numbers)
+  s = s.replace(/\b\d{8,}\b/g, "");
+  // Collapse separators & whitespace
+  s = s.replace(/[•|·]+/g, " ").replace(/[\s\-_/]{2,}/g, " ").replace(/\s+/g, " ").trim();
+  // Trim dangling punctuation
+  s = s.replace(/^[\-•·,:;\s]+|[\-•·,:;\s]+$/g, "").trim();
+  if (!s) return "";
+  // Title-case if it's ALL CAPS
+  if (s === s.toUpperCase() && /[A-Z]/.test(s)) {
+    s = s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return s.slice(0, 60);
+}
+
+/** Strip technical metadata from notes so they render cleanly. */
+export function cleanNotes(input: unknown): string {
+  if (input == null) return "";
+  let s = String(input);
+  s = s.replace(/\b(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s+\w{3}\s+\d{1,2}\s+\d{4}[^,;|]*/gi, "");
+  s = s.replace(/\bGMT[+\-]?\d{0,4}.*$/i, "");
+  s = s.replace(/\b(?:upi\s*(?:ref|reference)|ref(?:erence)?\s*(?:no\.?|id)?|txn\s*(?:id|no\.?)|transaction\s*id)\s*[:#-]?\s*[A-Z0-9]+/gi, "");
+  s = s.replace(/\b\d{10,}\b/g, "");
+  s = s.replace(/\s{2,}/g, " ").replace(/^[\-•·,:;\s]+|[\-•·,:;\s]+$/g, "").trim();
+  return s;
 }
 
 export function parseAmount(input: unknown): number | null {
