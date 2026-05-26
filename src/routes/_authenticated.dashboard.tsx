@@ -1,17 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-import { ArrowDown, ArrowUp, TrendingUp, Sparkles, Landmark, Calendar, ChevronRight, Activity, Target } from "lucide-react";
+import { Sparkles, Calendar, ChevronRight, AlertTriangle, Shield, TrendingUp, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell,
-} from "recharts";
+import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import { useTransactions, useCategories, useBudgets, monthKey, useProfile, useLoans } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
+
+const SIMPLE_CATEGORIES = ["Food", "Travel", "EMI", "Bills", "Shopping", "Others"];
+function simplifyCategory(name?: string | null) {
+  if (!name) return "Others";
+  const n = name.toLowerCase();
+  if (/food|dining|swiggy|zomato|restaurant|grocer/.test(n)) return "Food";
+  if (/transport|uber|ola|fuel|travel|cab|metro/.test(n)) return "Travel";
+  if (/emi|loan/.test(n)) return "EMI";
+  if (/bill|utilit|recharge|electric|internet|mobile/.test(n)) return "Bills";
+  if (/shop|amazon|flipkart|myntra/.test(n)) return "Shopping";
+  return "Others";
+}
 
 function Dashboard() {
   const { data: profile } = useProfile();
@@ -20,323 +30,335 @@ function Dashboard() {
   const month = monthKey();
   const { data: budgets = [] } = useBudgets(month);
   const { data: loans = [] } = useLoans();
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? "INR";
 
-  const loanStats = useMemo(() => {
-    const debt = loans.reduce((s, l) => s + l.remaining_balance, 0);
-    const monthlyEmi = loans.reduce((s, l) => s + (l.remaining_balance > 0 ? l.emi_amount : 0), 0);
-    const totalBorrowed = loans.reduce((s, l) => s + l.total_amount, 0);
-    const pct = totalBorrowed > 0 ? ((totalBorrowed - debt) / totalBorrowed) * 100 : 0;
-    const active = loans.filter(l => l.remaining_balance > 0).length;
-    const upcoming = [...loans]
-      .filter(l => l.remaining_balance > 0)
-      .map(l => {
-        const today = new Date();
-        const d = new Date(today.getFullYear(), today.getMonth(), Math.min(l.due_day, 28));
-        if (d < today) d.setMonth(d.getMonth() + 1);
-        return { loan: l, due: d };
-      })
-      .sort((a, b) => a.due.getTime() - b.due.getTime())[0];
-    return { debt, monthlyEmi, pct, active, upcoming };
-  }, [loans]);
+  const now = new Date();
 
-  const stats = useMemo(() => {
-    const now = new Date();
+  // Salary survival math
+  const survival = useMemo(() => {
     const monthTx = transactions.filter((t) => {
       const d = new Date(t.transaction_date);
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
-    const income = monthTx.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
-    const expenses = monthTx.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    const totalIncome = transactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
-    const totalExpense = transactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    const balance = totalIncome - totalExpense;
-    return { income, expenses, balance, savings: income - expenses, savingsRate: income > 0 ? ((income - expenses) / income) * 100 : 0 };
-  }, [transactions]);
+    const incomeTx = monthTx.filter(t => t.type === "income").sort((a, b) =>
+      new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
+    const salary = incomeTx.reduce((s, t) => s + t.amount, 0);
+    const lastSalaryDate = incomeTx.length ? new Date(incomeTx[incomeTx.length - 1].transaction_date) : new Date(now.getFullYear(), now.getMonth(), 1);
+    const expensesSinceSalary = transactions
+      .filter(t => t.type === "expense" && new Date(t.transaction_date) >= lastSalaryDate)
+      .reduce((s, t) => s + t.amount, 0);
+    const salaryLeft = Math.max(0, salary - expensesSinceSalary);
 
-  const netWorth = stats.balance - loanStats.debt;
+    // Days until next salary: assume same day next month
+    const nextSalary = new Date(lastSalaryDate);
+    nextSalary.setMonth(nextSalary.getMonth() + 1);
+    const days = Math.max(1, Math.ceil((nextSalary.getTime() - now.getTime()) / 86_400_000));
+    const safeDaily = salaryLeft / days;
 
-  // Health score: savings rate (0-50), debt ratio (0-30), budget adherence (0-20)
-  const health = useMemo(() => {
-    const sr = Math.max(0, Math.min(50, stats.savingsRate / 2));
-    const dti = stats.income > 0 ? (loanStats.monthlyEmi / stats.income) * 100 : 0;
-    const dtiScore = Math.max(0, 30 - dti * 0.6);
-    const overBudget = budgets.filter(b => {
-      const spent = transactions.filter(t => t.type === "expense" && t.category_id === b.category_id && t.transaction_date.startsWith(month.slice(0, 7))).reduce((s, t) => s + t.amount, 0);
-      return spent > b.monthly_limit;
-    }).length;
-    const budgetScore = budgets.length === 0 ? 10 : Math.max(0, 20 - overBudget * 5);
-    return Math.round(sr + dtiScore + budgetScore);
-  }, [stats, loanStats, budgets, transactions, month]);
+    // Today's spend
+    const todayKey = now.toISOString().slice(0, 10);
+    const spentToday = transactions
+      .filter(t => t.type === "expense" && t.transaction_date.slice(0, 10) === todayKey)
+      .reduce((s, t) => s + t.amount, 0);
+    const remainingToday = Math.max(0, safeDaily - spentToday);
 
-  const trend = useMemo(() => {
-    const months: { key: string; label: string; income: number; expense: number }[] = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleString(undefined, { month: "short" }), income: 0, expense: 0 });
+    // EMI pressure
+    const monthlyEmi = loans.reduce((s, l) => s + (l.remaining_balance > 0 ? l.emi_amount : 0), 0);
+    const emiRatio = salary > 0 ? (monthlyEmi / salary) * 100 : 0;
+    const emiLevel: "Low" | "Medium" | "High" = emiRatio < 20 ? "Low" : emiRatio < 40 ? "Medium" : "High";
+
+    // Survival score: salary buffer (50) + emi pressure (30) + spending pace (20)
+    const buffer = salary > 0 ? Math.min(50, (salaryLeft / salary) * 50) : 25;
+    const emiScore = Math.max(0, 30 - emiRatio * 0.5);
+    const pace = spentToday <= safeDaily ? 20 : Math.max(0, 20 - ((spentToday - safeDaily) / Math.max(1, safeDaily)) * 20);
+    const score = Math.round(buffer + emiScore + pace);
+
+    const mood: "safe" | "careful" | "danger" =
+      score >= 70 && spentToday <= safeDaily ? "safe" :
+      score >= 45 ? "careful" : "danger";
+
+    // Upcoming EMI
+    const upcoming = [...loans].filter(l => l.remaining_balance > 0).map(l => {
+      const d = new Date(now.getFullYear(), now.getMonth(), Math.min(l.due_day, 28));
+      if (d < now) d.setMonth(d.getMonth() + 1);
+      return { loan: l, due: d };
+    }).sort((a, b) => a.due.getTime() - b.due.getTime())[0];
+
+    return { salary, salaryLeft, days, safeDaily, spentToday, remainingToday, monthlyEmi, emiRatio, emiLevel, score, mood, upcoming, lastSalaryDate, nextSalary };
+  }, [transactions, loans, now.getDate()]);
+
+  // Danger alerts
+  const alerts = useMemo(() => {
+    const list: { icon: string; text: string }[] = [];
+    if (survival.salaryLeft < survival.safeDaily * survival.days * 0.5 && survival.days > 3) {
+      list.push({ icon: "⚠", text: `Only ${formatCurrency(survival.salaryLeft, currency)} left for ${survival.days} days` });
     }
-    transactions.forEach((t) => {
+    if (survival.upcoming) {
+      const daysToEmi = Math.ceil((survival.upcoming.due.getTime() - now.getTime()) / 86_400_000);
+      if (daysToEmi <= 5) list.push({ icon: "⚠", text: `EMI due in ${daysToEmi} day${daysToEmi === 1 ? "" : "s"}` });
+    }
+    if (survival.spentToday > survival.safeDaily && survival.safeDaily > 0) {
+      list.push({ icon: "⚠", text: "You've crossed today's safe spend limit" });
+    }
+    // category breach (top category > 40% of month expenses)
+    const monthExpenses = transactions.filter(t => {
       const d = new Date(t.transaction_date);
-      const k = `${d.getFullYear()}-${d.getMonth()}`;
-      const m = months.find((x) => x.key === k);
-      if (!m) return;
-      if (t.type === "income") m.income += t.amount;
-      if (t.type === "expense") m.expense += t.amount;
+      return t.type === "expense" && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
-    return months;
+    const byCat = new Map<string, number>();
+    monthExpenses.forEach(t => {
+      const c = categories.find(c => c.id === t.category_id)?.name;
+      const k = simplifyCategory(c);
+      byCat.set(k, (byCat.get(k) ?? 0) + t.amount);
+    });
+    const total = [...byCat.values()].reduce((a, b) => a + b, 0);
+    [...byCat.entries()].forEach(([k, v]) => {
+      if (total > 0 && v / total > 0.4) list.push({ icon: "⚠", text: `${k} spending above safe limit` });
+    });
+    return list.slice(0, 4);
+  }, [survival, transactions, categories, currency]);
+
+  // Mini trend — last 7 days expense
+  const trend = useMemo(() => {
+    const days: { label: string; spend: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const spend = transactions.filter(t => t.type === "expense" && t.transaction_date.slice(0, 10) === key).reduce((s, t) => s + t.amount, 0);
+      days.push({ label: d.toLocaleDateString(undefined, { weekday: "short" }), spend });
+    }
+    return days;
   }, [transactions]);
 
-  const pieData = useMemo(() => {
-    const map = new Map<string, { name: string; value: number; color: string }>();
-    transactions.filter(t => t.type === "expense").forEach((t) => {
-      const c = categories.find(c => c.id === t.category_id);
-      const name = c?.name ?? "Uncategorized";
-      const color = c?.color ?? "#94a3b8";
-      const cur = map.get(name) ?? { name, value: 0, color };
-      cur.value += t.amount;
-      map.set(name, cur);
-    });
-    return [...map.values()].sort((a, b) => b.value - a.value).slice(0, 6);
-  }, [transactions, categories]);
+  const recent = useMemo(() => transactions.slice(0, 6), [transactions]);
 
-  
   const greeting = (() => {
     const h = new Date().getHours();
     return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
   })();
 
+  const moodMeta = {
+    safe: { dot: "🟢", label: "Safe", cls: "bg-success/10 text-success" },
+    careful: { dot: "🟡", label: "Careful", cls: "bg-gold/15 text-gold-foreground" },
+    danger: { dot: "🔴", label: "Danger Zone", cls: "bg-destructive/10 text-destructive" },
+  }[survival.mood];
+
+  const emiTone = survival.emiLevel === "Low" ? "🟢" : survival.emiLevel === "Medium" ? "🟡" : "🔴";
+
   return (
     <div>
-      <PageHeader title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`} subtitle="Here's your financial snapshot" />
+      <PageHeader title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`} subtitle="Your salary survival snapshot" />
 
       <div className="space-y-5 px-5 py-5 md:space-y-6 md:px-10 md:py-7">
-        {/* Net worth hero */}
+        {/* 1. Salary Survival Card */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
             <CardContent className="relative p-6 md:p-7">
               <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gold/20 blur-3xl" />
-              <div className="relative flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-70">Net Worth</p>
-                  <p className="mt-2 font-display text-3xl font-bold leading-none md:text-4xl">{formatCurrency(netWorth, currency)}</p>
-                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs opacity-90">
-                    <span>Assets {formatCurrency(stats.balance, currency)}</span>
-                    {loanStats.debt > 0 && <span>Debt {formatCurrency(loanStats.debt, currency)}</span>}
+              <div className="relative">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-70">Salary Left</p>
+                    <p className="mt-2 font-display text-3xl font-bold leading-none md:text-4xl tabular-nums">{formatCurrency(survival.salaryLeft, currency)}</p>
+                    <p className="mt-2 text-xs opacity-90">{survival.days} days until salary · Safe spend {formatCurrency(survival.safeDaily, currency)}/day</p>
                   </div>
-                </div>
-                <div className="flex shrink-0 flex-col items-end">
-                  <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium backdrop-blur">
-                    <Activity className="mr-1 inline h-3 w-3" /> Health {health}
+                  <span className={`shrink-0 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium backdrop-blur`}>
+                    {moodMeta.dot} {moodMeta.label}
                   </span>
-                  <div className="mt-2 h-1.5 w-20 overflow-hidden rounded-full bg-white/20">
-                    <div className="h-full bg-gold" style={{ width: `${Math.min(100, health)}%` }} />
-                  </div>
+                </div>
+
+                <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+                  <SurvivalStat label="Days left" value={String(survival.days)} />
+                  <SurvivalStat label="EMI pressure" value={`${emiTone} ${survival.emiLevel}`} />
+                  <SurvivalStat label="Survival" value={`${survival.score}%`} />
+                </div>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
+                  <div className="h-full bg-gold transition-all" style={{ width: `${Math.min(100, Math.max(0, survival.score))}%` }} />
                 </div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Income / Expenses / Savings — compact mobile grid */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          <MiniStat label="Income" value={formatCurrency(stats.income, currency)} icon={ArrowUp} tone="success" />
-          <MiniStat label="Expenses" value={formatCurrency(stats.expenses, currency)} icon={ArrowDown} tone="destructive" />
-          <MiniStat label="Saved" value={formatCurrency(stats.savings, currency)} sub={`${stats.savingsRate.toFixed(0)}% rate`} icon={TrendingUp} tone="gold" className="col-span-2 md:col-span-1" />
-        </div>
+        {/* 2. Today's Safe Spending */}
+        <Card className="shadow-soft">
+          <CardContent className="p-4 md:p-5">
+            <div className="flex items-baseline justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Today's safe limit</p>
+                <p className="mt-1 font-display text-2xl font-bold tabular-nums">{formatCurrency(survival.remainingToday, currency)}</p>
+                <p className="text-[11px] text-muted-foreground">remaining today</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Spent today</p>
+                <p className="font-display text-base font-semibold tabular-nums">{formatCurrency(survival.spentToday, currency)}</p>
+              </div>
+            </div>
+            <Progress
+              value={survival.safeDaily > 0 ? Math.min(100, (survival.spentToday / survival.safeDaily) * 100) : 0}
+              className="mt-3 h-2"
+            />
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              {survival.spentToday <= survival.safeDaily
+                ? "You're on track for today. Keep it calm."
+                : "You've crossed today's limit — pause non-essential spends."}
+            </p>
+          </CardContent>
+        </Card>
 
-        {/* Loans strip */}
-        {loans.length > 0 && (
-          <Link to="/loans" className="block">
-            <Card className="overflow-hidden shadow-soft transition-shadow hover:shadow-elegant">
-              <CardContent className="flex items-center gap-4 p-4 md:p-5">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Landmark className="h-5 w-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Outstanding debt</p>
-                    <p className="text-xs text-muted-foreground">{loanStats.pct.toFixed(0)}% paid</p>
-                  </div>
-                  <p className="font-display text-lg font-bold leading-tight">{formatCurrency(loanStats.debt, currency)}</p>
-                  <Progress value={loanStats.pct} className="mt-2 h-1.5" />
-                  <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span>EMI {formatCurrency(loanStats.monthlyEmi, currency)}/mo</span>
-                    {loanStats.upcoming && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {loanStats.upcoming.due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                      </span>
-                    )}
-                  </div>
+        {/* 3. Salary Countdown */}
+        <Card className="shadow-soft">
+          <CardContent className="flex items-center gap-4 p-4 md:p-5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Calendar className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Next salary in</p>
+              <p className="font-display text-lg font-bold leading-tight">{survival.days} day{survival.days === 1 ? "" : "s"}</p>
+              <p className="text-[11px] text-muted-foreground">
+                Around {survival.nextSalary.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · stretch {formatCurrency(survival.salaryLeft, currency)} till then
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 4. Danger Alerts */}
+        {alerts.length > 0 && (
+          <Card className="border-destructive/20 bg-destructive/5 shadow-soft">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 font-display text-base">
+                <AlertTriangle className="h-4 w-4 text-destructive" /> Danger alerts
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {alerts.map((a, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm">
+                  <span aria-hidden>{a.icon}</span>
+                  <span className="text-foreground/90">{a.text}</span>
                 </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          </Link>
+              ))}
+            </CardContent>
+          </Card>
         )}
 
-        {/* Charts */}
-        <div className="grid gap-5 lg:grid-cols-3">
-          <Card className="shadow-soft lg:col-span-2">
-            <CardHeader className="pb-2">
-              <CardTitle className="font-display text-base">Income vs Expenses</CardTitle>
-            </CardHeader>
-            <CardContent className="h-60 px-2 md:h-72 md:px-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trend} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="g-in" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="oklch(0.62 0.13 165)" stopOpacity={0.6} />
-                      <stop offset="100%" stopColor="oklch(0.62 0.13 165)" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="g-out" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="oklch(0.65 0.13 50)" stopOpacity={0.5} />
-                      <stop offset="100%" stopColor="oklch(0.65 0.13 50)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="label" stroke="oklch(0.55 0.03 160)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="oklch(0.55 0.03 160)" fontSize={11} tickLine={false} axisLine={false} width={40} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => formatCurrency(v, currency)} />
-                  <Area type="monotone" dataKey="income" stroke="oklch(0.5 0.12 165)" strokeWidth={2.5} fill="url(#g-in)" />
-                  <Area type="monotone" dataKey="expense" stroke="oklch(0.65 0.13 50)" strokeWidth={2.5} fill="url(#g-out)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        {/* 5. AI Insight */}
+        <Card className="shadow-soft">
+          <CardContent className="flex items-start gap-3 p-4 md:p-5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-gold-foreground">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AI insight</p>
+              <p className="mt-1 text-sm text-foreground/90">
+                {survival.mood === "safe"
+                  ? "You're pacing well. Keep daily spend under " + formatCurrency(survival.safeDaily, currency) + " and you'll comfortably reach next salary."
+                  : survival.mood === "careful"
+                    ? "Spending is a bit ahead. Trim 1–2 food or shopping spends this week to stay calm till payday."
+                    : "You're stretched thin. Pause non-essentials and prioritise EMIs + bills for the next few days."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="shadow-soft">
-            <CardHeader className="pb-2">
-              <CardTitle className="font-display text-base">Top spending</CardTitle>
-            </CardHeader>
-            <CardContent className="h-60 md:h-72">
-              {pieData.length === 0 ? (
-                <p className="flex h-full items-center justify-center text-sm text-muted-foreground">No expenses yet.</p>
-              ) : (
-                <div className="flex h-full items-center gap-3">
-                  <div className="h-full flex-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={42} outerRadius={70} paddingAngle={2}>
-                          {pieData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                        </Pie>
-                        <Tooltip formatter={(v: number) => formatCurrency(v, currency)} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} />
-                      </PieChart>
-                    </ResponsiveContainer>
+        {/* 6. Smart Transactions */}
+        <Card className="shadow-soft">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
+              <Wallet className="h-4 w-4 text-primary" /> Smart transactions
+            </CardTitle>
+            <Link to="/transactions" className="text-xs font-medium text-primary hover:underline">View all</Link>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {recent.length === 0 ? (
+              <p className="py-2 text-sm text-muted-foreground">No transactions yet.</p>
+            ) : recent.map(t => {
+              const catName = categories.find(c => c.id === t.category_id)?.name;
+              const simple = simplifyCategory(catName);
+              const isIncome = t.type === "income";
+              const title = isIncome ? "Salary Credited" : (t.notes?.split(/\s|·/)[0] || catName || simple);
+              const breach = !isIncome && simple === "Food" && t.amount > survival.safeDaily * 0.5 && survival.safeDaily > 0;
+              return (
+                <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{title}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {isIncome ? "Income" : simple}{breach ? " · Above safe limit ⚠" : ""}
+                    </p>
                   </div>
-                  <ul className="flex-1 space-y-1.5 text-xs">
-                    {pieData.slice(0, 5).map((d) => (
-                      <li key={d.name} className="flex items-center gap-2">
-                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: d.color }} />
-                        <span className="truncate">{d.name}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <p className={`shrink-0 font-display text-sm font-semibold tabular-nums ${isIncome ? "text-success" : ""}`}>
+                    {isIncome ? "+" : ""}{formatCurrency(t.amount, currency)}
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              );
+            })}
+          </CardContent>
+        </Card>
 
-        {/* Goals progress + Budgets */}
-        <div className="grid gap-5 lg:grid-cols-3">
-          <Card className="shadow-soft lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="flex items-center gap-2 font-display text-base">
-                <Target className="h-4 w-4 text-primary" /> Financial freedom progress
-              </CardTitle>
-              <Link to="/goals" className="text-xs font-medium text-primary hover:underline">View goals</Link>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex items-baseline justify-between">
-                  <p className="text-xs text-muted-foreground">Savings rate</p>
-                  <p className="font-display text-sm font-semibold tabular-nums">{stats.savingsRate.toFixed(0)}%</p>
-                </div>
-                <Progress value={Math.min(100, Math.max(0, stats.savingsRate))} className="mt-1.5 h-2" />
-                <p className="mt-1 text-[11px] text-muted-foreground">Target ≥ 30% for freedom track</p>
-              </div>
-              <div>
-                <div className="flex items-baseline justify-between">
-                  <p className="text-xs text-muted-foreground">Health score</p>
-                  <p className="font-display text-sm font-semibold tabular-nums">{health}/100</p>
-                </div>
-                <Progress value={health} className="mt-1.5 h-2" />
-              </div>
-              <div className="rounded-lg border bg-muted/30 p-3">
-                <p className="flex items-center gap-1.5 text-xs font-medium">
-                  <Sparkles className="h-3.5 w-3.5 text-gold" /> AI insight
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {stats.savingsRate >= 30
-                    ? "Excellent — you're on the financial freedom track. Consider deploying surplus into investments."
-                    : stats.savingsRate >= 15
-                      ? "Solid start. Trim 1–2 discretionary categories to push savings rate above 30%."
-                      : "Cashflow is tight this month. Review top spending categories and set a budget."}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* 7. Mini Spending Trend */}
+        <Card className="shadow-soft">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
+              <TrendingUp className="h-4 w-4 text-primary" /> Spending trend
+            </CardTitle>
+            <span className="text-[11px] text-muted-foreground">Last 7 days</span>
+          </CardHeader>
+          <CardContent className="h-32 px-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trend} margin={{ top: 5, right: 6, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="g-spend" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="oklch(0.55 0.12 180)" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="oklch(0.55 0.12 180)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="label" stroke="oklch(0.55 0.03 160)" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => formatCurrency(v, currency)} />
+                <Area type="monotone" dataKey="spend" stroke="oklch(0.5 0.12 180)" strokeWidth={2} fill="url(#g-spend)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-          <Card className="shadow-soft">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="flex items-center gap-2 font-display text-base">
-                <Sparkles className="h-4 w-4 text-gold" /> Budgets
-              </CardTitle>
-              <Link to="/budgets" className="text-xs font-medium text-primary hover:underline">Manage</Link>
-            </CardHeader>
-            <CardContent className="space-y-3.5">
-              {budgets.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No budgets set yet.</p>
-              ) : budgets.slice(0, 5).map((b) => {
-                const c = categories.find(x => x.id === b.category_id);
-                const spent = transactions.filter(t => t.type === "expense" && t.category_id === b.category_id && t.transaction_date.startsWith(month.slice(0, 7))).reduce((s, t) => s + t.amount, 0);
-                const pct = Math.min(100, (spent / b.monthly_limit) * 100);
-                const over = spent > b.monthly_limit;
-                return (
-                  <div key={b.id}>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium">{c?.name ?? "Category"}</span>
-                      <span className={over ? "text-destructive" : "text-muted-foreground"}>
-                        {formatCurrency(spent, currency)} / {formatCurrency(b.monthly_limit, currency)}
-                      </span>
-                    </div>
-                    <Progress value={pct} className="mt-1.5 h-1.5" />
+        {/* 8. Budgets */}
+        <Card className="shadow-soft">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
+              <Shield className="h-4 w-4 text-primary" /> Budgets
+            </CardTitle>
+            <Link to="/budgets" className="text-xs font-medium text-primary hover:underline">Manage</Link>
+          </CardHeader>
+          <CardContent className="space-y-3.5">
+            {budgets.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No budgets set yet.</p>
+            ) : budgets.slice(0, 5).map((b) => {
+              const c = categories.find(x => x.id === b.category_id);
+              const spent = transactions.filter(t => t.type === "expense" && t.category_id === b.category_id && t.transaction_date.startsWith(month.slice(0, 7))).reduce((s, t) => s + t.amount, 0);
+              const pct = Math.min(100, (spent / b.monthly_limit) * 100);
+              const over = spent > b.monthly_limit;
+              return (
+                <div key={b.id}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium">{simplifyCategory(c?.name)}</span>
+                    <span className={over ? "text-destructive" : "text-muted-foreground"}>
+                      {formatCurrency(spent, currency)} / {formatCurrency(b.monthly_limit, currency)}
+                    </span>
                   </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        </div>
+                  <Progress value={pct} className="mt-1.5 h-1.5" />
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
 
-function MiniStat({ label, value, sub, icon: Icon, tone, className }: {
-  label: string; value: string; sub?: string; icon: typeof ArrowUp;
-  tone: "success" | "destructive" | "gold" | "primary"; className?: string;
-}) {
-  const tones: Record<string, string> = {
-    success: "bg-success/10 text-success",
-    destructive: "bg-destructive/10 text-destructive",
-    gold: "bg-gold/15 text-gold-foreground",
-    primary: "bg-primary/10 text-primary",
-  };
+function SurvivalStat({ label, value }: { label: string; value: string }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={className}>
-      <Card className="shadow-soft">
-        <CardContent className="p-3.5 md:p-4">
-          <div className="flex items-center gap-2">
-            <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${tones[tone]}`}>
-              <Icon className="h-3.5 w-3.5" />
-            </span>
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-          </div>
-          <p className="mt-2 font-display text-lg font-bold tabular-nums md:text-xl">{value}</p>
-          {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
-        </CardContent>
-      </Card>
-    </motion.div>
+    <div className="rounded-xl bg-white/10 px-2 py-2 backdrop-blur">
+      <p className="text-[10px] uppercase tracking-wider opacity-75">{label}</p>
+      <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{value}</p>
+    </div>
   );
 }
