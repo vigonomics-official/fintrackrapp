@@ -238,47 +238,65 @@ function TransactionsPage() {
                         {items.map((t) => {
                           const c = categories.find(x => x.id === t.category_id);
                           const when = new Date(t.created_at);
-                          const compactTime = isNaN(when.getTime())
+                          const shortTime = isNaN(when.getTime())
                             ? ""
-                            : `${when.toLocaleDateString(undefined, { day: "numeric", month: "short" })} • ${when.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
-                          // Pull a clean merchant/title from notes (strip GMT timestamps & UPI refs).
+                            : when.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+                          // Clean merchant/title (strip GMT timestamps, UPI refs, VPAs, long IDs).
                           const rawNotes = (t.notes ?? "").split(" — ")[0] ?? "";
                           const cleanTitle = rawNotes
                             .replace(/\b(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s+\w{3}\s+\d{1,2}\s+\d{4}[^,;|]*/gi, "")
                             .replace(/\bGMT[+\-]?\d{0,4}.*$/i, "")
-                            .replace(/\b\d{10,}\b/g, "")
+                            .replace(/\b[\w.\-]+@[a-z]{2,}\b/gi, "")
+                            .replace(/\bUPI[\s:\-]*Ref[^\s]*/gi, "")
+                            .replace(/\bRef\s*(No\.?|#)?\s*[:\-]?\s*\w+/gi, "")
+                            .replace(/\b\d{8,}\b/g, "")
                             .replace(/[•|·]+/g, " ")
                             .replace(/\s{2,}/g, " ")
                             .trim();
                           const title = cleanTitle || c?.name || "Uncategorized";
-                          const subtitle = c?.name && cleanTitle ? c.name : t.payment_method.replace("_", " ").toUpperCase();
-                          const meta = [compactTime, subtitle].filter(Boolean).join(" · ");
+                          const pmLabel = t.payment_method.replace("_", " ").toUpperCase();
                           return (
-                            <li key={t.id} className="group flex items-center gap-2 px-3 py-2.5 transition-colors hover:bg-muted/40">
+                            <li key={t.id} className="group flex items-center gap-2 px-3 py-3 transition-colors hover:bg-muted/40">
                               <button
                                 onClick={() => { setEditing(t); setDialogOpen(true); }}
                                 className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                                aria-label={`View ${title}`}
                               >
-                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold" style={{ background: (c?.color ?? "#94a3b8") + "22", color: c?.color ?? "#64748b" }}>
+                                <span
+                                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+                                  style={{ background: (c?.color ?? "#94a3b8") + "1f", color: c?.color ?? "#64748b" }}
+                                >
                                   {(c?.name ?? title).charAt(0).toUpperCase()}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-sm font-medium">{title}</p>
-                                  <p className="truncate text-[11px] text-muted-foreground">{meta}</p>
+                                  <p className="truncate text-[14px] font-medium leading-tight text-foreground">{title}</p>
+                                  <div className="mt-1 flex items-center gap-1.5">
+                                    {c?.name && (
+                                      <span className="truncate rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                        {c.name}
+                                      </span>
+                                    )}
+                                    <span className="shrink-0 rounded-full bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                      {pmLabel}
+                                    </span>
+                                    {shortTime && (
+                                      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground/80">{shortTime}</span>
+                                    )}
+                                  </div>
                                 </div>
-                                <p className={`shrink-0 whitespace-nowrap font-display text-sm font-semibold tabular-nums ${t.type === "income" ? "text-success" : t.type === "expense" ? "text-foreground" : "text-muted-foreground"}`}>
+                                <p className={`shrink-0 whitespace-nowrap pl-1 font-display text-[15px] font-semibold tabular-nums ${t.type === "income" ? "text-success" : t.type === "expense" ? "text-foreground" : "text-muted-foreground"}`}>
                                   {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}{formatCurrency(t.amount, currency)}
                                 </p>
                               </button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="More">
+                                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 opacity-60 group-hover:opacity-100" aria-label="More">
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => { setEditing(t); setDialogOpen(true); }}>
-                                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                                    <Pencil className="mr-2 h-4 w-4" /> View / Edit
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => onDelete(t.id)} className="text-destructive focus:text-destructive">
                                     <Trash2 className="mr-2 h-4 w-4" /> Delete
