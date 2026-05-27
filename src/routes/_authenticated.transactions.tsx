@@ -152,8 +152,9 @@ function TransactionsPage() {
 
   return (
     <div>
+      <ExpensesTabs />
       <PageHeader
-        title="Transactions"
+        title="Expenses"
         subtitle={`${filtered.length} of ${txs.length}`}
         action={
           <>
