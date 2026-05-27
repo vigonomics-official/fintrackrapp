@@ -273,11 +273,20 @@ function Dashboard() {
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AI insight</p>
               <p className="mt-1 text-sm text-foreground/90">
-                {survival.mood === "safe"
-                  ? "You're pacing well. Keep daily spend under " + formatCurrency(survival.safeDaily, currency) + " and you'll comfortably reach next salary."
-                  : survival.mood === "careful"
-                    ? "Spending is a bit ahead. Trim 1–2 food or shopping spends this week to stay calm till payday."
-                    : "You're stretched thin. Pause non-essentials and prioritise EMIs + bills for the next few days."}
+                {(() => {
+                  const top = insightData.topCat;
+                  if (top && top[1] > survival.safeDaily * 3) {
+                    const save = Math.round(top[1] * 0.25);
+                    return `You spent ${formatCurrency(top[1], currency)} on ${top[0]} this month. Cutting back ~25% could save you ${formatCurrency(save, currency)}.`;
+                  }
+                  if (survival.mood === "safe") {
+                    return `Nicely paced. Stay under ${formatCurrency(survival.safeDaily, currency)}/day and you'll glide to next salary.`;
+                  }
+                  if (survival.mood === "careful") {
+                    return `You're slightly ahead of pace. Skipping 2 food-delivery orders this week can ease the squeeze.`;
+                  }
+                  return `Stretched thin. Pause non-essentials and protect EMIs + bills for the next ${survival.days} day${survival.days === 1 ? "" : "s"}.`;
+                })()}
               </p>
             </div>
           </CardContent>
