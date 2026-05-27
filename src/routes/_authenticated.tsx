@@ -27,7 +27,11 @@ const NAV = [
   { to: "/menu", label: "Profile", icon: MenuIcon },
 ] as const;
 
+const EXPENSES_ROUTES = ["/transactions", "/budgets", "/categories"];
 function matchRoute(path: string, route: string) {
+  if (route === "/transactions") {
+    return EXPENSES_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
+  }
   return path === route || path.startsWith(route + "/");
 }
 
