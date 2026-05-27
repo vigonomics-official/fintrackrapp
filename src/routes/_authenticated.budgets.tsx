@@ -150,15 +150,17 @@ function BudgetsPage() {
                   <p className="font-display text-lg font-bold tabular-nums">{formatCurrency(spent, currency)}</p>
                   <p className="text-xs text-muted-foreground tabular-nums">/ {formatCurrency(b.monthly_limit, currency)}</p>
                 </div>
-                <Progress
-                  value={Math.min(100, pct)}
-                  className="mt-2 h-1.5"
-                  indicatorClassName={cn(
-                    status === "safe" && "bg-success",
-                    status === "warning" && "bg-gold",
-                    status === "critical" && "bg-destructive",
-                  )}
-                />
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      status === "safe" && "bg-success",
+                      status === "warning" && "bg-gold",
+                      status === "critical" && "bg-destructive",
+                    )}
+                    style={{ width: `${Math.min(100, pct)}%` }}
+                  />
+                </div>
                 <div className="mt-2 flex items-center justify-between text-[11px]">
                   <span className={cn("flex items-center gap-1 font-medium", tone.text)}>
                     <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />
