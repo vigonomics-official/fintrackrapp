@@ -59,6 +59,7 @@ function AuthenticatedLayout() {
   useEffect(() => {
     setTxOpen(false);
     setHomeSheetOpen(false);
+    setCibtOpen(false);
   }, [path]);
 
   if (loading || !user) {
