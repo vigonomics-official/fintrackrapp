@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Home, ArrowLeftRight, Target, Users, Menu as MenuIcon, LogOut, Plus,
-  TrendingUp, TrendingDown, Flag, HandCoins, Split,
+  TrendingUp, TrendingDown, Flag, ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
+import { CanIBuyThisDialog } from "@/components/finance/CanIBuyThisDialog";
 import { TXN_EVENT } from "@/lib/sms-background";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
