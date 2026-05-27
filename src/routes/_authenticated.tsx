@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Home, ArrowLeftRight, Target, Users, Menu as MenuIcon, LogOut, Plus,
-  TrendingUp, TrendingDown, Flag, HandCoins, Split,
+  TrendingUp, TrendingDown, Flag, ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
+import { CanIBuyThisDialog } from "@/components/finance/CanIBuyThisDialog";
 import { TXN_EVENT } from "@/lib/sms-background";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -37,6 +38,7 @@ function AuthenticatedLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [txOpen, setTxOpen] = useState(false);
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
+  const [cibtOpen, setCibtOpen] = useState(false);
 
   // Real-time refresh: any SMS-detected transaction invalidates relevant queries
   // so Dashboard, Transactions and Budgets reflect the new entry instantly.
@@ -57,6 +59,7 @@ function AuthenticatedLayout() {
   useEffect(() => {
     setTxOpen(false);
     setHomeSheetOpen(false);
+    setCibtOpen(false);
   }, [path]);
 
   if (loading || !user) {
@@ -155,16 +158,15 @@ function AuthenticatedLayout() {
               onClick={() => { setHomeSheetOpen(false); navigate({ to: "/goals" }); setTimeout(() => window.dispatchEvent(new CustomEvent("fintrackr:fab")), 120); }}
             />
             <QuickActionTile
-              icon={HandCoins} label="Add Lending" tone="bg-gold/15 text-gold-foreground"
-              onClick={() => { setHomeSheetOpen(false); navigate({ to: "/split-settle" }); setTimeout(() => window.dispatchEvent(new CustomEvent("fintrackr:fab", { detail: { intent: "lend" } })), 120); }}
-            />
-            <QuickActionTile
-              icon={Split} label="Split Expense" tone="bg-info/15 text-info"
-              onClick={() => { setHomeSheetOpen(false); navigate({ to: "/split-settle" }); setTimeout(() => window.dispatchEvent(new CustomEvent("fintrackr:fab", { detail: { intent: "split" } })), 120); }}
+              icon={ShoppingBag} label="Can I Buy This?" tone="bg-gold/15 text-gold-foreground"
+              onClick={() => { setHomeSheetOpen(false); setTimeout(() => setCibtOpen(true), 80); }}
             />
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Can I Buy This? — available from Home FAB */}
+      <CanIBuyThisDialog open={cibtOpen} onOpenChange={setCibtOpen} />
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/60 bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
