@@ -21,13 +21,17 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Home },
-  { to: "/transactions", label: "Transactions", icon: ArrowLeftRight },
+  { to: "/transactions", label: "Expenses", icon: ArrowLeftRight },
   { to: "/goals", label: "Goals", icon: Target },
   { to: "/split-settle", label: "Split", icon: Users },
-  { to: "/menu", label: "Menu", icon: MenuIcon },
+  { to: "/menu", label: "Profile", icon: MenuIcon },
 ] as const;
 
+const EXPENSES_ROUTES = ["/transactions", "/budgets", "/categories"];
 function matchRoute(path: string, route: string) {
+  if (route === "/transactions") {
+    return EXPENSES_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
+  }
   return path === route || path.startsWith(route + "/");
 }
 
