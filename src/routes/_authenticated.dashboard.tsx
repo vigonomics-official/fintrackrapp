@@ -87,20 +87,8 @@ function Dashboard() {
     return { salary, salaryLeft, days, safeDaily, spentToday, remainingToday, monthlyEmi, emiRatio, emiLevel, score, mood, upcoming, lastSalaryDate, nextSalary };
   }, [transactions, loans, now.getDate()]);
 
-  // Danger alerts
-  const alerts = useMemo(() => {
-    const list: { icon: string; text: string }[] = [];
-    if (survival.salaryLeft < survival.safeDaily * survival.days * 0.5 && survival.days > 3) {
-      list.push({ icon: "⚠", text: `Only ${formatCurrency(survival.salaryLeft, currency)} left for ${survival.days} days` });
-    }
-    if (survival.upcoming) {
-      const daysToEmi = Math.ceil((survival.upcoming.due.getTime() - now.getTime()) / 86_400_000);
-      if (daysToEmi <= 5) list.push({ icon: "⚠", text: `EMI due in ${daysToEmi} day${daysToEmi === 1 ? "" : "s"}` });
-    }
-    if (survival.spentToday > survival.safeDaily && survival.safeDaily > 0) {
-      list.push({ icon: "⚠", text: "You've crossed today's safe spend limit" });
-    }
-    // category breach (top category > 40% of month expenses)
+  // Danger alerts + smart insight inputs
+  const insightData = useMemo(() => {
     const monthExpenses = transactions.filter(t => {
       const d = new Date(t.transaction_date);
       return t.type === "expense" && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
@@ -112,11 +100,46 @@ function Dashboard() {
       byCat.set(k, (byCat.get(k) ?? 0) + t.amount);
     });
     const total = [...byCat.values()].reduce((a, b) => a + b, 0);
-    [...byCat.entries()].forEach(([k, v]) => {
-      if (total > 0 && v / total > 0.4) list.push({ icon: "⚠", text: `${k} spending above safe limit` });
+    const topCat = [...byCat.entries()].sort((a, b) => b[1] - a[1])[0];
+
+    // Last 7 days spend & weekend pattern
+    const last7 = transactions.filter(t => {
+      if (t.type !== "expense") return false;
+      const d = new Date(t.transaction_date);
+      return (now.getTime() - d.getTime()) / 86_400_000 <= 7;
+    });
+    const weekendSpend = last7.filter(t => {
+      const day = new Date(t.transaction_date).getDay();
+      return day === 0 || day === 6;
+    }).reduce((s, t) => s + t.amount, 0);
+    const weekdaySpend = last7.reduce((s, t) => s + t.amount, 0) - weekendSpend;
+    const weekendRisk = weekendSpend > weekdaySpend * 0.5 && weekendSpend > survival.safeDaily * 2;
+
+    return { byCat, total, topCat, weekendSpend, weekendRisk };
+  }, [transactions, categories, survival.safeDaily]);
+
+  const alerts = useMemo(() => {
+    const list: { icon: string; text: string }[] = [];
+    if (survival.salaryLeft < survival.safeDaily * survival.days * 0.5 && survival.days > 3) {
+      list.push({ icon: "⚠", text: `Only ${formatCurrency(survival.salaryLeft, currency)} left for ${survival.days} days` });
+    }
+    if (survival.upcoming) {
+      const daysToEmi = Math.ceil((survival.upcoming.due.getTime() - now.getTime()) / 86_400_000);
+      if (daysToEmi <= 5) list.push({ icon: "⚠", text: `EMI due in ${daysToEmi} day${daysToEmi === 1 ? "" : "s"} · ${formatCurrency(survival.upcoming.loan.emi_amount, currency)}` });
+    }
+    if (survival.spentToday > survival.safeDaily && survival.safeDaily > 0) {
+      list.push({ icon: "⚠", text: "You've crossed today's safe spend limit" });
+    }
+    const day = now.getDay();
+    if (insightData.weekendRisk && (day >= 4 || day === 0)) {
+      list.push({ icon: "🛍", text: "High spending risk expected this weekend" });
+    }
+    insightData.byCat.forEach((v, k) => {
+      if (insightData.total > 0 && v / insightData.total > 0.4) list.push({ icon: "⚠", text: `${k} spending above safe limit` });
     });
     return list.slice(0, 4);
-  }, [survival, transactions, categories, currency]);
+  }, [survival, insightData, currency]);
+
 
   // Mini trend — last 7 days expense
   const trend = useMemo(() => {
