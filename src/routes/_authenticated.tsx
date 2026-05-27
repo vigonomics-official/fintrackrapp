@@ -158,16 +158,15 @@ function AuthenticatedLayout() {
               onClick={() => { setHomeSheetOpen(false); navigate({ to: "/goals" }); setTimeout(() => window.dispatchEvent(new CustomEvent("fintrackr:fab")), 120); }}
             />
             <QuickActionTile
-              icon={HandCoins} label="Add Lending" tone="bg-gold/15 text-gold-foreground"
-              onClick={() => { setHomeSheetOpen(false); navigate({ to: "/split-settle" }); setTimeout(() => window.dispatchEvent(new CustomEvent("fintrackr:fab", { detail: { intent: "lend" } })), 120); }}
-            />
-            <QuickActionTile
-              icon={Split} label="Split Expense" tone="bg-info/15 text-info"
-              onClick={() => { setHomeSheetOpen(false); navigate({ to: "/split-settle" }); setTimeout(() => window.dispatchEvent(new CustomEvent("fintrackr:fab", { detail: { intent: "split" } })), 120); }}
+              icon={ShoppingBag} label="Can I Buy This?" tone="bg-gold/15 text-gold-foreground"
+              onClick={() => { setHomeSheetOpen(false); setTimeout(() => setCibtOpen(true), 80); }}
             />
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Can I Buy This? — available from Home FAB */}
+      <CanIBuyThisDialog open={cibtOpen} onOpenChange={setCibtOpen} />
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/60 bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
