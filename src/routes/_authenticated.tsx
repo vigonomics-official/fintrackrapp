@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tan
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Home, ArrowLeftRight, Target, Users, Menu as MenuIcon, LogOut, Plus,
+  Home, Wallet, CalendarRange, Sparkles, UserCircle, LogOut, Plus,
   TrendingUp, TrendingDown, Flag, ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -21,11 +21,12 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Home },
-  { to: "/transactions", label: "Expenses", icon: ArrowLeftRight },
-  { to: "/goals", label: "Goals", icon: Target },
-  { to: "/split-settle", label: "Split", icon: Users },
-  { to: "/menu", label: "Profile", icon: MenuIcon },
+  { to: "/transactions", label: "Expenses", icon: Wallet },
+  { to: "/planner", label: "Planner", icon: CalendarRange },
+  { to: "/insights", label: "Insights", icon: Sparkles },
+  { to: "/menu", label: "Profile", icon: UserCircle },
 ] as const;
+
 
 const EXPENSES_ROUTES = ["/transactions", "/budgets", "/categories"];
 function matchRoute(path: string, route: string) {
