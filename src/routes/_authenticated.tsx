@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, Link, useRouterState } from "@tan
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Home, ArrowLeftRight, Target, Users, Menu as MenuIcon, LogOut, Plus,
+  Home, Wallet, CalendarRange, Sparkles, UserCircle, LogOut, Plus,
   TrendingUp, TrendingDown, Flag, ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -21,11 +21,12 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Home },
-  { to: "/transactions", label: "Expenses", icon: ArrowLeftRight },
-  { to: "/goals", label: "Goals", icon: Target },
-  { to: "/split-settle", label: "Split", icon: Users },
-  { to: "/menu", label: "Profile", icon: MenuIcon },
+  { to: "/transactions", label: "Expenses", icon: Wallet },
+  { to: "/planner", label: "Planner", icon: CalendarRange },
+  { to: "/insights", label: "Insights", icon: Sparkles },
+  { to: "/menu", label: "Profile", icon: UserCircle },
 ] as const;
+
 
 const EXPENSES_ROUTES = ["/transactions", "/budgets", "/categories"];
 function matchRoute(path: string, route: string) {
@@ -78,7 +79,10 @@ function AuthenticatedLayout() {
   const isDashboard = matchRoute(path, "/dashboard");
   const isMenu = matchRoute(path, "/menu");
   const isSmsIntel = matchRoute(path, "/sms-intelligence");
-  const fabHidden = isMenu || isSmsIntel;
+  const isPlanner = matchRoute(path, "/planner");
+  const isInsights = matchRoute(path, "/insights");
+  const fabHidden = isMenu || isSmsIntel || isPlanner || isInsights;
+
 
   function handleFab() {
     if (isTransactions) {
@@ -181,11 +185,12 @@ function AuthenticatedLayout() {
             return (
               <Link key={item.to} to={item.to} preload="intent"
                 className={cn("relative flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
-                  active ? "text-primary" : "text-muted-foreground hover:text-foreground")}>
-                {active && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />}
-                <Icon className={cn("h-5 w-5 transition-transform", active && "scale-110")} strokeWidth={active ? 2.4 : 2} />
+                  active ? "text-success" : "text-muted-foreground hover:text-foreground")}>
+                {active && <span className="absolute top-0 h-0.5 w-6 rounded-full bg-success" />}
+                <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.7} />
                 {item.label}
               </Link>
+
             );
           })}
         </div>
