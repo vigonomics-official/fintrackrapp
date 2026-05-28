@@ -79,7 +79,10 @@ function AuthenticatedLayout() {
   const isDashboard = matchRoute(path, "/dashboard");
   const isMenu = matchRoute(path, "/menu");
   const isSmsIntel = matchRoute(path, "/sms-intelligence");
-  const fabHidden = isMenu || isSmsIntel;
+  const isPlanner = matchRoute(path, "/planner");
+  const isInsights = matchRoute(path, "/insights");
+  const fabHidden = isMenu || isSmsIntel || isPlanner || isInsights;
+
 
   function handleFab() {
     if (isTransactions) {
