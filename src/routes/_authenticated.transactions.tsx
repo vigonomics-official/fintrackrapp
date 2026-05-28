@@ -21,6 +21,8 @@ import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
 import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
+import { SpendingOverview } from "@/components/finance/SpendingOverview";
+import { TimeRangeFilter, computeRange, previousRange, type RangeKey, type DateRange } from "@/components/finance/TimeRangeFilter";
 import { cleanMerchant, cleanNotes, categorize, parseDate, parseAmount } from "@/lib/import-utils";
 
 export const Route = createFileRoute("/_authenticated/transactions")({ component: TransactionsPage });
@@ -41,8 +43,18 @@ function TransactionsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [rangeKey, setRangeKey] = useState<RangeKey>("month");
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [customRange, setCustomRange] = useState<DateRange>({ from: todayIso, to: todayIso });
+  const range = useMemo(() => computeRange(rangeKey, customRange), [rangeKey, customRange]);
+  const prevRange = useMemo(() => previousRange(rangeKey, range), [rangeKey, range]);
+
+  const inRange = (d: string, r: DateRange) => d >= r.from && d <= r.to;
+  const rangeTxs = useMemo(() => txs.filter(t => inRange(t.transaction_date, range)), [txs, range]);
+  const prevRangeTxs = useMemo(() => txs.filter(t => inRange(t.transaction_date, prevRange)), [txs, prevRange]);
+
   const filtered = useMemo(() => {
-    return txs.filter((t) => {
+    return rangeTxs.filter((t) => {
       if (typeFilter !== "all" && t.type !== typeFilter) return false;
       if (catFilter !== "all" && t.category_id !== catFilter) return false;
       if (q) {
@@ -52,7 +64,7 @@ function TransactionsPage() {
       }
       return true;
     });
-  }, [txs, q, typeFilter, catFilter, categories]);
+  }, [rangeTxs, q, typeFilter, catFilter, categories]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, Transaction[]> = {};
