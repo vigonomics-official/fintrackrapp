@@ -182,21 +182,23 @@ function TransactionsPage() {
       />
 
       <div className="space-y-4 px-5 py-5 md:px-10">
-        {/* Summary chips */}
-        <div className="flex gap-2">
-          <div className="flex-1 rounded-xl bg-success/10 px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-success">Income</p>
-            <p className="font-display text-base font-bold tabular-nums text-success">{formatCurrency(totals.inc, currency)}</p>
-          </div>
-          <div className="flex-1 rounded-xl bg-destructive/10 px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-destructive">Expenses</p>
-            <p className="font-display text-base font-bold tabular-nums text-destructive">{formatCurrency(totals.exp, currency)}</p>
-          </div>
-          <div className="flex-1 rounded-xl bg-muted px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Net</p>
-            <p className="font-display text-base font-bold tabular-nums">{formatCurrency(totals.inc - totals.exp, currency)}</p>
-          </div>
-        </div>
+        {/* Time range filter */}
+        <TimeRangeFilter
+          value={rangeKey}
+          onChange={setRangeKey}
+          custom={customRange}
+          onCustomChange={setCustomRange}
+        />
+
+        {/* Spending overview */}
+        <SpendingOverview
+          range={rangeKey}
+          currency={currency}
+          rangeTxs={rangeTxs}
+          prevRangeTxs={prevRangeTxs}
+          allTxs={txs}
+          categories={categories}
+        />
 
         {/* Search + filter toggle */}
         <Card className="shadow-soft">
