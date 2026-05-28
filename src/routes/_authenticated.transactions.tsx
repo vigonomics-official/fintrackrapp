@@ -21,6 +21,8 @@ import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
 import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
+import { SpendingOverview } from "@/components/finance/SpendingOverview";
+import { TimeRangeFilter, computeRange, previousRange, type RangeKey, type DateRange } from "@/components/finance/TimeRangeFilter";
 import { cleanMerchant, cleanNotes, categorize, parseDate, parseAmount } from "@/lib/import-utils";
 
 export const Route = createFileRoute("/_authenticated/transactions")({ component: TransactionsPage });
@@ -41,8 +43,18 @@ function TransactionsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [rangeKey, setRangeKey] = useState<RangeKey>("month");
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [customRange, setCustomRange] = useState<DateRange>({ from: todayIso, to: todayIso });
+  const range = useMemo(() => computeRange(rangeKey, customRange), [rangeKey, customRange]);
+  const prevRange = useMemo(() => previousRange(rangeKey, range), [rangeKey, range]);
+
+  const inRange = (d: string, r: DateRange) => d >= r.from && d <= r.to;
+  const rangeTxs = useMemo(() => txs.filter(t => inRange(t.transaction_date, range)), [txs, range]);
+  const prevRangeTxs = useMemo(() => txs.filter(t => inRange(t.transaction_date, prevRange)), [txs, prevRange]);
+
   const filtered = useMemo(() => {
-    return txs.filter((t) => {
+    return rangeTxs.filter((t) => {
       if (typeFilter !== "all" && t.type !== typeFilter) return false;
       if (catFilter !== "all" && t.category_id !== catFilter) return false;
       if (q) {
@@ -52,7 +64,7 @@ function TransactionsPage() {
       }
       return true;
     });
-  }, [txs, q, typeFilter, catFilter, categories]);
+  }, [rangeTxs, q, typeFilter, catFilter, categories]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, Transaction[]> = {};
@@ -170,21 +182,23 @@ function TransactionsPage() {
       />
 
       <div className="space-y-4 px-5 py-5 md:px-10">
-        {/* Summary chips */}
-        <div className="flex gap-2">
-          <div className="flex-1 rounded-xl bg-success/10 px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-success">Income</p>
-            <p className="font-display text-base font-bold tabular-nums text-success">{formatCurrency(totals.inc, currency)}</p>
-          </div>
-          <div className="flex-1 rounded-xl bg-destructive/10 px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-destructive">Expenses</p>
-            <p className="font-display text-base font-bold tabular-nums text-destructive">{formatCurrency(totals.exp, currency)}</p>
-          </div>
-          <div className="flex-1 rounded-xl bg-muted px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Net</p>
-            <p className="font-display text-base font-bold tabular-nums">{formatCurrency(totals.inc - totals.exp, currency)}</p>
-          </div>
-        </div>
+        {/* Time range filter */}
+        <TimeRangeFilter
+          value={rangeKey}
+          onChange={setRangeKey}
+          custom={customRange}
+          onCustomChange={setCustomRange}
+        />
+
+        {/* Spending overview */}
+        <SpendingOverview
+          range={rangeKey}
+          currency={currency}
+          rangeTxs={rangeTxs}
+          prevRangeTxs={prevRangeTxs}
+          allTxs={txs}
+          categories={categories}
+        />
 
         {/* Search + filter toggle */}
         <Card className="shadow-soft">
