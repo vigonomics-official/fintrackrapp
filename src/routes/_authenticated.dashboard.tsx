@@ -1,17 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
-import { Sparkles, Calendar, ChevronRight, AlertTriangle, Shield, TrendingUp, Wallet } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Sparkles, Calendar, AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
+import { Input } from "@/components/ui/input";
 import { useTransactions, useCategories, useBudgets, monthKey, useProfile, useLoans } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
-const SIMPLE_CATEGORIES = ["Food", "Travel", "EMI", "Bills", "Shopping", "Others"];
 function simplifyCategory(name?: string | null) {
   if (!name) return "Others";
   const n = name.toLowerCase();
@@ -20,8 +19,11 @@ function simplifyCategory(name?: string | null) {
   if (/emi|loan/.test(n)) return "EMI";
   if (/bill|utilit|recharge|electric|internet|mobile/.test(n)) return "Bills";
   if (/shop|amazon|flipkart|myntra/.test(n)) return "Shopping";
+  if (/rent|housing/.test(n)) return "Rent";
   return "Others";
 }
+
+const ESSENTIAL = new Set(["EMI", "Bills", "Rent"]);
 
 function Dashboard() {
   const { data: profile } = useProfile();
@@ -34,7 +36,6 @@ function Dashboard() {
 
   const now = new Date();
 
-  // Salary survival math
   const survival = useMemo(() => {
     const monthTx = transactions.filter((t) => {
       const d = new Date(t.transaction_date);
@@ -49,25 +50,22 @@ function Dashboard() {
       .reduce((s, t) => s + t.amount, 0);
     const salaryLeft = Math.max(0, salary - expensesSinceSalary);
 
-    // Days until next salary: assume same day next month
     const nextSalary = new Date(lastSalaryDate);
     nextSalary.setMonth(nextSalary.getMonth() + 1);
     const days = Math.max(1, Math.ceil((nextSalary.getTime() - now.getTime()) / 86_400_000));
     const safeDaily = salaryLeft / days;
+    const stretchDaily = safeDaily * 0.85;
 
-    // Today's spend
     const todayKey = now.toISOString().slice(0, 10);
     const spentToday = transactions
       .filter(t => t.type === "expense" && t.transaction_date.slice(0, 10) === todayKey)
       .reduce((s, t) => s + t.amount, 0);
     const remainingToday = Math.max(0, safeDaily - spentToday);
 
-    // EMI pressure
     const monthlyEmi = loans.reduce((s, l) => s + (l.remaining_balance > 0 ? l.emi_amount : 0), 0);
     const emiRatio = salary > 0 ? (monthlyEmi / salary) * 100 : 0;
     const emiLevel: "Low" | "Medium" | "High" = emiRatio < 20 ? "Low" : emiRatio < 40 ? "Medium" : "High";
 
-    // Survival score: salary buffer (50) + emi pressure (30) + spending pace (20)
     const buffer = salary > 0 ? Math.min(50, (salaryLeft / salary) * 50) : 25;
     const emiScore = Math.max(0, 30 - emiRatio * 0.5);
     const pace = spentToday <= safeDaily ? 20 : Math.max(0, 20 - ((spentToday - safeDaily) / Math.max(1, safeDaily)) * 20);
@@ -77,81 +75,93 @@ function Dashboard() {
       score >= 70 && spentToday <= safeDaily ? "safe" :
       score >= 45 ? "careful" : "danger";
 
-    // Upcoming EMI
     const upcoming = [...loans].filter(l => l.remaining_balance > 0).map(l => {
       const d = new Date(now.getFullYear(), now.getMonth(), Math.min(l.due_day, 28));
       if (d < now) d.setMonth(d.getMonth() + 1);
       return { loan: l, due: d };
     }).sort((a, b) => a.due.getTime() - b.due.getTime())[0];
 
-    return { salary, salaryLeft, days, safeDaily, spentToday, remainingToday, monthlyEmi, emiRatio, emiLevel, score, mood, upcoming, lastSalaryDate, nextSalary };
+    return { salary, salaryLeft, days, safeDaily, stretchDaily, spentToday, remainingToday, monthlyEmi, emiRatio, emiLevel, score, mood, upcoming, lastSalaryDate, nextSalary };
   }, [transactions, loans, now.getDate()]);
 
-  // Danger alerts + smart insight inputs
-  const insightData = useMemo(() => {
-    const monthExpenses = transactions.filter(t => {
+  // Per-category spending (this month vs last month) for risks + insights
+  const catStats = useMemo(() => {
+    const thisM = new Map<string, number>();
+    const lastM = new Map<string, number>();
+    const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    transactions.forEach(t => {
+      if (t.type !== "expense") return;
       const d = new Date(t.transaction_date);
-      return t.type === "expense" && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      const cat = simplifyCategory(categories.find(c => c.id === t.category_id)?.name);
+      if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+        thisM.set(cat, (thisM.get(cat) ?? 0) + t.amount);
+      } else if (d.getMonth() === last.getMonth() && d.getFullYear() === last.getFullYear()) {
+        lastM.set(cat, (lastM.get(cat) ?? 0) + t.amount);
+      }
     });
-    const byCat = new Map<string, number>();
-    monthExpenses.forEach(t => {
-      const c = categories.find(c => c.id === t.category_id)?.name;
-      const k = simplifyCategory(c);
-      byCat.set(k, (byCat.get(k) ?? 0) + t.amount);
+    const topCat = [...thisM.entries()].sort((a, b) => b[1] - a[1])[0];
+    return { thisM, lastM, topCat };
+  }, [transactions, categories]);
+
+  // Spending risks (replaces trend chart)
+  const risks = useMemo(() => {
+    const list: { tone: "warn" | "info" | "danger"; text: string }[] = [];
+
+    // Budget exceedances
+    budgets.forEach(b => {
+      const c = categories.find(x => x.id === b.category_id);
+      const cat = simplifyCategory(c?.name);
+      const spent = catStats.thisM.get(cat) ?? 0;
+      if (spent > b.monthly_limit) {
+        list.push({ tone: "danger", text: `${cat} spending exceeded budget by ${formatCurrency(spent - b.monthly_limit, currency)}` });
+      }
     });
-    const total = [...byCat.values()].reduce((a, b) => a + b, 0);
-    const topCat = [...byCat.entries()].sort((a, b) => b[1] - a[1])[0];
 
-    // Last 7 days spend & weekend pattern
-    const last7 = transactions.filter(t => {
-      if (t.type !== "expense") return false;
-      const d = new Date(t.transaction_date);
-      return (now.getTime() - d.getTime()) / 86_400_000 <= 7;
+    // Month-over-month jumps
+    catStats.thisM.forEach((amt, cat) => {
+      const prev = catStats.lastM.get(cat) ?? 0;
+      if (prev > 0 && amt > prev * 1.2) {
+        const pct = Math.round(((amt - prev) / prev) * 100);
+        list.push({ tone: "warn", text: `${cat} spending increased ${pct}% this month` });
+      }
     });
-    const weekendSpend = last7.filter(t => {
-      const day = new Date(t.transaction_date).getDay();
-      return day === 0 || day === 6;
-    }).reduce((s, t) => s + t.amount, 0);
-    const weekdaySpend = last7.reduce((s, t) => s + t.amount, 0) - weekendSpend;
-    const weekendRisk = weekendSpend > weekdaySpend * 0.5 && weekendSpend > survival.safeDaily * 2;
 
-    return { byCat, total, topCat, weekendSpend, weekendRisk };
-  }, [transactions, categories, survival.safeDaily]);
-
-  const alerts = useMemo(() => {
-    const list: { icon: string; text: string }[] = [];
-    if (survival.salaryLeft < survival.safeDaily * survival.days * 0.5 && survival.days > 3) {
-      list.push({ icon: "⚠", text: `Only ${formatCurrency(survival.salaryLeft, currency)} left for ${survival.days} days` });
+    // Safe daily reminder
+    if (survival.safeDaily > 0) {
+      list.push({ tone: "info", text: `Safe spending limit is ${formatCurrency(survival.safeDaily, currency)}/day` });
     }
+
+    // EMI proximity
     if (survival.upcoming) {
-      const daysToEmi = Math.ceil((survival.upcoming.due.getTime() - now.getTime()) / 86_400_000);
-      if (daysToEmi <= 5) list.push({ icon: "⚠", text: `EMI due in ${daysToEmi} day${daysToEmi === 1 ? "" : "s"} · ${formatCurrency(survival.upcoming.loan.emi_amount, currency)}` });
+      const d = Math.ceil((survival.upcoming.due.getTime() - now.getTime()) / 86_400_000);
+      if (d <= 5) list.push({ tone: "warn", text: `EMI due in ${d} day${d === 1 ? "" : "s"} · ${formatCurrency(survival.upcoming.loan.emi_amount, currency)}` });
     }
-    if (survival.spentToday > survival.safeDaily && survival.safeDaily > 0) {
-      list.push({ icon: "⚠", text: "You've crossed today's safe spend limit" });
-    }
-    const day = now.getDay();
-    if (insightData.weekendRisk && (day >= 4 || day === 0)) {
-      list.push({ icon: "🛍", text: "High spending risk expected this weekend" });
-    }
-    insightData.byCat.forEach((v, k) => {
-      if (insightData.total > 0 && v / insightData.total > 0.4) list.push({ icon: "⚠", text: `${k} spending above safe limit` });
-    });
-    return list.slice(0, 4);
-  }, [survival, insightData, currency]);
 
+    return list.slice(0, 5);
+  }, [budgets, catStats, categories, survival, currency]);
 
-  // Mini trend — last 7 days expense
-  const trend = useMemo(() => {
-    const days: { label: string; spend: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      const spend = transactions.filter(t => t.type === "expense" && t.transaction_date.slice(0, 10) === key).reduce((s, t) => s + t.amount, 0);
-      days.push({ label: d.toLocaleDateString(undefined, { weekday: "short" }), spend });
+  // AI actionable insight — save opportunity
+  const insight = useMemo(() => {
+    const top = catStats.topCat;
+    if (top && top[1] > 0) {
+      const monthSpend = top[1];
+      // Suggest cutting ~17% (~₹70/day on 4000 example)
+      const dailyCut = Math.max(20, Math.round((monthSpend * 0.17) / 30 / 10) * 10);
+      const monthSave = dailyCut * 30;
+      return {
+        title: "Save Opportunity",
+        line1: `You spent ${formatCurrency(monthSpend, currency)} on ${top[0]} this month.`,
+        line2: `Reducing spending by ${formatCurrency(dailyCut, currency)}/day could save:`,
+        save: `${formatCurrency(monthSave, currency)}/month`,
+      };
     }
-    return days;
-  }, [transactions]);
+    return {
+      title: "Save Opportunity",
+      line1: `Stay under ${formatCurrency(survival.safeDaily, currency)}/day this week.`,
+      line2: "Trimming just one delivery order can save:",
+      save: `${formatCurrency(Math.max(200, Math.round(survival.safeDaily * 0.2)) * 30, currency)}/month`,
+    };
+  }, [catStats, currency, survival.safeDaily]);
 
   const recent = useMemo(() => transactions.slice(0, 6), [transactions]);
 
@@ -161,19 +171,32 @@ function Dashboard() {
   })();
 
   const moodMeta = {
-    safe: { dot: "🟢", label: "Safe", cls: "bg-success/10 text-success" },
-    careful: { dot: "🟡", label: "Careful", cls: "bg-gold/15 text-gold-foreground" },
-    danger: { dot: "🔴", label: "Danger Zone", cls: "bg-destructive/10 text-destructive" },
+    safe: { dot: "🟢", label: "Safe Zone", cls: "bg-success/15 text-success" },
+    careful: { dot: "🟡", label: "Watch Spending", cls: "bg-gold/20 text-gold-foreground" },
+    danger: { dot: "🔴", label: "Danger Zone", cls: "bg-destructive/15 text-destructive" },
   }[survival.mood];
 
   const emiTone = survival.emiLevel === "Low" ? "🟢" : survival.emiLevel === "Medium" ? "🟡" : "🔴";
+
+  // "Can I buy this?" inline mini
+  const [item, setItem] = useState("");
+  const [priceStr, setPriceStr] = useState("");
+  const price = Number(priceStr) || 0;
+  const afterBuy = useMemo(() => {
+    const newLeft = Math.max(0, survival.salaryLeft - price);
+    const newDaily = newLeft / Math.max(1, survival.days);
+    const buffer = survival.salary > 0 ? Math.min(50, (newLeft / survival.salary) * 50) : 25;
+    const emiScore = Math.max(0, 30 - survival.emiRatio * 0.5);
+    const newScore = Math.round(buffer + emiScore + 20);
+    return { newLeft, newDaily, newScore };
+  }, [price, survival]);
 
   return (
     <div>
       <PageHeader title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`} subtitle="Your salary survival snapshot" />
 
       <div className="space-y-5 px-5 py-5 md:space-y-6 md:px-10 md:py-7">
-        {/* 1. Salary Survival Card */}
+        {/* 1. Salary Survival Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
             <CardContent className="relative p-6 md:p-7">
@@ -193,17 +216,20 @@ function Dashboard() {
                 <div className="mt-5 grid grid-cols-3 gap-2 text-center">
                   <SurvivalStat label="Days left" value={String(survival.days)} />
                   <SurvivalStat label="EMI pressure" value={`${emiTone} ${survival.emiLevel}`} />
-                  <SurvivalStat label="Survival" value={`${survival.score}%`} />
+                  <SurvivalStat label="Survival Score" value={`${survival.score}/100`} />
                 </div>
                 <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
                   <div className="h-full bg-gold transition-all" style={{ width: `${Math.min(100, Math.max(0, survival.score))}%` }} />
                 </div>
+                <p className="mt-2.5 text-[10.5px] opacity-75">
+                  Based on Salary Left · Days Until Salary · EMI Pressure · Spending Speed
+                </p>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* 2. Today's Safe Spending */}
+        {/* 2. Today's Safe Limit */}
         <Card className="shadow-soft">
           <CardContent className="p-4 md:p-5">
             <div className="flex items-baseline justify-between">
@@ -229,66 +255,69 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* 3. Salary Countdown */}
+        {/* 3. Next Salary Card */}
         <Card className="shadow-soft">
-          <CardContent className="flex items-center gap-4 p-4 md:p-5">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Calendar className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Next salary in</p>
-              <p className="font-display text-lg font-bold leading-tight">{survival.days} day{survival.days === 1 ? "" : "s"}</p>
-              <p className="text-[11px] text-muted-foreground">
-                Around {survival.nextSalary.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · stretch {formatCurrency(survival.salaryLeft, currency)} till then
-              </p>
+          <CardContent className="p-4 md:p-5">
+            <div className="flex items-center gap-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Calendar className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Next salary</p>
+                <p className="font-display text-lg font-bold leading-tight">{survival.days} day{survival.days === 1 ? "" : "s"} left</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Around {survival.nextSalary.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-muted/40 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended</p>
+                <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{formatCurrency(survival.safeDaily, currency)}/day</p>
+              </div>
+              <div className="rounded-xl bg-success/10 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-wider text-success/80">Stretch goal</p>
+                <p className="mt-0.5 font-display text-sm font-semibold tabular-nums text-success">{formatCurrency(survival.stretchDaily, currency)}/day</p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 4. Danger Alerts */}
-        {alerts.length > 0 && (
-          <Card className="border-destructive/20 bg-destructive/5 shadow-soft">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 font-display text-base">
-                <AlertTriangle className="h-4 w-4 text-destructive" /> Danger alerts
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {alerts.map((a, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <span aria-hidden>{a.icon}</span>
-                  <span className="text-foreground/90">{a.text}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* 5. AI Insight */}
+        {/* 4. AI Insight (actionable save opportunity) */}
         <Card className="shadow-soft">
           <CardContent className="flex items-start gap-3 p-4 md:p-5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-gold-foreground">
               <Sparkles className="h-4 w-4" />
             </span>
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AI insight</p>
-              <p className="mt-1 text-sm text-foreground/90">
-                {(() => {
-                  const top = insightData.topCat;
-                  if (top && top[1] > survival.safeDaily * 3) {
-                    const save = Math.round(top[1] * 0.25);
-                    return `You spent ${formatCurrency(top[1], currency)} on ${top[0]} this month. Cutting back ~25% could save you ${formatCurrency(save, currency)}.`;
-                  }
-                  if (survival.mood === "safe") {
-                    return `Nicely paced. Stay under ${formatCurrency(survival.safeDaily, currency)}/day and you'll glide to next salary.`;
-                  }
-                  if (survival.mood === "careful") {
-                    return `You're slightly ahead of pace. Skipping 2 food-delivery orders this week can ease the squeeze.`;
-                  }
-                  return `Stretched thin. Pause non-essentials and protect EMIs + bills for the next ${survival.days} day${survival.days === 1 ? "" : "s"}.`;
-                })()}
-              </p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{insight.title}</p>
+              <p className="mt-1 text-sm text-foreground/90">{insight.line1}</p>
+              <p className="mt-1 text-sm text-foreground/90">{insight.line2}</p>
+              <p className="mt-1 font-display text-lg font-bold text-success tabular-nums">{insight.save}</p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* 5. Can I buy this? (compact inline) */}
+        <Card className="shadow-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
+              <ShoppingBag className="h-4 w-4 text-primary" /> Can I buy this?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-[1fr_120px] gap-2">
+              <Input placeholder="Item name" value={item} onChange={(e) => setItem(e.target.value)} className="h-9 text-sm" />
+              <Input type="number" inputMode="decimal" placeholder="Price" value={priceStr} onChange={(e) => setPriceStr(e.target.value)} className="h-9 text-sm tabular-nums" />
+            </div>
+            {price > 0 && (
+              <div className="rounded-xl bg-muted/40 p-3 text-sm">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">After purchase{item ? ` · ${item}` : ""}</p>
+                <BuyRow label="Salary Left" before={formatCurrency(survival.salaryLeft, currency)} after={formatCurrency(afterBuy.newLeft, currency)} />
+                <BuyRow label="Safe Daily Spend" before={`${formatCurrency(survival.safeDaily, currency)}/day`} after={`${formatCurrency(afterBuy.newDaily, currency)}/day`} />
+                <BuyRow label="Survival Score" before={`${survival.score}`} after={`${afterBuy.newScore}`} />
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -307,15 +336,27 @@ function Dashboard() {
               const catName = categories.find(c => c.id === t.category_id)?.name;
               const simple = simplifyCategory(catName);
               const isIncome = t.type === "income";
-              const title = isIncome ? "Salary Credited" : (t.notes?.split(/\s|·/)[0] || catName || simple);
-              const breach = !isIncome && simple === "Food" && t.amount > survival.safeDaily * 0.5 && survival.safeDaily > 0;
+              const title = isIncome ? "Salary Credited" : (catName || simple);
+
+              let label = simple;
+              let labelCls = "text-muted-foreground";
+              if (isIncome) {
+                label = "Income Received ✅";
+                labelCls = "text-success";
+              } else if (ESSENTIAL.has(simple)) {
+                label = "Essential Expense";
+              } else if (catStats.topCat && simple === catStats.topCat[0]) {
+                label = "Largest Expense This Month";
+              } else if (simple === "Food" && survival.safeDaily > 0 && t.amount > survival.safeDaily * 0.5) {
+                label = "Above Safe Limit ⚠";
+                labelCls = "text-destructive";
+              }
+
               return (
                 <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{title}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {isIncome ? "Income" : simple}{breach ? " · Above safe limit ⚠" : ""}
-                    </p>
+                    <p className={`truncate text-[11px] ${labelCls}`}>{label}</p>
                   </div>
                   <p className={`shrink-0 font-display text-sm font-semibold tabular-nums ${isIncome ? "text-success" : ""}`}>
                     {isIncome ? "+" : ""}{formatCurrency(t.amount, currency)}
@@ -326,28 +367,29 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* 7. Mini Spending Trend */}
+        {/* 7. Spending Risks (replaces trend chart) */}
         <Card className="shadow-soft">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 font-display text-base">
-              <TrendingUp className="h-4 w-4 text-primary" /> Spending trend
+              <AlertTriangle className="h-4 w-4 text-gold-foreground" /> Spending risks
             </CardTitle>
-            <span className="text-[11px] text-muted-foreground">Last 7 days</span>
           </CardHeader>
-          <CardContent className="h-32 px-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trend} margin={{ top: 5, right: 6, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="g-spend" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="oklch(0.55 0.12 180)" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="oklch(0.55 0.12 180)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="label" stroke="oklch(0.55 0.03 160)" fontSize={10} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => formatCurrency(v, currency)} />
-                <Area type="monotone" dataKey="spend" stroke="oklch(0.5 0.12 180)" strokeWidth={2} fill="url(#g-spend)" />
-              </AreaChart>
-            </ResponsiveContainer>
+          <CardContent className="space-y-2">
+            {risks.length === 0 ? (
+              <p className="py-1 text-sm text-muted-foreground">No risks detected. You're spending calmly.</p>
+            ) : risks.map((r, i) => {
+              const tone = r.tone === "danger"
+                ? "border-destructive/20 bg-destructive/5 text-destructive"
+                : r.tone === "warn"
+                  ? "border-gold/25 bg-gold/10 text-gold-foreground"
+                  : "border-border bg-muted/40 text-foreground/90";
+              return (
+                <div key={i} className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-sm ${tone}`}>
+                  <span aria-hidden>⚠</span>
+                  <span>{r.text}</span>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 
@@ -364,18 +406,29 @@ function Dashboard() {
               <p className="text-sm text-muted-foreground">No budgets set yet.</p>
             ) : budgets.slice(0, 5).map((b) => {
               const c = categories.find(x => x.id === b.category_id);
-              const spent = transactions.filter(t => t.type === "expense" && t.category_id === b.category_id && t.transaction_date.startsWith(month.slice(0, 7))).reduce((s, t) => s + t.amount, 0);
-              const pct = Math.min(100, (spent / b.monthly_limit) * 100);
+              const name = simplifyCategory(c?.name);
+              const spent = transactions
+                .filter(t => t.type === "expense" && t.category_id === b.category_id && t.transaction_date.startsWith(month.slice(0, 7)))
+                .reduce((s, t) => s + t.amount, 0);
+              const pctRaw = (spent / b.monthly_limit) * 100;
+              const pct = Math.min(100, pctRaw);
               const over = spent > b.monthly_limit;
+              const remaining = Math.max(0, b.monthly_limit - spent);
+
               return (
                 <div key={b.id}>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium">{simplifyCategory(c?.name)}</span>
-                    <span className={over ? "text-destructive" : "text-muted-foreground"}>
-                      {formatCurrency(spent, currency)} / {formatCurrency(b.monthly_limit, currency)}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{name}</span>
+                    <span className={`text-xs tabular-nums ${over ? "text-destructive" : "text-muted-foreground"}`}>
+                      {over ? "Budget Exceeded ⚠" : `${Math.round(pctRaw)}% Used`}
                     </span>
                   </div>
                   <Progress value={pct} className="mt-1.5 h-1.5" />
+                  <p className={`mt-1 text-[11px] tabular-nums ${over ? "text-destructive" : "text-muted-foreground"}`}>
+                    {over
+                      ? `Overspent by ${formatCurrency(spent - b.monthly_limit, currency)}`
+                      : `${formatCurrency(remaining, currency)} Remaining`}
+                  </p>
                 </div>
               );
             })}
@@ -391,6 +444,19 @@ function SurvivalStat({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl bg-white/10 px-2 py-2 backdrop-blur">
       <p className="text-[10px] uppercase tracking-wider opacity-75">{label}</p>
       <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function BuyRow({ label, before, after }: { label: string; before: string; after: string }) {
+  return (
+    <div className="mt-1.5 flex items-center justify-between gap-2">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-1.5 text-xs font-medium tabular-nums">
+        <span className="text-muted-foreground line-through opacity-70">{before}</span>
+        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+        <span className="font-semibold">{after}</span>
+      </span>
     </div>
   );
 }
