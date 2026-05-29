@@ -104,62 +104,93 @@ function Dashboard() {
     return { thisM, lastM, topCat };
   }, [transactions, categories]);
 
-  // Spending risks (replaces trend chart)
+  // Spending risks — merged per category (budget overage + MoM increase combined)
   const risks = useMemo(() => {
-    const list: { tone: "warn" | "info" | "danger"; text: string }[] = [];
+    type Risk = { tone: "warn" | "info" | "danger"; title: string; main: string; reason?: string };
+    const byCat = new Map<string, Risk>();
 
-    // Budget exceedances
+    // Budget overages first (highest priority)
     budgets.forEach(b => {
       const c = categories.find(x => x.id === b.category_id);
       const cat = simplifyCategory(c?.name);
       const spent = catStats.thisM.get(cat) ?? 0;
       if (spent > b.monthly_limit) {
-        list.push({ tone: "danger", text: `${cat} spending exceeded budget by ${formatCurrency(spent - b.monthly_limit, currency)}` });
+        byCat.set(cat, {
+          tone: "danger",
+          title: `${cat} Budget Alert`,
+          main: `Overspent by ${formatCurrency(spent - b.monthly_limit, currency)}`,
+        });
       }
     });
 
-    // Month-over-month jumps
+    // Month-over-month jumps — attach as reason, or standalone
     catStats.thisM.forEach((amt, cat) => {
       const prev = catStats.lastM.get(cat) ?? 0;
       if (prev > 0 && amt > prev * 1.2) {
-        const pct = Math.round(((amt - prev) / prev) * 100);
-        list.push({ tone: "warn", text: `${cat} spending increased ${pct}% this month` });
+        const delta = amt - prev;
+        const reason = `${cat} spending increased by ${formatCurrency(delta, currency)} vs last month`;
+        const existing = byCat.get(cat);
+        if (existing) {
+          existing.reason = `Main reason: ${cat.toLowerCase()} spending up ${formatCurrency(delta, currency)} this month.`;
+        } else {
+          byCat.set(cat, { tone: "warn", title: `${cat} Spending Up`, main: reason });
+        }
       }
     });
 
-    // Safe daily reminder
-    if (survival.safeDaily > 0) {
-      list.push({ tone: "info", text: `Safe spending limit is ${formatCurrency(survival.safeDaily, currency)}/day` });
-    }
+    const list: Risk[] = [...byCat.values()];
 
-    // EMI proximity
     if (survival.upcoming) {
       const d = Math.ceil((survival.upcoming.due.getTime() - now.getTime()) / 86_400_000);
-      if (d <= 5) list.push({ tone: "warn", text: `EMI due in ${d} day${d === 1 ? "" : "s"} · ${formatCurrency(survival.upcoming.loan.emi_amount, currency)}` });
+      if (d <= 5) list.push({ tone: "warn", title: "EMI Due Soon", main: `${formatCurrency(survival.upcoming.loan.emi_amount, currency)} due in ${d} day${d === 1 ? "" : "s"}` });
+    }
+
+    if (list.length === 0 && survival.safeDaily > 0) {
+      list.push({ tone: "info", title: "Safe Spending Limit", main: `${formatCurrency(survival.safeDaily, currency)}/day to stay on track` });
     }
 
     return list.slice(0, 5);
   }, [budgets, catStats, categories, survival, currency]);
 
-  // AI actionable insight — save opportunity
+  // AI actionable insight — practical recommendations
   const insight = useMemo(() => {
     const top = catStats.topCat;
     if (top && top[1] > 0) {
-      const monthSpend = top[1];
-      // Suggest cutting ~17% (~₹70/day on 4000 example)
+      const [name, monthSpend] = top;
+      if (name === "Food") {
+        const orderCost = Math.max(250, Math.round((monthSpend / 30) * 0.6));
+        const save = orderCost * 8; // ~2 orders/week
+        return {
+          title: "Save Opportunity",
+          action: "Reduce food delivery by 2 orders this week",
+          save: `${formatCurrency(save, currency)}/month`,
+        };
+      }
+      if (name === "Travel") {
+        const dailyCut = Math.max(40, Math.round((monthSpend * 0.2) / 30 / 10) * 10);
+        return {
+          title: "Save Opportunity",
+          action: `Reduce transport spending by ${formatCurrency(dailyCut, currency)}/day`,
+          save: `${formatCurrency(dailyCut * 30, currency)}/month`,
+        };
+      }
+      if (name === "Shopping") {
+        return {
+          title: "Save Opportunity",
+          action: "Skip 1 non-essential shopping order this week",
+          save: `${formatCurrency(Math.round(monthSpend * 0.15), currency)}/month`,
+        };
+      }
       const dailyCut = Math.max(20, Math.round((monthSpend * 0.17) / 30 / 10) * 10);
-      const monthSave = dailyCut * 30;
       return {
         title: "Save Opportunity",
-        line1: `You spent ${formatCurrency(monthSpend, currency)} on ${top[0]} this month.`,
-        line2: `Reducing spending by ${formatCurrency(dailyCut, currency)}/day could save:`,
-        save: `${formatCurrency(monthSave, currency)}/month`,
+        action: `Reduce ${name.toLowerCase()} spending by ${formatCurrency(dailyCut, currency)}/day`,
+        save: `${formatCurrency(dailyCut * 30, currency)}/month`,
       };
     }
     return {
       title: "Save Opportunity",
-      line1: `Stay under ${formatCurrency(survival.safeDaily, currency)}/day this week.`,
-      line2: "Trimming just one delivery order can save:",
+      action: `Stay under ${formatCurrency(survival.safeDaily, currency)}/day this week`,
       save: `${formatCurrency(Math.max(200, Math.round(survival.safeDaily * 0.2)) * 30, currency)}/month`,
     };
   }, [catStats, currency, survival.safeDaily]);
