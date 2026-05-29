@@ -503,7 +503,6 @@ function Dashboard() {
     </div>
   );
 }
-}
 
 function SurvivalStat({ label, value }: { label: string; value: string }) {
   return (
