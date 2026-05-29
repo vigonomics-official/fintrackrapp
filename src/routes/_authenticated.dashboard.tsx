@@ -501,9 +501,8 @@ function Dashboard() {
         </Card>
       </div>
     </div>
-      </div>
-    </div>
   );
+}
 }
 
 function SurvivalStat({ label, value }: { label: string; value: string }) {
