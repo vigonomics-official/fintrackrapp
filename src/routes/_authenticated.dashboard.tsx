@@ -229,6 +229,23 @@ function Dashboard() {
       <PageHeader title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`} subtitle="Your salary survival snapshot" />
 
       <div className="space-y-5 px-5 py-5 md:space-y-6 md:px-10 md:py-7">
+        {!hasExpenses && (
+          <Card className="border-dashed shadow-soft">
+            <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Wallet className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-display text-base font-semibold">No expenses recorded yet</p>
+                <p className="mt-1 text-xs text-muted-foreground">Start tracking expenses to calculate your safe daily spending.</p>
+              </div>
+              <Button asChild size="sm" className="mt-1">
+                <Link to="/transactions"><Plus className="mr-1 h-4 w-4" /> Add Expense</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 1. Salary Survival Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
