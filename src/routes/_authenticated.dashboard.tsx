@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { Sparkles, Calendar, AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight } from "lucide-react";
+import { Sparkles, Calendar, AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -103,67 +104,99 @@ function Dashboard() {
     return { thisM, lastM, topCat };
   }, [transactions, categories]);
 
-  // Spending risks (replaces trend chart)
+  // Spending risks — merged per category (budget overage + MoM increase combined)
   const risks = useMemo(() => {
-    const list: { tone: "warn" | "info" | "danger"; text: string }[] = [];
+    type Risk = { tone: "warn" | "info" | "danger"; title: string; main: string; reason?: string };
+    const byCat = new Map<string, Risk>();
 
-    // Budget exceedances
+    // Budget overages first (highest priority)
     budgets.forEach(b => {
       const c = categories.find(x => x.id === b.category_id);
       const cat = simplifyCategory(c?.name);
       const spent = catStats.thisM.get(cat) ?? 0;
       if (spent > b.monthly_limit) {
-        list.push({ tone: "danger", text: `${cat} spending exceeded budget by ${formatCurrency(spent - b.monthly_limit, currency)}` });
+        byCat.set(cat, {
+          tone: "danger",
+          title: `${cat} Budget Alert`,
+          main: `Overspent by ${formatCurrency(spent - b.monthly_limit, currency)}`,
+        });
       }
     });
 
-    // Month-over-month jumps
+    // Month-over-month jumps — attach as reason, or standalone
     catStats.thisM.forEach((amt, cat) => {
       const prev = catStats.lastM.get(cat) ?? 0;
       if (prev > 0 && amt > prev * 1.2) {
-        const pct = Math.round(((amt - prev) / prev) * 100);
-        list.push({ tone: "warn", text: `${cat} spending increased ${pct}% this month` });
+        const delta = amt - prev;
+        const reason = `${cat} spending increased by ${formatCurrency(delta, currency)} vs last month`;
+        const existing = byCat.get(cat);
+        if (existing) {
+          existing.reason = `Main reason: ${cat.toLowerCase()} spending up ${formatCurrency(delta, currency)} this month.`;
+        } else {
+          byCat.set(cat, { tone: "warn", title: `${cat} Spending Up`, main: reason });
+        }
       }
     });
 
-    // Safe daily reminder
-    if (survival.safeDaily > 0) {
-      list.push({ tone: "info", text: `Safe spending limit is ${formatCurrency(survival.safeDaily, currency)}/day` });
-    }
+    const list: Risk[] = [...byCat.values()];
 
-    // EMI proximity
     if (survival.upcoming) {
       const d = Math.ceil((survival.upcoming.due.getTime() - now.getTime()) / 86_400_000);
-      if (d <= 5) list.push({ tone: "warn", text: `EMI due in ${d} day${d === 1 ? "" : "s"} · ${formatCurrency(survival.upcoming.loan.emi_amount, currency)}` });
+      if (d <= 5) list.push({ tone: "warn", title: "EMI Due Soon", main: `${formatCurrency(survival.upcoming.loan.emi_amount, currency)} due in ${d} day${d === 1 ? "" : "s"}` });
+    }
+
+    if (list.length === 0 && survival.safeDaily > 0) {
+      list.push({ tone: "info", title: "Safe Spending Limit", main: `${formatCurrency(survival.safeDaily, currency)}/day to stay on track` });
     }
 
     return list.slice(0, 5);
   }, [budgets, catStats, categories, survival, currency]);
 
-  // AI actionable insight — save opportunity
+  // AI actionable insight — practical recommendations
   const insight = useMemo(() => {
     const top = catStats.topCat;
     if (top && top[1] > 0) {
-      const monthSpend = top[1];
-      // Suggest cutting ~17% (~₹70/day on 4000 example)
+      const [name, monthSpend] = top;
+      if (name === "Food") {
+        const orderCost = Math.max(250, Math.round((monthSpend / 30) * 0.6));
+        const save = orderCost * 8; // ~2 orders/week
+        return {
+          title: "Save Opportunity",
+          action: "Reduce food delivery by 2 orders this week",
+          save: `${formatCurrency(save, currency)}/month`,
+        };
+      }
+      if (name === "Travel") {
+        const dailyCut = Math.max(40, Math.round((monthSpend * 0.2) / 30 / 10) * 10);
+        return {
+          title: "Save Opportunity",
+          action: `Reduce transport spending by ${formatCurrency(dailyCut, currency)}/day`,
+          save: `${formatCurrency(dailyCut * 30, currency)}/month`,
+        };
+      }
+      if (name === "Shopping") {
+        return {
+          title: "Save Opportunity",
+          action: "Skip 1 non-essential shopping order this week",
+          save: `${formatCurrency(Math.round(monthSpend * 0.15), currency)}/month`,
+        };
+      }
       const dailyCut = Math.max(20, Math.round((monthSpend * 0.17) / 30 / 10) * 10);
-      const monthSave = dailyCut * 30;
       return {
         title: "Save Opportunity",
-        line1: `You spent ${formatCurrency(monthSpend, currency)} on ${top[0]} this month.`,
-        line2: `Reducing spending by ${formatCurrency(dailyCut, currency)}/day could save:`,
-        save: `${formatCurrency(monthSave, currency)}/month`,
+        action: `Reduce ${name.toLowerCase()} spending by ${formatCurrency(dailyCut, currency)}/day`,
+        save: `${formatCurrency(dailyCut * 30, currency)}/month`,
       };
     }
     return {
       title: "Save Opportunity",
-      line1: `Stay under ${formatCurrency(survival.safeDaily, currency)}/day this week.`,
-      line2: "Trimming just one delivery order can save:",
+      action: `Stay under ${formatCurrency(survival.safeDaily, currency)}/day this week`,
       save: `${formatCurrency(Math.max(200, Math.round(survival.safeDaily * 0.2)) * 30, currency)}/month`,
     };
   }, [catStats, currency, survival.safeDaily]);
 
   const recent = useMemo(() => transactions.slice(0, 6), [transactions]);
+  const hasExpenses = useMemo(() => transactions.some(t => t.type === "expense"), [transactions]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -196,6 +229,23 @@ function Dashboard() {
       <PageHeader title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`} subtitle="Your salary survival snapshot" />
 
       <div className="space-y-5 px-5 py-5 md:space-y-6 md:px-10 md:py-7">
+        {!hasExpenses && (
+          <Card className="border-dashed shadow-soft">
+            <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Wallet className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-display text-base font-semibold">No expenses recorded yet</p>
+                <p className="mt-1 text-xs text-muted-foreground">Start tracking expenses to calculate your safe daily spending.</p>
+              </div>
+              <Button asChild size="sm" className="mt-1">
+                <Link to="/transactions"><Plus className="mr-1 h-4 w-4" /> Add Expense</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 1. Salary Survival Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
@@ -291,9 +341,9 @@ function Dashboard() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{insight.title}</p>
-              <p className="mt-1 text-sm text-foreground/90">{insight.line1}</p>
-              <p className="mt-1 text-sm text-foreground/90">{insight.line2}</p>
-              <p className="mt-1 font-display text-lg font-bold text-success tabular-nums">{insight.save}</p>
+              <p className="mt-1 text-sm text-foreground/90">{insight.action}</p>
+              <p className="mt-2 text-[11px] uppercase tracking-wider text-muted-foreground">Potential savings</p>
+              <p className="font-display text-lg font-bold text-success tabular-nums">{insight.save}</p>
             </div>
           </CardContent>
         </Card>
@@ -310,14 +360,26 @@ function Dashboard() {
               <Input placeholder="Item name" value={item} onChange={(e) => setItem(e.target.value)} className="h-9 text-sm" />
               <Input type="number" inputMode="decimal" placeholder="Price" value={priceStr} onChange={(e) => setPriceStr(e.target.value)} className="h-9 text-sm tabular-nums" />
             </div>
-            {price > 0 && (
-              <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">After purchase{item ? ` · ${item}` : ""}</p>
-                <BuyRow label="Salary Left" before={formatCurrency(survival.salaryLeft, currency)} after={formatCurrency(afterBuy.newLeft, currency)} />
-                <BuyRow label="Safe Daily Spend" before={`${formatCurrency(survival.safeDaily, currency)}/day`} after={`${formatCurrency(afterBuy.newDaily, currency)}/day`} />
-                <BuyRow label="Survival Score" before={`${survival.score}`} after={`${afterBuy.newScore}`} />
-              </div>
-            )}
+            {price > 0 && (() => {
+              const dropPct = survival.score > 0 ? ((survival.score - afterBuy.newScore) / survival.score) * 100 : 0;
+              const ratio = survival.salaryLeft > 0 ? price / survival.salaryLeft : 1;
+              const impact = ratio > 0.4 || dropPct > 25 || afterBuy.newLeft <= 0
+                ? { dot: "🔴", text: "Not Recommended", cls: "bg-destructive/15 text-destructive" }
+                : ratio > 0.2 || dropPct > 12
+                  ? { dot: "🟡", text: "Think Twice", cls: "bg-gold/20 text-gold-foreground" }
+                  : { dot: "🟢", text: "Safe Purchase", cls: "bg-success/15 text-success" };
+              return (
+                <div className="rounded-xl bg-muted/40 p-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">After purchase{item ? ` · ${item}` : ""}</p>
+                    <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-medium ${impact.cls}`}>{impact.dot} {impact.text}</span>
+                  </div>
+                  <BuyRow label="Salary Left" before={formatCurrency(survival.salaryLeft, currency)} after={formatCurrency(afterBuy.newLeft, currency)} />
+                  <BuyRow label="Safe Daily Spend" before={`${formatCurrency(survival.safeDaily, currency)}/day`} after={`${formatCurrency(afterBuy.newDaily, currency)}/day`} />
+                  <BuyRow label="Survival Score" before={`${survival.score}`} after={`${afterBuy.newScore}`} />
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 
@@ -338,18 +400,30 @@ function Dashboard() {
               const isIncome = t.type === "income";
               const title = isIncome ? "Salary Credited" : (catName || simple);
 
-              let label = simple;
+              // Determine if this category is over-budget or surged this month
+              const budget = budgets.find(b => b.category_id === t.category_id);
+              const spentInCat = catStats.thisM.get(simple) ?? 0;
+              const overBudget = budget ? spentInCat > budget.monthly_limit : false;
+              const prevCat = catStats.lastM.get(simple) ?? 0;
+              const surged = prevCat > 0 && spentInCat > prevCat * 1.2;
+
+              let label = "Optional Expense";
               let labelCls = "text-muted-foreground";
               if (isIncome) {
                 label = "Income Received ✅";
                 labelCls = "text-success";
               } else if (ESSENTIAL.has(simple)) {
                 label = "Essential Expense";
-              } else if (catStats.topCat && simple === catStats.topCat[0]) {
-                label = "Largest Expense This Month";
+                labelCls = "text-foreground/70";
+              } else if (overBudget) {
+                label = "Budget Alert ⚠";
+                labelCls = "text-destructive";
               } else if (simple === "Food" && survival.safeDaily > 0 && t.amount > survival.safeDaily * 0.5) {
                 label = "Above Safe Limit ⚠";
                 labelCls = "text-destructive";
+              } else if (surged) {
+                label = "Spending Up This Month";
+                labelCls = "text-gold-foreground";
               }
 
               return (
@@ -367,7 +441,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* 7. Spending Risks (replaces trend chart) */}
+        {/* 7. Spending Risks */}
         <Card className="shadow-soft">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 font-display text-base">
@@ -379,14 +453,16 @@ function Dashboard() {
               <p className="py-1 text-sm text-muted-foreground">No risks detected. You're spending calmly.</p>
             ) : risks.map((r, i) => {
               const tone = r.tone === "danger"
-                ? "border-destructive/20 bg-destructive/5 text-destructive"
+                ? "border-destructive/20 bg-destructive/5"
                 : r.tone === "warn"
-                  ? "border-gold/25 bg-gold/10 text-gold-foreground"
-                  : "border-border bg-muted/40 text-foreground/90";
+                  ? "border-gold/25 bg-gold/10"
+                  : "border-border bg-muted/40";
+              const titleCls = r.tone === "danger" ? "text-destructive" : r.tone === "warn" ? "text-gold-foreground" : "text-foreground";
               return (
-                <div key={i} className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-sm ${tone}`}>
-                  <span aria-hidden>⚠</span>
-                  <span>{r.text}</span>
+                <div key={i} className={`rounded-xl border px-3 py-2.5 ${tone}`}>
+                  <p className={`text-[11px] font-semibold uppercase tracking-wider ${titleCls}`}>{r.title}</p>
+                  <p className="mt-0.5 text-sm font-medium text-foreground/90 tabular-nums">{r.main}</p>
+                  {r.reason && <p className="mt-1 text-[11px] text-muted-foreground">{r.reason}</p>}
                 </div>
               );
             })}
@@ -401,7 +477,7 @@ function Dashboard() {
             </CardTitle>
             <Link to="/budgets" className="text-xs font-medium text-primary hover:underline">Manage</Link>
           </CardHeader>
-          <CardContent className="space-y-3.5">
+          <CardContent className="space-y-4">
             {budgets.length === 0 ? (
               <p className="text-sm text-muted-foreground">No budgets set yet.</p>
             ) : budgets.slice(0, 5).map((b) => {
@@ -413,22 +489,29 @@ function Dashboard() {
               const pctRaw = (spent / b.monthly_limit) * 100;
               const pct = Math.min(100, pctRaw);
               const over = spent > b.monthly_limit;
+              const warn = !over && pctRaw >= 80;
               const remaining = Math.max(0, b.monthly_limit - spent);
+              const status = over
+                ? { text: "Overspent ⚠", cls: "text-destructive" }
+                : warn
+                  ? { text: "Warning", cls: "text-gold-foreground" }
+                  : { text: "On Track ✅", cls: "text-success" };
 
               return (
                 <div key={b.id}>
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{name}</span>
-                    <span className={`text-xs tabular-nums ${over ? "text-destructive" : "text-muted-foreground"}`}>
-                      {over ? "Budget Exceeded ⚠" : `${Math.round(pctRaw)}% Used`}
-                    </span>
+                    <span className={`text-xs font-medium ${status.cls}`}>{status.text}</span>
                   </div>
                   <Progress value={pct} className="mt-1.5 h-1.5" />
-                  <p className={`mt-1 text-[11px] tabular-nums ${over ? "text-destructive" : "text-muted-foreground"}`}>
-                    {over
-                      ? `Overspent by ${formatCurrency(spent - b.monthly_limit, currency)}`
-                      : `${formatCurrency(remaining, currency)} Remaining`}
-                  </p>
+                  <div className="mt-1.5 flex items-center justify-between text-[11px] tabular-nums text-muted-foreground">
+                    <span>Budget {formatCurrency(b.monthly_limit, currency)} · Spent {formatCurrency(spent, currency)}</span>
+                    <span className={over ? "font-medium text-destructive" : "text-foreground/70"}>
+                      {over
+                        ? `Overspent ${formatCurrency(spent - b.monthly_limit, currency)}`
+                        : `${formatCurrency(remaining, currency)} left · ${Math.round(pctRaw)}% used`}
+                    </span>
+                  </div>
                 </div>
               );
             })}
