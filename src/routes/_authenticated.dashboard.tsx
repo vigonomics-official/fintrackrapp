@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { Sparkles, Calendar, AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, PiggyBank } from "lucide-react";
+import { Sparkles, Calendar, AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
