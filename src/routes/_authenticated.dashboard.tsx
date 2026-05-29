@@ -323,9 +323,9 @@ function Dashboard() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{insight.title}</p>
-              <p className="mt-1 text-sm text-foreground/90">{insight.line1}</p>
-              <p className="mt-1 text-sm text-foreground/90">{insight.line2}</p>
-              <p className="mt-1 font-display text-lg font-bold text-success tabular-nums">{insight.save}</p>
+              <p className="mt-1 text-sm text-foreground/90">{insight.action}</p>
+              <p className="mt-2 text-[11px] uppercase tracking-wider text-muted-foreground">Potential savings</p>
+              <p className="font-display text-lg font-bold text-success tabular-nums">{insight.save}</p>
             </div>
           </CardContent>
         </Card>
