@@ -196,6 +196,7 @@ function Dashboard() {
   }, [catStats, currency, survival.safeDaily]);
 
   const recent = useMemo(() => transactions.slice(0, 6), [transactions]);
+  const hasExpenses = useMemo(() => transactions.some(t => t.type === "expense"), [transactions]);
 
   const greeting = (() => {
     const h = new Date().getHours();
