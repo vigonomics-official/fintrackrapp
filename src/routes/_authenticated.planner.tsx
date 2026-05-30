@@ -2,8 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Wallet, Calendar, Landmark, BellRing, Target, ShoppingBag,
-  ArrowRight, Sparkles, Plus, Trash2, CheckCircle2, AlertTriangle,
-  TrendingDown, Clock, IndianRupee,
+  ArrowRight, Sparkles, Plus, Trash2, TrendingDown,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
