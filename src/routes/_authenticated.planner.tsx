@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Wallet, Calendar, Landmark, BellRing, Target, ShoppingBag,
   ArrowRight, Sparkles, Plus, Trash2, TrendingDown,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
