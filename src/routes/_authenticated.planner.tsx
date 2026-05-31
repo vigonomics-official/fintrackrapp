@@ -188,6 +188,13 @@ function MonthlyPlan() {
         </CardContent>
       </Card>
 
+      <FinancialJourney
+        monthlyEmi={s.monthlyEmi}
+        salary={s.salary}
+        outstanding={outstanding}
+        currency={s.currency}
+      />
+
       <div className="grid grid-cols-2 gap-2.5">
         <Stat label="Survival Score" value={`${s.score}/100`} />
         <Stat
