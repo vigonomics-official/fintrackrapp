@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Wallet, Calendar, Landmark, BellRing, Target, ShoppingBag,
-  ArrowRight, Sparkles, Plus, Trash2, TrendingDown,
+  ArrowRight, Sparkles, Plus, Trash2, TrendingDown, BellRing,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,13 +17,13 @@ export const Route = createFileRoute("/_authenticated/planner")({ component: Pla
 
 type TabKey = "monthly" | "allocation" | "loans" | "bills" | "goals" | "cibt";
 
-const TABS: { key: TabKey; label: string; icon: typeof Wallet }[] = [
-  { key: "monthly", label: "Monthly Plan", icon: Calendar },
-  { key: "allocation", label: "Salary Allocation", icon: Wallet },
-  { key: "loans", label: "Loans & EMI", icon: Landmark },
-  { key: "bills", label: "Bills & Subs", icon: BellRing },
-  { key: "goals", label: "Goals", icon: Target },
-  { key: "cibt", label: "Can I Buy This", icon: ShoppingBag },
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "monthly", label: "Plan" },
+  { key: "allocation", label: "Allocate" },
+  { key: "loans", label: "Loans" },
+  { key: "bills", label: "Bills" },
+  { key: "goals", label: "Goals" },
+  { key: "cibt", label: "Buy" },
 ];
 
 function PlannerPage() {
@@ -32,13 +31,12 @@ function PlannerPage() {
 
   return (
     <div className="w-full overflow-x-hidden pb-10">
-      <PageHeader title="Planner" subtitle="Your financial control center." />
+      <PageHeader title="Planner" subtitle="Plan • Save • Survive" />
 
       {/* Tab strip */}
       <div className="sticky top-0 z-10 border-b bg-card/80 backdrop-blur">
-        <div className="no-scrollbar mx-auto flex max-w-3xl gap-1.5 overflow-x-auto px-3 py-2.5 sm:px-6 md:px-10">
+        <div className="no-scrollbar mx-auto flex max-w-3xl gap-1 overflow-x-auto px-3 py-1.5 sm:px-6 md:px-10">
           {TABS.map((t) => {
-            const Icon = t.icon;
             const active = tab === t.key;
             return (
               <button
@@ -46,13 +44,12 @@ function PlannerPage() {
                 type="button"
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  "shrink-0 rounded-full px-3 py-1 text-[12px] font-medium transition-colors",
                   active
-                    ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                    : "border-border bg-background text-muted-foreground hover:bg-muted/50"
+                    ? "bg-primary text-primary-foreground shadow-soft"
+                    : "text-muted-foreground hover:bg-muted/60"
                 )}
               >
-                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
                 <span className="whitespace-nowrap">{t.label}</span>
               </button>
             );
@@ -158,6 +155,13 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
 function MonthlyPlan() {
   const s = useSurvival();
   const safe = s.forecastBalance >= 0;
+  const zone =
+    s.score >= 70
+      ? { dot: "🟢", label: "Safe Zone", tone: "bg-success/20 text-success" }
+      : s.score >= 40
+        ? { dot: "🟡", label: "Watch Spending", tone: "bg-gold/20 text-gold-foreground" }
+        : { dot: "🔴", label: "Danger Zone", tone: "bg-destructive/20 text-destructive" };
+
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden border-none bg-gradient-primary text-primary-foreground shadow-elegant">
@@ -169,50 +173,52 @@ function MonthlyPlan() {
             </p>
             <p className="mt-1 text-xs opacity-85">
               {s.hasIncome
-                ? `${s.days} days until next salary · ${formatCurrency(s.safeDaily, s.currency)}/day safe`
+                ? `${s.days} days left · ${formatCurrency(s.safeDaily, s.currency)}/day safe`
                 : "Add this month's salary to unlock your plan."}
             </p>
           </div>
+          {s.hasIncome && (
+            <span className={cn("inline-flex w-fit items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold backdrop-blur")}>
+              {zone.dot} {zone.label}
+            </span>
+          )}
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-        <Stat label="Days Until Salary" value={s.hasIncome ? `${s.days}` : "—"} />
-        <Stat label="Safe Daily Spend" value={s.hasIncome ? `${formatCurrency(s.safeDaily, s.currency)}/d` : "—"} />
+      <div className="grid grid-cols-2 gap-2.5">
         <Stat label="Survival Score" value={`${s.score}/100`} />
-        <Stat label="EMI Pressure" value={s.emiLevel} tone={s.emiLevel === "High" ? "text-destructive" : s.emiLevel === "Medium" ? "text-gold-foreground" : "text-success"} />
+        <Stat
+          label="EMI Pressure"
+          value={s.emiLevel}
+          tone={s.emiLevel === "High" ? "text-destructive" : s.emiLevel === "Medium" ? "text-gold-foreground" : "text-success"}
+        />
         <Stat label="Monthly EMI" value={formatCurrency(s.monthlyEmi, s.currency)} />
-        <Stat label="Salary" value={formatCurrency(s.salary, s.currency)} />
+        <Stat
+          label="Month-End Forecast"
+          value={s.hasIncome ? formatCurrency(s.forecastBalance, s.currency) : "—"}
+          tone={s.hasIncome ? (safe ? "text-success" : "text-destructive") : undefined}
+        />
       </div>
 
-      <Card className="shadow-soft">
-        <CardContent className="space-y-2 p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                safe ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
-              )}
-            >
-              {safe ? "🟢 Safe" : "🔴 Risk"}
-            </span>
+      <Card className="border-primary/20 bg-primary/5 shadow-soft">
+        <CardContent className="space-y-1.5 p-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">AI Planner Insight</p>
           </div>
-          <p className="font-display text-xl font-bold tabular-nums">
-            {s.hasIncome ? formatCurrency(s.forecastBalance, s.currency) : "—"}
-          </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm leading-relaxed text-foreground">
             {!s.hasIncome
-              ? "Add income to forecast your month-end balance."
+              ? "Add this month's salary so we can guide your spending until next payday."
               : safe
-                ? "Expected balance on payday at your current pace."
-                : "⚠ Risk of running out before salary. Slow down spending."}
+                ? `At your current pace, you'll finish the month with about ${formatCurrency(Math.max(0, s.forecastBalance), s.currency)} left. You're in a ${zone.label.toLowerCase()} — keep daily spending under ${formatCurrency(s.safeDaily, s.currency)}.`
+                : `At your current pace, you may run short before salary. Trim daily spending below ${formatCurrency(s.safeDaily, s.currency)} to recover into a safe zone.`}
           </p>
         </CardContent>
       </Card>
     </div>
   );
 }
+
 
 /* ============================ Salary Allocation ============================ */
 
