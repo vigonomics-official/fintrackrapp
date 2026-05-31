@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { FinancialJourney } from "@/components/finance/FinancialJourney";
 import { useTransactions, useLoans, useProfile } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
