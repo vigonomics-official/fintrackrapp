@@ -17,13 +17,13 @@ export const Route = createFileRoute("/_authenticated/planner")({ component: Pla
 
 type TabKey = "monthly" | "allocation" | "loans" | "bills" | "goals" | "cibt";
 
-const TABS: { key: TabKey; label: string; icon: typeof Wallet }[] = [
-  { key: "monthly", label: "Monthly Plan", icon: Calendar },
-  { key: "allocation", label: "Salary Allocation", icon: Wallet },
-  { key: "loans", label: "Loans & EMI", icon: Landmark },
-  { key: "bills", label: "Bills & Subs", icon: BellRing },
-  { key: "goals", label: "Goals", icon: Target },
-  { key: "cibt", label: "Can I Buy This", icon: ShoppingBag },
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "monthly", label: "Plan" },
+  { key: "allocation", label: "Allocate" },
+  { key: "loans", label: "Loans" },
+  { key: "bills", label: "Bills" },
+  { key: "goals", label: "Goals" },
+  { key: "cibt", label: "Buy" },
 ];
 
 function PlannerPage() {
@@ -31,13 +31,12 @@ function PlannerPage() {
 
   return (
     <div className="w-full overflow-x-hidden pb-10">
-      <PageHeader title="Planner" subtitle="Your financial control center." />
+      <PageHeader title="Planner" subtitle="Plan • Save • Survive" />
 
       {/* Tab strip */}
       <div className="sticky top-0 z-10 border-b bg-card/80 backdrop-blur">
-        <div className="no-scrollbar mx-auto flex max-w-3xl gap-1.5 overflow-x-auto px-3 py-2.5 sm:px-6 md:px-10">
+        <div className="no-scrollbar mx-auto flex max-w-3xl gap-1 overflow-x-auto px-3 py-1.5 sm:px-6 md:px-10">
           {TABS.map((t) => {
-            const Icon = t.icon;
             const active = tab === t.key;
             return (
               <button
@@ -45,13 +44,12 @@ function PlannerPage() {
                 type="button"
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  "shrink-0 rounded-full px-3 py-1 text-[12px] font-medium transition-colors",
                   active
-                    ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                    : "border-border bg-background text-muted-foreground hover:bg-muted/50"
+                    ? "bg-primary text-primary-foreground shadow-soft"
+                    : "text-muted-foreground hover:bg-muted/60"
                 )}
               >
-                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
                 <span className="whitespace-nowrap">{t.label}</span>
               </button>
             );
