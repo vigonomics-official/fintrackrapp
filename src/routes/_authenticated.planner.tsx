@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { FinancialJourney } from "@/components/finance/FinancialJourney";
 import { useTransactions, useLoans, useProfile } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -154,6 +155,8 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
 
 function MonthlyPlan() {
   const s = useSurvival();
+  const { data: loans = [] } = useLoans();
+  const outstanding = loans.reduce((a, l) => a + Number(l.remaining_balance || 0), 0);
   const safe = s.forecastBalance >= 0;
   const zone =
     s.score >= 70
@@ -184,6 +187,13 @@ function MonthlyPlan() {
           )}
         </CardContent>
       </Card>
+
+      <FinancialJourney
+        monthlyEmi={s.monthlyEmi}
+        salary={s.salary}
+        outstanding={outstanding}
+        currency={s.currency}
+      />
 
       <div className="grid grid-cols-2 gap-2.5">
         <Stat label="Survival Score" value={`${s.score}/100`} />
