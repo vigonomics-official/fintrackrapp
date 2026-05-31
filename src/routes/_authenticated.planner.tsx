@@ -155,6 +155,8 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
 
 function MonthlyPlan() {
   const s = useSurvival();
+  const { data: loans = [] } = useLoans();
+  const outstanding = loans.reduce((a, l) => a + Number(l.remaining_balance || 0), 0);
   const safe = s.forecastBalance >= 0;
   const zone =
     s.score >= 70
