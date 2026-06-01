@@ -591,16 +591,6 @@ function LoansTab() {
           );
         })()}
         <div className="space-y-2.5">
-          {/* placeholder to keep structure */}
-        </div>
-        <div className="space-y-2.5">
-          {loans.map((l) => {
-            const paid = l.total_amount - l.remaining_balance;
-            const pct = Math.min(100, (paid / l.total_amount) * 100);
-            const emisLeft = Math.max(0, Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount)));
-            const due = nextDue(l.due_day);
-            return (
-        <div className="space-y-2.5">
           {loans.map((l) => {
             const paid = l.total_amount - l.remaining_balance;
             const pct = Math.min(100, (paid / l.total_amount) * 100);
