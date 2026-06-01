@@ -426,6 +426,42 @@ function SalaryAllocation() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Allocation Health Score */}
+      {(() => {
+        const insights: { tone: "ok" | "warn"; text: string }[] = [];
+        if (alloc.savings >= 20) insights.push({ tone: "ok", text: "Savings healthy" });
+        else insights.push({ tone: "warn", text: `Savings low — target 20% (now ${alloc.savings}%)` });
+        if (alloc.food > 20) insights.push({ tone: "warn", text: "Food spending high" });
+        if (alloc.travel > 15) insights.push({ tone: "warn", text: "Travel budget needs review" });
+        if (alloc.rent > 35) insights.push({ tone: "warn", text: "Rent above 35% — heavy load" });
+        if (alloc.emi > 40) insights.push({ tone: "warn", text: "EMI above 40% — debt stress" });
+        const penalty = insights.filter((i) => i.tone === "warn").length * 8 + (over ? 20 : 0);
+        const score = Math.max(0, Math.min(100, 100 - penalty));
+        return (
+          <Card className="shadow-soft">
+            <CardContent className="space-y-2 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Allocation Health</p>
+                </div>
+                <p className="font-display text-xl font-bold tabular-nums">
+                  {score}<span className="text-xs text-muted-foreground">/100</span>
+                </p>
+              </div>
+              <ul className="space-y-1">
+                {insights.map((i, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-xs">
+                    <span>{i.tone === "ok" ? "✓" : "⚠"}</span>
+                    <span className={i.tone === "ok" ? "text-success" : "text-muted-foreground"}>{i.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        );
+      })()}
     </div>
   );
 }
