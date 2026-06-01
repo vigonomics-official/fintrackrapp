@@ -197,19 +197,38 @@ function MonthlyPlan() {
       />
 
       <div className="grid grid-cols-2 gap-2.5">
+        <Stat label="Days Left" value={s.hasIncome ? `${s.days}` : "—"} />
         <Stat label="Survival Score" value={`${s.score}/100`} />
+        <Stat label="Monthly EMI" value={formatCurrency(s.monthlyEmi, s.currency)} />
         <Stat
           label="EMI Pressure"
           value={s.emiLevel}
           tone={s.emiLevel === "High" ? "text-destructive" : s.emiLevel === "Medium" ? "text-gold-foreground" : "text-success"}
         />
-        <Stat label="Monthly EMI" value={formatCurrency(s.monthlyEmi, s.currency)} />
-        <Stat
-          label="Month-End Forecast"
-          value={s.hasIncome ? formatCurrency(s.forecastBalance, s.currency) : "—"}
-          tone={s.hasIncome ? (safe ? "text-success" : "text-destructive") : undefined}
-        />
       </div>
+
+      {/* Month-End Forecast */}
+      <Card className={cn("border shadow-soft", safe ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5")}>
+        <CardContent className="space-y-1 p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
+          <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? (safe ? "text-success" : "text-destructive") : "")}>
+            {s.hasIncome ? formatCurrency(Math.max(s.forecastBalance, s.forecastBalance), s.currency) : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {!s.hasIncome
+              ? "Add salary to forecast your month-end balance."
+              : safe
+                ? "Expected balance at next payday — you're on track."
+                : "⚠ Risk of running out before salary. Trim daily spend."}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Next Action */}
+      {s.hasIncome && <NextActionCard s={s} outstanding={outstanding} />}
+
+      {/* Financial Health Score */}
+      {s.hasIncome && <HealthScoreCard s={s} outstanding={outstanding} />}
 
       <Card className="border-primary/20 bg-primary/5 shadow-soft">
         <CardContent className="space-y-1.5 p-4">
@@ -221,12 +240,89 @@ function MonthlyPlan() {
             {!s.hasIncome
               ? "Add this month's salary so we can guide your spending until next payday."
               : safe
-                ? `At your current pace, you'll finish the month with about ${formatCurrency(Math.max(0, s.forecastBalance), s.currency)} left. You're in a ${zone.label.toLowerCase()} — keep daily spending under ${formatCurrency(s.safeDaily, s.currency)}.`
+                ? `At your current pace, you'll finish the month with about ${formatCurrency(Math.max(0, s.forecastBalance), s.currency)} left. Keep daily spending under ${formatCurrency(s.safeDaily, s.currency)}.`
                 : `At your current pace, you may run short before salary. Trim daily spending below ${formatCurrency(s.safeDaily, s.currency)} to recover into a safe zone.`}
           </p>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/* ---------- Next Action & Health Score ---------- */
+
+function NextActionCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
+  const actions: string[] = [];
+  if (s.forecastBalance < 0) actions.push(`Stay below ${formatCurrency(s.safeDaily, s.currency)}/day to recover`);
+  if (outstanding > 0 && s.monthlyEmi > 0) actions.push(`Add ${formatCurrency(Math.round(s.monthlyEmi * 0.1), s.currency)} extra EMI to close loans faster`);
+  if (s.salary > 0) actions.push(`Save ${formatCurrency(Math.round(s.salary * 0.1), s.currency)} this month (10% rule)`);
+  if (s.salaryLeft > 0) actions.push(`Avoid purchases above ${formatCurrency(Math.round(s.salaryLeft * 0.25), s.currency)}`);
+  const top = actions.slice(0, 3);
+
+  return (
+    <Card className="border-primary/20 shadow-soft">
+      <CardContent className="space-y-2 p-4">
+        <div className="flex items-center gap-2">
+          <Flame className="h-3.5 w-3.5 text-primary" />
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Next Actions</p>
+        </div>
+        <ul className="space-y-1.5">
+          {top.map((a, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm">
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
+              <span className="leading-snug">{a}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
+  const savings = s.salary > 0 ? Math.min(25, Math.max(0, (s.salaryLeft / s.salary) * 25)) : 0;
+  const debt = s.salary > 0 ? Math.max(0, 25 - (s.monthlyEmi / s.salary) * 50) : 25;
+  const bills = 20; // assume on-track until billing data integrated
+  const survival = Math.min(30, s.score * 0.3);
+  const total = Math.round(savings + debt + bills + survival);
+  const tip =
+    total >= 80
+      ? "You're financially healthy — keep saving consistently."
+      : total >= 60
+        ? `Boost savings to ${formatCurrency(Math.round(s.salary * 0.2), s.currency)}/mo and reduce EMI load to reach 80+.`
+        : "Cut a high-interest loan or trim discretionary spend to climb above 60.";
+
+  const bars: { label: string; val: number; max: number }[] = [
+    { label: "Savings", val: Math.round(savings), max: 25 },
+    { label: "Debt", val: Math.round(debt), max: 25 },
+    { label: "Bills", val: bills, max: 20 },
+    { label: "Survival", val: Math.round(survival), max: 30 },
+  ];
+
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Financial Health</p>
+          </div>
+          <p className="font-display text-xl font-bold tabular-nums">{total}<span className="text-xs text-muted-foreground">/100</span></p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {bars.map((b) => (
+            <div key={b.label}>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-muted-foreground">{b.label}</span>
+                <span className="tabular-nums">{b.val}/{b.max}</span>
+              </div>
+              <Progress value={(b.val / b.max) * 100} className="h-1" />
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground">{tip}</p>
+      </CardContent>
+    </Card>
   );
 }
 
