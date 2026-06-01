@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight, Sparkles, Plus, Trash2, TrendingDown, BellRing,
+  CheckCircle2, Flame, Target as TargetIcon, ShieldCheck,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -196,19 +197,38 @@ function MonthlyPlan() {
       />
 
       <div className="grid grid-cols-2 gap-2.5">
+        <Stat label="Days Left" value={s.hasIncome ? `${s.days}` : "—"} />
         <Stat label="Survival Score" value={`${s.score}/100`} />
+        <Stat label="Monthly EMI" value={formatCurrency(s.monthlyEmi, s.currency)} />
         <Stat
           label="EMI Pressure"
           value={s.emiLevel}
           tone={s.emiLevel === "High" ? "text-destructive" : s.emiLevel === "Medium" ? "text-gold-foreground" : "text-success"}
         />
-        <Stat label="Monthly EMI" value={formatCurrency(s.monthlyEmi, s.currency)} />
-        <Stat
-          label="Month-End Forecast"
-          value={s.hasIncome ? formatCurrency(s.forecastBalance, s.currency) : "—"}
-          tone={s.hasIncome ? (safe ? "text-success" : "text-destructive") : undefined}
-        />
       </div>
+
+      {/* Month-End Forecast */}
+      <Card className={cn("border shadow-soft", safe ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5")}>
+        <CardContent className="space-y-1 p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
+          <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? (safe ? "text-success" : "text-destructive") : "")}>
+            {s.hasIncome ? formatCurrency(Math.max(s.forecastBalance, s.forecastBalance), s.currency) : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {!s.hasIncome
+              ? "Add salary to forecast your month-end balance."
+              : safe
+                ? "Expected balance at next payday — you're on track."
+                : "⚠ Risk of running out before salary. Trim daily spend."}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Next Action */}
+      {s.hasIncome && <NextActionCard s={s} outstanding={outstanding} />}
+
+      {/* Financial Health Score */}
+      {s.hasIncome && <HealthScoreCard s={s} outstanding={outstanding} />}
 
       <Card className="border-primary/20 bg-primary/5 shadow-soft">
         <CardContent className="space-y-1.5 p-4">
@@ -220,12 +240,89 @@ function MonthlyPlan() {
             {!s.hasIncome
               ? "Add this month's salary so we can guide your spending until next payday."
               : safe
-                ? `At your current pace, you'll finish the month with about ${formatCurrency(Math.max(0, s.forecastBalance), s.currency)} left. You're in a ${zone.label.toLowerCase()} — keep daily spending under ${formatCurrency(s.safeDaily, s.currency)}.`
+                ? `At your current pace, you'll finish the month with about ${formatCurrency(Math.max(0, s.forecastBalance), s.currency)} left. Keep daily spending under ${formatCurrency(s.safeDaily, s.currency)}.`
                 : `At your current pace, you may run short before salary. Trim daily spending below ${formatCurrency(s.safeDaily, s.currency)} to recover into a safe zone.`}
           </p>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/* ---------- Next Action & Health Score ---------- */
+
+function NextActionCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
+  const actions: string[] = [];
+  if (s.forecastBalance < 0) actions.push(`Stay below ${formatCurrency(s.safeDaily, s.currency)}/day to recover`);
+  if (outstanding > 0 && s.monthlyEmi > 0) actions.push(`Add ${formatCurrency(Math.round(s.monthlyEmi * 0.1), s.currency)} extra EMI to close loans faster`);
+  if (s.salary > 0) actions.push(`Save ${formatCurrency(Math.round(s.salary * 0.1), s.currency)} this month (10% rule)`);
+  if (s.salaryLeft > 0) actions.push(`Avoid purchases above ${formatCurrency(Math.round(s.salaryLeft * 0.25), s.currency)}`);
+  const top = actions.slice(0, 3);
+
+  return (
+    <Card className="border-primary/20 shadow-soft">
+      <CardContent className="space-y-2 p-4">
+        <div className="flex items-center gap-2">
+          <Flame className="h-3.5 w-3.5 text-primary" />
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Next Actions</p>
+        </div>
+        <ul className="space-y-1.5">
+          {top.map((a, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm">
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
+              <span className="leading-snug">{a}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
+  const savings = s.salary > 0 ? Math.min(25, Math.max(0, (s.salaryLeft / s.salary) * 25)) : 0;
+  const debt = s.salary > 0 ? Math.max(0, 25 - (s.monthlyEmi / s.salary) * 50) : 25;
+  const bills = 20; // assume on-track until billing data integrated
+  const survival = Math.min(30, s.score * 0.3);
+  const total = Math.round(savings + debt + bills + survival);
+  const tip =
+    total >= 80
+      ? "You're financially healthy — keep saving consistently."
+      : total >= 60
+        ? `Boost savings to ${formatCurrency(Math.round(s.salary * 0.2), s.currency)}/mo and reduce EMI load to reach 80+.`
+        : "Cut a high-interest loan or trim discretionary spend to climb above 60.";
+
+  const bars: { label: string; val: number; max: number }[] = [
+    { label: "Savings", val: Math.round(savings), max: 25 },
+    { label: "Debt", val: Math.round(debt), max: 25 },
+    { label: "Bills", val: bills, max: 20 },
+    { label: "Survival", val: Math.round(survival), max: 30 },
+  ];
+
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Financial Health</p>
+          </div>
+          <p className="font-display text-xl font-bold tabular-nums">{total}<span className="text-xs text-muted-foreground">/100</span></p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {bars.map((b) => (
+            <div key={b.label}>
+              <div className="flex justify-between text-[11px]">
+                <span className="text-muted-foreground">{b.label}</span>
+                <span className="tabular-nums">{b.val}/{b.max}</span>
+              </div>
+              <Progress value={(b.val / b.max) * 100} className="h-1" />
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground">{tip}</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -329,6 +426,42 @@ function SalaryAllocation() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Allocation Health Score */}
+      {(() => {
+        const insights: { tone: "ok" | "warn"; text: string }[] = [];
+        if (alloc.savings >= 20) insights.push({ tone: "ok", text: "Savings healthy" });
+        else insights.push({ tone: "warn", text: `Savings low — target 20% (now ${alloc.savings}%)` });
+        if (alloc.food > 20) insights.push({ tone: "warn", text: "Food spending high" });
+        if (alloc.travel > 15) insights.push({ tone: "warn", text: "Travel budget needs review" });
+        if (alloc.rent > 35) insights.push({ tone: "warn", text: "Rent above 35% — heavy load" });
+        if (alloc.emi > 40) insights.push({ tone: "warn", text: "EMI above 40% — debt stress" });
+        const penalty = insights.filter((i) => i.tone === "warn").length * 8 + (over ? 20 : 0);
+        const score = Math.max(0, Math.min(100, 100 - penalty));
+        return (
+          <Card className="shadow-soft">
+            <CardContent className="space-y-2 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Allocation Health</p>
+                </div>
+                <p className="font-display text-xl font-bold tabular-nums">
+                  {score}<span className="text-xs text-muted-foreground">/100</span>
+                </p>
+              </div>
+              <ul className="space-y-1">
+                {insights.map((i, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-xs">
+                    <span>{i.tone === "ok" ? "✓" : "⚠"}</span>
+                    <span className={i.tone === "ok" ? "text-success" : "text-muted-foreground"}>{i.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        );
+      })()}
     </div>
   );
 }
@@ -402,16 +535,61 @@ function LoansTab() {
       </div>
 
       {loans.length === 0 ? (
-        <Card className="shadow-soft">
+        <Card className="border-success/30 bg-success/5 shadow-soft">
           <CardContent className="space-y-3 p-5 text-center">
-            <p className="text-sm font-semibold">No loans tracked yet</p>
-            <p className="text-xs text-muted-foreground">Add EMIs to get debt-free faster.</p>
-            <Button asChild size="sm" className="bg-gradient-primary">
+            <p className="text-sm font-semibold">🎉 No active loans</p>
+            <p className="text-xs text-muted-foreground">Great — now build an emergency fund of 3–6 months of expenses.</p>
+            <Button asChild size="sm" variant="outline">
               <Link to="/loans">Add a loan</Link>
             </Button>
           </CardContent>
         </Card>
       ) : (
+        <>
+        {/* Loan Priority Engine */}
+        {(() => {
+          const ranked = [...loans]
+            .filter((l) => l.remaining_balance > 0)
+            .map((l) => ({
+              l,
+              // Avalanche score: prioritise high rate + small balance for quick wins
+              score: (Number(l.interest_rate) || 0) * 10 - Math.log10(Math.max(1, l.remaining_balance)),
+            }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
+          if (ranked.length === 0) return null;
+          const top = ranked[0].l;
+          const monthsCut = totals.monthlyEmi > 0 ? Math.max(1, Math.ceil(top.remaining_balance / (top.emi_amount * 2))) : 0;
+          const intSaved = Math.round((monthsCut * top.emi_amount * (top.interest_rate || 0)) / 1200);
+          return (
+            <Card className="border-primary/20 bg-primary/5 shadow-soft">
+              <CardContent className="space-y-2.5 p-4">
+                <div className="flex items-center gap-2">
+                  <TargetIcon className="h-3.5 w-3.5 text-primary" />
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Close This First</p>
+                </div>
+                <ol className="space-y-1 text-sm">
+                  {ranked.map((r, i) => (
+                    <li key={r.l.id} className="flex items-center justify-between">
+                      <span><span className="font-semibold">#{i + 1}</span> {r.l.loan_name}</span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">{formatCurrency(r.l.remaining_balance, currency)} @ {r.l.interest_rate}%</span>
+                    </li>
+                  ))}
+                </ol>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="rounded-lg bg-background p-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Interest Saved</p>
+                    <p className="font-display text-sm font-bold tabular-nums">{formatCurrency(intSaved, currency)}</p>
+                  </div>
+                  <div className="rounded-lg bg-background p-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Months Reduced</p>
+                    <p className="font-display text-sm font-bold tabular-nums">~{monthsCut} mo</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
         <div className="space-y-2.5">
           {loans.map((l) => {
             const paid = l.total_amount - l.remaining_balance;
@@ -442,6 +620,7 @@ function LoansTab() {
             <Link to="/loans">Manage loans</Link>
           </Button>
         </div>
+        </>
       )}
 
       {/* Fast Payoff Simulator */}
@@ -590,7 +769,7 @@ function BillsTab() {
       {sorted.length === 0 ? (
         <Card className="shadow-soft">
           <CardContent className="p-5 text-center text-sm text-muted-foreground">
-            No bills tracked yet. Add Netflix, electricity, rent, or any recurring payment.
+            Add recurring bills (rent, electricity, OTT) to improve forecasting.
           </CardContent>
         </Card>
       ) : (
@@ -722,7 +901,7 @@ function GoalsTab() {
       {goals.length === 0 ? (
         <Card className="shadow-soft">
           <CardContent className="p-5 text-center text-sm text-muted-foreground">
-            No goals yet. Set a small one — even ₹5,000 in a month feels great.
+            Create your first savings goal — even ₹5,000 builds momentum.
           </CardContent>
         </Card>
       ) : (
