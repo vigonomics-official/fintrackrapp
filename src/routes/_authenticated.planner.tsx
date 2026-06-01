@@ -535,16 +535,71 @@ function LoansTab() {
       </div>
 
       {loans.length === 0 ? (
-        <Card className="shadow-soft">
+        <Card className="border-success/30 bg-success/5 shadow-soft">
           <CardContent className="space-y-3 p-5 text-center">
-            <p className="text-sm font-semibold">No loans tracked yet</p>
-            <p className="text-xs text-muted-foreground">Add EMIs to get debt-free faster.</p>
-            <Button asChild size="sm" className="bg-gradient-primary">
+            <p className="text-sm font-semibold">🎉 No active loans</p>
+            <p className="text-xs text-muted-foreground">Great — now build an emergency fund of 3–6 months of expenses.</p>
+            <Button asChild size="sm" variant="outline">
               <Link to="/loans">Add a loan</Link>
             </Button>
           </CardContent>
         </Card>
       ) : (
+        <>
+        {/* Loan Priority Engine */}
+        {(() => {
+          const ranked = [...loans]
+            .filter((l) => l.remaining_balance > 0)
+            .map((l) => ({
+              l,
+              // Avalanche score: prioritise high rate + small balance for quick wins
+              score: (Number(l.interest_rate) || 0) * 10 - Math.log10(Math.max(1, l.remaining_balance)),
+            }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
+          if (ranked.length === 0) return null;
+          const top = ranked[0].l;
+          const monthsCut = totals.monthlyEmi > 0 ? Math.max(1, Math.ceil(top.remaining_balance / (top.emi_amount * 2))) : 0;
+          const intSaved = Math.round((monthsCut * top.emi_amount * (top.interest_rate || 0)) / 1200);
+          return (
+            <Card className="border-primary/20 bg-primary/5 shadow-soft">
+              <CardContent className="space-y-2.5 p-4">
+                <div className="flex items-center gap-2">
+                  <TargetIcon className="h-3.5 w-3.5 text-primary" />
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Close This First</p>
+                </div>
+                <ol className="space-y-1 text-sm">
+                  {ranked.map((r, i) => (
+                    <li key={r.l.id} className="flex items-center justify-between">
+                      <span><span className="font-semibold">#{i + 1}</span> {r.l.loan_name}</span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">{formatCurrency(r.l.remaining_balance, currency)} @ {r.l.interest_rate}%</span>
+                    </li>
+                  ))}
+                </ol>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="rounded-lg bg-background p-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Interest Saved</p>
+                    <p className="font-display text-sm font-bold tabular-nums">{formatCurrency(intSaved, currency)}</p>
+                  </div>
+                  <div className="rounded-lg bg-background p-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Months Reduced</p>
+                    <p className="font-display text-sm font-bold tabular-nums">~{monthsCut} mo</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+        <div className="space-y-2.5">
+          {/* placeholder to keep structure */}
+        </div>
+        <div className="space-y-2.5">
+          {loans.map((l) => {
+            const paid = l.total_amount - l.remaining_balance;
+            const pct = Math.min(100, (paid / l.total_amount) * 100);
+            const emisLeft = Math.max(0, Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount)));
+            const due = nextDue(l.due_day);
+            return (
         <div className="space-y-2.5">
           {loans.map((l) => {
             const paid = l.total_amount - l.remaining_balance;
