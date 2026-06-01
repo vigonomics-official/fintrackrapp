@@ -769,7 +769,7 @@ function BillsTab() {
       {sorted.length === 0 ? (
         <Card className="shadow-soft">
           <CardContent className="p-5 text-center text-sm text-muted-foreground">
-            No bills tracked yet. Add Netflix, electricity, rent, or any recurring payment.
+            Add recurring bills (rent, electricity, OTT) to improve forecasting.
           </CardContent>
         </Card>
       ) : (
