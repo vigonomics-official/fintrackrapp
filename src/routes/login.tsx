@@ -43,31 +43,48 @@ function LoginPage() {
     navigate({ to: "/dashboard" });
   };
 
-  return <AuthShell title="Welcome back" subtitle="Sign in to your FinTrackr account">
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div>
-        <Label>Email</Label>
-        <Input type="email" autoComplete="email" {...register("email")} />
-        {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
-      </div>
-      <div>
-        <div className="flex items-center justify-between">
-          <Label>Password</Label>
-          <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+  return (
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-6">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-sm"
+      >
+        <div className="mb-6 flex flex-col items-center text-center">
+          <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-gold text-gold-foreground shadow-soft">₣</div>
+            FinTrackr
+          </Link>
+          <h1 className="mt-4 font-display text-2xl font-bold">Welcome back</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Sign in to your FinTrackr account</p>
         </div>
-        <Input type="password" autoComplete="current-password" {...register("password")} />
-        {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
-      </div>
-      <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
-        {loading ? "Signing in…" : "Sign in"}
-      </Button>
-    </form>
-    <Divider />
-    <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
-    <p className="mt-6 text-center text-sm text-muted-foreground">
-      No account? <Link to="/signup" className="font-medium text-primary hover:underline">Create one</Link>
-    </p>
-  </AuthShell>;
+
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <Label>Email</Label>
+            <Input type="email" autoComplete="email" {...register("email")} />
+            {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <Label>Password</Label>
+              <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+            </div>
+            <Input type="password" autoComplete="current-password" {...register("password")} />
+            {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+          </div>
+          <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
+            {loading ? "Signing in…" : "Sign in"}
+          </Button>
+        </form>
+        <Divider />
+        <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          No account? <Link to="/signup" className="font-medium text-primary hover:underline">Create one</Link>
+        </p>
+      </motion.div>
+    </div>
+  );
 }
 
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
