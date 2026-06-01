@@ -620,6 +620,7 @@ function LoansTab() {
             <Link to="/loans">Manage loans</Link>
           </Button>
         </div>
+        </>
       )}
 
       {/* Fast Payoff Simulator */}
