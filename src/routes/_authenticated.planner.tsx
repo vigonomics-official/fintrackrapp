@@ -901,7 +901,7 @@ function GoalsTab() {
       {goals.length === 0 ? (
         <Card className="shadow-soft">
           <CardContent className="p-5 text-center text-sm text-muted-foreground">
-            No goals yet. Set a small one — even ₹5,000 in a month feels great.
+            Create your first savings goal — even ₹5,000 builds momentum.
           </CardContent>
         </Card>
       ) : (
