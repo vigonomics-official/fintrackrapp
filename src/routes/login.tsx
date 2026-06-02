@@ -52,7 +52,7 @@ function LoginPage() {
 
   return (
     <div
-      className="flex min-h-[100dvh] items-center justify-center px-5 py-8"
+      className="flex h-[100dvh] min-h-[100dvh] w-full items-center justify-center overflow-hidden px-6 py-4"
       style={{ background: "#FAFAF7" }}
     >
       <motion.div
@@ -60,20 +60,20 @@ function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm"
       >
-        <div className="mb-6 flex flex-col items-center text-center">
-          <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
+        <div className="mb-4 flex flex-col items-center text-center">
+          <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
               ₹
             </div>
             FinTrackr
           </Link>
-          <p className="mt-2 text-xs font-medium text-muted-foreground">
+          <p className="mt-1.5 text-xs font-medium text-muted-foreground">
             Your Salary Survival System
           </p>
-          <h1 className="mt-5 font-display text-2xl font-bold">Welcome back</h1>
+          <h1 className="mt-3 font-display text-xl font-bold">Welcome back</h1>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-3.5">
+        <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <Label>Email</Label>
             <Input type="email" autoComplete="email" {...register("email")} />
@@ -95,12 +95,12 @@ function LoginPage() {
         <Divider />
         <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
 
-        <p className="mt-5 text-center text-sm text-muted-foreground">
+        <p className="mt-4 text-center text-sm text-muted-foreground">
           No account?{" "}
           <Link to="/signup" className="font-medium text-primary hover:underline">Create one</Link>
         </p>
 
-        <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">
+        <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
           No bank login needed • Built for India • Privacy First
         </p>
       </motion.div>
