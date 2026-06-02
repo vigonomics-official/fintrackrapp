@@ -52,8 +52,8 @@ function LoginPage() {
 
   return (
     <div
-      className="flex h-[100dvh] min-h-[100dvh] w-full items-center justify-center overflow-hidden px-6 py-4"
-      style={{ background: "#FAFAF7" }}
+      className="flex w-full flex-col items-center justify-center"
+      style={{ background: "#FAFAF7", minHeight: "100vh", padding: "32px 24px" }}
     >
       <motion.div
         initial={{ opacity: 0, y: 8 }}
