@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -11,7 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export const Route = createFileRoute("/login")({ component: LoginPage });
+export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const { data } = await supabase.auth.getSession();
+    if (data.session) throw redirect({ to: "/dashboard" });
+  },
+  component: LoginPage,
+});
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -44,22 +51,29 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-6">
+    <div
+      className="flex min-h-[100dvh] items-center justify-center px-5 py-8"
+      style={{ background: "#FAFAF7" }}
+    >
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm"
       >
         <div className="mb-6 flex flex-col items-center text-center">
-          <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-gold text-gold-foreground shadow-soft">₣</div>
+          <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
+              ₹
+            </div>
             FinTrackr
           </Link>
-          <h1 className="mt-4 font-display text-2xl font-bold">Welcome back</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to your FinTrackr account</p>
+          <p className="mt-2 text-xs font-medium text-muted-foreground">
+            Your Salary Survival System
+          </p>
+          <h1 className="mt-5 font-display text-2xl font-bold">Welcome back</h1>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <div>
             <Label>Email</Label>
             <Input type="email" autoComplete="email" {...register("email")} />
@@ -74,13 +88,20 @@ function LoginPage() {
             {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
           </div>
           <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? "Signing in…" : "Sign In"}
           </Button>
         </form>
+
         <Divider />
         <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          No account? <Link to="/signup" className="font-medium text-primary hover:underline">Create one</Link>
+
+        <p className="mt-5 text-center text-sm text-muted-foreground">
+          No account?{" "}
+          <Link to="/signup" className="font-medium text-primary hover:underline">Create one</Link>
+        </p>
+
+        <p className="mt-6 text-center text-[11px] leading-relaxed text-muted-foreground">
+          No bank login needed • Built for India • Privacy First
         </p>
       </motion.div>
     </div>
