@@ -182,10 +182,10 @@ function MenuPage() {
         <div className="pt-2">
           <Button
             variant="outline"
-            className="w-full gap-2"
+            className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => signOut().then(() => navigate({ to: "/login" }))}
           >
-            <LogOut className="h-4 w-4" /> Sign out
+            <LogOut className="h-4 w-4" /> Sign Out
           </Button>
         </div>
       </div>
