@@ -52,55 +52,57 @@ function LoginPage() {
 
   return (
     <div
-      className="flex w-full flex-col items-center justify-center"
-      style={{ background: "#FAFAF7", minHeight: "100vh", padding: "32px 24px" }}
+      className="flex h-[100vh] max-h-[100vh] w-full items-center justify-center overflow-hidden"
+      style={{ background: "#FAFAF7" }}
     >
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm"
+        className="flex h-full w-full max-w-sm flex-col px-6 py-8"
       >
-        <div className="mb-4 flex flex-col items-center text-center">
-          <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
-              ₹
+        <div className="flex flex-1 flex-col justify-center">
+          <div className="mb-4 flex flex-col items-center text-center">
+            <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
+                ₹
+              </div>
+              FinTrackr
+            </Link>
+            <p className="mt-1.5 text-xs font-medium text-muted-foreground">
+              Your Salary Survival System
+            </p>
+            <h1 className="mt-3 font-display text-xl font-bold">Welcome back</h1>
+          </div>
+
+          <form onSubmit={onSubmit} className="space-y-3">
+            <div>
+              <Label>Email</Label>
+              <Input type="email" autoComplete="email" {...register("email")} />
+              {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
             </div>
-            FinTrackr
-          </Link>
-          <p className="mt-1.5 text-xs font-medium text-muted-foreground">
-            Your Salary Survival System
+            <div>
+              <div className="flex items-center justify-between">
+                <Label>Password</Label>
+                <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+              </div>
+              <Input type="password" autoComplete="current-password" {...register("password")} />
+              {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+            </div>
+            <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
+              {loading ? "Signing in…" : "Sign In"}
+            </Button>
+          </form>
+
+          <Divider />
+          <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
+
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            No account?{" "}
+            <Link to="/signup" className="font-medium text-primary hover:underline">Create one</Link>
           </p>
-          <h1 className="mt-3 font-display text-xl font-bold">Welcome back</h1>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div>
-            <Label>Email</Label>
-            <Input type="email" autoComplete="email" {...register("email")} />
-            {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
-          </div>
-          <div>
-            <div className="flex items-center justify-between">
-              <Label>Password</Label>
-              <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
-            </div>
-            <Input type="password" autoComplete="current-password" {...register("password")} />
-            {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
-          </div>
-          <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
-            {loading ? "Signing in…" : "Sign In"}
-          </Button>
-        </form>
-
-        <Divider />
-        <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          No account?{" "}
-          <Link to="/signup" className="font-medium text-primary hover:underline">Create one</Link>
-        </p>
-
-        <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
+        <p className="pt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
           No bank login needed • Built for India • Privacy First
         </p>
       </motion.div>
