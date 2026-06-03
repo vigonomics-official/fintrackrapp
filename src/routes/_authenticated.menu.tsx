@@ -27,62 +27,36 @@ const GROUPS: Group[] = [
     title: "Smart Features",
     tone: "smart",
     items: [
-      { label: "SMS Intelligence", icon: MessageSquareText, to: "/sms-intelligence", badge: "New", description: "Auto-detect UPI & SMS spends" },
-      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", badge: "New", description: "Self-learning rules & merchants" },
-      { label: "Smart Financial Insights", icon: Sparkles, badge: "Soon", description: "AI insights on your money" },
-      { label: "WhatsApp Expense Assistant", icon: Bot, badge: "Soon", description: "Log spends via WhatsApp" },
-      { label: "Smart Notifications", icon: BellRing, badge: "Soon", description: "Bills, EMIs, anomalies" },
+      { label: "SMS Intelligence", icon: MessageSquareText, to: "/sms-intelligence", description: "Auto-detect UPI & SMS spends" },
+      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants" },
+      { label: "Smart Financial Insights", icon: Sparkles, to: "/insights", description: "AI insights on your money" },
     ],
   },
   {
-    title: "Financial Management",
+    title: "Financial Tools",
     items: [
-      { label: "Budgets", icon: Wallet, to: "/budgets" },
-      { label: "Categories", icon: Tag, to: "/categories" },
       { label: "Loans & EMI", icon: Landmark, to: "/loans" },
-      { label: "Subscription Tracker", icon: Repeat, badge: "Soon" },
     ],
   },
   {
-    title: "Wealth & Investments",
-    items: [
-      { label: "Investment Tracker", icon: BarChart3, to: "/investments" },
-      { label: "SIP Tracker", icon: TrendingUp, to: "/investments" },
-      { label: "Gold", icon: Coins, badge: "Soon" },
-      { label: "Portfolio Analytics", icon: PieChart, to: "/reports" },
-    ],
-  },
-  {
-    title: "Social & Family",
-    items: [
-      { label: "Family Finance", icon: Users, badge: "Soon" },
-      { label: "Shared Budgets", icon: Share2, badge: "Soon" },
-      { label: "Shared Goals", icon: Target, badge: "Soon" },
-    ],
-  },
-  {
-    title: "Data & Privacy",
+    title: "Data",
     items: [
       { label: "Import CSV", icon: Upload, to: "/import" },
       { label: "Export Data", icon: Download, to: "/transactions" },
-      { label: "Backup & Restore", icon: DatabaseBackup, badge: "Soon" },
-      { label: "Security & Privacy", icon: ShieldCheck, badge: "Soon" },
     ],
   },
   {
-    title: "App Settings",
+    title: "Settings",
     items: [
       { label: "Appearance", icon: Palette, to: "/settings" },
       { label: "Currency & Localization", icon: Globe, to: "/settings" },
-      { label: "Notifications", icon: Bell, badge: "Soon" },
     ],
   },
   {
     title: "Support",
     items: [
-      { label: "Help Center", icon: HelpCircle, badge: "Soon" },
-      { label: "About App", icon: Info, badge: "v1.0" },
-      { label: "Feedback", icon: MessageSquare, badge: "Soon" },
+      { label: "About App", icon: Info, to: "/settings" },
+      { label: "Feedback", icon: MessageSquare, to: "/settings" },
     ],
   },
 ];
