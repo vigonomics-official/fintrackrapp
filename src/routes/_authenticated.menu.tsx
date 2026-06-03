@@ -1,13 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useCallback } from "react";
 import {
-  Wallet, Tag, Landmark, Repeat,
-  TrendingUp, Coins, PieChart, BarChart3,
-  Users, Share2, Target,
-  Upload, Download, DatabaseBackup, ShieldCheck,
-  Palette, Globe, Bell,
-  HelpCircle, Info, MessageSquare,
-  MessageSquareText, Sparkles, Bot, BellRing,
+  Wallet, Landmark,
+  Upload, Download,
+  Palette, Globe,
+  Info, MessageSquare,
+  MessageSquareText, Sparkles,
   ChevronRight, ChevronDown, LogOut, Search,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
