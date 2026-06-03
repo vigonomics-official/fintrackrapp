@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +32,25 @@ function LoginPage() {
     resolver: zodResolver(schema),
   });
 
+  useEffect(() => {
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyHeight = document.body.style.height;
+    const previousBodyMaxHeight = document.body.style.maxHeight;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100vh";
+    document.body.style.maxHeight = "100vh";
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.height = previousBodyHeight;
+      document.body.style.maxHeight = previousBodyMaxHeight;
+    };
+  }, []);
+
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -52,13 +71,13 @@ function LoginPage() {
 
   return (
     <div
-      className="flex h-[100vh] max-h-[100vh] w-full items-center justify-center overflow-hidden"
+      className="fixed inset-0 flex h-[100vh] max-h-[100vh] w-full items-center justify-center overflow-hidden"
       style={{ background: "#FAFAF7" }}
     >
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex h-full w-full max-w-sm flex-col px-6 py-8"
+        className="flex h-full max-h-[100vh] w-full max-w-sm flex-col overflow-hidden px-6 py-8"
       >
         <div className="flex flex-1 flex-col justify-center">
           <div className="mb-4 flex flex-col items-center text-center">
