@@ -69,16 +69,17 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
     return rows.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct)).slice(0, 3);
   }, [rangeTxs, prevRangeTxs, categories]);
 
-  // Survival status
-  const ratio = income > 0 ? expense / income : expense > 0 ? 1.5 : 0;
+  // Status based on monthly budget consumption
+  const totalBudget = budgets.reduce((s, b) => s + (b.monthly_limit || 0), 0);
+  const budgetRatio = totalBudget > 0 ? expense / totalBudget : 0;
   const status =
-    income === 0 && expense === 0
-      ? { dot: "bg-muted-foreground", label: "No activity", emoji: "—" }
-      : ratio < 0.6
-      ? { dot: "bg-success", label: "On track", emoji: "🟢" }
-      : ratio < 0.9
-      ? { dot: "bg-gold", label: "Careful", emoji: "🟡" }
-      : { dot: "bg-destructive", label: "Tight", emoji: "🔴" };
+    totalBudget === 0
+      ? { dot: "bg-muted-foreground", label: "Tracking" }
+      : budgetRatio < 0.3
+      ? { dot: "bg-success", label: "On Track" }
+      : budgetRatio <= 0.7
+      ? { dot: "bg-gold", label: "Moderate" }
+      : { dot: "bg-destructive", label: "Tight" };
 
   // Yearly stats
   const yearly = useMemo(() => {
