@@ -199,7 +199,9 @@ function TransactionsPage() {
           prevRangeTxs={prevRangeTxs}
           allTxs={txs}
           categories={categories}
+          budgets={budgets}
         />
+
 
         {/* Search + filter toggle */}
         <Card className="shadow-soft">
