@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/currency";
-import type { Category, Transaction } from "@/hooks/use-finance";
+import type { Budget, Category, Transaction } from "@/hooks/use-finance";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 type Props = {
@@ -11,6 +11,7 @@ type Props = {
   prevRangeTxs: Transaction[];    // same length window before current
   allTxs: Transaction[];          // for yearly view
   categories: Category[];
+  budgets?: Budget[];
 };
 
 function topCategoryTotals(txs: Transaction[], categories: Category[], limit = 4) {
@@ -28,7 +29,7 @@ function topCategoryTotals(txs: Transaction[], categories: Category[], limit = 4
     .slice(0, limit);
 }
 
-export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allTxs, categories }: Props) {
+export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allTxs, categories, budgets = [] }: Props) {
   const income = useMemo(() => rangeTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0), [rangeTxs]);
   const expense = useMemo(() => rangeTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0), [rangeTxs]);
   const remaining = income - expense;
@@ -68,16 +69,17 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
     return rows.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct)).slice(0, 3);
   }, [rangeTxs, prevRangeTxs, categories]);
 
-  // Survival status
-  const ratio = income > 0 ? expense / income : expense > 0 ? 1.5 : 0;
+  // Status based on monthly budget consumption
+  const totalBudget = budgets.reduce((s, b) => s + (b.monthly_limit || 0), 0);
+  const budgetRatio = totalBudget > 0 ? expense / totalBudget : 0;
   const status =
-    income === 0 && expense === 0
-      ? { dot: "bg-muted-foreground", label: "No activity", emoji: "—" }
-      : ratio < 0.6
-      ? { dot: "bg-success", label: "On track", emoji: "🟢" }
-      : ratio < 0.9
-      ? { dot: "bg-gold", label: "Careful", emoji: "🟡" }
-      : { dot: "bg-destructive", label: "Tight", emoji: "🔴" };
+    totalBudget === 0
+      ? { dot: "bg-muted-foreground", label: "Tracking" }
+      : budgetRatio < 0.3
+      ? { dot: "bg-success", label: "On Track" }
+      : budgetRatio <= 0.7
+      ? { dot: "bg-gold", label: "Moderate" }
+      : { dot: "bg-destructive", label: "Tight" };
 
   // Yearly stats
   const yearly = useMemo(() => {
@@ -121,28 +123,31 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
 
   return (
     <div className="space-y-3">
-      {/* Where your salary went */}
+      {/* This month's spending */}
       <Card className="shadow-soft">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-baseline justify-between">
-            <p className="text-sm font-semibold">Where your salary went</p>
+            <p className="text-sm font-semibold">This Month's Spending</p>
             <p className="text-[11px] text-muted-foreground">{rangeLabel}</p>
           </div>
 
           <div className="flex items-baseline justify-between">
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Income</p>
-              <p className="font-display text-lg font-bold tabular-nums text-success">
-                {formatCurrency(income, currency)}
-              </p>
-            </div>
+            {income > 0 ? (
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Income</p>
+                <p className="font-display text-lg font-bold tabular-nums text-success">
+                  {formatCurrency(income, currency)}
+                </p>
+              </div>
+            ) : <div />}
             <div className="text-right">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Remaining</p>
-              <p className={`font-display text-lg font-bold tabular-nums ${remaining >= 0 ? "text-foreground" : "text-destructive"}`}>
-                {formatCurrency(remaining, currency)}
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Spent So Far</p>
+              <p className="font-display text-lg font-bold tabular-nums" style={{ color: "#374151" }}>
+                {formatCurrency(Math.abs(expense), currency)}
               </p>
             </div>
           </div>
+
 
           {topCats.length > 0 ? (
             <ul className="space-y-2 pt-1">
@@ -199,7 +204,7 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
       )}
 
       {/* Comparison */}
-      {comparisons.length > 0 && range !== "year" && (
+      {comparisons.length > 0 && range !== "year" && days >= 7 && prevExpense > 0 && (
         <Card className="shadow-soft">
           <CardContent className="space-y-2 p-4">
             <div className="flex items-baseline justify-between">
