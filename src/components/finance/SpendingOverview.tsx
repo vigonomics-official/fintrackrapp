@@ -29,7 +29,7 @@ function topCategoryTotals(txs: Transaction[], categories: Category[], limit = 4
     .slice(0, limit);
 }
 
-export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allTxs, categories }: Props) {
+export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allTxs, categories, budgets = [] }: Props) {
   const income = useMemo(() => rangeTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0), [rangeTxs]);
   const expense = useMemo(() => rangeTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0), [rangeTxs]);
   const remaining = income - expense;
