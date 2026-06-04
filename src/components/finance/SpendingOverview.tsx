@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/currency";
-import type { Category, Transaction } from "@/hooks/use-finance";
+import type { Budget, Category, Transaction } from "@/hooks/use-finance";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 type Props = {
@@ -11,6 +11,7 @@ type Props = {
   prevRangeTxs: Transaction[];    // same length window before current
   allTxs: Transaction[];          // for yearly view
   categories: Category[];
+  budgets?: Budget[];
 };
 
 function topCategoryTotals(txs: Transaction[], categories: Category[], limit = 4) {
