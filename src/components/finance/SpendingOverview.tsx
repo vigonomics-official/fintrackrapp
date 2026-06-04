@@ -123,28 +123,31 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
 
   return (
     <div className="space-y-3">
-      {/* Where your salary went */}
+      {/* This month's spending */}
       <Card className="shadow-soft">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-baseline justify-between">
-            <p className="text-sm font-semibold">Where your salary went</p>
+            <p className="text-sm font-semibold">This Month's Spending</p>
             <p className="text-[11px] text-muted-foreground">{rangeLabel}</p>
           </div>
 
           <div className="flex items-baseline justify-between">
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Income</p>
-              <p className="font-display text-lg font-bold tabular-nums text-success">
-                {formatCurrency(income, currency)}
-              </p>
-            </div>
+            {income > 0 ? (
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Income</p>
+                <p className="font-display text-lg font-bold tabular-nums text-success">
+                  {formatCurrency(income, currency)}
+                </p>
+              </div>
+            ) : <div />}
             <div className="text-right">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Remaining</p>
-              <p className={`font-display text-lg font-bold tabular-nums ${remaining >= 0 ? "text-foreground" : "text-destructive"}`}>
-                {formatCurrency(remaining, currency)}
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Spent So Far</p>
+              <p className="font-display text-lg font-bold tabular-nums" style={{ color: "#374151" }}>
+                {formatCurrency(Math.abs(expense), currency)}
               </p>
             </div>
           </div>
+
 
           {topCats.length > 0 ? (
             <ul className="space-y-2 pt-1">
