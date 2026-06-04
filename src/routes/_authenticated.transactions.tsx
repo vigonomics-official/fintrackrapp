@@ -14,7 +14,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTransactions, useCategories, useProfile, type Transaction } from "@/hooks/use-finance";
+import { useTransactions, useCategories, useProfile, useBudgets, monthKey, type Transaction } from "@/hooks/use-finance";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/currency";
