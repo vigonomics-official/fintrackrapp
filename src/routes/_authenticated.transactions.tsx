@@ -33,6 +33,7 @@ function TransactionsPage() {
   const { data: txs = [] } = useTransactions();
   const { data: categories = [] } = useCategories();
   const { data: profile } = useProfile();
+  const { data: budgets = [] } = useBudgets(monthKey());
   const currency = profile?.currency ?? "USD";
 
   const [q, setQ] = useState("");
