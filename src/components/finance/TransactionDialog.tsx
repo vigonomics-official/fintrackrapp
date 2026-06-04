@@ -179,18 +179,17 @@ export function TransactionDialog({
             <div className="mt-2 grid grid-cols-4 gap-2">
               {QUICK_CATS.map((q) => {
                 const id = findCategoryId(q);
-                const selected = id && selectedCategoryId === id;
+                const selected = !!id && selectedCategoryId === id;
                 return (
                   <button
                     type="button"
                     key={q.name}
-                    onClick={() => id && form.setValue("category_id", id)}
-                    disabled={!id}
-                    className={`flex flex-col items-center justify-center rounded-lg border p-2 text-xs font-medium transition ${
+                    onClick={() => form.setValue("category_id", id)}
+                    className={`flex h-16 flex-col items-center justify-center rounded-lg border p-2 text-xs font-medium opacity-100 transition ${
                       selected
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-transparent bg-muted text-foreground hover:bg-muted/70"
-                    } ${!id ? "opacity-40 cursor-not-allowed" : ""}`}
+                        : "border-border bg-muted text-foreground hover:bg-muted/70"
+                    }`}
                   >
                     <span className="text-lg leading-none">{q.emoji}</span>
                     <span className="mt-1 truncate">{q.name}</span>
