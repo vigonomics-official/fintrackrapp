@@ -256,12 +256,44 @@ function Dashboard() {
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-70">Salary Left</p>
                     <p className="mt-2 font-display text-3xl font-bold leading-none md:text-4xl tabular-nums">{formatCurrency(survival.salaryLeft, currency)}</p>
-                    <p className="mt-2 text-xs opacity-90">{survival.days} days until salary · Safe spend {formatCurrency(survival.safeDaily, currency)}/day</p>
+                    <p className="mt-3 text-white" style={{ fontSize: "16px", fontWeight: 600 }}>
+                      Safe to spend {formatCurrency(survival.safeDaily, currency)}/day
+                    </p>
                   </div>
                   <span className={`shrink-0 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium backdrop-blur`}>
                     {moodMeta.dot} {moodMeta.label}
                   </span>
                 </div>
+
+                {(() => {
+                  const day = now.getDate();
+                  const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                  const monthProgress = day / totalDays;
+                  const monthExpense = transactions
+                    .filter(t => {
+                      const d = new Date(t.transaction_date);
+                      return t.type === "expense" && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    })
+                    .reduce((s, t) => s + t.amount, 0);
+                  const spendProgress = survival.salary > 0 ? monthExpense / survival.salary : 0;
+                  const onTrack = spendProgress <= monthProgress;
+                  return (
+                    <div className="mt-4">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-white/20">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${Math.min(100, Math.max(0, monthProgress * 100))}%`,
+                            background: onTrack ? "#22c55e" : "#f97316",
+                          }}
+                        />
+                      </div>
+                      <p className="mt-1.5 text-white" style={{ fontSize: "11px", opacity: 0.8 }}>
+                        Day {day} of {totalDays} • {Math.round(monthProgress * 100)}% of month gone
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 <div className="mt-5 grid grid-cols-3 gap-2 text-center">
                   <SurvivalStat label="Days left" value={String(survival.days)} />
@@ -278,6 +310,52 @@ function Dashboard() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Info chips */}
+        <div className="flex justify-center gap-2">
+          <span
+            className="inline-flex items-center rounded-full bg-white shadow-soft"
+            style={{ color: "#374151", fontSize: "13px", padding: "6px 12px", borderRadius: "20px" }}
+          >
+            📅 {survival.days} days to salary
+          </span>
+          <span
+            className="inline-flex items-center rounded-full bg-white shadow-soft"
+            style={{ color: "#374151", fontSize: "13px", padding: "6px 12px", borderRadius: "20px" }}
+          >
+            🎯 Score: {survival.score}/100
+          </span>
+        </div>
+
+        {/* Today's Pulse */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="shadow-soft" style={{ borderRadius: "12px" }}>
+            <CardContent className="p-4">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Spent Today</p>
+              <p className="mt-1 font-display text-lg font-bold tabular-nums" style={{ color: "#374151" }}>
+                {formatCurrency(survival.spentToday, currency)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-soft" style={{ borderRadius: "12px" }}>
+            <CardContent className="p-4">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Left Today</p>
+              {(() => {
+                const left = survival.safeDaily - survival.spentToday;
+                const positive = left > 0;
+                return (
+                  <p
+                    className="mt-1 font-display text-lg font-bold tabular-nums"
+                    style={{ color: positive ? "#16a34a" : "#dc2626" }}
+                  >
+                    {!positive && "⚠️ "}
+                    {formatCurrency(Math.max(0, left), currency)}
+                  </p>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* 2. Today's Safe Limit */}
         <Card className="shadow-soft">
