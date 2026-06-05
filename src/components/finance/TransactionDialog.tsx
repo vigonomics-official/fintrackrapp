@@ -54,6 +54,7 @@ export function TransactionDialog({
   const { data: categories = [] } = useCategories();
   const [submitting, setSubmitting] = useState(false);
   const amountRef = useRef<HTMLInputElement | null>(null);
+  const [selectedQuick, setSelectedQuick] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -67,7 +68,7 @@ export function TransactionDialog({
   });
 
   const watchType = form.watch("type");
-  const selectedCategoryId = form.watch("category_id");
+  
 
   useEffect(() => {
     if (open) {
@@ -80,6 +81,7 @@ export function TransactionDialog({
           transaction_date: edit.transaction_date,
           notes: edit.notes ?? "",
         });
+        setSelectedQuick(null);
       } else {
         form.reset({
           type: "expense",
@@ -88,8 +90,8 @@ export function TransactionDialog({
           transaction_date: new Date().toISOString().slice(0, 10),
           notes: "",
         });
+        setSelectedQuick(null);
       }
-      // Auto-focus amount field on open
       setTimeout(() => amountRef.current?.focus(), 60);
     }
   }, [open, edit, form]);
@@ -179,12 +181,15 @@ export function TransactionDialog({
             <div className="mt-2 grid grid-cols-4 gap-2">
               {QUICK_CATS.map((q) => {
                 const id = findCategoryId(q);
-                const selected = !!id && selectedCategoryId === id;
+                const selected = selectedQuick === q.name;
                 return (
                   <button
                     type="button"
                     key={q.name}
-                    onClick={() => form.setValue("category_id", id)}
+                    onClick={() => {
+                      setSelectedQuick(q.name);
+                      form.setValue("category_id", id ?? undefined);
+                    }}
                     className={`flex h-16 flex-col items-center justify-center rounded-lg border p-2 text-xs font-medium opacity-100 transition ${
                       selected
                         ? "border-primary bg-primary text-primary-foreground"
