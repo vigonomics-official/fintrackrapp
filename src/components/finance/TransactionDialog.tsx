@@ -54,6 +54,7 @@ export function TransactionDialog({
   const { data: categories = [] } = useCategories();
   const [submitting, setSubmitting] = useState(false);
   const amountRef = useRef<HTMLInputElement | null>(null);
+  const [selectedQuick, setSelectedQuick] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
