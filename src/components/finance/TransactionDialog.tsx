@@ -68,7 +68,7 @@ export function TransactionDialog({
   });
 
   const watchType = form.watch("type");
-  const selectedCategoryId = form.watch("category_id");
+  
 
   useEffect(() => {
     if (open) {
