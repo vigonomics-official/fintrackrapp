@@ -81,6 +81,7 @@ export function TransactionDialog({
           transaction_date: edit.transaction_date,
           notes: edit.notes ?? "",
         });
+        setSelectedQuick(null);
       } else {
         form.reset({
           type: "expense",
@@ -89,8 +90,8 @@ export function TransactionDialog({
           transaction_date: new Date().toISOString().slice(0, 10),
           notes: "",
         });
+        setSelectedQuick(null);
       }
-      // Auto-focus amount field on open
       setTimeout(() => amountRef.current?.focus(), 60);
     }
   }, [open, edit, form]);
