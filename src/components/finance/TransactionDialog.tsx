@@ -181,12 +181,15 @@ export function TransactionDialog({
             <div className="mt-2 grid grid-cols-4 gap-2">
               {QUICK_CATS.map((q) => {
                 const id = findCategoryId(q);
-                const selected = !!id && selectedCategoryId === id;
+                const selected = selectedQuick === q.name;
                 return (
                   <button
                     type="button"
                     key={q.name}
-                    onClick={() => form.setValue("category_id", id)}
+                    onClick={() => {
+                      setSelectedQuick(q.name);
+                      form.setValue("category_id", id ?? undefined);
+                    }}
                     className={`flex h-16 flex-col items-center justify-center rounded-lg border p-2 text-xs font-medium opacity-100 transition ${
                       selected
                         ? "border-primary bg-primary text-primary-foreground"
