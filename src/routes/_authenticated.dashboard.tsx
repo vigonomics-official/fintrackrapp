@@ -328,6 +328,7 @@ function Dashboard() {
         </div>
 
         {/* Today's Pulse */}
+        <h2 className="sr-only">Today's Pulse</h2>
         <div className="grid grid-cols-2 gap-3">
           <Card className="shadow-soft" style={{ borderRadius: "12px" }}>
             <CardContent className="p-4">
