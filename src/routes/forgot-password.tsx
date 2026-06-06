@@ -27,8 +27,8 @@ function ForgotPage() {
     <AuthShell title="Reset password" subtitle="We'll email you a link to set a new one">
       <form onSubmit={submit} className="space-y-4">
         <div>
-          <Label>Email</Label>
-          <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Label htmlFor="forgot-email">Email</Label>
+          <Input id="forgot-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <Button disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
           {loading ? "Sending…" : "Send reset link"}
