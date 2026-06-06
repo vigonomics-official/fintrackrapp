@@ -197,7 +197,7 @@ export function TransactionDialog({
                     }`}
                   >
                     <span className="text-lg leading-none">{q.emoji}</span>
-                    <span className="mt-1 truncate">{q.name}</span>
+                    <span className="mt-1 w-full truncate text-center">{q.name}</span>
                   </button>
                 );
               })}
