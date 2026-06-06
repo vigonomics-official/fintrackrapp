@@ -135,7 +135,7 @@ export function TransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100vw-32px)] max-w-md overflow-x-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{edit ? "Edit transaction" : "Add transaction"}</DialogTitle>
           <DialogDescription>Track money in, out, or moved.</DialogDescription>
@@ -190,14 +190,14 @@ export function TransactionDialog({
                       setSelectedQuick(q.name);
                       form.setValue("category_id", id ?? undefined);
                     }}
-                    className={`flex h-16 flex-col items-center justify-center rounded-lg border p-2 text-xs font-medium opacity-100 transition ${
+                    className={`flex h-16 min-w-0 flex-col items-center justify-center rounded-lg border p-1 text-[11px] font-medium opacity-100 transition ${
                       selected
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-muted text-foreground hover:bg-muted/70"
                     }`}
                   >
                     <span className="text-lg leading-none">{q.emoji}</span>
-                    <span className="mt-1 truncate">{q.name}</span>
+                    <span className="mt-1 w-full truncate text-center">{q.name}</span>
                   </button>
                 );
               })}
