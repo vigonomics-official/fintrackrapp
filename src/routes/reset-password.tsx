@@ -28,8 +28,8 @@ function ResetPage() {
     <AuthShell title="Set a new password" subtitle="Choose something memorable">
       <form onSubmit={submit} className="space-y-4">
         <div>
-          <Label>New password</Label>
-          <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Label htmlFor="reset-password">New password</Label>
+          <Input id="reset-password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <Button disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
           {loading ? "Saving…" : "Update password"}
