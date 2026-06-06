@@ -131,7 +131,7 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
             <p className="text-[11px] text-muted-foreground">{rangeLabel}</p>
           </div>
 
-          <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline justify-between gap-3">
             {income > 0 ? (
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Income</p>
@@ -139,10 +139,10 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
                   {formatCurrency(income, currency)}
                 </p>
               </div>
-            ) : <div />}
-            <div className="text-right">
+            ) : null}
+            <div className={income > 0 ? "text-right" : "ml-auto text-right"}>
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Spent So Far</p>
-              <p className="font-display text-lg font-bold tabular-nums" style={{ color: "#374151" }}>
+              <p className="font-display text-xl font-bold tabular-nums" style={{ color: "#374151" }}>
                 {formatCurrency(Math.abs(expense), currency)}
               </p>
             </div>
