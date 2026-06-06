@@ -95,16 +95,16 @@ function LoginPage() {
 
           <form onSubmit={onSubmit} className="space-y-3">
             <div>
-              <Label>Email</Label>
-              <Input type="email" autoComplete="email" {...register("email")} />
+              <Label htmlFor="login-email">Email</Label>
+              <Input id="login-email" type="email" autoComplete="email" {...register("email")} />
               {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <Label>Password</Label>
+                <Label htmlFor="login-password">Password</Label>
                 <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
               </div>
-              <Input type="password" autoComplete="current-password" {...register("password")} />
+              <Input id="login-password" type="password" autoComplete="current-password" {...register("password")} />
               {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
             </div>
             <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
