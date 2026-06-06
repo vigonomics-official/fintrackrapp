@@ -591,7 +591,16 @@ function Dashboard() {
           <CardContent className="space-y-4">
             {budgets.length === 0 ? (
               <p className="text-sm text-muted-foreground">No budgets set yet.</p>
-            ) : budgets.slice(0, 5).map((b) => {
+            ) : (() => {
+              const seen = new Set<string>();
+              const unique = budgets.filter((b) => {
+                const key = b.category_id ?? `__none_${b.id}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+              });
+              return unique.slice(0, 5);
+            })().map((b) => {
               const c = categories.find(x => x.id === b.category_id);
               const name = simplifyCategory(c?.name);
               const spent = transactions
