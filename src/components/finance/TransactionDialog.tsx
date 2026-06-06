@@ -190,7 +190,7 @@ export function TransactionDialog({
                       setSelectedQuick(q.name);
                       form.setValue("category_id", id ?? undefined);
                     }}
-                    className={`flex h-16 flex-col items-center justify-center rounded-lg border p-2 text-xs font-medium opacity-100 transition ${
+                    className={`flex h-16 min-w-0 flex-col items-center justify-center rounded-lg border p-1 text-[11px] font-medium opacity-100 transition ${
                       selected
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-muted text-foreground hover:bg-muted/70"
