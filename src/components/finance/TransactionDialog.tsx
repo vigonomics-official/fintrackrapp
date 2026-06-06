@@ -135,7 +135,7 @@ export function TransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100vw-32px)] max-w-md overflow-x-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{edit ? "Edit transaction" : "Add transaction"}</DialogTitle>
           <DialogDescription>Track money in, out, or moved.</DialogDescription>
