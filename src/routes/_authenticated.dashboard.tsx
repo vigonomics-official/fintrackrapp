@@ -357,31 +357,64 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* 2. Today's Safe Limit */}
-        <Card className="shadow-soft">
-          <CardContent className="p-4 md:p-5">
-            <div className="flex items-baseline justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Today's safe limit</p>
-                <p className="mt-1 font-display text-2xl font-bold tabular-nums">{formatCurrency(survival.remainingToday, currency)}</p>
-                <p className="text-[11px] text-muted-foreground">remaining today</p>
+        {/* Spending Streak */}
+        {(() => {
+          const safeDailyRounded = Math.max(0, Math.round(survival.safeDaily));
+          const days: { key: string; spent: number; under: boolean; hasData: boolean }[] = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(now.getDate() - i);
+            const key = d.toISOString().slice(0, 10);
+            const dayTx = transactions.filter(t => t.type === "expense" && t.transaction_date.slice(0, 10) === key);
+            const spent = dayTx.reduce((s, t) => s + t.amount, 0);
+            days.push({ key, spent, under: survival.safeDaily > 0 && spent <= survival.safeDaily, hasData: dayTx.length > 0 });
+          }
+          let streak = 0;
+          for (let i = days.length - 1; i >= 0; i--) {
+            if (days[i].under) streak++;
+            else break;
+          }
+          return (
+            <div
+              style={{
+                background: "#F0FDF4",
+                border: "1px solid #BBF7D0",
+                borderRadius: "12px",
+                padding: "14px 16px",
+              }}
+              className="flex items-center gap-4"
+            >
+              <div className="flex flex-col items-center justify-center" style={{ minWidth: 56 }}>
+                <span style={{ fontSize: 28, lineHeight: 1 }}>🔥</span>
+                <span className="font-display font-bold tabular-nums" style={{ fontSize: 28, lineHeight: 1.1, color: "#166534" }}>{streak}</span>
+                <span style={{ fontSize: 11, color: "#15803d" }}>day streak</span>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Spent today</p>
-                <p className="font-display text-base font-semibold tabular-nums">{formatCurrency(survival.spentToday, currency)}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold" style={{ color: "#166534", fontSize: 14 }}>Under Budget Streak</p>
+                <p style={{ fontSize: 11, color: "#15803d" }}>
+                  {streak === 0
+                    ? `Start today — spend under ${formatCurrency(safeDailyRounded, currency)} to begin your streak`
+                    : `Stay under ${formatCurrency(safeDailyRounded, currency)}/day to keep it going`}
+                </p>
+                <div className="mt-2 flex items-center gap-1.5">
+                  {days.map((d) => (
+                    <span
+                      key={d.key}
+                      title={d.key}
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        background: d.under && d.hasData ? "#22c55e" : "#d1d5db",
+                        display: "inline-block",
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-            <Progress
-              value={survival.safeDaily > 0 ? Math.min(100, (survival.spentToday / survival.safeDaily) * 100) : 0}
-              className="mt-3 h-2"
-            />
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              {survival.spentToday <= survival.safeDaily
-                ? "You're on track for today. Keep it calm."
-                : "You've crossed today's limit — pause non-essential spends."}
-            </p>
-          </CardContent>
-        </Card>
+          );
+        })()}
 
         {/* 3. Next Salary Card */}
         <Card className="shadow-soft">
@@ -558,7 +591,16 @@ function Dashboard() {
           <CardContent className="space-y-4">
             {budgets.length === 0 ? (
               <p className="text-sm text-muted-foreground">No budgets set yet.</p>
-            ) : budgets.slice(0, 5).map((b) => {
+            ) : (() => {
+              const seen = new Set<string>();
+              const unique = budgets.filter((b) => {
+                const key = b.category_id ?? `__none_${b.id}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+              });
+              return unique.slice(0, 5);
+            })().map((b) => {
               const c = categories.find(x => x.id === b.category_id);
               const name = simplifyCategory(c?.name);
               const spent = transactions
