@@ -247,6 +247,7 @@ function Dashboard() {
         )}
 
         {/* 1. Salary Survival Hero */}
+        <h2 className="sr-only">Salary Survival</h2>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
             <CardContent className="relative p-6 md:p-7">
