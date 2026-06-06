@@ -54,18 +54,18 @@ function SignupPage() {
     <AuthShell title="Create your account" subtitle="Start tracking in under a minute">
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <Label>Name</Label>
-          <Input {...register("name")} />
+          <Label htmlFor="signup-name">Name</Label>
+          <Input id="signup-name" {...register("name")} />
           {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
         </div>
         <div>
-          <Label>Email</Label>
-          <Input type="email" autoComplete="email" {...register("email")} />
+          <Label htmlFor="signup-email">Email</Label>
+          <Input id="signup-email" type="email" autoComplete="email" {...register("email")} />
           {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
         </div>
         <div>
-          <Label>Password</Label>
-          <Input type="password" autoComplete="new-password" {...register("password")} />
+          <Label htmlFor="signup-password">Password</Label>
+          <Input id="signup-password" type="password" autoComplete="new-password" {...register("password")} />
           {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
         </div>
         <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-elegant">

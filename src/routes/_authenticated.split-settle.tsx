@@ -530,7 +530,7 @@ function EntryList({
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="sm" variant="outline" className="px-2"><MoreHorizontal className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="outline" className="px-2" aria-label="More options"><MoreHorizontal className="h-4 w-4" /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onEdit(e)}><Pencil className="mr-2 h-3.5 w-3.5" /> Edit</DropdownMenuItem>

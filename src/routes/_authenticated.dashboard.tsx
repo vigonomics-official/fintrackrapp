@@ -247,6 +247,7 @@ function Dashboard() {
         )}
 
         {/* 1. Salary Survival Hero */}
+        <h2 className="sr-only">Salary Survival</h2>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
             <CardContent className="relative p-6 md:p-7">
@@ -328,6 +329,7 @@ function Dashboard() {
         </div>
 
         {/* Today's Pulse */}
+        <h2 className="sr-only">Today's Pulse</h2>
         <div className="grid grid-cols-2 gap-3">
           <Card className="shadow-soft" style={{ borderRadius: "12px" }}>
             <CardContent className="p-4">
