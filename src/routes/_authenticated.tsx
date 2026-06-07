@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
 import { CanIBuyThisDialog } from "@/components/finance/CanIBuyThisDialog";
+import { CreateGoalDialog } from "@/components/finance/CreateGoalDialog";
 import { TXN_EVENT } from "@/lib/sms-background";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
