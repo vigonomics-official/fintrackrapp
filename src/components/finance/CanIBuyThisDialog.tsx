@@ -97,11 +97,11 @@ export function CanIBuyThisDialog({ open, onOpenChange }: { open: boolean; onOpe
           <div className="space-y-1.5">
             <Label htmlFor="cibt-amount" className="text-xs">Amount ({currency})</Label>
             <Input id="cibt-amount" type="number" inputMode="decimal" placeholder="2499"
-              value={amountStr} onChange={(e) => setAmountStr(e.target.value)} />
+              value={amountStr} onChange={(e) => { setAmountStr(e.target.value); setChecked(false); }} />
           </div>
         </div>
 
-        {amount > 0 && (
+        {showResults && (
           <div className="space-y-3 rounded-2xl border bg-card p-4">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">If you buy this</p>
             <Row label="Safe spend / day" before={formatCurrency(before.safeDaily, currency)} after={formatCurrency(after.safeDaily, currency)} />
@@ -121,6 +121,7 @@ export function CanIBuyThisDialog({ open, onOpenChange }: { open: boolean; onOpe
 
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="ghost" onClick={close}>Close</Button>
+          <Button onClick={() => setChecked(true)} disabled={amount <= 0}>Check Now</Button>
         </div>
       </DialogContent>
     </Dialog>
