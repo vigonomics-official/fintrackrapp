@@ -5,7 +5,7 @@ import type { Budget, Category, Transaction } from "@/hooks/use-finance";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 type Props = {
-  range: "week" | "month" | "lastMonth" | "year" | "custom";
+  range: "week" | "month" | "year" | "custom";
   currency: string;
   rangeTxs: Transaction[];        // already filtered to current range
   prevRangeTxs: Transaction[];    // same length window before current
@@ -116,7 +116,6 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
   const rangeLabel = {
     week: "this week",
     month: "this month",
-    lastMonth: "last month",
     year: "this year",
     custom: "selected period",
   }[range];
@@ -176,7 +175,7 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
       </Card>
 
       {/* Smart summary */}
-      {(range === "month" || range === "lastMonth" || range === "week") && expense > 0 && (
+      {(range === "month" || range === "week") && expense > 0 && (
         <Card className="shadow-soft">
           <CardContent className="grid grid-cols-2 gap-3 p-4">
             <div>
