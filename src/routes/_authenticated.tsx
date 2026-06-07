@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
 import { CanIBuyThisDialog } from "@/components/finance/CanIBuyThisDialog";
+import { CreateGoalDialog } from "@/components/finance/CreateGoalDialog";
 import { TXN_EVENT } from "@/lib/sms-background";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -44,6 +45,7 @@ function AuthenticatedLayout() {
   const [txOpen, setTxOpen] = useState(false);
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
   const [cibtOpen, setCibtOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
 
   // Real-time refresh: any SMS-detected transaction invalidates relevant queries
   // so Dashboard, Transactions and Budgets reflect the new entry instantly.
@@ -65,6 +67,7 @@ function AuthenticatedLayout() {
     setTxOpen(false);
     setHomeSheetOpen(false);
     setCibtOpen(false);
+    setGoalOpen(false);
   }, [path]);
 
   if (loading || !user) {
@@ -163,7 +166,7 @@ function AuthenticatedLayout() {
             />
             <QuickActionTile
               icon={Flag} label="Create Goal" tone="bg-primary/10 text-primary"
-              onClick={() => { setHomeSheetOpen(false); navigate({ to: "/goals" }); setTimeout(() => window.dispatchEvent(new CustomEvent("fintrackr:fab")), 120); }}
+              onClick={() => { setHomeSheetOpen(false); setTimeout(() => setGoalOpen(true), 80); }}
             />
             <QuickActionTile
               icon={ShoppingBag} label="Can I Buy This?" tone="bg-gold/15 text-gold-foreground"
@@ -175,6 +178,9 @@ function AuthenticatedLayout() {
 
       {/* Can I Buy This? — available from Home FAB */}
       <CanIBuyThisDialog open={cibtOpen} onOpenChange={setCibtOpen} />
+
+      {/* Create Goal — available from Home Quick Actions */}
+      <CreateGoalDialog open={goalOpen} onOpenChange={setGoalOpen} />
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/60 bg-card pb-[env(safe-area-inset-bottom)] md:hidden">

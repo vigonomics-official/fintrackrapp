@@ -49,17 +49,20 @@ export function CanIBuyThisDialog({ open, onOpenChange }: { open: boolean; onOpe
 
   const [item, setItem] = useState("");
   const [amountStr, setAmountStr] = useState("");
+  const [checked, setChecked] = useState(false);
   const amount = Number(amountStr) || 0;
 
   const before = useMemo(() => computeSurvival(transactions, loans, 0), [transactions, loans]);
   const after = useMemo(() => computeSurvival(transactions, loans, amount), [transactions, loans, amount]);
 
-  const reset = () => { setItem(""); setAmountStr(""); };
+  const reset = () => { setItem(""); setAmountStr(""); setChecked(false); };
   const close = () => { onOpenChange(false); setTimeout(reset, 200); };
 
+  const showResults = checked && amount > 0;
+
   const scoreDrop = before.score - after.score;
-  const verdict = amount === 0
-    ? { tone: "neutral", title: "Enter an amount to check", msg: "Tell us how much it costs." }
+  const verdict = !showResults
+    ? { tone: "neutral", title: "Enter an amount to check", msg: "Tell us how much it costs, then tap Check Now." }
     : amount > before.salaryLeft
       ? { tone: "danger", title: "Skip this one ❌", msg: "This is more than what's left till next salary." }
       : scoreDrop >= 20 || after.safeDaily < before.safeDaily * 0.5
@@ -94,11 +97,11 @@ export function CanIBuyThisDialog({ open, onOpenChange }: { open: boolean; onOpe
           <div className="space-y-1.5">
             <Label htmlFor="cibt-amount" className="text-xs">Amount ({currency})</Label>
             <Input id="cibt-amount" type="number" inputMode="decimal" placeholder="2499"
-              value={amountStr} onChange={(e) => setAmountStr(e.target.value)} />
+              value={amountStr} onChange={(e) => { setAmountStr(e.target.value); setChecked(false); }} />
           </div>
         </div>
 
-        {amount > 0 && (
+        {showResults && (
           <div className="space-y-3 rounded-2xl border bg-card p-4">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">If you buy this</p>
             <Row label="Safe spend / day" before={formatCurrency(before.safeDaily, currency)} after={formatCurrency(after.safeDaily, currency)} />
@@ -118,6 +121,7 @@ export function CanIBuyThisDialog({ open, onOpenChange }: { open: boolean; onOpe
 
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="ghost" onClick={close}>Close</Button>
+          <Button onClick={() => setChecked(true)} disabled={amount <= 0}>Check Now</Button>
         </div>
       </DialogContent>
     </Dialog>
