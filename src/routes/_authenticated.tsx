@@ -45,6 +45,7 @@ function AuthenticatedLayout() {
   const [txOpen, setTxOpen] = useState(false);
   const [homeSheetOpen, setHomeSheetOpen] = useState(false);
   const [cibtOpen, setCibtOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
 
   // Real-time refresh: any SMS-detected transaction invalidates relevant queries
   // so Dashboard, Transactions and Budgets reflect the new entry instantly.
