@@ -67,6 +67,7 @@ function AuthenticatedLayout() {
     setTxOpen(false);
     setHomeSheetOpen(false);
     setCibtOpen(false);
+    setGoalOpen(false);
   }, [path]);
 
   if (loading || !user) {
