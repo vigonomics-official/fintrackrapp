@@ -166,7 +166,7 @@ function AuthenticatedLayout() {
             />
             <QuickActionTile
               icon={Flag} label="Create Goal" tone="bg-primary/10 text-primary"
-              onClick={() => { setHomeSheetOpen(false); navigate({ to: "/goals" }); setTimeout(() => window.dispatchEvent(new CustomEvent("fintrackr:fab")), 120); }}
+              onClick={() => { setHomeSheetOpen(false); setTimeout(() => setGoalOpen(true), 80); }}
             />
             <QuickActionTile
               icon={ShoppingBag} label="Can I Buy This?" tone="bg-gold/15 text-gold-foreground"
