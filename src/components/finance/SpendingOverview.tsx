@@ -116,7 +116,6 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
   const rangeLabel = {
     week: "this week",
     month: "this month",
-    lastMonth: "last month",
     year: "this year",
     custom: "selected period",
   }[range];
