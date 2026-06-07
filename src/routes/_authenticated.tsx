@@ -179,6 +179,9 @@ function AuthenticatedLayout() {
       {/* Can I Buy This? — available from Home FAB */}
       <CanIBuyThisDialog open={cibtOpen} onOpenChange={setCibtOpen} />
 
+      {/* Create Goal — available from Home Quick Actions */}
+      <CreateGoalDialog open={goalOpen} onOpenChange={setGoalOpen} />
+
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/60 bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
         <div className="grid grid-cols-5">
