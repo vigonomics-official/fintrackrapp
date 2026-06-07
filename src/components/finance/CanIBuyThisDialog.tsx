@@ -49,17 +49,20 @@ export function CanIBuyThisDialog({ open, onOpenChange }: { open: boolean; onOpe
 
   const [item, setItem] = useState("");
   const [amountStr, setAmountStr] = useState("");
+  const [checked, setChecked] = useState(false);
   const amount = Number(amountStr) || 0;
 
   const before = useMemo(() => computeSurvival(transactions, loans, 0), [transactions, loans]);
   const after = useMemo(() => computeSurvival(transactions, loans, amount), [transactions, loans, amount]);
 
-  const reset = () => { setItem(""); setAmountStr(""); };
+  const reset = () => { setItem(""); setAmountStr(""); setChecked(false); };
   const close = () => { onOpenChange(false); setTimeout(reset, 200); };
 
+  const showResults = checked && amount > 0;
+
   const scoreDrop = before.score - after.score;
-  const verdict = amount === 0
-    ? { tone: "neutral", title: "Enter an amount to check", msg: "Tell us how much it costs." }
+  const verdict = !showResults
+    ? { tone: "neutral", title: "Enter an amount to check", msg: "Tell us how much it costs, then tap Check Now." }
     : amount > before.salaryLeft
       ? { tone: "danger", title: "Skip this one ❌", msg: "This is more than what's left till next salary." }
       : scoreDrop >= 20 || after.safeDaily < before.safeDaily * 0.5
