@@ -5,7 +5,7 @@ import type { Budget, Category, Transaction } from "@/hooks/use-finance";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 type Props = {
-  range: "week" | "month" | "lastMonth" | "year" | "custom";
+  range: "week" | "month" | "year" | "custom";
   currency: string;
   rangeTxs: Transaction[];        // already filtered to current range
   prevRangeTxs: Transaction[];    // same length window before current
