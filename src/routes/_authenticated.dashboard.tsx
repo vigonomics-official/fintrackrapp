@@ -295,7 +295,7 @@ function Dashboard() {
             className="inline-flex items-center rounded-full bg-white shadow-soft"
             style={{ color: "#374151", fontSize: "13px", padding: "6px 12px", borderRadius: "20px" }}
           >
-            📅 {survival.days} days to salary
+            📅 {survival.isSalaryToday ? "Salary Today 🎉" : `${daysLeftLabel(survival.days)} to salary`}
           </span>
           <span
             className="inline-flex items-center rounded-full bg-white shadow-soft"
