@@ -124,7 +124,9 @@ function MonthlyPlan() {
             </p>
             <p className="mt-1 text-xs opacity-85">
               {s.hasIncome
-                ? `${s.days} days left · ${formatCurrency(s.safeDaily, s.currency)}/day safe`
+                ? s.isSalaryToday
+                  ? `Salary Today 🎉 · ${formatCurrency(s.safeDaily, s.currency)} safe today`
+                  : `${s.days} day${s.days === 1 ? "" : "s"} left · ${formatCurrency(s.safeDaily, s.currency)}/day safe`
                 : "Add this month's salary to unlock your plan."}
             </p>
           </div>
