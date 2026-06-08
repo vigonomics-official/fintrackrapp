@@ -13,6 +13,7 @@ export function CanIBuyThisDialog({ open, onOpenChange }: { open: boolean; onOpe
   const { data: profile } = useProfile();
   const { data: transactions = [] } = useTransactions();
   const { data: loans = [] } = useLoans();
+  const { settings: salarySettings } = useSalarySettings();
   const currency = profile?.currency ?? "INR";
 
   const [item, setItem] = useState("");
@@ -20,8 +21,14 @@ export function CanIBuyThisDialog({ open, onOpenChange }: { open: boolean; onOpe
   const [checked, setChecked] = useState(false);
   const amount = Number(amountStr) || 0;
 
-  const before = useMemo(() => computeSurvival(transactions, loans, 0), [transactions, loans]);
-  const after = useMemo(() => computeSurvival(transactions, loans, amount), [transactions, loans, amount]);
+  const before = useMemo(
+    () => computeSurvival({ transactions, loans, salarySettings, extraSpend: 0 }),
+    [transactions, loans, salarySettings]
+  );
+  const after = useMemo(
+    () => computeSurvival({ transactions, loans, salarySettings, extraSpend: amount }),
+    [transactions, loans, salarySettings, amount]
+  );
 
   const reset = () => { setItem(""); setAmountStr(""); setChecked(false); };
   const close = () => { onOpenChange(false); setTimeout(reset, 200); };
