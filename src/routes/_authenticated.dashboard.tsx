@@ -274,7 +274,7 @@ function Dashboard() {
                 })()}
 
                 <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                  <SurvivalStat label="Days left" value={String(survival.days)} />
+                  <SurvivalStat label="Days left" value={survival.isSalaryToday ? "Today 🎉" : String(survival.days)} />
                   <SurvivalStat label="EMI pressure" value={`${emiTone} ${survival.emiLevel}`} />
                   <SurvivalStat label="Survival Score" value={`${survival.score}/100`} />
                 </div>
