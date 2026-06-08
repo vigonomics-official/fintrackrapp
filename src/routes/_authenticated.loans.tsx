@@ -318,6 +318,7 @@ function LoansPage() {
   const { data: profile } = useProfile();
   const { data: loans = [] } = useLoans();
   const { data: txs = [] } = useTransactions();
+  const { settings: salarySettings } = useSalarySettings();
   const qc = useQueryClient();
   const { user } = useAuth();
   const currency = profile?.currency ?? "USD";
