@@ -350,40 +350,26 @@ function LoansPage() {
     return { debt, monthlyEmi, totalBorrowed, totalPaid, payoffPct, dti, monthIncome };
   }, [loans, txs]);
 
-  // Salary survival assistant computations
+  // Salary survival assistant computations (shared util)
   const survival = useMemo(() => {
-    const incomes = txs
-      .filter((t) => t.type === "income")
-      .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
-    const lastSalary = incomes[0];
-    const today = new Date();
-
-    // next salary date: same day-of-month as last income, next occurrence
-    let daysUntil: number | null = null;
-    let nextDate: Date | null = null;
-    if (lastSalary) {
-      const last = new Date(lastSalary.transaction_date);
-      const d = new Date(today.getFullYear(), today.getMonth(), Math.min(last.getDate(), 28));
-      if (d <= today) d.setMonth(d.getMonth() + 1);
-      nextDate = d;
-      daysUntil = Math.max(1, Math.ceil((d.getTime() - today.getTime()) / 86400000));
-    }
-
-    // spending this month (expense txns)
-    const monthSpend = txs.filter((t) => {
-      const d = new Date(t.transaction_date);
-      return t.type === "expense" && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
-    }).reduce((s, t) => s + t.amount, 0);
-
-    const salaryLeft = Math.max(0, totals.monthIncome - totals.monthlyEmi - monthSpend);
-    const safeDaily = daysUntil ? Math.max(0, Math.floor(salaryLeft / daysUntil)) : 0;
-
+    const s = computeSurvival({ transactions: txs, loans, salarySettings });
+    // After-EMI view used on the loans screen
+    const salaryLeft = Math.max(0, s.salaryLeft - totals.monthlyEmi);
+    const days = Math.max(1, s.daysRemaining);
+    const safeDaily = Math.max(0, Math.floor(salaryLeft / days));
     let pressure: "safe" | "moderate" | "high" = "safe";
     if (totals.dti >= 50) pressure = "high";
     else if (totals.dti >= 30) pressure = "moderate";
-
-    return { salaryLeft, daysUntil, nextDate, safeDaily, pressure, hasIncome: !!lastSalary };
-  }, [txs, totals]);
+    return {
+      salaryLeft,
+      daysUntil: s.daysRemaining,
+      nextDate: s.nextSalary,
+      safeDaily,
+      pressure,
+      hasIncome: s.hasIncome,
+      isSalaryToday: s.isSalaryToday,
+    };
+  }, [txs, loans, salarySettings, totals]);
 
   const quickMarkPaid = async (loan: Loan, e: React.MouseEvent) => {
     e.stopPropagation();
