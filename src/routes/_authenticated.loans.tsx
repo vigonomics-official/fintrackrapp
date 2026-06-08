@@ -34,6 +34,8 @@ import { PageHeader } from "@/components/finance/PageHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { useLoans, useLoanPayments, useTransactions, useProfile, type Loan, type LoanType } from "@/hooks/use-finance";
+import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/loans")({ component: LoansPage });
