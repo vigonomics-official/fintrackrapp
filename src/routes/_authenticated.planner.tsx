@@ -12,6 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { FinancialJourney } from "@/components/finance/FinancialJourney";
 import { useTransactions, useLoans, useProfile } from "@/hooks/use-finance";
+import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
@@ -77,68 +79,13 @@ function useSurvival(extraSpend = 0) {
   const { data: profile } = useProfile();
   const { data: transactions = [] } = useTransactions();
   const { data: loans = [] } = useLoans();
+  const { settings: salarySettings } = useSalarySettings();
   const currency = profile?.currency ?? "INR";
 
   const data = useMemo(() => {
-    const now = new Date();
-    const monthTx = transactions.filter((t) => {
-      const d = new Date(t.transaction_date);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    });
-    const incomeTx = monthTx
-      .filter((t) => t.type === "income")
-      .sort((a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
-    const salary = incomeTx.reduce((s, t) => s + Number(t.amount), 0);
-    const lastSalaryDate = incomeTx.length
-      ? new Date(incomeTx[incomeTx.length - 1].transaction_date)
-      : new Date(now.getFullYear(), now.getMonth(), 1);
-    const expensesSinceSalary =
-      transactions
-        .filter((t) => t.type === "expense" && new Date(t.transaction_date) >= lastSalaryDate)
-        .reduce((s, t) => s + Number(t.amount), 0) + extraSpend;
-    const salaryLeft = Math.max(0, salary - expensesSinceSalary);
-
-    const nextSalary = new Date(lastSalaryDate);
-    nextSalary.setMonth(nextSalary.getMonth() + 1);
-    const days = Math.max(1, Math.ceil((nextSalary.getTime() - now.getTime()) / 86_400_000));
-    const safeDaily = salaryLeft / days;
-
-    const monthlyEmi = loans.reduce(
-      (s, l) => s + (Number(l.remaining_balance) > 0 ? Number(l.emi_amount) : 0),
-      0
-    );
-    const emiRatio = salary > 0 ? (monthlyEmi / salary) * 100 : 0;
-    const emiLevel: "Low" | "Medium" | "High" =
-      emiRatio < 20 ? "Low" : emiRatio < 40 ? "Medium" : "High";
-
-    const buffer = salary > 0 ? Math.min(50, (salaryLeft / salary) * 50) : 25;
-    const emiScore = Math.max(0, 30 - emiRatio * 0.5);
-
-    const todayKey = now.toISOString().slice(0, 10);
-    const spentToday =
-      transactions
-        .filter((t) => t.type === "expense" && t.transaction_date.slice(0, 10) === todayKey)
-        .reduce((s, t) => s + Number(t.amount), 0) + extraSpend;
-    const pace =
-      spentToday <= safeDaily
-        ? 20
-        : Math.max(0, 20 - ((spentToday - safeDaily) / Math.max(1, safeDaily)) * 20);
-
-    const score = Math.round(buffer + emiScore + pace);
-
-    // Forecast: avg daily spend so far * remaining days
-    const daysSinceSalary = Math.max(
-      1,
-      Math.ceil((now.getTime() - lastSalaryDate.getTime()) / 86_400_000)
-    );
-    const avgDaily = expensesSinceSalary / daysSinceSalary;
-    const forecastBalance = Math.round(salaryLeft - avgDaily * days);
-
-    return {
-      currency, salary, salaryLeft, days, safeDaily, monthlyEmi,
-      emiLevel, score, forecastBalance, nextSalary, hasIncome: salary > 0,
-    };
-  }, [transactions, loans, extraSpend, currency]);
+    const s = computeSurvival({ transactions, loans, salarySettings, extraSpend });
+    return { currency, ...s };
+  }, [transactions, loans, extraSpend, currency, salarySettings]);
 
   return data;
 }
@@ -177,7 +124,9 @@ function MonthlyPlan() {
             </p>
             <p className="mt-1 text-xs opacity-85">
               {s.hasIncome
-                ? `${s.days} days left · ${formatCurrency(s.safeDaily, s.currency)}/day safe`
+                ? s.isSalaryToday
+                  ? `Salary Today 🎉 · ${formatCurrency(s.safeDaily, s.currency)} safe today`
+                  : `${s.days} day${s.days === 1 ? "" : "s"} left · ${formatCurrency(s.safeDaily, s.currency)}/day safe`
                 : "Add this month's salary to unlock your plan."}
             </p>
           </div>
@@ -197,7 +146,7 @@ function MonthlyPlan() {
       />
 
       <div className="grid grid-cols-2 gap-2.5">
-        <Stat label="Days Left" value={s.hasIncome ? `${s.days}` : "—"} />
+        <Stat label="Days Left" value={s.hasIncome ? (s.isSalaryToday ? "Today 🎉" : `${s.days}`) : "—"} />
         <Stat label="Survival Score" value={`${s.score}/100`} />
         <Stat label="Monthly EMI" value={formatCurrency(s.monthlyEmi, s.currency)} />
         <Stat

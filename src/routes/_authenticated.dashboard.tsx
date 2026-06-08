@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { useTransactions, useCategories, useBudgets, monthKey, useProfile, useLoans } from "@/hooks/use-finance";
+import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { computeSurvival } from "@/lib/survival";
+import { daysLeftLabel } from "@/lib/salary-cycle";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 
@@ -33,57 +36,31 @@ function Dashboard() {
   const month = monthKey();
   const { data: budgets = [] } = useBudgets(month);
   const { data: loans = [] } = useLoans();
+  const { settings: salarySettings } = useSalarySettings();
   const currency = profile?.currency ?? "INR";
 
   const now = new Date();
 
   const survival = useMemo(() => {
-    const monthTx = transactions.filter((t) => {
-      const d = new Date(t.transaction_date);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    });
-    const incomeTx = monthTx.filter(t => t.type === "income").sort((a, b) =>
-      new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime());
-    const salary = incomeTx.reduce((s, t) => s + t.amount, 0);
-    const lastSalaryDate = incomeTx.length ? new Date(incomeTx[incomeTx.length - 1].transaction_date) : new Date(now.getFullYear(), now.getMonth(), 1);
-    const expensesSinceSalary = transactions
-      .filter(t => t.type === "expense" && new Date(t.transaction_date) >= lastSalaryDate)
-      .reduce((s, t) => s + t.amount, 0);
-    const salaryLeft = Math.max(0, salary - expensesSinceSalary);
-
-    const nextSalary = new Date(lastSalaryDate);
-    nextSalary.setMonth(nextSalary.getMonth() + 1);
-    const days = Math.max(1, Math.ceil((nextSalary.getTime() - now.getTime()) / 86_400_000));
-    const safeDaily = salaryLeft / days;
-    const stretchDaily = safeDaily * 0.85;
-
-    const todayKey = now.toISOString().slice(0, 10);
-    const spentToday = transactions
-      .filter(t => t.type === "expense" && t.transaction_date.slice(0, 10) === todayKey)
-      .reduce((s, t) => s + t.amount, 0);
-    const remainingToday = Math.max(0, safeDaily - spentToday);
-
-    const monthlyEmi = loans.reduce((s, l) => s + (l.remaining_balance > 0 ? l.emi_amount : 0), 0);
-    const emiRatio = salary > 0 ? (monthlyEmi / salary) * 100 : 0;
-    const emiLevel: "Low" | "Medium" | "High" = emiRatio < 20 ? "Low" : emiRatio < 40 ? "Medium" : "High";
-
-    const buffer = salary > 0 ? Math.min(50, (salaryLeft / salary) * 50) : 25;
-    const emiScore = Math.max(0, 30 - emiRatio * 0.5);
-    const pace = spentToday <= safeDaily ? 20 : Math.max(0, 20 - ((spentToday - safeDaily) / Math.max(1, safeDaily)) * 20);
-    const score = Math.round(buffer + emiScore + pace);
-
+    const base = computeSurvival({ transactions, loans, salarySettings });
+    const stretchDaily = base.safeDaily * 0.85;
+    const remainingToday = Math.max(0, base.safeDaily - base.spentToday);
     const mood: "safe" | "careful" | "danger" =
-      score >= 70 && spentToday <= safeDaily ? "safe" :
-      score >= 45 ? "careful" : "danger";
-
-    const upcoming = [...loans].filter(l => l.remaining_balance > 0).map(l => {
-      const d = new Date(now.getFullYear(), now.getMonth(), Math.min(l.due_day, 28));
-      if (d < now) d.setMonth(d.getMonth() + 1);
-      return { loan: l, due: d };
-    }).sort((a, b) => a.due.getTime() - b.due.getTime())[0];
-
-    return { salary, salaryLeft, days, safeDaily, stretchDaily, spentToday, remainingToday, monthlyEmi, emiRatio, emiLevel, score, mood, upcoming, lastSalaryDate, nextSalary };
-  }, [transactions, loans, now.getDate()]);
+      base.score >= 70 && base.spentToday <= base.safeDaily
+        ? "safe"
+        : base.score >= 45
+          ? "careful"
+          : "danger";
+    const upcoming = [...loans]
+      .filter((l) => l.remaining_balance > 0)
+      .map((l) => {
+        const d = new Date(now.getFullYear(), now.getMonth(), Math.min(l.due_day, 28));
+        if (d < now) d.setMonth(d.getMonth() + 1);
+        return { loan: l, due: d };
+      })
+      .sort((a, b) => a.due.getTime() - b.due.getTime())[0];
+    return { ...base, stretchDaily, remainingToday, mood, upcoming };
+  }, [transactions, loans, salarySettings, now.getDate()]);
 
   // Per-category spending (this month vs last month) for risks + insights
   const catStats = useMemo(() => {
@@ -297,7 +274,7 @@ function Dashboard() {
                 })()}
 
                 <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                  <SurvivalStat label="Days left" value={String(survival.days)} />
+                  <SurvivalStat label="Days left" value={survival.isSalaryToday ? "Today 🎉" : String(survival.days)} />
                   <SurvivalStat label="EMI pressure" value={`${emiTone} ${survival.emiLevel}`} />
                   <SurvivalStat label="Survival Score" value={`${survival.score}/100`} />
                 </div>
@@ -318,7 +295,7 @@ function Dashboard() {
             className="inline-flex items-center rounded-full bg-white shadow-soft"
             style={{ color: "#374151", fontSize: "13px", padding: "6px 12px", borderRadius: "20px" }}
           >
-            📅 {survival.days} days to salary
+            📅 {survival.isSalaryToday ? "Salary Today 🎉" : `${daysLeftLabel(survival.days)} to salary`}
           </span>
           <span
             className="inline-flex items-center rounded-full bg-white shadow-soft"
