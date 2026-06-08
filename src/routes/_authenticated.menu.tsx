@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
 
 export const Route = createFileRoute("/_authenticated/menu")({ component: MenuPage });
 
@@ -95,6 +96,9 @@ function MenuPage() {
           </div>
           <Link to="/settings" className="shrink-0 text-xs font-medium text-primary">Edit</Link>
         </Card>
+
+        {/* Salary Settings — central control for salary-based calculations */}
+        <SalarySettingsSection />
 
         {/* Search */}
         <div className="relative">
