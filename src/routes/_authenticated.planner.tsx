@@ -146,7 +146,7 @@ function MonthlyPlan() {
       />
 
       <div className="grid grid-cols-2 gap-2.5">
-        <Stat label="Days Left" value={s.hasIncome ? `${s.days}` : "—"} />
+        <Stat label="Days Left" value={s.hasIncome ? (s.isSalaryToday ? "Today 🎉" : `${s.days}`) : "—"} />
         <Stat label="Survival Score" value={`${s.score}/100`} />
         <Stat label="Monthly EMI" value={formatCurrency(s.monthlyEmi, s.currency)} />
         <Stat
