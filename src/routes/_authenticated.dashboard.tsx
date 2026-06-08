@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { useTransactions, useCategories, useBudgets, monthKey, useProfile, useLoans } from "@/hooks/use-finance";
+import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { computeSurvival } from "@/lib/survival";
+import { daysLeftLabel } from "@/lib/salary-cycle";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 
