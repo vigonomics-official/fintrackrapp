@@ -1,0 +1,16 @@
+# FinTrackr
+
+> An intelligent money control center built for Indian salary life — track UPI spends, set monthly safe limits, plan EMIs, and beat month-end stress.
+
+FinTrackr helps salaried users in India see exactly where their money goes between paydays. It combines SMS/UPI intelligence, smart categorization, salary-aware budgeting, goal planning, and a "Can I buy this?" gut-check to keep spending under control.
+
+## Pages
+
+- [Home](/): Product overview, features, and how FinTrackr helps you survive till next salary.
+- [Sign in](/login): Existing users sign in to FinTrackr.
+- [Create account](/signup): Sign up for a new FinTrackr account.
+- [Get started](/onboarding): Guided setup — pick goals, set salary date, and configure preferences.
+
+## Optional
+
+- [Reset password](/forgot-password): Request a password reset email.
