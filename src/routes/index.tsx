@@ -348,7 +348,7 @@ function TrustSection() {
             >
               <it.icon className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">{it.title}</h3>
+            <h2 className="text-sm font-semibold text-gray-900">{it.title}</h2>
             <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
           </motion.div>
         ))}
