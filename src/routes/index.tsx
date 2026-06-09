@@ -528,7 +528,7 @@ function SmartFeatures() {
                   <span className="text-sm font-semibold text-gray-900">{ex.from}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="h-3.5 w-3.5 text-gray-400" />
+                  <ArrowRight className="h-3.5 w-3.5 text-gray-600" />
                   <span
                     className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
                     style={{ background: "rgba(20,184,166,0.12)", color: BRAND.accent }}
@@ -640,7 +640,7 @@ function DashboardShowcase() {
               <div>
                 <p className="text-xs font-medium text-gray-500">Savings goal · Goa trip</p>
                 <p className="font-display text-2xl font-bold text-gray-900">
-                  ₹ 38,200 <span className="text-sm font-medium text-gray-400">/ 50,000</span>
+                  ₹ 38,200 <span className="text-sm font-medium text-gray-600">/ 50,000</span>
                 </p>
               </div>
               <div
@@ -676,7 +676,7 @@ function DashboardShowcase() {
           >
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-gray-700">Spending by category</p>
-              <span className="text-[10px] text-gray-400">This month</span>
+              <span className="text-[10px] text-gray-600">This month</span>
             </div>
             <div className="mt-4 space-y-3.5">
               {categories.map((c, i) => (
@@ -776,7 +776,7 @@ function DashboardShowcase() {
           <a href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md">
             <Sparkles className="h-4 w-4" style={{ color: BRAND.primary }} />
             See Demo
-            <ArrowRight className="h-3.5 w-3.5 text-gray-400" />
+            <ArrowRight className="h-3.5 w-3.5 text-gray-600" />
           </a>
         </motion.div>
       </div>
@@ -928,7 +928,7 @@ function Testimonials() {
               whileHover={{ y: -6 }}
               className={`group relative rounded-3xl bg-gradient-to-br ${c.grad} p-6 ring-1 ${c.ring} shadow-[0_10px_40px_-20px_rgba(17,24,39,0.18)] transition-shadow hover:shadow-[0_24px_60px_-20px_rgba(17,24,39,0.25)]`}
             >
-              <Quote className="absolute right-5 top-5 h-7 w-7 text-white/60" />
+              <Quote className="absolute right-5 top-5 h-7 w-7 text-white/85" />
               <p className="text-sm leading-relaxed text-gray-800">"{c.quote}"</p>
               <div className="mt-6 flex items-center gap-3">
                 <div
@@ -1016,7 +1016,7 @@ function FinalCTA() {
           initial={{ opacity: 1 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-5 text-xs font-medium text-white/50"
+          className="mt-5 text-xs font-medium text-white/80"
         >
           No credit card required · Takes 30 seconds
         </motion.p>
