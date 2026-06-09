@@ -7,7 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthShell } from "./login";
 
-export const Route = createFileRoute("/reset-password")({ component: ResetPage });
+export const Route = createFileRoute("/reset-password")({
+  head: () => ({
+    meta: [
+      { title: "Set a new password — FinTrackr" },
+      { name: "description", content: "Choose a new password for your FinTrackr account and get back to tracking your money." },
+      { property: "og:title", content: "Set a new password — FinTrackr" },
+      { property: "og:description", content: "Choose a new password for your FinTrackr account and get back to tracking your money." },
+      { property: "og:url", content: "/reset-password" },
+    ],
+    links: [{ rel: "canonical", href: "/reset-password" }],
+  }),
+  component: ResetPage,
+});
 
 function ResetPage() {
   const navigate = useNavigate();
