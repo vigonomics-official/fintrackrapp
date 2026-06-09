@@ -7,7 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthShell } from "./login";
 
-export const Route = createFileRoute("/forgot-password")({ component: ForgotPage });
+export const Route = createFileRoute("/forgot-password")({
+  head: () => ({
+    meta: [
+      { title: "Reset your password — FinTrackr" },
+      { name: "description", content: "Forgot your FinTrackr password? Enter your email and we'll send a secure reset link." },
+      { property: "og:title", content: "Reset your password — FinTrackr" },
+      { property: "og:description", content: "Forgot your FinTrackr password? Enter your email and we'll send a secure reset link." },
+      { property: "og:url", content: "/forgot-password" },
+    ],
+    links: [{ rel: "canonical", href: "/forgot-password" }],
+  }),
+  component: ForgotPage,
+});
 
 function ForgotPage() {
   const [email, setEmail] = useState("");
