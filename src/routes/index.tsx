@@ -263,10 +263,7 @@ function Hero() {
           Built for Indian salary life
         </motion.span>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
+        <h1
           className="mx-auto mt-5 max-w-3xl font-display text-[2.1rem] font-bold leading-[1.1] tracking-tight text-gray-900 md:text-6xl"
         >
           Know exactly where your{" "}
@@ -279,7 +276,7 @@ function Hero() {
             salary
           </span>{" "}
           goes.
-        </motion.h1>
+        </h1>
 
         <motion.p
           initial={{ opacity: 0, y: 14 }}
