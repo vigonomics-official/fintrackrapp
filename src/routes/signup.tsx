@@ -11,7 +11,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthShell } from "./login";
 
-export const Route = createFileRoute("/signup")({ component: SignupPage });
+export const Route = createFileRoute("/signup")({
+  head: () => ({
+    meta: [
+      { title: "Create your FinTrackr account" },
+      { name: "description", content: "Sign up for FinTrackr — track UPI spends, set monthly safe limits and beat month-end stress." },
+      { property: "og:title", content: "Create your FinTrackr account" },
+      { property: "og:description", content: "Sign up for FinTrackr — track UPI spends, set monthly safe limits and beat month-end stress." },
+      { property: "og:url", content: "/signup" },
+    ],
+    links: [{ rel: "canonical", href: "/signup" }],
+  }),
+  component: SignupPage,
+});
 
 const schema = z.object({
   name: z.string().trim().min(2, "Tell us your name").max(80),

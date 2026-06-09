@@ -49,7 +49,15 @@ export const Route = createFileRoute("/")({
         content:
           "FinTrackr is an intelligent money control center built for Indian salary life. Track UPI spends, set budgets, and beat month-end stress.",
       },
+      { property: "og:title", content: "FinTrackr — Know exactly where your ₹ goes" },
+      {
+        property: "og:description",
+        content:
+          "FinTrackr is an intelligent money control center built for Indian salary life. Track UPI spends, set budgets, and beat month-end stress.",
+      },
+      { property: "og:url", content: "/" },
     ],
+    links: [{ rel: "canonical", href: "/" }],
   }),
   component: Landing,
 });

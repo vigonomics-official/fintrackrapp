@@ -17,7 +17,11 @@ export const Route = createFileRoute("/onboarding")({
     meta: [
       { title: "Get started — FinTrackr" },
       { name: "description", content: "Set up your FinTrackr account in under 60 seconds." },
+      { property: "og:title", content: "Get started — FinTrackr" },
+      { property: "og:description", content: "Set up your FinTrackr account in under 60 seconds." },
+      { property: "og:url", content: "/onboarding" },
     ],
+    links: [{ rel: "canonical", href: "/onboarding" }],
   }),
   component: OnboardingPage,
 });
