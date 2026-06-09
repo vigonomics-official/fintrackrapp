@@ -17,6 +17,16 @@ export const Route = createFileRoute("/login")({
     const { data } = await supabase.auth.getSession();
     if (data.session) throw redirect({ to: "/dashboard" });
   },
+  head: () => ({
+    meta: [
+      { title: "Sign in — FinTrackr" },
+      { name: "description", content: "Sign in to FinTrackr to track expenses, budgets and salary survival in one place." },
+      { property: "og:title", content: "Sign in — FinTrackr" },
+      { property: "og:description", content: "Sign in to FinTrackr to track expenses, budgets and salary survival in one place." },
+      { property: "og:url", content: "/login" },
+    ],
+    links: [{ rel: "canonical", href: "/login" }],
+  }),
   component: LoginPage,
 });
 
