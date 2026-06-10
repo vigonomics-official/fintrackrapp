@@ -357,7 +357,9 @@ function SmsIntelligencePage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold tabular-nums">−{formatCurrency(it.amount)}</p>
-                      <p className="text-[10px] text-muted-foreground">{it.confidence}% match</p>
+                      <span className="mt-1 inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                        {it.confidence}% Match
+                      </span>
                     </div>
                   </div>
                   <div className="mt-2.5 flex items-center justify-between pl-13">
@@ -380,8 +382,8 @@ function SmsIntelligencePage() {
                         <Pencil className="h-3 w-3 text-muted-foreground group-hover:text-foreground" />
                       </button>
                     )}
-                    <ConfidenceBar value={it.confidence} />
                   </div>
+
                 </div>
               );
             })}
