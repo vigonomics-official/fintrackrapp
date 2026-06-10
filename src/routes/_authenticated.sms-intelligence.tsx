@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ShieldCheck, MessageSquareText, Sparkles, Pencil, Check, X,
   UtensilsCrossed, Pizza, Car, ShoppingBag, ArrowLeftRight, Receipt, Plus,
-  RadioTower, BatteryCharging, Smartphone, RefreshCw, AlertTriangle, CheckCircle2,
+  RefreshCw, CheckCircle2, Info, Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
