@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   ShieldCheck, MessageSquareText, Sparkles, Pencil, Check, X,
@@ -12,8 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 import { parseSms, txnSignature, formatCompactDateTime } from "@/lib/sms-parser";
 import {
   smsDebug, enqueueRetry, broadcastTxn, enableBackgroundMode, disableBackgroundMode,
-  requestIgnoreBatteryOptimizations, detectOem, oemAutostartHint,
-  subscribeSmsLogs, getSmsLogs, type DebugEntry,
+  requestIgnoreBatteryOptimizations,
 } from "@/lib/sms-background";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
