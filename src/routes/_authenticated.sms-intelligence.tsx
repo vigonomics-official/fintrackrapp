@@ -272,50 +272,23 @@ function SmsIntelligencePage() {
       <PageHeader title="SMS Intelligence" subtitle="Auto-detect UPI & SMS transactions, privately on-device." />
 
       <div className="space-y-6 px-6 py-6 md:px-10">
-        {/* Privacy hero */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 shadow-soft">
-            <div className="flex items-start gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <ShieldCheck className="h-5 w-5" />
-              </span>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold">Privacy-first detection</h3>
-                  <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">On-device</Badge>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  We parse only financial SMS locally. No bank login, no data leaves your phone.
-                </p>
-                <div className="mt-4 flex items-center justify-between rounded-xl border bg-card/60 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">SMS permission</p>
-                    <p className="truncate text-xs text-muted-foreground">Required to read transaction alerts.</p>
-                  </div>
-                  <Switch
-                    checked={enabled && sms.permission === "granted"}
-                    onCheckedChange={async (v) => {
-                      setEnabled(v);
-                      if (v && sms.permission !== "granted") await sms.requestPermission();
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
+        {/* Friendly status banner */}
+        <StatusBanner platform={sms.platform} listening={sms.listening && enabled} lastEventAt={sms.lastEventAt} />
 
-        {/* Inline quick actions (replaces FAB) */}
-        <div className="-mt-2 flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-1.5"
-            onClick={() => sms.requestPermission()}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Re-check Permissions
-          </Button>
+        {/* Simplified status card */}
+        <SimpleStatusCard
+          platform={sms.platform}
+          enabled={enabled}
+          listening={sms.listening}
+          lastEventAt={sms.lastEventAt}
+          onEnable={async () => {
+            setEnabled(true);
+            if (sms.permission !== "granted") await sms.requestPermission();
+          }}
+        />
+
+        {/* Quick actions */}
+        <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
             variant="outline"
@@ -329,26 +302,24 @@ function SmsIntelligencePage() {
             <Sparkles className="h-3.5 w-3.5" />
             Test SMS Detection
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-1.5"
-            onClick={() => {
-              sms.stopListener();
-              setTimeout(() => sms.startListener(), 120);
-              toast.success("Listener refreshed");
-            }}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh Listener
-          </Button>
+          {sms.platform !== "web" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-1.5"
+              onClick={() => {
+                sms.stopListener();
+                setTimeout(() => sms.startListener(), 120);
+                toast.success("Listener refreshed");
+              }}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </Button>
+          )}
         </div>
 
-        {/* Permission & Listener Status */}
-        <PermissionStatusPanel sms={sms} enabled={enabled} onRetry={sms.requestPermission} />
 
-        {/* Debug log stream */}
-        <DebugLogPanel />
 
 
         {/* Stats */}
