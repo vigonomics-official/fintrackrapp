@@ -390,28 +390,38 @@ function SmsIntelligencePage() {
           </Card>
         </section>
 
-        {/* Smart rules */}
+        {/* Auto-categorization rules */}
         <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Smart Rules</h2>
-            <Badge variant="secondary" className="text-[10px]">{rules.length} active</Badge>
+          <div className="mb-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Auto-categorization Rules</h2>
+              <Badge variant="secondary" className="text-[10px]">{rules.length} active</Badge>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Merchants are automatically categorized when detected.
+            </p>
           </div>
           <Card className="overflow-hidden shadow-soft">
             <ul className="divide-y">
               {rules.map((r, i) => (
-                <li key={i} className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <li key={i} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <Receipt className="h-4 w-4" />
                     </span>
-                    <div>
-                      <p className="text-sm font-medium">If merchant contains <span className="font-mono text-primary">{r.match}</span></p>
-                      <p className="text-xs text-muted-foreground">→ Categorize as {r.category}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        <span className="font-mono text-primary">{r.match}</span>
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">Categorize as {r.category}</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => setRules(rules.filter((_, j) => j !== i))}>
+                  <button
+                    onClick={() => setRules(rules.filter((_, j) => j !== i))}
+                    className="shrink-0 text-xs font-medium text-red-600 hover:underline"
+                  >
                     Remove
-                  </Button>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -423,7 +433,18 @@ function SmsIntelligencePage() {
               </Button>
             </div>
           </Card>
+          <Button
+            variant="outline"
+            className="mt-3 w-full rounded-xl border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+            onClick={() => {
+              const el = document.querySelector<HTMLInputElement>('input[placeholder="Merchant keyword"]');
+              el?.focus();
+            }}
+          >
+            <Plus className="h-4 w-4" /> Add Custom Rule
+          </Button>
         </section>
+
 
         <p className="flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground">
           <MessageSquareText className="h-3.5 w-3.5" />
