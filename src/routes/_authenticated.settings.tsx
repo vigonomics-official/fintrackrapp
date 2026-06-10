@@ -24,13 +24,13 @@ function SettingsPage() {
   const qc = useQueryClient();
   const { data: profile } = useProfile();
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("INR");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (profile) {
       setName(profile.name ?? "");
-      setCurrency(profile.currency ?? "USD");
+      setCurrency(profile.currency ?? "INR");
     }
   }, [profile]);
 

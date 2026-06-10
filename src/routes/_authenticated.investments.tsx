@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/investments")({ component:
 
 function Investments() {
   const { data: profile } = useProfile();
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? "INR";
   const [fabSheet, setFabSheet] = useState(false);
 
   useEffect(() => {

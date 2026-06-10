@@ -51,7 +51,7 @@ function ImportPage() {
   const { data: profile } = useProfile();
   const { data: categories = [] } = useCategories();
   const { data: existingTx = [] } = useTransactions();
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? "INR";
 
   const [step, setStep] = useState<Step>("source");
   const [source, setSource] = useState<ImportSource>("generic");
