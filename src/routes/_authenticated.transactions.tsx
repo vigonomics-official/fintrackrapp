@@ -34,7 +34,7 @@ function TransactionsPage() {
   const { data: categories = [] } = useCategories();
   const { data: profile } = useProfile();
   const { data: budgets = [] } = useBudgets(monthKey());
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? "INR";
 
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");

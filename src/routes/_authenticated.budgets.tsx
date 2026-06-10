@@ -33,7 +33,7 @@ function BudgetsPage() {
   const { data: categories = [] } = useCategories();
   const { data: txs = [] } = useTransactions();
   const { data: profile } = useProfile();
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? "INR";
 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

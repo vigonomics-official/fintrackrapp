@@ -15,7 +15,7 @@ function ReportsPage() {
   const { data: txs = [] } = useTransactions();
   const { data: categories = [] } = useCategories();
   const { data: profile } = useProfile();
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? "INR";
 
   const monthly = useMemo(() => {
     const map = new Map<string, { label: string; income: number; expense: number }>();

@@ -321,7 +321,7 @@ function LoansPage() {
   const { settings: salarySettings } = useSalarySettings();
   const qc = useQueryClient();
   const { user } = useAuth();
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? "INR";
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Loan | null>(null);
   const [fabSheet, setFabSheet] = useState(false);
