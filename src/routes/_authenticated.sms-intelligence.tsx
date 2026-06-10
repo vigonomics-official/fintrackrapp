@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   ShieldCheck, MessageSquareText, Sparkles, Pencil, Check, X,
   UtensilsCrossed, Pizza, Car, ShoppingBag, ArrowLeftRight, Receipt, Plus,
-  RadioTower, BatteryCharging, Smartphone, RefreshCw, AlertTriangle, CheckCircle2,
+  RefreshCw, CheckCircle2, Info, Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,8 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 import { parseSms, txnSignature, formatCompactDateTime } from "@/lib/sms-parser";
 import {
   smsDebug, enqueueRetry, broadcastTxn, enableBackgroundMode, disableBackgroundMode,
-  requestIgnoreBatteryOptimizations, detectOem, oemAutostartHint,
-  subscribeSmsLogs, getSmsLogs, type DebugEntry,
+  requestIgnoreBatteryOptimizations,
 } from "@/lib/sms-background";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -272,50 +270,23 @@ function SmsIntelligencePage() {
       <PageHeader title="SMS Intelligence" subtitle="Auto-detect UPI & SMS transactions, privately on-device." />
 
       <div className="space-y-6 px-6 py-6 md:px-10">
-        {/* Privacy hero */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 shadow-soft">
-            <div className="flex items-start gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <ShieldCheck className="h-5 w-5" />
-              </span>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold">Privacy-first detection</h3>
-                  <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">On-device</Badge>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  We parse only financial SMS locally. No bank login, no data leaves your phone.
-                </p>
-                <div className="mt-4 flex items-center justify-between rounded-xl border bg-card/60 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">SMS permission</p>
-                    <p className="truncate text-xs text-muted-foreground">Required to read transaction alerts.</p>
-                  </div>
-                  <Switch
-                    checked={enabled && sms.permission === "granted"}
-                    onCheckedChange={async (v) => {
-                      setEnabled(v);
-                      if (v && sms.permission !== "granted") await sms.requestPermission();
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
+        {/* Friendly status banner */}
+        <StatusBanner platform={sms.platform} listening={sms.listening && enabled} lastEventAt={sms.lastEventAt} />
 
-        {/* Inline quick actions (replaces FAB) */}
-        <div className="-mt-2 flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-1.5"
-            onClick={() => sms.requestPermission()}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Re-check Permissions
-          </Button>
+        {/* Simplified status card */}
+        <SimpleStatusCard
+          platform={sms.platform}
+          enabled={enabled}
+          listening={sms.listening}
+          lastEventAt={sms.lastEventAt}
+          onEnable={async () => {
+            setEnabled(true);
+            if (sms.permission !== "granted") await sms.requestPermission();
+          }}
+        />
+
+        {/* Quick actions */}
+        <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
             variant="outline"
@@ -329,26 +300,24 @@ function SmsIntelligencePage() {
             <Sparkles className="h-3.5 w-3.5" />
             Test SMS Detection
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-9 gap-1.5"
-            onClick={() => {
-              sms.stopListener();
-              setTimeout(() => sms.startListener(), 120);
-              toast.success("Listener refreshed");
-            }}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh Listener
-          </Button>
+          {sms.platform !== "web" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 gap-1.5"
+              onClick={() => {
+                sms.stopListener();
+                setTimeout(() => sms.startListener(), 120);
+                toast.success("Listener refreshed");
+              }}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </Button>
+          )}
         </div>
 
-        {/* Permission & Listener Status */}
-        <PermissionStatusPanel sms={sms} enabled={enabled} onRetry={sms.requestPermission} />
 
-        {/* Debug log stream */}
-        <DebugLogPanel />
 
 
         {/* Stats */}
@@ -386,7 +355,9 @@ function SmsIntelligencePage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold tabular-nums">−{formatCurrency(it.amount)}</p>
-                      <p className="text-[10px] text-muted-foreground">{it.confidence}% match</p>
+                      <span className="mt-1 inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                        {it.confidence}% Match
+                      </span>
                     </div>
                   </div>
                   <div className="mt-2.5 flex items-center justify-between pl-13">
@@ -409,36 +380,46 @@ function SmsIntelligencePage() {
                         <Pencil className="h-3 w-3 text-muted-foreground group-hover:text-foreground" />
                       </button>
                     )}
-                    <ConfidenceBar value={it.confidence} />
                   </div>
+
                 </div>
               );
             })}
           </Card>
         </section>
 
-        {/* Smart rules */}
+        {/* Auto-categorization rules */}
         <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Smart Rules</h2>
-            <Badge variant="secondary" className="text-[10px]">{rules.length} active</Badge>
+          <div className="mb-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Auto-categorization Rules</h2>
+              <Badge variant="secondary" className="text-[10px]">{rules.length} active</Badge>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Merchants are automatically categorized when detected.
+            </p>
           </div>
           <Card className="overflow-hidden shadow-soft">
             <ul className="divide-y">
               {rules.map((r, i) => (
-                <li key={i} className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <li key={i} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <Receipt className="h-4 w-4" />
                     </span>
-                    <div>
-                      <p className="text-sm font-medium">If merchant contains <span className="font-mono text-primary">{r.match}</span></p>
-                      <p className="text-xs text-muted-foreground">→ Categorize as {r.category}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        <span className="font-mono text-primary">{r.match}</span>
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">Categorize as {r.category}</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => setRules(rules.filter((_, j) => j !== i))}>
+                  <button
+                    onClick={() => setRules(rules.filter((_, j) => j !== i))}
+                    className="shrink-0 text-xs font-medium text-red-600 hover:underline"
+                  >
                     Remove
-                  </Button>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -450,7 +431,18 @@ function SmsIntelligencePage() {
               </Button>
             </div>
           </Card>
+          <Button
+            variant="outline"
+            className="mt-3 w-full rounded-xl border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+            onClick={() => {
+              const el = document.querySelector<HTMLInputElement>('input[placeholder="Merchant keyword"]');
+              el?.focus();
+            }}
+          >
+            <Plus className="h-4 w-4" /> Add Custom Rule
+          </Button>
         </section>
+
 
         <p className="flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground">
           <MessageSquareText className="h-3.5 w-3.5" />
@@ -470,148 +462,105 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ConfidenceBar({ value }: { value: number }) {
+function StatusBanner({ platform }: { platform: Platform; listening: boolean; lastEventAt: number | null }) {
+  if (platform !== "web") return null;
   return (
-    <div className="flex h-1.5 w-20 overflow-hidden rounded-full bg-muted">
-      <div className="bg-primary transition-all" style={{ width: `${value}%` }} />
+    <div
+      className="flex items-start gap-3 rounded-2xl border p-4"
+      style={{ backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }}
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-600">
+        <Info className="h-4.5 w-4.5" />
+      </span>
+      <div className="text-sm text-blue-900">
+        <p className="font-semibold">📱 For automatic SMS detection, download the FinTrackr Android app.</p>
+        <p className="mt-1 text-blue-800/90">On web, you can review sample detected transactions below.</p>
+      </div>
     </div>
   );
 }
 
-function PermissionStatusPanel({
-  sms, enabled, onRetry,
+function formatRelative(ts: number) {
+  const diff = Math.max(0, Date.now() - ts);
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} minute${m === 1 ? "" : "s"} ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  const d = Math.floor(h / 24);
+  return `${d} day${d === 1 ? "" : "s"} ago`;
+}
+
+function SimpleStatusCard({
+  platform, enabled, listening, lastEventAt, onEnable,
 }: {
-  sms: ReturnType<typeof useSmsListener>;
-  enabled: boolean;
-  onRetry: () => void;
+  platform: Platform; enabled: boolean; listening: boolean; lastEventAt: number | null; onEnable: () => void;
 }) {
-  const isWeb = sms.platform === "web";
-  const permLabel: Record<string, string> = {
-    granted: "Granted", denied: "Denied", prompt: "Not requested", unsupported: "Unavailable on web",
-  };
-  const permTone: Record<string, string> = {
-    granted: "text-emerald-600 bg-emerald-500/10",
-    denied: "text-red-600 bg-red-500/10",
-    prompt: "text-amber-600 bg-amber-500/10",
-    unsupported: "text-muted-foreground bg-muted",
-  };
-  const listenerOn = enabled && sms.listening;
-  return (
-    <Card className="overflow-hidden p-4 shadow-soft">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <RadioTower className={cn("h-4 w-4", listenerOn ? "text-emerald-500" : "text-muted-foreground")} />
-          <h3 className="text-sm font-semibold">Listener status</h3>
+  const isWeb = platform === "web";
+  if (isWeb) {
+    return (
+      <Card className="p-4 shadow-soft">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Web Version</span>
         </div>
-        <Badge variant="outline" className={cn("text-[10px]", listenerOn ? "border-emerald-500/40 text-emerald-600" : "")}>
-          {listenerOn ? "Active" : "Idle"}
-        </Badge>
-      </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <StatusRow
-          icon={<Smartphone className="h-4 w-4" />}
-          label="Platform"
-          value={sms.platform === "android-native" ? "Android (native)" : sms.platform === "ios-native" ? "iOS (native)" : "Web browser"}
-        />
-        <StatusRow
-          icon={sms.permission === "granted" ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-          label="READ_SMS / RECEIVE_SMS"
-          value={permLabel[sms.permission]}
-          tone={permTone[sms.permission]}
-        />
-        <StatusRow
-          icon={<RadioTower className="h-4 w-4" />}
-          label="Background listener"
-          value={listenerOn ? "Running" : enabled ? "Waiting for permission" : "Off"}
-        />
-        <StatusRow
-          icon={<BatteryCharging className="h-4 w-4" />}
-          label="Battery optimization"
-          value={sms.batteryRestricted == null ? "Unknown" : sms.batteryRestricted ? "Restricted" : "Unrestricted"}
-          tone={sms.batteryRestricted ? "text-amber-600 bg-amber-500/10" : ""}
-        />
-      </div>
-      {(isWeb || sms.permission !== "granted" || sms.batteryRestricted) && (
-        <div className="mt-3 rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground">
-          {isWeb ? (
-            <p>Real-time SMS detection requires the FinTrackr Android app. The web preview shows sample data only.</p>
-          ) : sms.permission !== "granted" ? (
-            <p>Grant SMS access so FinTrackr can detect bank & UPI alerts the moment they arrive.</p>
-          ) : (
-            <p>Battery optimization may pause the listener in the background. Disable it for FinTrackr to keep detection reliable.</p>
-          )}
-          {(() => {
-            const hint = oemAutostartHint(detectOem());
-            return hint ? <p className="mt-1.5">{hint}</p> : null;
-          })()}
-          <div className="mt-2 flex gap-2">
-            <Button size="sm" variant="outline" onClick={onRetry}>
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-check permissions
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => requestIgnoreBatteryOptimizations()}>
-              <BatteryCharging className="mr-1.5 h-3.5 w-3.5" /> Disable battery limits
-            </Button>
+        <div className="mt-2 flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+            <Globe className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">Running on Web Browser</p>
+            <div className="mt-1 flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground">SMS Detection:</span>
+              <span className="rounded-full bg-muted px-2 py-0.5 font-semibold text-muted-foreground">Not Available</span>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Sample data shown below.</p>
           </div>
         </div>
-      )}
-      {sms.lastEventAt && (
-        <p className="mt-3 text-[11px] text-muted-foreground">
-          Last SMS event: {new Date(sms.lastEventAt).toLocaleTimeString()}
-        </p>
-      )}
-    </Card>
-  );
-}
-
-function StatusRow({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: string }) {
+      </Card>
+    );
+  }
+  const active = enabled && listening;
   return (
-    <div className="flex items-center justify-between rounded-xl border bg-card/60 px-3 py-2.5">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">{icon}</span>
-        <p className="truncate text-xs font-medium">{label}</p>
+    <Card className="p-4 shadow-soft">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Android Version</span>
+        <Badge
+          variant="outline"
+          className={cn("text-[10px]", active ? "border-emerald-500/40 text-emerald-600" : "text-muted-foreground")}
+        >
+          {active ? "Active" : "Idle"}
+        </Badge>
       </div>
-      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", tone || "bg-muted text-muted-foreground")}>{value}</span>
-    </div>
-  );
-}
-
-function DebugLogPanel() {
-  const [entries, setEntries] = useState<DebugEntry[]>(() => getSmsLogs());
-  const [open, setOpen] = useState(false);
-  useEffect(() => subscribeSmsLogs((e) => setEntries((prev) => [e, ...prev].slice(0, 200))), []);
-  const toneFor = (lvl: DebugEntry["level"]) =>
-    lvl === "error" ? "text-red-600" :
-    lvl === "warn" ? "text-amber-600" :
-    lvl === "success" ? "text-emerald-600" : "text-muted-foreground";
-  return (
-    <Card className="overflow-hidden p-4 shadow-soft">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between"
-      >
-        <div className="flex items-center gap-2">
-          <RadioTower className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold">Debug log</h3>
-          <Badge variant="secondary" className="text-[10px]">{entries.length}</Badge>
-        </div>
-        <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show"}</span>
-      </button>
-      {open && (
-        <ul className="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg bg-muted/30 p-2 font-mono text-[11px]">
-          {entries.length === 0 && (
-            <li className="text-muted-foreground">No events yet — enable the listener to start capturing.</li>
+      <div className="mt-2 flex items-start gap-3">
+        <span
+          className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+            active ? "bg-emerald-500/15 text-emerald-600" : "bg-muted text-muted-foreground",
           )}
-          {entries.map((e, i) => (
-            <li key={i} className={cn("flex gap-2", toneFor(e.level))}>
-              <span className="shrink-0 text-muted-foreground">
-                {new Date(e.ts).toLocaleTimeString([], { hour12: false })}
-              </span>
-              <span className="shrink-0 uppercase tracking-wider opacity-70">[{e.tag}]</span>
-              <span className="truncate">{e.message}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+        >
+          {active ? <CheckCircle2 className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">
+            {active ? "✅ SMS Detection Active" : "SMS Detection Paused"}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {active ? "Listening for UPI and banking alerts" : "Enable to detect UPI & banking alerts"}
+          </p>
+          {active && lastEventAt && (
+            <p className="mt-2 text-xs">
+              <span className="text-muted-foreground">Last Detected:</span>{" "}
+              <span className="font-medium">{formatRelative(lastEventAt)}</span>
+            </p>
+          )}
+          {!active && (
+            <Button size="sm" className="mt-3 h-8" onClick={onEnable}>
+              Enable SMS Detection
+            </Button>
+          )}
+        </div>
+      </div>
     </Card>
   );
 }
+
