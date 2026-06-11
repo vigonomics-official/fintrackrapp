@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
-import { Search, Pencil, Trash2, Download, Upload, MoreVertical, Filter } from "lucide-react";
+import { Search, Pencil, Trash2, Download, Upload, MoreVertical, Filter, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/error-utils";
 import { useQueryClient } from "@tanstack/react-query";
