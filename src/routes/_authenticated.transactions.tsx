@@ -81,6 +81,44 @@ function TransactionsPage() {
     return { inc, exp };
   }, [filtered]);
 
+  const uncategorized = useMemo(
+    () => rangeTxs.filter((t) => !t.category_id && t.type !== "transfer"),
+    [rangeTxs],
+  );
+  const [fixingCats, setFixingCats] = useState(false);
+
+  const fixUncategorized = async () => {
+    if (!user || uncategorized.length === 0) return;
+    setFixingCats(true);
+    try {
+      const summary: Record<string, number> = {};
+      const updates: { id: string; category_id: string }[] = [];
+      for (const t of uncategorized) {
+        const merchant = (t.notes ?? "").split(" — ")[0] ?? "";
+        if (!merchant) continue;
+        const { category_id } = categorize(merchant, categories);
+        if (!category_id) continue;
+        updates.push({ id: t.id, category_id });
+        const name = categories.find((c) => c.id === category_id)?.name ?? "Other";
+        summary[name] = (summary[name] ?? 0) + 1;
+      }
+      for (const u of updates) {
+        await supabase.from("transactions").update({ category_id: u.category_id }).eq("id", u.id);
+      }
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      const lines = Object.entries(summary).map(([k, v]) => `${k}: ${v}`).join(" · ");
+      toast.success(
+        updates.length
+          ? `Categorized ${updates.length} transactions — ${lines}`
+          : "No matching rules found for remaining transactions",
+      );
+    } catch (err: any) {
+      toast.error(friendlyError(err, "Could not auto-categorize"));
+    } finally {
+      setFixingCats(false);
+    }
+  };
+
   const onDelete = async (id: string) => {
     if (!confirm("Delete this transaction?")) return;
     const { error } = await supabase.from("transactions").delete().eq("id", id);
