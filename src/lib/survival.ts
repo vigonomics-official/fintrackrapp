@@ -60,19 +60,33 @@ export function computeSurvival(opts: {
       ? cycleDaysUntilSalary(payDay, now)
       : Math.max(0, Math.ceil((next.getTime() - now.getTime()) / 86_400_000));
 
-  // --- 2. Salary amount: prefer configured settings; fall back to actual income in this cycle
-  const cycleIncome = transactions
-    .filter((t) => t.type === "income" && new Date(t.transaction_date) >= last)
+  // --- 2. Restrict ALL planner math to the current pay cycle (last salary → today).
+  // String-based YYYY-MM-DD comparison avoids timezone drift from `new Date("YYYY-MM-DD")`
+  // parsing as UTC midnight (which in IST is the previous day) and guarantees historical
+  // imports from earlier months never bleed into current-cycle calculations.
+  const toKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const lastKey = toKey(last);
+  const todayKey = toKey(now);
+  const inCurrentCycle = (t: Tx) => {
+    const k = String(t.transaction_date).slice(0, 10);
+    return k >= lastKey && k <= todayKey;
+  };
+  const cycleTxs = transactions.filter(inCurrentCycle);
+
+  // Salary amount: prefer configured settings; fall back to income in this cycle only.
+  const cycleIncome = cycleTxs
+    .filter((t) => t.type === "income")
     .reduce((s, t) => s + Number(t.amount), 0);
   const salary =
     salarySettings.amount != null && salarySettings.amount > 0
       ? salarySettings.amount
       : cycleIncome;
 
-  // --- 3. Spending this cycle / today
+  // --- 3. Spending this cycle / today (current cycle only — historical txs excluded)
   const expensesSinceSalary =
-    transactions
-      .filter((t) => t.type === "expense" && new Date(t.transaction_date) >= last)
+    cycleTxs
+      .filter((t) => t.type === "expense")
       .reduce((s, t) => s + Number(t.amount), 0) + extraSpend;
   const salaryLeft = Math.max(0, salary - expensesSinceSalary);
 
