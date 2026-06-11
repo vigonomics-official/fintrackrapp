@@ -94,9 +94,8 @@ export function computeSurvival(opts: {
   // remaining balance is what's safe to spend today.
   const safeDaily = daysRemaining <= 0 ? salaryLeft : salaryLeft / Math.max(1, daysRemaining);
 
-  const todayKey = now.toISOString().slice(0, 10);
   const spentToday =
-    transactions
+    cycleTxs
       .filter((t) => t.type === "expense" && String(t.transaction_date).slice(0, 10) === todayKey)
       .reduce((s, t) => s + Number(t.amount), 0) + extraSpend;
 
