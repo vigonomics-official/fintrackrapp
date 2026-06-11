@@ -105,7 +105,26 @@ function MonthlyPlan() {
   const s = useSurvival();
   const { data: loans = [] } = useLoans();
   const outstanding = loans.reduce((a, l) => a + Number(l.remaining_balance || 0), 0);
-  const safe = s.forecastBalance >= 0;
+  const forecast = s.forecastBalance;
+  const forecastTone =
+    forecast > 0
+      ? "text-success"
+      : forecast >= -2000
+        ? "text-gold-foreground"
+        : "text-destructive";
+  const forecastBorder =
+    forecast > 0
+      ? "border-success/30 bg-success/5"
+      : forecast >= -2000
+        ? "border-gold/30 bg-gold/10"
+        : "border-destructive/30 bg-destructive/5";
+  const forecastLabel =
+    forecast > 0
+      ? "Expected savings at month end"
+      : forecast >= -2000
+        ? "Slight overspend risk"
+        : "High risk — reduce daily spend";
+  const safe = forecast >= 0;
   const zone =
     s.score >= 70
       ? { dot: "🟢", label: "Safe Zone", tone: "bg-success/20 text-success" }
@@ -157,18 +176,14 @@ function MonthlyPlan() {
       </div>
 
       {/* Month-End Forecast */}
-      <Card className={cn("border shadow-soft", safe ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5")}>
+      <Card className={cn("border shadow-soft", forecastBorder)}>
         <CardContent className="space-y-1 p-4">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
-          <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? (safe ? "text-success" : "text-destructive") : "")}>
-            {s.hasIncome ? formatCurrency(Math.max(s.forecastBalance, s.forecastBalance), s.currency) : "—"}
+          <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? forecastTone : "")}>
+            {s.hasIncome ? formatCurrency(forecast, s.currency) : "—"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {!s.hasIncome
-              ? "Add salary to forecast your month-end balance."
-              : safe
-                ? "Expected balance at next payday — you're on track."
-                : "⚠ Risk of running out before salary. Trim daily spend."}
+            {!s.hasIncome ? "Add salary to forecast your month-end balance." : forecastLabel}
           </p>
         </CardContent>
       </Card>
