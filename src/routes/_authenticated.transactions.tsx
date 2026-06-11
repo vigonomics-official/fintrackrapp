@@ -241,6 +241,28 @@ function TransactionsPage() {
         />
 
 
+        {/* Fix uncategorized */}
+        {uncategorized.length > 0 && (
+          <Card className="border-orange-200 bg-orange-50 shadow-soft dark:border-orange-900/50 dark:bg-orange-950/30">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-300">
+                  <Sparkles className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Fix uncategorized</p>
+                  <p className="text-xs text-muted-foreground">
+                    You have {uncategorized.length} uncategorized {uncategorized.length === 1 ? "transaction" : "transactions"}.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" onClick={fixUncategorized} disabled={fixingCats} className="bg-orange-600 hover:bg-orange-700">
+                {fixingCats ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Working…</> : <><Sparkles className="mr-2 h-4 w-4" /> Auto-Categorize All</>}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Search + filter toggle */}
         <Card className="shadow-soft">
           <CardContent className="space-y-3 p-3">
@@ -310,8 +332,11 @@ function TransactionsPage() {
                             .replace(/[•|·]+/g, " ")
                             .replace(/\s{2,}/g, " ")
                             .trim();
-                          const title = cleanTitle || c?.name || "Uncategorized";
+                          const title = cleanTitle || c?.name || "Unknown Merchant";
                           const pmLabel = t.payment_method.replace("_", " ").toUpperCase();
+                          const isUncategorized = !c && t.type !== "transfer";
+                          const iconBg = isUncategorized ? "#f9731614" : (c?.color ?? "#94a3b8") + "1f";
+                          const iconColor = isUncategorized ? "#ea580c" : (c?.color ?? "#64748b");
                           return (
                             <li key={t.id} className="group flex items-center gap-2 px-3 py-3 transition-colors hover:bg-muted/40">
                               <button
@@ -321,18 +346,22 @@ function TransactionsPage() {
                               >
                                 <span
                                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-                                  style={{ background: (c?.color ?? "#94a3b8") + "1f", color: c?.color ?? "#64748b" }}
+                                  style={{ background: iconBg, color: iconColor }}
                                 >
-                                  {(c?.name ?? title).charAt(0).toUpperCase()}
+                                  {title.charAt(0).toUpperCase()}
                                 </span>
                                 <div className="min-w-0 flex-1">
                                   <p className="truncate text-[14px] font-medium leading-tight text-foreground">{title}</p>
                                   <div className="mt-1 flex items-center gap-1.5">
-                                    {c?.name && (
+                                    {c?.name ? (
                                       <span className="truncate rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                                         {c.name}
                                       </span>
-                                    )}
+                                    ) : isUncategorized ? (
+                                      <span className="truncate rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                        Uncategorized
+                                      </span>
+                                    ) : null}
                                     <span className="shrink-0 rounded-full bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                                       {pmLabel}
                                     </span>
