@@ -1,4 +1,5 @@
 import type { Category, Transaction } from "@/hooks/use-finance";
+import { getMemory, normalizeMerchant } from "@/lib/categorization";
 
 export type ImportSource = "gpay" | "phonepe" | "paytm" | "bank" | "credit_card" | "generic";
 
@@ -264,18 +265,33 @@ const MERCHANT_RULES: { match: RegExp; category: string; type?: "income" | "expe
 ];
 
 export function categorize(merchant: string, categories: Category[]): { category_id: string | null; type?: "income" | "expense" } {
-  // Brand registry first (precise)
+  // 1) Learned merchant memory wins (user has previously corrected this merchant)
+  const key = normalizeMerchant(merchant);
+  if (key) {
+    const memory = getMemory();
+    const mem = memory.find((m) => key.includes(m.key) || m.key.includes(key));
+    if (mem) {
+      const cat = categories.find((c) => c.name.toLowerCase() === mem.category.toLowerCase());
+      if (cat) return { category_id: cat.id };
+    }
+  }
+  // 2) Brand registry (precise)
   const brand = detectBrand(merchant);
   if (brand) {
     const cat = categories.find((c) => c.name.toLowerCase() === brand.category.toLowerCase());
     if (cat) return { category_id: cat.id, type: brand.type };
   }
-  // Fuzzy fallback
+  // 3) Fuzzy fallback
   for (const rule of MERCHANT_RULES) {
     if (rule.match.test(merchant)) {
       const cat = categories.find((c) => c.name.toLowerCase() === rule.category.toLowerCase());
       if (cat) return { category_id: cat.id, type: rule.type };
     }
+  }
+  // 4) Detect person-to-person transfers
+  if (/^(paid to|received from|transfer to|sent to)\s+[A-Z][a-z]+/i.test(merchant)) {
+    const cat = categories.find((c) => /personal\s*transfer/i.test(c.name));
+    if (cat) return { category_id: cat.id };
   }
   return { category_id: null };
 }

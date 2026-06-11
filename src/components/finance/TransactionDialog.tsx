@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/error-utils";
 import { supabase } from "@/integrations/supabase/client";
+import { rememberMerchant } from "@/lib/categorization";
 import { useAuth } from "@/lib/auth-context";
 import { useCategories, type Transaction } from "@/hooks/use-finance";
 import { PAYMENT_METHODS } from "@/lib/constants";
@@ -126,6 +127,12 @@ export function TransactionDialog({
     const { error } = await op;
     setSubmitting(false);
     if (error) return toast.error(friendlyError(error));
+    // Learn merchant → category mapping so future imports auto-categorize
+    if (values.category_id && values.notes?.trim()) {
+      const catName = categories.find((c) => c.id === values.category_id)?.name;
+      const merchant = values.notes.trim().split(" — ")[0];
+      if (catName && merchant) rememberMerchant(merchant, catName, values.amount, true);
+    }
     toast.success(edit ? "Transaction updated" : "Transaction added");
     qc.invalidateQueries({ queryKey: ["transactions"] });
     onOpenChange(false);
