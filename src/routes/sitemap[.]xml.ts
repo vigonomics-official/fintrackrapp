@@ -18,6 +18,11 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/login", changefreq: "monthly", priority: "0.5" },
           { path: "/signup", changefreq: "monthly", priority: "0.6" },
           { path: "/forgot-password", changefreq: "yearly", priority: "0.3" },
+          { path: "/reset-password", changefreq: "yearly", priority: "0.2" },
+          { path: "/onboarding", changefreq: "monthly", priority: "0.4" },
+          { path: "/dashboard", changefreq: "weekly", priority: "0.7" },
+          { path: "/budgets", changefreq: "monthly", priority: "0.6" },
+          { path: "/categories", changefreq: "monthly", priority: "0.5" },
         ];
 
         const urls = entries.map((e) =>
