@@ -19,7 +19,21 @@ import { useProfile } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/goals")({ component: Goals });
+export const Route = createFileRoute("/_authenticated/goals")({
+  component: Goals,
+  head: () => ({
+    meta: [
+      { title: "Savings Goals — FinTrackr" },
+      { name: "description", content: "Plan and track savings goals with progress and target dates." },
+      { property: "og:title", content: "Savings Goals — FinTrackr" },
+      { property: "og:description", content: "Plan and track savings goals with progress and target dates." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/goals" },
+      { name: "twitter:title", content: "Savings Goals — FinTrackr" },
+      { name: "twitter:description", content: "Plan and track savings goals with progress and target dates." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/goals" }],
+  }),
+});
 
 type GoalKind = "savings" | "emergency" | "fire" | "debt" | "investment" | "travel" | "gadget" | "custom";
 

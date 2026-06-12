@@ -25,6 +25,18 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/smart-categorization")({
   component: SmartCategorizationPage,
+  head: () => ({
+    meta: [
+      { title: "Smart Categorization — FinTrackr" },
+      { name: "description", content: "Self-learning merchant rules that auto-tag your transactions." },
+      { property: "og:title", content: "Smart Categorization — FinTrackr" },
+      { property: "og:description", content: "Self-learning merchant rules that auto-tag your transactions." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/smart-categorization" },
+      { name: "twitter:title", content: "Smart Categorization — FinTrackr" },
+      { name: "twitter:description", content: "Self-learning merchant rules that auto-tag your transactions." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/smart-categorization" }],
+  }),
 });
 
 const FALLBACK_CATS = ["Food", "Dining", "Grocery", "Transport", "Fuel", "Shopping", "Subscription", "Recharge", "Bills", "Travel", "Health", "Entertainment", "Transfers", "Other"];

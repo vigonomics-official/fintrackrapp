@@ -16,7 +16,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { CURRENCIES } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 
-export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage });
+export const Route = createFileRoute("/_authenticated/settings")({
+  component: SettingsPage,
+  head: () => ({
+    meta: [
+      { title: "Settings — FinTrackr" },
+      { name: "description", content: "Profile, salary cycle, currency, and FinTrackr preferences." },
+      { property: "og:title", content: "Settings — FinTrackr" },
+      { property: "og:description", content: "Profile, salary cycle, currency, and FinTrackr preferences." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/settings" },
+      { name: "twitter:title", content: "Settings — FinTrackr" },
+      { name: "twitter:description", content: "Profile, salary cycle, currency, and FinTrackr preferences." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/settings" }],
+  }),
+});
 
 function SettingsPage() {
   const { user, signOut } = useAuth();

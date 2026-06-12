@@ -25,7 +25,21 @@ import { SpendingOverview } from "@/components/finance/SpendingOverview";
 import { TimeRangeFilter, computeRange, previousRange, type RangeKey, type DateRange } from "@/components/finance/TimeRangeFilter";
 import { cleanMerchant, cleanNotes, categorize, parseDate, parseAmount } from "@/lib/import-utils";
 
-export const Route = createFileRoute("/_authenticated/transactions")({ component: TransactionsPage });
+export const Route = createFileRoute("/_authenticated/transactions")({
+  component: TransactionsPage,
+  head: () => ({
+    meta: [
+      { title: "Transactions — FinTrackr" },
+      { name: "description", content: "Search, filter, and categorize every expense and income entry." },
+      { property: "og:title", content: "Transactions — FinTrackr" },
+      { property: "og:description", content: "Search, filter, and categorize every expense and income entry." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/transactions" },
+      { name: "twitter:title", content: "Transactions — FinTrackr" },
+      { name: "twitter:description", content: "Search, filter, and categorize every expense and income entry." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/transactions" }],
+  }),
+});
 
 function TransactionsPage() {
   const { user } = useAuth();

@@ -24,6 +24,18 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/sms-intelligence")({
   component: SmsIntelligencePage,
+  head: () => ({
+    meta: [
+      { title: "SMS Intelligence — FinTrackr" },
+      { name: "description", content: "Auto-detect UPI and bank SMS transactions into your ledger." },
+      { property: "og:title", content: "SMS Intelligence — FinTrackr" },
+      { property: "og:description", content: "Auto-detect UPI and bank SMS transactions into your ledger." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/sms-intelligence" },
+      { name: "twitter:title", content: "SMS Intelligence — FinTrackr" },
+      { name: "twitter:description", content: "Auto-detect UPI and bank SMS transactions into your ledger." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/sms-intelligence" }],
+  }),
 });
 
 type Detected = {

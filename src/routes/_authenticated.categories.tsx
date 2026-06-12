@@ -22,7 +22,21 @@ import { PageHeader } from "@/components/finance/PageHeader";
 import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/categories")({ component: CategoriesPage });
+export const Route = createFileRoute("/_authenticated/categories")({
+  component: CategoriesPage,
+  head: () => ({
+    meta: [
+      { title: "Categories — FinTrackr" },
+      { name: "description", content: "Organize expenses with custom categories, icons, and colors." },
+      { property: "og:title", content: "Categories — FinTrackr" },
+      { property: "og:description", content: "Organize expenses with custom categories, icons, and colors." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/categories" },
+      { name: "twitter:title", content: "Categories — FinTrackr" },
+      { name: "twitter:description", content: "Organize expenses with custom categories, icons, and colors." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/categories" }],
+  }),
+});
 
 const COLORS = ["#0d7a5f", "#10b981", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899", "#ef4444", "#f97316", "#f59e0b", "#c9a84c"];
 

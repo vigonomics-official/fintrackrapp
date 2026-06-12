@@ -23,7 +23,21 @@ import { PageHeader } from "@/components/finance/PageHeader";
 import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/budgets")({ component: BudgetsPage });
+export const Route = createFileRoute("/_authenticated/budgets")({
+  component: BudgetsPage,
+  head: () => ({
+    meta: [
+      { title: "Budgets — FinTrackr" },
+      { name: "description", content: "Set monthly category budgets and track spending against safe limits." },
+      { property: "og:title", content: "Budgets — FinTrackr" },
+      { property: "og:description", content: "Set monthly category budgets and track spending against safe limits." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/budgets" },
+      { name: "twitter:title", content: "Budgets — FinTrackr" },
+      { name: "twitter:description", content: "Set monthly category budgets and track spending against safe limits." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/budgets" }],
+  }),
+});
 
 function BudgetsPage() {
   const { user } = useAuth();

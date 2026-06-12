@@ -31,7 +31,21 @@ import {
   type ImportSource, type StagedRow, type TargetField,
 } from "@/lib/import-utils";
 
-export const Route = createFileRoute("/_authenticated/import")({ component: ImportPage });
+export const Route = createFileRoute("/_authenticated/import")({
+  component: ImportPage,
+  head: () => ({
+    meta: [
+      { title: "Import Transactions — FinTrackr" },
+      { name: "description", content: "Import GPay, bank, and CSV statements with auto-categorization." },
+      { property: "og:title", content: "Import Transactions — FinTrackr" },
+      { property: "og:description", content: "Import GPay, bank, and CSV statements with auto-categorization." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/import" },
+      { name: "twitter:title", content: "Import Transactions — FinTrackr" },
+      { name: "twitter:description", content: "Import GPay, bank, and CSV statements with auto-categorization." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/import" }],
+  }),
+});
 
 type Step = "source" | "upload" | "mapping" | "preview" | "success";
 
