@@ -45,9 +45,16 @@ export function computeSurvival(opts: {
 }): Survival {
   const { transactions, loans, salarySettings, extraSpend = 0, now = new Date() } = opts;
 
-  // --- 1. Pay-cycle window driven by Salary Settings (single source of truth)
+  // --- 1. Determine cycle start. Prefer the most recent INCOME transaction date
+  // (real salary credit). Fall back to the payDay from Salary Settings, then to
+  // first-of-month. Use the more recent of (settings-derived last salary day) and
+  // (latest income tx) so an early/late actual credit always wins.
   const payDay = salarySettings.payDay;
-  const last =
+  const toKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const todayKey = toKey(now);
+
+  const settingsLast =
     payDay != null
       ? cycleLastSalaryDate(payDay, now)
       : new Date(now.getFullYear(), now.getMonth(), 1);
@@ -55,26 +62,32 @@ export function computeSurvival(opts: {
     payDay != null
       ? cycleNextSalaryDate(payDay, now)
       : new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const incomeKeys = transactions
+    .filter((t) => t.type === "income")
+    .map((t) => String(t.transaction_date).slice(0, 10))
+    .filter((k) => k <= todayKey)
+    .sort();
+  const latestIncomeKey = incomeKeys.length ? incomeKeys[incomeKeys.length - 1] : null;
+
+  const settingsLastKey = toKey(settingsLast);
+  const cycleStartKey =
+    latestIncomeKey && latestIncomeKey > settingsLastKey ? latestIncomeKey : settingsLastKey;
+  const [csY, csM, csD] = cycleStartKey.split("-").map(Number);
+  const last = new Date(csY, csM - 1, csD);
+
   const daysRemaining =
     payDay != null
       ? cycleDaysUntilSalary(payDay, now)
       : Math.max(0, Math.ceil((next.getTime() - now.getTime()) / 86_400_000));
 
-  // --- 2. Restrict ALL planner math to the current pay cycle (last salary → today).
-  // String-based YYYY-MM-DD comparison avoids timezone drift from `new Date("YYYY-MM-DD")`
-  // parsing as UTC midnight (which in IST is the previous day) and guarantees historical
-  // imports from earlier months never bleed into current-cycle calculations.
-  const toKey = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const lastKey = toKey(last);
-  const todayKey = toKey(now);
+  // --- 2. Restrict ALL planner math to the current pay cycle (cycle start → today).
   const inCurrentCycle = (t: Tx) => {
     const k = String(t.transaction_date).slice(0, 10);
-    return k >= lastKey && k <= todayKey;
+    return k >= cycleStartKey && k <= todayKey;
   };
   const cycleTxs = transactions.filter(inCurrentCycle);
 
-  // Salary amount: prefer configured settings; fall back to income in this cycle only.
   const cycleIncome = cycleTxs
     .filter((t) => t.type === "income")
     .reduce((s, t) => s + Number(t.amount), 0);
@@ -90,8 +103,6 @@ export function computeSurvival(opts: {
       .reduce((s, t) => s + Number(t.amount), 0) + extraSpend;
   const salaryLeft = Math.max(0, salary - expensesSinceSalary);
 
-  // safe-daily: divide by remaining days; on the salary day itself, the
-  // remaining balance is what's safe to spend today.
   const safeDaily = daysRemaining <= 0 ? salaryLeft : salaryLeft / Math.max(1, daysRemaining);
 
   const spentToday =
@@ -117,11 +128,32 @@ export function computeSurvival(opts: {
       : Math.max(0, 20 - ((spentToday - safeDaily) / Math.max(1, safeDaily)) * 20);
   const score = Math.round(buffer + emiScore + pace);
 
-  // --- 6. Forecast
-  const cycleLengthDays = Math.max(1, Math.round((next.getTime() - last.getTime()) / 86_400_000));
-  const daysElapsed = Math.max(1, cycleLengthDays - daysRemaining);
+  // --- 6. Forecast: avgDaily × daysRemaining is projected remaining spend.
+  // daysElapsed counts whole days since cycle start, minimum 1.
+  const msPerDay = 86_400_000;
+  const daysElapsed = Math.max(
+    1,
+    Math.floor((now.getTime() - last.getTime()) / msPerDay) || 1,
+  );
   const avgDaily = expensesSinceSalary / daysElapsed;
-  const forecastBalance = Math.round(salaryLeft - avgDaily * Math.max(1, daysRemaining));
+  const projectedRemaining = avgDaily * Math.max(0, daysRemaining);
+  const forecastBalance = Math.round(salary - expensesSinceSalary - projectedRemaining);
+
+  if (typeof console !== "undefined") {
+    // Temporary debug — verify cycle math
+    // eslint-disable-next-line no-console
+    console.log("[Planner] cycle debug", {
+      cycleStart: cycleStartKey,
+      today: todayKey,
+      daysElapsed,
+      daysRemaining,
+      cycleExpenses: expensesSinceSalary,
+      avgDaily: Math.round(avgDaily),
+      projectedRemaining: Math.round(projectedRemaining),
+      salary,
+      forecastBalance,
+    });
+  }
 
   return {
     salary,
