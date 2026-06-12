@@ -107,23 +107,23 @@ function MonthlyPlan() {
   const outstanding = loans.reduce((a, l) => a + Number(l.remaining_balance || 0), 0);
   const forecast = s.forecastBalance;
   const forecastTone =
-    forecast > 0
+    forecast >= 1000
       ? "text-success"
-      : forecast >= -2000
+      : forecast >= 0
         ? "text-gold-foreground"
         : "text-destructive";
   const forecastBorder =
-    forecast > 0
+    forecast >= 1000
       ? "border-success/30 bg-success/5"
-      : forecast >= -2000
+      : forecast >= 0
         ? "border-gold/30 bg-gold/10"
         : "border-destructive/30 bg-destructive/5";
   const forecastLabel =
-    forecast > 0
-      ? "Expected savings at month end"
-      : forecast >= -2000
-        ? "Slight overspend risk"
-        : "High risk — reduce daily spend";
+    forecast >= 1000
+      ? `${formatCurrency(forecast, s.currency)} expected at month end 🎯`
+      : forecast >= 0
+        ? "Barely breaking even ⚠️"
+        : "Reduce daily spend to recover";
   const safe = forecast >= 0;
   const zone =
     s.score >= 70
