@@ -26,7 +26,21 @@ import { useProfile } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/split-settle")({ component: SplitSettle });
+export const Route = createFileRoute("/_authenticated/split-settle")({
+  component: SplitSettle,
+  head: () => ({
+    meta: [
+      { title: "Split & Settle — FinTrackr" },
+      { name: "description", content: "Split bills with friends and track who owes what." },
+      { property: "og:title", content: "Split & Settle — FinTrackr" },
+      { property: "og:description", content: "Split bills with friends and track who owes what." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/split-settle" },
+      { name: "twitter:title", content: "Split & Settle — FinTrackr" },
+      { name: "twitter:description", content: "Split bills with friends and track who owes what." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/split-settle" }],
+  }),
+});
 
 type Kind = "lend" | "borrow" | "split";
 type Status = "pending" | "partial" | "completed" | "overdue";

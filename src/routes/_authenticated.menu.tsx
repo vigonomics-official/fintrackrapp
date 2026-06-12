@@ -16,7 +16,21 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
 
-export const Route = createFileRoute("/_authenticated/menu")({ component: MenuPage });
+export const Route = createFileRoute("/_authenticated/menu")({
+  component: MenuPage,
+  head: () => ({
+    meta: [
+      { title: "Menu — FinTrackr" },
+      { name: "description", content: "Jump to any FinTrackr feature from one place." },
+      { property: "og:title", content: "Menu — FinTrackr" },
+      { property: "og:description", content: "Jump to any FinTrackr feature from one place." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/menu" },
+      { name: "twitter:title", content: "Menu — FinTrackr" },
+      { name: "twitter:description", content: "Jump to any FinTrackr feature from one place." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/menu" }],
+  }),
+});
 
 type Item = { label: string; icon: typeof Wallet; to?: string; badge?: string; description?: string };
 type Group = { title: string; tone?: "smart" | "default"; items: Item[] };

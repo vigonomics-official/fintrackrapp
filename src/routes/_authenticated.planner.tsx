@@ -17,7 +17,21 @@ import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/planner")({ component: PlannerPage });
+export const Route = createFileRoute("/_authenticated/planner")({
+  component: PlannerPage,
+  head: () => ({
+    meta: [
+      { title: "Planner — FinTrackr" },
+      { name: "description", content: "Salary-aware month-end forecast and safe daily spend planner." },
+      { property: "og:title", content: "Planner — FinTrackr" },
+      { property: "og:description", content: "Salary-aware month-end forecast and safe daily spend planner." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/planner" },
+      { name: "twitter:title", content: "Planner — FinTrackr" },
+      { name: "twitter:description", content: "Salary-aware month-end forecast and safe daily spend planner." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/planner" }],
+  }),
+});
 
 type TabKey = "monthly" | "allocation" | "loans" | "bills" | "goals" | "cibt";
 

@@ -4,7 +4,21 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/insights")({ component: InsightsPage });
+export const Route = createFileRoute("/_authenticated/insights")({
+  component: InsightsPage,
+  head: () => ({
+    meta: [
+      { title: "Insights — FinTrackr" },
+      { name: "description", content: "Smart spending insights, danger alerts, and weekly survival reports." },
+      { property: "og:title", content: "Insights — FinTrackr" },
+      { property: "og:description", content: "Smart spending insights, danger alerts, and weekly survival reports." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/insights" },
+      { name: "twitter:title", content: "Insights — FinTrackr" },
+      { name: "twitter:description", content: "Smart spending insights, danger alerts, and weekly survival reports." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/insights" }],
+  }),
+});
 
 const ITEMS = [
   {

@@ -12,7 +12,21 @@ import { useProfile } from "@/hooks/use-finance";
 import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/investments")({ component: Investments });
+export const Route = createFileRoute("/_authenticated/investments")({
+  component: Investments,
+  head: () => ({
+    meta: [
+      { title: "Investments — FinTrackr" },
+      { name: "description", content: "Track mutual funds, stocks, and SIPs in one place." },
+      { property: "og:title", content: "Investments — FinTrackr" },
+      { property: "og:description", content: "Track mutual funds, stocks, and SIPs in one place." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/investments" },
+      { name: "twitter:title", content: "Investments — FinTrackr" },
+      { name: "twitter:description", content: "Track mutual funds, stocks, and SIPs in one place." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/investments" }],
+  }),
+});
 
 function Investments() {
   const { data: profile } = useProfile();

@@ -9,7 +9,21 @@ import { useTransactions, useCategories, useProfile } from "@/hooks/use-finance"
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 
-export const Route = createFileRoute("/_authenticated/reports")({ component: ReportsPage });
+export const Route = createFileRoute("/_authenticated/reports")({
+  component: ReportsPage,
+  head: () => ({
+    meta: [
+      { title: "Reports & Insights — FinTrackr" },
+      { name: "description", content: "Monthly trends, category breakdowns, and savings rate." },
+      { property: "og:title", content: "Reports & Insights — FinTrackr" },
+      { property: "og:description", content: "Monthly trends, category breakdowns, and savings rate." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/reports" },
+      { name: "twitter:title", content: "Reports & Insights — FinTrackr" },
+      { name: "twitter:description", content: "Monthly trends, category breakdowns, and savings rate." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/reports" }],
+  }),
+});
 
 function ReportsPage() {
   const { data: txs = [] } = useTransactions();

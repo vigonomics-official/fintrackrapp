@@ -38,7 +38,21 @@ import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 
-export const Route = createFileRoute("/_authenticated/loans")({ component: LoansPage });
+export const Route = createFileRoute("/_authenticated/loans")({
+  component: LoansPage,
+  head: () => ({
+    meta: [
+      { title: "Loans & EMIs — FinTrackr" },
+      { name: "description", content: "Manage loans, EMIs, and prepayment plans without month-end stress." },
+      { property: "og:title", content: "Loans & EMIs — FinTrackr" },
+      { property: "og:description", content: "Manage loans, EMIs, and prepayment plans without month-end stress." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/loans" },
+      { name: "twitter:title", content: "Loans & EMIs — FinTrackr" },
+      { name: "twitter:description", content: "Manage loans, EMIs, and prepayment plans without month-end stress." },
+    ],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/loans" }],
+  }),
+});
 
 const LOAN_TYPES: { value: LoanType; label: string; icon: typeof Home }[] = [
   { value: "home", label: "Home Loan", icon: Home },
