@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
-import { Search, Pencil, Trash2, Download, Upload, MoreVertical, Filter, Sparkles, Loader2 } from "lucide-react";
+import { Search, Pencil, Trash2, Download, Upload, MoreVertical, Filter, Sparkles, Loader2, CheckSquare, X, Inbox } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/error-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -24,6 +25,8 @@ import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
 import { SpendingOverview } from "@/components/finance/SpendingOverview";
 import { TimeRangeFilter, computeRange, previousRange, type RangeKey, type DateRange } from "@/components/finance/TimeRangeFilter";
 import { cleanMerchant, cleanNotes, categorize, parseDate, parseAmount } from "@/lib/import-utils";
+import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { lastSalaryDate } from "@/lib/salary-cycle";
 
 export const Route = createFileRoute("/_authenticated/transactions")({
   component: TransactionsPage,
