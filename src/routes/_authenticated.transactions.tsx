@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
-import { Search, Pencil, Trash2, Download, Upload, MoreVertical, Filter, Sparkles, Loader2 } from "lucide-react";
+import { Search, Pencil, Trash2, Download, Upload, MoreVertical, Filter, Sparkles, Loader2, CheckSquare, X, Inbox } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/error-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -24,6 +25,8 @@ import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
 import { SpendingOverview } from "@/components/finance/SpendingOverview";
 import { TimeRangeFilter, computeRange, previousRange, type RangeKey, type DateRange } from "@/components/finance/TimeRangeFilter";
 import { cleanMerchant, cleanNotes, categorize, parseDate, parseAmount } from "@/lib/import-utils";
+import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { lastSalaryDate } from "@/lib/salary-cycle";
 
 export const Route = createFileRoute("/_authenticated/transactions")({
   component: TransactionsPage,
@@ -61,8 +64,49 @@ function TransactionsPage() {
   const [rangeKey, setRangeKey] = useState<RangeKey>("month");
   const todayIso = new Date().toISOString().slice(0, 10);
   const [customRange, setCustomRange] = useState<DateRange>({ from: todayIso, to: todayIso });
-  const range = useMemo(() => computeRange(rangeKey, customRange), [rangeKey, customRange]);
+  const { settings: salarySettings } = useSalarySettings();
+  const baseRange = useMemo(() => computeRange(rangeKey, customRange), [rangeKey, customRange]);
+  // For "Month": align with current salary cycle (most recent salary tx, else payDay setting).
+  const range = useMemo<DateRange>(() => {
+    if (rangeKey !== "month") return baseRange;
+    const salaryTxs = txs
+      .filter((t) => t.type === "income")
+      .map((t) => t.transaction_date)
+      .sort();
+    const lastSalaryTx = salaryTxs.length ? salaryTxs[salaryTxs.length - 1] : null;
+    const payDay = salarySettings.payDay ?? 1;
+    const cycleStart = lastSalaryTx ?? lastSalaryDate(payDay).toISOString().slice(0, 10);
+    return { from: cycleStart, to: baseRange.to };
+  }, [rangeKey, baseRange, txs, salarySettings.payDay]);
   const prevRange = useMemo(() => previousRange(rangeKey, range), [rangeKey, range]);
+
+  // Bulk select mode
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkCat, setBulkCat] = useState<string>("");
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const exitSelect = () => { setSelectMode(false); setSelected(new Set()); };
+
+  // Import success banner
+  const [importBanner, setImportBanner] = useState<{ count: number; ts: number } | null>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("fintrackr:last_import");
+      if (!raw) return;
+      const data = JSON.parse(raw) as { count: number; ts: number };
+      const dismissed = Number(localStorage.getItem("fintrackr:last_import_dismissed") ?? 0);
+      if (data.ts > dismissed) setImportBanner(data);
+    } catch {}
+  }, []);
+  const dismissBanner = () => {
+    try { localStorage.setItem("fintrackr:last_import_dismissed", String(Date.now())); } catch {}
+    setImportBanner(null);
+  };
 
   const inRange = (d: string, r: DateRange) => d >= r.from && d <= r.to;
   const rangeTxs = useMemo(() => txs.filter(t => inRange(t.transaction_date, range)), [txs, range]);
@@ -215,6 +259,37 @@ function TransactionsPage() {
     return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: dt.getFullYear() === today.getFullYear() ? undefined : "numeric" });
   };
 
+  const rangeLabel = useMemo(() => {
+    const count = filtered.length;
+    const base =
+      rangeKey === "week" ? "This Week"
+      : rangeKey === "month" ? "This Cycle"
+      : rangeKey === "year" ? "This Year"
+      : "Custom Range";
+    return `Showing: ${base} (${count} ${count === 1 ? "transaction" : "transactions"})`;
+  }, [rangeKey, filtered.length]);
+
+  const bulkCategorize = async () => {
+    if (!bulkCat || selected.size === 0) return;
+    const ids = Array.from(selected);
+    const { error } = await supabase.from("transactions").update({ category_id: bulkCat }).in("id", ids);
+    if (error) return toast.error(friendlyError(error));
+    toast.success(`Categorized ${ids.length} transactions`);
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+    exitSelect();
+  };
+
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`Delete ${selected.size} transactions? This cannot be undone.`)) return;
+    const ids = Array.from(selected);
+    const { error } = await supabase.from("transactions").delete().in("id", ids);
+    if (error) return toast.error(friendlyError(error));
+    toast.success(`Deleted ${ids.length} transactions`);
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+    exitSelect();
+  };
+
   return (
     <div>
       <ExpensesTabs />
@@ -224,6 +299,14 @@ function TransactionsPage() {
         action={
           <>
             <input ref={fileRef} type="file" accept=".csv" hidden onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
+            <Button
+              variant={selectMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => (selectMode ? exitSelect() : setSelectMode(true))}
+            >
+              <CheckSquare className="h-4 w-4 md:mr-1" />
+              <span className="hidden md:inline">{selectMode ? "Cancel" : "Select"}</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
               <Upload className="h-4 w-4 md:mr-1" /><span className="hidden md:inline">Import</span>
             </Button>
@@ -235,6 +318,34 @@ function TransactionsPage() {
       />
 
       <div className="space-y-4 px-5 py-5 md:px-10">
+        {/* Date range indicator */}
+        <p className="text-[12px] text-muted-foreground">{rangeLabel}</p>
+
+        {/* Import success banner */}
+        {importBanner && (
+          <Card className="border-sky-200 bg-sky-50 shadow-soft dark:border-sky-900/50 dark:bg-sky-950/30">
+            <CardContent className="flex items-center gap-3 p-4">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600 dark:bg-sky-900/50 dark:text-sky-300">
+                <Inbox className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">📥 Data Imported Successfully</p>
+                <p className="text-xs text-muted-foreground">
+                  {importBanner.count} transactions added
+                  {uncategorized.length > 0 ? ` · ${uncategorized.length} need a category` : ""}
+                </p>
+              </div>
+              {uncategorized.length > 0 && (
+                <Button size="sm" onClick={fixUncategorized} disabled={fixingCats} className="bg-sky-600 hover:bg-sky-700">
+                  Categorize Now →
+                </Button>
+              )}
+              <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={dismissBanner} aria-label="Dismiss">
+                <X className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         {/* Time range filter */}
         <TimeRangeFilter
           value={rangeKey}
@@ -346,23 +457,37 @@ function TransactionsPage() {
                             .replace(/[•|·]+/g, " ")
                             .replace(/\s{2,}/g, " ")
                             .trim();
-                          const title = cleanTitle || c?.name || "Unknown Merchant";
+                          const fullTitle = cleanTitle || c?.name || "Unknown Merchant";
+                          const title = fullTitle.length > 20 ? fullTitle.slice(0, 20).trimEnd() + "…" : fullTitle;
                           const pmLabel = t.payment_method.replace("_", " ").toUpperCase();
                           const isUncategorized = !c && t.type !== "transfer";
                           const iconBg = isUncategorized ? "#f9731614" : (c?.color ?? "#94a3b8") + "1f";
                           const iconColor = isUncategorized ? "#ea580c" : (c?.color ?? "#64748b");
+                          const isChecked = selected.has(t.id);
                           return (
                             <li key={t.id} className="group flex items-center gap-2 px-3 py-3 transition-colors hover:bg-muted/40">
+                              {selectMode && (
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={() => toggleSelect(t.id)}
+                                  aria-label="Select"
+                                  className="ml-1"
+                                />
+                              )}
                               <button
-                                onClick={() => { setEditing(t); setDialogOpen(true); }}
+                                onClick={() => {
+                                  if (selectMode) { toggleSelect(t.id); return; }
+                                  setEditing(t); setDialogOpen(true);
+                                }}
                                 className="flex min-w-0 flex-1 items-center gap-3 text-left"
                                 aria-label={`View ${title}`}
+                                title={fullTitle}
                               >
                                 <span
                                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
                                   style={{ background: iconBg, color: iconColor }}
                                 >
-                                  {title.charAt(0).toUpperCase()}
+                                  {fullTitle.charAt(0).toUpperCase()}
                                 </span>
                                 <div className="min-w-0 flex-1">
                                   <p className="truncate text-[14px] font-medium leading-tight text-foreground">{title}</p>
@@ -388,21 +513,23 @@ function TransactionsPage() {
                                   {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}{formatCurrency(t.amount, currency)}
                                 </p>
                               </button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 opacity-60 group-hover:opacity-100" aria-label="More">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => { setEditing(t); setDialogOpen(true); }}>
-                                    <Pencil className="mr-2 h-4 w-4" /> View / Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => onDelete(t.id)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {!selectMode && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 opacity-60 group-hover:opacity-100" aria-label="More">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => { setEditing(t); setDialogOpen(true); }}>
+                                      <Pencil className="mr-2 h-4 w-4" /> View / Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onDelete(t.id)} className="text-destructive focus:text-destructive">
+                                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </li>
                           );
                         })}
@@ -415,6 +542,25 @@ function TransactionsPage() {
           </div>
         )}
       </div>
+
+      {selectMode && selected.size > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 shadow-elegant backdrop-blur md:left-64">
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-foreground">{selected.size} Selected</span>
+            <Select value={bulkCat} onValueChange={setBulkCat}>
+              <SelectTrigger className="h-9 w-44"><SelectValue placeholder="Pick category" /></SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={bulkCategorize} disabled={!bulkCat}>Categorize</Button>
+            <Button size="sm" variant="destructive" onClick={bulkDelete}>Delete</Button>
+            <Button size="sm" variant="ghost" onClick={exitSelect} className="ml-auto">Done</Button>
+          </div>
+        </div>
+      )}
 
       <TransactionDialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditing(undefined); }} edit={editing} />
     </div>
