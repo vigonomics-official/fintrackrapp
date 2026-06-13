@@ -457,23 +457,37 @@ function TransactionsPage() {
                             .replace(/[•|·]+/g, " ")
                             .replace(/\s{2,}/g, " ")
                             .trim();
-                          const title = cleanTitle || c?.name || "Unknown Merchant";
+                          const fullTitle = cleanTitle || c?.name || "Unknown Merchant";
+                          const title = fullTitle.length > 20 ? fullTitle.slice(0, 20).trimEnd() + "…" : fullTitle;
                           const pmLabel = t.payment_method.replace("_", " ").toUpperCase();
                           const isUncategorized = !c && t.type !== "transfer";
                           const iconBg = isUncategorized ? "#f9731614" : (c?.color ?? "#94a3b8") + "1f";
                           const iconColor = isUncategorized ? "#ea580c" : (c?.color ?? "#64748b");
+                          const isChecked = selected.has(t.id);
                           return (
                             <li key={t.id} className="group flex items-center gap-2 px-3 py-3 transition-colors hover:bg-muted/40">
+                              {selectMode && (
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={() => toggleSelect(t.id)}
+                                  aria-label="Select"
+                                  className="ml-1"
+                                />
+                              )}
                               <button
-                                onClick={() => { setEditing(t); setDialogOpen(true); }}
+                                onClick={() => {
+                                  if (selectMode) { toggleSelect(t.id); return; }
+                                  setEditing(t); setDialogOpen(true);
+                                }}
                                 className="flex min-w-0 flex-1 items-center gap-3 text-left"
                                 aria-label={`View ${title}`}
+                                title={fullTitle}
                               >
                                 <span
                                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
                                   style={{ background: iconBg, color: iconColor }}
                                 >
-                                  {title.charAt(0).toUpperCase()}
+                                  {fullTitle.charAt(0).toUpperCase()}
                                 </span>
                                 <div className="min-w-0 flex-1">
                                   <p className="truncate text-[14px] font-medium leading-tight text-foreground">{title}</p>
@@ -499,21 +513,23 @@ function TransactionsPage() {
                                   {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}{formatCurrency(t.amount, currency)}
                                 </p>
                               </button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 opacity-60 group-hover:opacity-100" aria-label="More">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => { setEditing(t); setDialogOpen(true); }}>
-                                    <Pencil className="mr-2 h-4 w-4" /> View / Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => onDelete(t.id)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {!selectMode && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 opacity-60 group-hover:opacity-100" aria-label="More">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => { setEditing(t); setDialogOpen(true); }}>
+                                      <Pencil className="mr-2 h-4 w-4" /> View / Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onDelete(t.id)} className="text-destructive focus:text-destructive">
+                                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </li>
                           );
                         })}
