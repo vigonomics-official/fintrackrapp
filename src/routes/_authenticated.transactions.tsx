@@ -299,6 +299,14 @@ function TransactionsPage() {
         action={
           <>
             <input ref={fileRef} type="file" accept=".csv" hidden onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
+            <Button
+              variant={selectMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => (selectMode ? exitSelect() : setSelectMode(true))}
+            >
+              <CheckSquare className="h-4 w-4 md:mr-1" />
+              <span className="hidden md:inline">{selectMode ? "Cancel" : "Select"}</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
               <Upload className="h-4 w-4 md:mr-1" /><span className="hidden md:inline">Import</span>
             </Button>
@@ -310,6 +318,34 @@ function TransactionsPage() {
       />
 
       <div className="space-y-4 px-5 py-5 md:px-10">
+        {/* Date range indicator */}
+        <p className="text-[12px] text-muted-foreground">{rangeLabel}</p>
+
+        {/* Import success banner */}
+        {importBanner && (
+          <Card className="border-sky-200 bg-sky-50 shadow-soft dark:border-sky-900/50 dark:bg-sky-950/30">
+            <CardContent className="flex items-center gap-3 p-4">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600 dark:bg-sky-900/50 dark:text-sky-300">
+                <Inbox className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">📥 Data Imported Successfully</p>
+                <p className="text-xs text-muted-foreground">
+                  {importBanner.count} transactions added
+                  {uncategorized.length > 0 ? ` · ${uncategorized.length} need a category` : ""}
+                </p>
+              </div>
+              {uncategorized.length > 0 && (
+                <Button size="sm" onClick={fixUncategorized} disabled={fixingCats} className="bg-sky-600 hover:bg-sky-700">
+                  Categorize Now →
+                </Button>
+              )}
+              <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={dismissBanner} aria-label="Dismiss">
+                <X className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         {/* Time range filter */}
         <TimeRangeFilter
           value={rangeKey}
