@@ -259,6 +259,37 @@ function TransactionsPage() {
     return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: dt.getFullYear() === today.getFullYear() ? undefined : "numeric" });
   };
 
+  const rangeLabel = useMemo(() => {
+    const count = filtered.length;
+    const base =
+      rangeKey === "week" ? "This Week"
+      : rangeKey === "month" ? "This Cycle"
+      : rangeKey === "year" ? "This Year"
+      : "Custom Range";
+    return `Showing: ${base} (${count} ${count === 1 ? "transaction" : "transactions"})`;
+  }, [rangeKey, filtered.length]);
+
+  const bulkCategorize = async () => {
+    if (!bulkCat || selected.size === 0) return;
+    const ids = Array.from(selected);
+    const { error } = await supabase.from("transactions").update({ category_id: bulkCat }).in("id", ids);
+    if (error) return toast.error(friendlyError(error));
+    toast.success(`Categorized ${ids.length} transactions`);
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+    exitSelect();
+  };
+
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`Delete ${selected.size} transactions? This cannot be undone.`)) return;
+    const ids = Array.from(selected);
+    const { error } = await supabase.from("transactions").delete().in("id", ids);
+    if (error) return toast.error(friendlyError(error));
+    toast.success(`Deleted ${ids.length} transactions`);
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+    exitSelect();
+  };
+
   return (
     <div>
       <ExpensesTabs />
