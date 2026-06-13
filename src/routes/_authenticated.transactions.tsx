@@ -64,8 +64,49 @@ function TransactionsPage() {
   const [rangeKey, setRangeKey] = useState<RangeKey>("month");
   const todayIso = new Date().toISOString().slice(0, 10);
   const [customRange, setCustomRange] = useState<DateRange>({ from: todayIso, to: todayIso });
-  const range = useMemo(() => computeRange(rangeKey, customRange), [rangeKey, customRange]);
+  const { settings: salarySettings } = useSalarySettings();
+  const baseRange = useMemo(() => computeRange(rangeKey, customRange), [rangeKey, customRange]);
+  // For "Month": align with current salary cycle (most recent salary tx, else payDay setting).
+  const range = useMemo<DateRange>(() => {
+    if (rangeKey !== "month") return baseRange;
+    const salaryTxs = txs
+      .filter((t) => t.type === "income")
+      .map((t) => t.transaction_date)
+      .sort();
+    const lastSalaryTx = salaryTxs.length ? salaryTxs[salaryTxs.length - 1] : null;
+    const payDay = salarySettings.payDay ?? 1;
+    const cycleStart = lastSalaryTx ?? lastSalaryDate(payDay).toISOString().slice(0, 10);
+    return { from: cycleStart, to: baseRange.to };
+  }, [rangeKey, baseRange, txs, salarySettings.payDay]);
   const prevRange = useMemo(() => previousRange(rangeKey, range), [rangeKey, range]);
+
+  // Bulk select mode
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkCat, setBulkCat] = useState<string>("");
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const exitSelect = () => { setSelectMode(false); setSelected(new Set()); };
+
+  // Import success banner
+  const [importBanner, setImportBanner] = useState<{ count: number; ts: number } | null>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("fintrackr:last_import");
+      if (!raw) return;
+      const data = JSON.parse(raw) as { count: number; ts: number };
+      const dismissed = Number(localStorage.getItem("fintrackr:last_import_dismissed") ?? 0);
+      if (data.ts > dismissed) setImportBanner(data);
+    } catch {}
+  }, []);
+  const dismissBanner = () => {
+    try { localStorage.setItem("fintrackr:last_import_dismissed", String(Date.now())); } catch {}
+    setImportBanner(null);
+  };
 
   const inRange = (d: string, r: DateRange) => d >= r.from && d <= r.to;
   const rangeTxs = useMemo(() => txs.filter(t => inRange(t.transaction_date, range)), [txs, range]);
