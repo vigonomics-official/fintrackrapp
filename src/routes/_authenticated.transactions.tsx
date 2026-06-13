@@ -543,6 +543,25 @@ function TransactionsPage() {
         )}
       </div>
 
+      {selectMode && selected.size > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 shadow-elegant backdrop-blur md:left-64">
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-foreground">{selected.size} Selected</span>
+            <Select value={bulkCat} onValueChange={setBulkCat}>
+              <SelectTrigger className="h-9 w-44"><SelectValue placeholder="Pick category" /></SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={bulkCategorize} disabled={!bulkCat}>Categorize</Button>
+            <Button size="sm" variant="destructive" onClick={bulkDelete}>Delete</Button>
+            <Button size="sm" variant="ghost" onClick={exitSelect} className="ml-auto">Done</Button>
+          </div>
+        </div>
+      )}
+
       <TransactionDialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditing(undefined); }} edit={editing} />
     </div>
   );
