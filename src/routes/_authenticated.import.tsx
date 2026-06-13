@@ -263,6 +263,12 @@ function ImportPage() {
         categorized: toImport.filter((r) => r.category_id).length,
       });
       setStep("success");
+      try {
+        localStorage.setItem(
+          "fintrackr:last_import",
+          JSON.stringify({ count: toImport.length, source, ts: Date.now() }),
+        );
+      } catch {}
       toast.success(`Imported ${toImport.length} transactions`);
     } catch (err: any) {
       toast.error(friendlyError(err, "Import failed"));
