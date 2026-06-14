@@ -233,13 +233,85 @@ function MonthlyPlan() {
 
 /* ---------- Next Action & Health Score ---------- */
 
-function NextActionCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
-  const actions: string[] = [];
-  if (s.forecastBalance < 0) actions.push(`Stay below ${formatCurrency(s.safeDaily, s.currency)}/day to recover`);
-  if (outstanding > 0 && s.monthlyEmi > 0) actions.push(`Add ${formatCurrency(Math.round(s.monthlyEmi * 0.1), s.currency)} extra EMI to close loans faster`);
-  if (s.salary > 0) actions.push(`Save ${formatCurrency(Math.round(s.salary * 0.1), s.currency)} this month (10% rule)`);
-  if (s.salaryLeft > 0) actions.push(`Avoid purchases above ${formatCurrency(Math.round(s.salaryLeft * 0.25), s.currency)}`);
-  const top = actions.slice(0, 3);
+/* ---------- Smart Next Actions, Weekly Budget & Health Score ---------- */
+
+function SmartNextActions({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
+  const { data: txs = [] } = useTransactions();
+  const { data: cats = [] } = useCategories();
+  const { data: loans = [] } = useLoans();
+
+  const tips = useMemo(() => {
+    const out: { icon: string; text: string }[] = [];
+    const toKey = (d: Date) => d.toISOString().slice(0, 10);
+    const cycleStartKey = toKey(s.lastSalaryDate);
+    const todayKey = toKey(new Date());
+
+    const cycleExpenses = txs.filter(
+      (t) =>
+        t.type === "expense" &&
+        String(t.transaction_date).slice(0, 10) >= cycleStartKey &&
+        String(t.transaction_date).slice(0, 10) <= todayKey,
+    );
+
+    // Smallest active loan → snowball tip
+    const activeLoans = loans.filter((l) => Number(l.remaining_balance) > 0);
+    if (activeLoans.length > 0) {
+      const smallest = [...activeLoans].sort((a, b) => a.remaining_balance - b.remaining_balance)[0];
+      const monthsNow = Math.max(1, Math.ceil(smallest.remaining_balance / Math.max(1, smallest.emi_amount)));
+      const monthsFast = Math.max(1, Math.ceil(smallest.remaining_balance / Math.max(1, smallest.emi_amount + 500)));
+      const saved = Math.max(0, monthsNow - monthsFast);
+      out.push({
+        icon: "🎯",
+        text: `Pay ${formatCurrency(500, s.currency)} extra on ${smallest.loan_name} this month. You'll close it ${saved || 1} month${saved === 1 ? "" : "s"} early.`,
+      });
+    }
+
+    // Food overspend check (food > 20% of salary)
+    const foodCatIds = new Set(
+      cats.filter((c) => /food|dining|eat/i.test(c.name)).map((c) => c.id),
+    );
+    const foodSpend = cycleExpenses
+      .filter((t) => t.category_id && foodCatIds.has(t.category_id))
+      .reduce((a, t) => a + Number(t.amount), 0);
+    if (s.salary > 0 && foodSpend > s.salary * 0.2) {
+      out.push({
+        icon: "🍔",
+        text: `Your food spend is ${formatCurrency(foodSpend, s.currency)} this cycle. Cook 3 meals at home to save ~${formatCurrency(800, s.currency)}.`,
+      });
+    }
+
+    // No emergency fund — proxy: no savings goal progress and overall salaryLeft low
+    const hasNoSavingsBuffer = s.salary > 0 && s.salaryLeft < s.salary * 0.1;
+    if (hasNoSavingsBuffer && activeLoans.length === 0) {
+      out.push({
+        icon: "🛡️",
+        text: `Start an emergency fund with ${formatCurrency(500, s.currency)}/month — that's only ${formatCurrency(17, s.currency)}/day.`,
+      });
+    }
+
+    // Forecast-driven tips
+    if (s.forecastBalance < -2000) {
+      out.push({
+        icon: "🔻",
+        text: `Stay under ${formatCurrency(s.safeDaily, s.currency)}/day to recover before salary.`,
+      });
+    } else if (s.forecastBalance >= 0 && s.score >= 70) {
+      out.push({
+        icon: "✅",
+        text: `You're doing great this month! Consider investing ${formatCurrency(Math.max(500, Math.round(s.salary * 0.05)), s.currency)} in an SIP.`,
+      });
+    }
+
+    // 10% savings nudge always (fills slot)
+    if (s.salary > 0) {
+      out.push({
+        icon: "💰",
+        text: `Save ${formatCurrency(Math.round(s.salary * 0.1), s.currency)} this month (10% rule).`,
+      });
+    }
+
+    return out.slice(0, 3);
+  }, [txs, cats, loans, s, outstanding]);
 
   return (
     <Card className="border-primary/20 shadow-soft">
@@ -249,10 +321,10 @@ function NextActionCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>;
           <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Next Actions</p>
         </div>
         <ul className="space-y-1.5">
-          {top.map((a, i) => (
+          {tips.map((a, i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
-              <span className="leading-snug">{a}</span>
+              <span className="mt-0.5 text-sm leading-none">{a.icon}</span>
+              <span className="leading-snug">{a.text}</span>
             </li>
           ))}
         </ul>
@@ -260,6 +332,70 @@ function NextActionCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>;
     </Card>
   );
 }
+
+function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; currency: string; cycleStart: Date }) {
+  const { data: txs = [] } = useTransactions();
+  const weeklyBudget = salary / 4;
+  const today = new Date();
+  const todayKey = today.toISOString().slice(0, 10);
+
+  const weeks = useMemo(() => {
+    const arr: { idx: number; start: Date; end: Date; spent: number; status: "past" | "current" | "upcoming" }[] = [];
+    for (let i = 0; i < 4; i++) {
+      const start = new Date(cycleStart);
+      start.setDate(cycleStart.getDate() + i * 7);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      const sk = start.toISOString().slice(0, 10);
+      const ek = end.toISOString().slice(0, 10);
+      const spent = txs
+        .filter((t) => {
+          const k = String(t.transaction_date).slice(0, 10);
+          return t.type === "expense" && k >= sk && k <= ek;
+        })
+        .reduce((a, t) => a + Number(t.amount), 0);
+      const status: "past" | "current" | "upcoming" =
+        todayKey > ek ? "past" : todayKey >= sk ? "current" : "upcoming";
+      arr.push({ idx: i + 1, start, end, spent, status });
+    }
+    return arr;
+  }, [txs, cycleStart, todayKey]);
+
+  const fmtRange = (a: Date, b: Date) =>
+    `${a.toLocaleDateString(undefined, { day: "numeric", month: "short" })}–${b.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
+
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-2 p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">This Cycle's Weekly Budget</p>
+          <p className="text-[11px] text-muted-foreground tabular-nums">{formatCurrency(weeklyBudget, currency)}/week</p>
+        </div>
+        <ul className="space-y-1.5">
+          {weeks.map((w) => {
+            const remaining = Math.max(0, weeklyBudget - w.spent);
+            const over = w.spent > weeklyBudget;
+            return (
+              <li key={w.idx} className="flex items-center justify-between gap-2 text-xs">
+                <span className="text-muted-foreground">
+                  Week {w.idx} ({fmtRange(w.start, w.end)})
+                </span>
+                <span className={cn("tabular-nums", over ? "text-destructive" : w.status === "current" ? "text-foreground" : "text-muted-foreground")}>
+                  {w.status === "upcoming"
+                    ? "Upcoming"
+                    : w.status === "past"
+                      ? `Spent ${formatCurrency(w.spent, currency)} ${over ? "⚠️" : "✅"}`
+                      : `Spent ${formatCurrency(w.spent, currency)} · ${formatCurrency(remaining, currency)} left`}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
   const savings = s.salary > 0 ? Math.min(25, Math.max(0, (s.salaryLeft / s.salary) * 25)) : 0;
