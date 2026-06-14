@@ -822,6 +822,15 @@ function LoansTab() {
                 </p>
               </div>
             </div>
+            {extraAmt > 0 && totals.monthsToFreeFast > 0 && (
+              <div className="rounded-lg bg-background p-2.5">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Debt-Free By</p>
+                <p className="mt-0.5 font-display text-base font-bold">
+                  {new Date(new Date().getFullYear(), new Date().getMonth() + totals.monthsToFreeFast)
+                    .toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+                </p>
+              </div>
+            )}
             <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
               <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
               Tip: Paying ₹1,000 extra/month can close small EMIs months earlier and save real interest.
