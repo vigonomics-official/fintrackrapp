@@ -120,23 +120,24 @@ function MonthlyPlan() {
   const { data: loans = [] } = useLoans();
   const outstanding = loans.reduce((a, l) => a + Number(l.remaining_balance || 0), 0);
   const forecast = s.forecastBalance;
+  // GREEN if positive; ORANGE if 0 to -2000; RED if < -2000
   const forecastTone =
-    forecast >= 1000
+    forecast > 0
       ? "text-success"
-      : forecast >= 0
+      : forecast >= -2000
         ? "text-gold-foreground"
         : "text-destructive";
   const forecastBorder =
-    forecast >= 1000
+    forecast > 0
       ? "border-success/30 bg-success/5"
-      : forecast >= 0
+      : forecast >= -2000
         ? "border-gold/30 bg-gold/10"
         : "border-destructive/30 bg-destructive/5";
   const forecastLabel =
-    forecast >= 1000
-      ? `${formatCurrency(forecast, s.currency)} expected at month end 🎯`
-      : forecast >= 0
-        ? "Barely breaking even ⚠️"
+    forecast > 0
+      ? `You may save ${formatCurrency(forecast, s.currency)} this month 🎯`
+      : forecast >= -2000
+        ? "Slight overspend risk ⚠️"
         : "Reduce daily spend to recover";
   const safe = forecast >= 0;
   const zone =
