@@ -203,8 +203,11 @@ function MonthlyPlan() {
         </CardContent>
       </Card>
 
-      {/* Next Action */}
-      {s.hasIncome && <NextActionCard s={s} outstanding={outstanding} />}
+      {/* Weekly budget tracker */}
+      {s.hasIncome && <WeeklyBudget salary={s.salary} currency={s.currency} cycleStart={s.lastSalaryDate} />}
+
+      {/* Smart Next Actions — personalized from real data */}
+      {s.hasIncome && <SmartNextActions s={s} outstanding={outstanding} />}
 
       {/* Financial Health Score */}
       {s.hasIncome && <HealthScoreCard s={s} outstanding={outstanding} />}
