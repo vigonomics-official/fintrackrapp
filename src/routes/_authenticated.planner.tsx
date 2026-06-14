@@ -708,6 +708,58 @@ function LoansTab() {
             </Card>
           );
         })()}
+
+        {/* 🎯 Loan Payoff Strategy — Snowball (smallest balance first) */}
+        {(() => {
+          const snowball = [...loans]
+            .filter((l) => l.remaining_balance > 0)
+            .sort((a, b) => a.remaining_balance - b.remaining_balance);
+          if (snowball.length === 0) return null;
+          return (
+            <Card className="border-primary/20 shadow-soft">
+              <CardContent className="space-y-3 p-4">
+                <div>
+                  <p className="text-sm font-semibold">🎯 Loan Payoff Strategy</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Pay minimum on all loans. Put extra money on the smallest loan first.
+                  </p>
+                </div>
+                <div className="space-y-2.5">
+                  {snowball.map((l, i) => {
+                    const monthsNow = Math.max(
+                      1,
+                      Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount)),
+                    );
+                    const monthsFast = Math.max(
+                      1,
+                      Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount + 500)),
+                    );
+                    const saved = Math.max(0, monthsNow - monthsFast);
+                    const intSaved = Math.round((saved * l.emi_amount * (Number(l.interest_rate) || 0)) / 1200);
+                    const badge = i === 0 ? "🎯 CLOSE THIS FIRST" : i === 1 ? "THEN CLOSE THIS" : `THEN #${i + 1}`;
+                    return (
+                      <div key={l.id} className="rounded-lg border bg-muted/20 p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">{badge}</p>
+                        <div className="mt-1 flex items-start justify-between gap-2">
+                          <p className="text-sm font-semibold">{l.loan_name}</p>
+                          <p className="text-sm font-bold tabular-nums">{formatCurrency(l.remaining_balance, currency)}</p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          EMI {formatCurrency(l.emi_amount, currency)}/mo · Closes in {monthsNow} mo
+                        </p>
+                        <p className="mt-1 text-[11px] text-foreground">
+                          💡 Pay {formatCurrency(500, currency)} extra → closes in {monthsFast} mo
+                          {saved > 0 ? ` (${saved} mo faster, save ${formatCurrency(intSaved, currency)} interest)` : ""}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         <div className="space-y-2.5">
           {loans.map((l) => {
             const paid = l.total_amount - l.remaining_balance;
