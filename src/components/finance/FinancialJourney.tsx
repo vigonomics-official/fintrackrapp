@@ -96,15 +96,17 @@ function deriveStage(
       current: Math.max(0, (ctx.outstanding ? ctx.outstanding * 0.15 : 7500)),
     };
   }
-  // Emergency Fund
+  // Emergency Fund — recommended save = 10% of salary (realistic baseline)
   if (a.challenge === "paycheck" || a.goal === "emergency" || a.challenge === "save") {
     const target = Math.max(30000, Math.round(ctx.salary * 3));
+    const tenPct = ctx.salary > 0 ? Math.round(ctx.salary * 0.10) : 0;
+    const monthly = Math.max(500, tenPct || save || 500);
     return {
       stage: "Emergency Fund Builder",
       emoji: "🛡️",
       tone: "bg-primary/15 text-primary",
-      nextAction: `Save ${formatCurrency(Math.max(1500, save || 1500), "INR")} this month into a separate account.`,
-      monthlyTarget: Math.max(1500, save || 1500),
+      nextAction: `Save ${formatCurrency(monthly, "INR")} this month into a separate account.`,
+      monthlyTarget: monthly,
       targetTotal: target,
       current: Math.min(target, save * 4),
     };
