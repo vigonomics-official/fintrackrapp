@@ -340,7 +340,7 @@ function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; curren
   const todayKey = today.toISOString().slice(0, 10);
 
   const weeks = useMemo(() => {
-    const arr: { idx: number; start: Date; end: Date; spent: number; status: "past" | "current" | "upcoming" }[] = [];
+    const arr: { idx: number; start: Date; end: Date; spent: number; upcoming: boolean }[] = [];
     for (let i = 0; i < 4; i++) {
       const start = new Date(cycleStart);
       start.setDate(cycleStart.getDate() + i * 7);
@@ -348,15 +348,17 @@ function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; curren
       end.setDate(start.getDate() + 6);
       const sk = start.toISOString().slice(0, 10);
       const ek = end.toISOString().slice(0, 10);
-      const spent = txs
-        .filter((t) => {
-          const k = String(t.transaction_date).slice(0, 10);
-          return t.type === "expense" && k >= sk && k <= ek;
-        })
-        .reduce((a, t) => a + Number(t.amount), 0);
-      const status: "past" | "current" | "upcoming" =
-        todayKey > ek ? "past" : todayKey >= sk ? "current" : "upcoming";
-      arr.push({ idx: i + 1, start, end, spent, status });
+      const upcoming = todayKey < sk;
+      // Only count spending for weeks that have started; never project into the future.
+      const spent = upcoming
+        ? 0
+        : txs
+            .filter((t) => {
+              const k = String(t.transaction_date).slice(0, 10);
+              return t.type === "expense" && k >= sk && k <= ek && k <= todayKey;
+            })
+            .reduce((a, t) => a + Number(t.amount), 0);
+      arr.push({ idx: i + 1, start, end, spent, upcoming });
     }
     return arr;
   }, [txs, cycleStart, todayKey]);
@@ -371,40 +373,47 @@ function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; curren
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This Cycle's Weekly Budget</p>
           <p className="text-[13px] font-bold text-emerald-500 tabular-nums">{formatCurrency(weeklyBudget, currency)}/week</p>
         </div>
-        <ul className="divide-y divide-border">
-          {weeks.map((w) => {
+        <ul className="flex flex-col gap-[10px]">
+          {weeks.map((w, i) => {
             const diff = weeklyBudget - w.spent;
-            const over = diff < 0;
-            const upcoming = w.status === "upcoming";
+            const over = !w.upcoming && diff < 0;
+            const reached = !w.upcoming && diff === 0 && w.spent > 0;
             const absDiff = Math.abs(diff);
-            const pct = upcoming ? 0 : Math.min(100, (w.spent / weeklyBudget) * 100);
+            const pct = w.upcoming ? 0 : Math.min(100, (w.spent / weeklyBudget) * 100);
 
-            const statusLabel = upcoming ? "Upcoming" : over ? "⚠️ Over Budget" : "✅ Under Budget";
-            const statusColor = upcoming ? "text-muted-foreground" : over ? "text-orange-500" : "text-emerald-500";
-            const barColor = upcoming ? "bg-muted-foreground/30" : over ? "bg-orange-500" : "bg-emerald-500";
+            const statusLabel = w.upcoming ? "Upcoming" : over ? "⚠️ Over" : "✅ Under";
+            const statusColor = w.upcoming ? "text-muted-foreground" : over ? "text-orange-500" : "text-emerald-500";
+            const trackStyle = { backgroundColor: "#e5e7eb" };
+            const fillColor = w.upcoming ? "#e5e7eb" : over ? "#f97316" : "#16a34a";
 
             let rightDetail: React.ReactNode;
-            if (upcoming) {
-              rightDetail = <span className="text-muted-foreground">Not started yet</span>;
+            if (w.upcoming) {
+              rightDetail = <span className="text-muted-foreground">Not started</span>;
             } else if (over) {
               rightDetail = <span className="text-orange-500">Over by {formatCurrency(absDiff, currency)}</span>;
+            } else if (reached) {
+              rightDetail = <span className="text-emerald-500">Budget reached 🎯</span>;
             } else {
               rightDetail = <span className="text-emerald-500">{formatCurrency(absDiff, currency)} left</span>;
             }
 
             return (
-              <li key={w.idx} className="py-3 first:pt-0 last:pb-0 space-y-2">
+              <li
+                key={w.idx}
+                className={cn("space-y-1.5", i > 0 && "pt-[10px] border-t")}
+                style={i > 0 ? { borderTopColor: "#f3f4f6" } : undefined}
+              >
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="font-medium text-muted-foreground">
                     Week {w.idx} · {fmtRange(w.start, w.end)}
                   </span>
                   <span className={cn("font-medium", statusColor)}>{statusLabel}</span>
                 </div>
-                <div className="h-1.5 w-full rounded-[3px] bg-muted overflow-hidden">
-                  <div className={cn("h-full rounded-[3px] transition-all", barColor)} style={{ width: `${pct}%` }} />
+                <div className="w-full overflow-hidden" style={{ height: 5, borderRadius: 3, ...trackStyle }}>
+                  <div className="h-full transition-all" style={{ width: `${pct}%`, borderRadius: 3, backgroundColor: fillColor }} />
                 </div>
                 <div className="flex items-center justify-between text-[13px] tabular-nums">
-                  <span className={cn(upcoming ? "text-muted-foreground" : "text-foreground")}>
+                  <span className={cn(w.upcoming ? "text-muted-foreground" : "text-foreground")}>
                     Spent {formatCurrency(w.spent, currency)}
                   </span>
                   {rightDetail}
