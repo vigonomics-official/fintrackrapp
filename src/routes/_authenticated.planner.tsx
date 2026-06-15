@@ -373,19 +373,32 @@ function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; curren
         </div>
         <ul className="space-y-1.5">
           {weeks.map((w) => {
-            const remaining = Math.max(0, weeklyBudget - w.spent);
-            const over = w.spent > weeklyBudget;
+            const diff = weeklyBudget - w.spent;
+            const over = diff < 0;
+            const reached = diff === 0 && w.spent > 0;
+            const absDiff = Math.abs(diff);
+            let detail: string;
+            if (w.status === "upcoming") {
+              detail = "Upcoming";
+            } else if (over) {
+              detail = `Spent ${formatCurrency(w.spent, currency)} · Over by ${formatCurrency(absDiff, currency)} ⚠️`;
+            } else if (reached) {
+              detail = `Spent ${formatCurrency(w.spent, currency)} · Budget reached 🎯`;
+            } else {
+              detail = `Spent ${formatCurrency(w.spent, currency)} · ${formatCurrency(absDiff, currency)} remaining ✅`;
+            }
+            const tone = w.status === "upcoming"
+              ? "text-muted-foreground"
+              : over
+                ? "text-orange-500"
+                : "text-emerald-500";
             return (
               <li key={w.idx} className="flex items-center justify-between gap-2 text-xs">
                 <span className="text-muted-foreground">
                   Week {w.idx} ({fmtRange(w.start, w.end)})
                 </span>
-                <span className={cn("tabular-nums", over ? "text-destructive" : w.status === "current" ? "text-foreground" : "text-muted-foreground")}>
-                  {w.status === "upcoming"
-                    ? "Upcoming"
-                    : w.status === "past"
-                      ? `Spent ${formatCurrency(w.spent, currency)} ${over ? "⚠️" : "✅"}`
-                      : `Spent ${formatCurrency(w.spent, currency)} · ${formatCurrency(remaining, currency)} left`}
+                <span className={cn("tabular-nums", tone)}>
+                  {detail}
                 </span>
               </li>
             );
