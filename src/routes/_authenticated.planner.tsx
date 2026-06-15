@@ -365,41 +365,50 @@ function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; curren
     `${a.toLocaleDateString(undefined, { day: "numeric", month: "short" })}–${b.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
 
   return (
-    <Card className="shadow-soft">
-      <CardContent className="space-y-2 p-4">
-        <div className="flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">This Cycle's Weekly Budget</p>
-          <p className="text-[11px] text-muted-foreground tabular-nums">{formatCurrency(weeklyBudget, currency)}/week</p>
+    <Card className="shadow-soft rounded-2xl">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This Cycle's Weekly Budget</p>
+          <p className="text-[13px] font-bold text-emerald-500 tabular-nums">{formatCurrency(weeklyBudget, currency)}/week</p>
         </div>
-        <ul className="space-y-1.5">
+        <ul className="divide-y divide-border">
           {weeks.map((w) => {
             const diff = weeklyBudget - w.spent;
             const over = diff < 0;
-            const reached = diff === 0 && w.spent > 0;
+            const upcoming = w.status === "upcoming";
             const absDiff = Math.abs(diff);
-            let detail: string;
-            if (w.status === "upcoming") {
-              detail = "Upcoming";
+            const pct = upcoming ? 0 : Math.min(100, (w.spent / weeklyBudget) * 100);
+
+            const statusLabel = upcoming ? "Upcoming" : over ? "⚠️ Over Budget" : "✅ Under Budget";
+            const statusColor = upcoming ? "text-muted-foreground" : over ? "text-orange-500" : "text-emerald-500";
+            const barColor = upcoming ? "bg-muted-foreground/30" : over ? "bg-orange-500" : "bg-emerald-500";
+
+            let rightDetail: React.ReactNode;
+            if (upcoming) {
+              rightDetail = <span className="text-muted-foreground">Not started yet</span>;
             } else if (over) {
-              detail = `Spent ${formatCurrency(w.spent, currency)} · Over by ${formatCurrency(absDiff, currency)} ⚠️`;
-            } else if (reached) {
-              detail = `Spent ${formatCurrency(w.spent, currency)} · Budget reached 🎯`;
+              rightDetail = <span className="text-orange-500">Over by {formatCurrency(absDiff, currency)}</span>;
             } else {
-              detail = `Spent ${formatCurrency(w.spent, currency)} · ${formatCurrency(absDiff, currency)} remaining ✅`;
+              rightDetail = <span className="text-emerald-500">{formatCurrency(absDiff, currency)} left</span>;
             }
-            const tone = w.status === "upcoming"
-              ? "text-muted-foreground"
-              : over
-                ? "text-orange-500"
-                : "text-emerald-500";
+
             return (
-              <li key={w.idx} className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-muted-foreground">
-                  Week {w.idx} ({fmtRange(w.start, w.end)})
-                </span>
-                <span className={cn("tabular-nums", tone)}>
-                  {detail}
-                </span>
+              <li key={w.idx} className="py-3 first:pt-0 last:pb-0 space-y-2">
+                <div className="flex items-center justify-between text-[13px]">
+                  <span className="font-medium text-muted-foreground">
+                    Week {w.idx} · {fmtRange(w.start, w.end)}
+                  </span>
+                  <span className={cn("font-medium", statusColor)}>{statusLabel}</span>
+                </div>
+                <div className="h-1.5 w-full rounded-[3px] bg-muted overflow-hidden">
+                  <div className={cn("h-full rounded-[3px] transition-all", barColor)} style={{ width: `${pct}%` }} />
+                </div>
+                <div className="flex items-center justify-between text-[13px] tabular-nums">
+                  <span className={cn(upcoming ? "text-muted-foreground" : "text-foreground")}>
+                    Spent {formatCurrency(w.spent, currency)}
+                  </span>
+                  {rightDetail}
+                </div>
               </li>
             );
           })}
