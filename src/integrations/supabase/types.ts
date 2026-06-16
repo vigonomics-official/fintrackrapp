@@ -273,30 +273,63 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_loans: number | null
+          age_group: string | null
           avatar_url: string | null
+          city: string | null
           created_at: string
           currency: string
           email: string | null
+          expense_categories: string[] | null
+          financial_situation: string | null
+          first_goal: Json | null
+          full_name: string | null
           id: string
+          monthly_emi: number | null
+          monthly_salary: number | null
           name: string | null
+          onboarding_completed: boolean
+          salary_date: number | null
           updated_at: string
         }
         Insert: {
+          active_loans?: number | null
+          age_group?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           currency?: string
           email?: string | null
+          expense_categories?: string[] | null
+          financial_situation?: string | null
+          first_goal?: Json | null
+          full_name?: string | null
           id: string
+          monthly_emi?: number | null
+          monthly_salary?: number | null
           name?: string | null
+          onboarding_completed?: boolean
+          salary_date?: number | null
           updated_at?: string
         }
         Update: {
+          active_loans?: number | null
+          age_group?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           currency?: string
           email?: string | null
+          expense_categories?: string[] | null
+          financial_situation?: string | null
+          first_goal?: Json | null
+          full_name?: string | null
           id?: string
+          monthly_emi?: number | null
+          monthly_salary?: number | null
           name?: string | null
+          onboarding_completed?: boolean
+          salary_date?: number | null
           updated_at?: string
         }
         Relationships: []
