@@ -62,6 +62,24 @@ function AuthenticatedLayout() {
     if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
 
+  // Redirect first-time users into onboarding
+  useEffect(() => {
+    if (loading || !user) return;
+    let cancelled = false;
+    (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data } = await (supabase as any)
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!data?.onboarding_completed) navigate({ to: "/onboarding" });
+    })();
+    return () => { cancelled = true; };
+  }, [loading, user, navigate]);
+
+
   // Reset FAB-related state on every route change to prevent stale modals leaking between tabs
   useEffect(() => {
     setTxOpen(false);
