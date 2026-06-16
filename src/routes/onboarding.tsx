@@ -1,161 +1,316 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ShieldCheck, Wallet, Sparkles, ArrowRight, Check,
-  PiggyBank, TrendingDown, Eye, CreditCard,
-  PieChart, IndianRupee, Lock, Globe, Clock, Plus, BarChart3, Calendar,
-  MessageSquareText,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/onboarding")({
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw redirect({ to: "/login" });
+    const { data: profile } = await (supabase as any)
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("id", session.user.id)
+      .maybeSingle();
+    if (profile?.onboarding_completed) throw redirect({ to: "/dashboard" });
+  },
   head: () => ({
     meta: [
-      { title: "Get started — FinTrackr" },
-      { name: "description", content: "Set up your FinTrackr account in under 60 seconds." },
-      { property: "og:title", content: "Get started — FinTrackr" },
-      { property: "og:description", content: "Set up your FinTrackr account in under 60 seconds." },
-      { property: "og:url", content: "/onboarding" },
+      { title: "Set up your salary survival system — FinTrackr" },
+      { name: "description", content: "Personalize FinTrackr in 5 quick steps." },
+      { name: "robots", content: "noindex" },
     ],
-    links: [{ rel: "canonical", href: "/onboarding" }],
   }),
   component: OnboardingPage,
 });
 
-const BRAND = {
-  primary: "#1A56DB",
-  accent: "#10B981",
-  bg: "#F9FAFB",
-  text: "#111827",
+const GREEN = "#1a6b4a";
+const GREEN_DARK = "#0d3d2a";
+const GREEN_ACCENT = "#0d7a5f";
+
+const CITIES = ["Chennai", "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Pune", "Coimbatore", "Other"];
+const AGE_GROUPS = ["18–22", "23–28", "29–35", "36–45", "45+"];
+const PAY_DATES = ["1st", "5th", "7th", "10th", "15th", "20th", "25th", "Last day", "Other"];
+const SITUATIONS = [
+  { id: "survive", emoji: "😰", title: "Salary disappears before month end", sub: "I need to survive" },
+  { id: "save",    emoji: "😐", title: "Managing but not saving much",      sub: "I need to save" },
+  { id: "grow",    emoji: "🙂", title: "Saving a little, want to do better", sub: "I need to grow" },
+  { id: "invest",  emoji: "😊", title: "Comfortable, want to build wealth",  sub: "I need to invest" },
+];
+const EXPENSE_CATS = [
+  { id: "rent",     emoji: "🏠", label: "Rent/Housing" },
+  { id: "food",     emoji: "🍔", label: "Food & Dining" },
+  { id: "fuel",     emoji: "🚗", label: "Fuel/Travel" },
+  { id: "emi",      emoji: "💳", label: "EMI/Loans" },
+  { id: "bills",    emoji: "📱", label: "Phone/Bills" },
+  { id: "family",   emoji: "👨‍👩‍👧", label: "Family Support" },
+  { id: "fun",      emoji: "🎮", label: "Entertainment" },
+  { id: "health",   emoji: "🏥", label: "Health" },
+  { id: "edu",      emoji: "🎓", label: "Education" },
+  { id: "shopping", emoji: "👗", label: "Shopping" },
+];
+const GOALS = [
+  { id: "emergency", emoji: "🛡️", title: "Emergency Fund",   sub: "3 months salary saved",     recommended: true },
+  { id: "debt",      emoji: "💳", title: "Become Debt-Free", sub: "Close all loans faster" },
+  { id: "gadget",    emoji: "📱", title: "New Phone/Gadget", sub: "Upgrade in 3–6 months" },
+  { id: "vehicle",   emoji: "🏍️", title: "Bike or Vehicle",  sub: "Your own ride" },
+  { id: "travel",    emoji: "✈️", title: "Vacation/Travel",  sub: "Your next adventure" },
+  { id: "home",      emoji: "🏠", title: "Home/House Goal",  sub: "Long-term dream" },
+];
+const HORIZONS = ["3 months", "6 months", "1 year", "2+ years"];
+
+type State = {
+  name: string; city: string; ageGroup: string;
+  salary: string; salaryDate: string; situation: string;
+  expenses: string[]; hasEmi: boolean; emi: string; loans: string;
+  goal: string; goalAmount: string; goalHorizon: string;
 };
 
-const PAY_DATES = [1, 5, 10, 15, 25, 30];
+const initial: State = {
+  name: "", city: "", ageGroup: "",
+  salary: "", salaryDate: "", situation: "",
+  expenses: [], hasEmi: false, emi: "", loans: "",
+  goal: "", goalAmount: "", goalHorizon: "",
+};
 
-type Goal = "save" | "stop" | "understand" | "debt";
-
-const GOALS: { id: Goal; label: string; sub: string; icon: typeof PiggyBank; tint: string }[] = [
-  { id: "save",       label: "Save more every month",       sub: "Build a healthy savings habit",          icon: PiggyBank,    tint: "#10B981" },
-  { id: "stop",       label: "Stop overspending",           sub: "Catch leaks before they grow",           icon: TrendingDown, tint: "#F59E0B" },
-  { id: "understand", label: "Understand where money goes", sub: "Clear, simple spend breakdown",          icon: Eye,          tint: "#1A56DB" },
-  { id: "debt",       label: "Pay off EMI / debt faster",   sub: "Plan and track repayments",              icon: CreditCard,   tint: "#8B5CF6" },
-];
+function fmt(n: number) {
+  return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+}
 
 function OnboardingPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
-  const [salary, setSalary] = useState("");
-  const [payDate, setPayDate] = useState<number | null>(null);
-  const [goal, setGoal] = useState<Goal | null>(null);
+  const [step, setStep] = useState(1); // 1..5 plus 6=loading, 7=ready
+  const [s, setS] = useState<State>(initial);
+  const [saving, setSaving] = useState(false);
 
-  const totalSteps = 4;
-  const progress = ((step + 1) / totalSteps) * 100;
+  const set = <K extends keyof State>(k: K, v: State[K]) => setS((prev) => ({ ...prev, [k]: v }));
 
-  const canContinue =
-    (step === 0) ||
-    (step === 1 && salary.trim().length > 0 && payDate !== null) ||
-    (step === 2 && goal !== null) ||
-    (step === 3);
+  const dailyLimit = useMemo(() => {
+    const n = Number(s.salary);
+    if (!n || n <= 0) return 0;
+    return Math.round(n / 30);
+  }, [s.salary]);
 
-  function next() {
-    if (step < totalSteps - 1) setStep(step + 1);
-    else finish();
-  }
+  const canNext = useMemo(() => {
+    if (step === 2) return s.name.trim() && s.city && s.ageGroup;
+    if (step === 3) return Number(s.salary) > 0 && s.salaryDate && s.situation;
+    if (step === 4) return s.expenses.length > 0 && (!s.hasEmi || (s.hasEmi && Number(s.emi) > 0 && s.loans));
+    if (step === 5) return !!s.goal;
+    return true;
+  }, [step, s]);
 
-  function finish() {
+  async function finish() {
+    setSaving(true);
+    setStep(6); // loading
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Please sign in again");
+      navigate({ to: "/login" });
+      return;
+    }
+    const goalDef = GOALS.find((g) => g.id === s.goal);
+    const firstGoal = goalDef
+      ? {
+          id: crypto.randomUUID(),
+          name: goalDef.title,
+          kind: s.goal === "emergency" ? "emergency" : s.goal === "debt" ? "debt" : s.goal === "travel" ? "travel" : s.goal === "gadget" ? "gadget" : "custom",
+          target: Number(s.goalAmount) || 0,
+          current: 0,
+          monthly: 0,
+          deadline: s.goalHorizon || undefined,
+          createdAt: new Date().toISOString(),
+        }
+      : null;
+
+    const { error } = await (supabase as any)
+      .from("profiles")
+      .update({
+        full_name: s.name.trim(),
+        name: s.name.trim(),
+        city: s.city,
+        age_group: s.ageGroup,
+        monthly_salary: Number(s.salary) || null,
+        salary_date: s.salaryDate ? parseInt(s.salaryDate.replace(/\D/g, ""), 10) || null : null,
+        financial_situation: s.situation,
+        expense_categories: s.expenses,
+        monthly_emi: s.hasEmi ? Number(s.emi) || 0 : 0,
+        active_loans: s.hasEmi ? parseInt(s.loans, 10) || 0 : 0,
+        first_goal: firstGoal,
+        currency: "INR",
+        onboarding_completed: true,
+      })
+      .eq("id", session.user.id);
+
+    if (error) {
+      toast.error("Could not save your setup. Please try again.");
+      setSaving(false);
+      setStep(5);
+      return;
+    }
+
+    // Persist first goal in the same localStorage shape the app uses
+    if (firstGoal) {
+      try {
+        const raw = localStorage.getItem("fintrackr_goals_v1");
+        const arr = raw ? JSON.parse(raw) : [];
+        arr.push(firstGoal);
+        localStorage.setItem("fintrackr_goals_v1", JSON.stringify(arr));
+      } catch {}
+    }
+
+    // Seed salary settings so Planner / Home work immediately
     try {
       localStorage.setItem(
-        "fintrackr:onboarding",
-        JSON.stringify({ salary, payDate, goal, completedAt: Date.now() }),
+        "fintrackr:salary",
+        JSON.stringify({
+          amount: Number(s.salary) || 0,
+          payDate: parseInt(s.salaryDate.replace(/\D/g, ""), 10) || 1,
+        }),
       );
     } catch {}
-    navigate({ to: "/dashboard" });
+
+    setTimeout(() => setStep(7), 2500);
   }
 
-  const ctaLabel =
-    step === 0 ? "Get Started" :
-    step === 1 ? "Next" :
-    step === 2 ? "Take me to my dashboard" :
-    "Add First Expense";
+  if (step === 6) return <LoadingScreen />;
+  if (step === 7) return (
+    <ReadyScreen
+      name={s.name}
+      salary={Number(s.salary) || 0}
+      payDate={s.salaryDate}
+      dailyLimit={dailyLimit}
+      goalTitle={GOALS.find((g) => g.id === s.goal)?.title ?? "—"}
+      onOpen={() => navigate({ to: "/dashboard" })}
+    />
+  );
 
+  // Step 1 = welcome (dark gradient), 2..5 = white form
+  if (step === 1) return <WelcomeScreen onStart={() => setStep(2)} />;
+
+  const totalSteps = 5;
   return (
-    <div className="min-h-screen w-full" style={{ background: BRAND.bg, color: BRAND.text }}>
+    <div className="min-h-screen w-full bg-white text-gray-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pt-6 pb-32">
-        <header className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-white text-sm font-bold"
-              style={{ background: BRAND.primary }}
-            >
-              ₣
-            </div>
-            <span className="font-semibold tracking-tight">FinTrackr</span>
-          </div>
+        {/* Top bar */}
+        <div className="mb-4 flex items-center gap-3">
           <button
-            onClick={finish}
-            className="text-sm font-medium text-gray-500 hover:text-gray-800"
+            onClick={() => setStep((x) => Math.max(2, x - 1))}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
+            aria-label="Back"
           >
-            Skip
+            <ArrowLeft className="h-5 w-5" />
           </button>
-        </header>
-
-        <div className="mb-8">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: BRAND.accent }}
-              initial={false}
-              animate={{ width: `${progress}%` }}
-              transition={{ type: "spring", stiffness: 120, damping: 20 }}
-            />
+          <div className="flex-1">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: GREEN_ACCENT }}
+                initial={false}
+                animate={{ width: `${(step - 1) / totalSteps * 100 + 20}%` }}
+                transition={{ type: "spring", stiffness: 120, damping: 20 }}
+              />
+            </div>
+            <p className="mt-1 text-[11px] font-semibold tracking-wide text-gray-500">{step - 1} of {totalSteps}</p>
           </div>
-          <p className="mt-2 text-xs font-medium text-gray-500">
-            Step {step + 1} of {totalSteps}
-          </p>
         </div>
 
-        <div className="flex-1">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              className="h-full"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -24 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            >
-              {step === 0 && <WelcomeStep />}
-              {step === 1 && (
-                <SalaryStep
-                  salary={salary}
-                  setSalary={setSalary}
-                  payDate={payDate}
-                  setPayDate={setPayDate}
-                />
-              )}
-              {step === 2 && <GoalStep goal={goal} setGoal={setGoal} />}
-              {step === 3 && <FirstDashboardStep />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 18 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -18 }}
+            transition={{ duration: 0.22 }}
+            className="flex-1"
+          >
+            {step === 2 && <PersonalStep s={s} set={set} />}
+            {step === 3 && <SalaryStep s={s} set={set} dailyLimit={dailyLimit} />}
+            {step === 4 && <ExpenseStep s={s} set={set} />}
+            {step === 5 && <GoalStep s={s} set={set} />}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white/90 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
         <div className="mx-auto max-w-md">
           <Button
-            onClick={next}
-            disabled={!canContinue}
-            className="h-12 w-full rounded-2xl text-base font-semibold shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
-            style={{ background: BRAND.accent, color: "white" }}
+            onClick={() => (step < 5 ? setStep(step + 1) : finish())}
+            disabled={!canNext || saving}
+            className="h-12 w-full rounded-2xl text-base font-semibold shadow-md transition-transform active:scale-[0.98] disabled:opacity-50"
+            style={{ background: GREEN_ACCENT, color: "white" }}
           >
-            {ctaLabel}
+            {step === 5 ? "Build My Survival System" : "Next"}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
-          <p className="mt-3 text-center text-[11px] text-gray-500">
-            Takes under 60 seconds · No card required
+          {step === 3 && (
+            <p className="mt-3 text-center text-[11px] text-gray-500">🔒 We never connect to your bank</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- STEP 1: WELCOME ---------------- */
+function WelcomeScreen({ onStart }: { onStart: () => void }) {
+  return (
+    <div
+      className="relative min-h-screen w-full overflow-hidden text-white"
+      style={{ background: `linear-gradient(to bottom, ${GREEN} 0%, ${GREEN_DARK} 100%)` }}
+    >
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-12 pb-10">
+        {/* Logo */}
+        <div className="flex flex-col items-center text-center">
+          <div className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white">₣</div>
+            FinTrackr
+          </div>
+          <p className="mt-1 text-xs text-white/70">Your Salary Survival System</p>
+        </div>
+
+        {/* Center */}
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <motion.div
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 18 }}
+            className="text-7xl"
+          >
+            👋
+          </motion.div>
+          <h1 className="mt-6 text-[28px] font-bold leading-tight">Welcome to FinTrackr</h1>
+          <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-white/80">
+            Most salary earners don't know where their money goes. You're about to change that.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+            {["✅ No bank login needed", "🔒 100% private", "⚡ Setup in 2 minutes"].map((p) => (
+              <span key={p} className="rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold" style={{ color: GREEN_ACCENT }}>
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="mt-6">
+          <button
+            onClick={onStart}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-[15px] font-bold shadow-lg active:scale-[0.98]"
+            style={{ color: GREEN_DARK }}
+          >
+            Let's Set Up My Survival System
+            <ArrowRight className="h-5 w-5" />
+          </button>
+          <p className="mt-4 text-center text-[12px] text-white/70">
+            Already have an account?{" "}
+            <a href="/login" className="font-semibold text-white underline">Sign in</a>
           </p>
         </div>
       </div>
@@ -163,404 +318,363 @@ function OnboardingPage() {
   );
 }
 
-function WelcomeStep() {
+/* ---------------- STEP 2: PERSONAL ---------------- */
+function PersonalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: State[K]) => void }) {
   return (
-    <div className="relative flex h-full flex-col items-center justify-center text-center">
-      <div className="pointer-events-none absolute inset-0 -mx-5 -mt-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-50/80 via-white/40 to-transparent" />
-        <div
-          className="absolute -top-16 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full opacity-60 blur-3xl"
-          style={{ background: "radial-gradient(circle, #BFDBFE 0%, #DBEAFE 50%, transparent 100%)" }}
-        />
+    <div>
+      <p className="text-[11px] font-bold tracking-wider" style={{ color: GREEN_ACCENT }}>
+        STEP 2 OF 5 · PERSONAL SETUP
+      </p>
+      <h1 className="mt-2 text-[24px] font-bold leading-tight">Let's personalize your survival system</h1>
+
+      <div className="mt-7 space-y-6">
+        <div>
+          <label className="text-sm font-semibold text-gray-800">What's your name?</label>
+          <Input
+            value={s.name}
+            onChange={(e) => set("name", e.target.value)}
+            placeholder="e.g. Vicky"
+            className="mt-2 h-12 rounded-xl border-gray-200 text-base"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-semibold text-gray-800">Your city</label>
+          <ChipGrid options={CITIES} value={s.city} onChange={(v) => set("city", v)} />
+        </div>
+
+        <div>
+          <label className="text-sm font-semibold text-gray-800">Your age group</label>
+          <ChipGrid options={AGE_GROUPS} value={s.ageGroup} onChange={(v) => set("ageGroup", v)} />
+        </div>
       </div>
-
-      <motion.div
-        className="pointer-events-none absolute top-6 right-2 z-0 rounded-2xl bg-white/95 p-3 shadow-elegant backdrop-blur-sm"
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
-            <IndianRupee className="h-4 w-4" />
-          </div>
-          <div className="text-left">
-            <p className="text-xs font-bold text-gray-900">₹2,340 saved</p>
-            <p className="text-[10px] text-gray-500">this month</p>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div
-        className="pointer-events-none absolute top-24 left-2 z-0 rounded-2xl bg-white/95 p-3 shadow-elegant backdrop-blur-sm"
-        animate={{ y: [0, 7, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
-            <PieChart className="h-4 w-4" />
-          </div>
-          <div className="text-left">
-            <p className="text-xs font-bold text-gray-900">Food ↓ 18%</p>
-            <p className="text-[10px] text-gray-500">vs last month</p>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div
-        className="pointer-events-none absolute bottom-36 right-2 z-0 rounded-2xl bg-white/95 p-3 shadow-elegant backdrop-blur-sm"
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
-            <Clock className="h-4 w-4" />
-          </div>
-          <div className="text-left">
-            <p className="text-xs font-bold text-gray-900">Salary in 5 days</p>
-            <p className="text-[10px] text-gray-500">₹45,000 incoming</p>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: "easeOut" }}
-        className="relative z-10 flex flex-col items-center"
-      >
-        <div
-          className="mb-8 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.5rem] text-white"
-          style={{
-            background: "linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)",
-            boxShadow: "0 12px 40px -8px rgba(26, 86, 219, 0.35)",
-          }}
-        >
-          <Wallet className="h-9 w-9" />
-        </div>
-
-        <h1 className="max-w-[17rem] text-[1.75rem] font-bold leading-[1.15] tracking-tight text-gray-900">
-          Finally understand where your money goes.
-        </h1>
-
-        <p className="mt-4 max-w-[18rem] text-[0.95rem] leading-relaxed text-gray-500">
-          FinTrackr helps Indian salary earners track spending, reduce stress, and save more.
-        </p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.25 }}
-        className="relative z-10 mt-10 flex flex-wrap items-center justify-center gap-x-3 gap-y-2"
-      >
-        <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-soft">
-          <Lock className="h-3.5 w-3.5 text-emerald-500" />
-          No bank login needed
-        </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-soft">
-          <Globe className="h-3.5 w-3.5 text-blue-500" />
-          Built for India
-        </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-soft">
-          <Clock className="h-3.5 w-3.5 text-amber-500" />
-          Setup takes less than 60 seconds
-        </div>
-      </motion.div>
     </div>
   );
 }
 
+/* ---------------- STEP 3: SALARY ---------------- */
 function SalaryStep({
-  salary, setSalary, payDate, setPayDate,
+  s, set, dailyLimit,
 }: {
-  salary: string; setSalary: (v: string) => void;
-  payDate: number | null; setPayDate: (d: number) => void;
+  s: State; set: <K extends keyof State>(k: K, v: State[K]) => void; dailyLimit: number;
 }) {
   return (
-    <div className="pt-2">
-      <h1 className="font-display text-2xl font-bold tracking-tight">
-        Let's set up your salary profile
-      </h1>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        Two quick details power your countdown, budgets, and insights.
+    <div>
+      <p className="text-[11px] font-bold tracking-wider" style={{ color: GREEN_ACCENT }}>
+        STEP 3 OF 5 · SALARY SETUP
       </p>
+      <h1 className="mt-2 text-[24px] font-bold leading-tight">Tell me about your salary</h1>
+      <p className="mt-1 text-sm text-gray-500">This is the foundation of your survival system</p>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="mt-7 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
-      >
-        <Label className="text-sm font-medium text-gray-700">Monthly salary</Label>
-        <div className="relative mt-2">
-          <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            inputMode="numeric"
-            placeholder="25,000"
-            value={salary}
-            onChange={(e) => setSalary(e.target.value.replace(/[^\d]/g, ""))}
-            className="h-12 rounded-xl border-gray-200 bg-gray-50 pl-9 text-base font-medium"
-            autoFocus
-          />
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.08 }}
-        className="mt-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
-      >
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-gray-500" />
-          <Label className="text-sm font-medium text-gray-700">
-            When do you usually get paid?
-          </Label>
+      <div className="mt-7 space-y-6">
+        <div>
+          <label className="text-sm font-semibold text-gray-800">Monthly take-home salary</label>
+          <p className="text-xs text-gray-500">After all deductions</p>
+          <div className="relative mt-2">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-700">₹</span>
+            <Input
+              type="number"
+              inputMode="numeric"
+              value={s.salary}
+              onChange={(e) => set("salary", e.target.value)}
+              placeholder="0"
+              className="h-14 rounded-xl border-gray-200 pl-10 text-2xl font-bold tabular-nums"
+            />
+          </div>
+          {dailyLimit > 0 && (
+            <p className="mt-2 text-xs font-medium" style={{ color: GREEN_ACCENT }}>
+              Your daily safe limit will be approximately ₹{fmt(dailyLimit)}/day
+            </p>
+          )}
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {PAY_DATES.map((d) => {
-            const active = payDate === d;
+        <div>
+          <label className="text-sm font-semibold text-gray-800">When do you get paid?</label>
+          <ChipGrid options={PAY_DATES} value={s.salaryDate} onChange={(v) => set("salaryDate", v)} />
+        </div>
+
+        <div>
+          <label className="text-sm font-semibold text-gray-800">How would you describe your financial situation?</label>
+          <div className="mt-3 space-y-2">
+            {SITUATIONS.map((opt) => {
+              const active = s.situation === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => set("situation", opt.id)}
+                  className={cn(
+                    "flex w-full items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all",
+                    active ? "bg-emerald-50" : "border-gray-200 bg-white hover:border-gray-300",
+                  )}
+                  style={active ? { borderColor: GREEN_ACCENT } : undefined}
+                >
+                  <span className="text-2xl">{opt.emoji}</span>
+                  <span className="flex-1">
+                    <span className="block text-sm font-semibold text-gray-900">{opt.title}</span>
+                    <span className="block text-xs text-gray-500">{opt.sub}</span>
+                  </span>
+                  {active && <Check className="mt-1 h-5 w-5" style={{ color: GREEN_ACCENT }} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- STEP 4: EXPENSES ---------------- */
+function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: State[K]) => void }) {
+  function toggle(id: string) {
+    set("expenses", s.expenses.includes(id) ? s.expenses.filter((x) => x !== id) : [...s.expenses, id]);
+  }
+  return (
+    <div>
+      <p className="text-[11px] font-bold tracking-wider" style={{ color: GREEN_ACCENT }}>
+        STEP 4 OF 5 · YOUR EXPENSES
+      </p>
+      <h1 className="mt-2 text-[24px] font-bold leading-tight">What eats your salary?</h1>
+      <p className="mt-1 text-sm text-gray-500">Select all that apply — be honest! 😄</p>
+
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        {EXPENSE_CATS.map((c) => {
+          const active = s.expenses.includes(c.id);
+          return (
+            <button
+              key={c.id}
+              onClick={() => toggle(c.id)}
+              className={cn(
+                "flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 transition-all",
+                active ? "text-white" : "border-gray-200 bg-white text-gray-900 hover:border-gray-300",
+              )}
+              style={active ? { background: GREEN_ACCENT, borderColor: GREEN_ACCENT } : undefined}
+            >
+              <span className="text-3xl">{c.emoji}</span>
+              <span className="text-[13px] font-semibold">{c.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {s.expenses.length > 0 && (
+        <p className="mt-4 text-sm font-medium" style={{ color: GREEN_ACCENT }}>
+          Great! You selected {s.expenses.length} expense {s.expenses.length === 1 ? "category" : "categories"}. We'll track all of these.
+        </p>
+      )}
+
+      <div className="mt-7">
+        <label className="text-sm font-semibold text-gray-800">Do you have any EMIs or loans?</label>
+        <div className="mt-3 inline-flex rounded-xl bg-gray-100 p-1">
+          {[{ k: false, l: "No" }, { k: true, l: "Yes" }].map((o) => {
+            const active = s.hasEmi === o.k;
             return (
               <button
-                key={d}
-                onClick={() => setPayDate(d)}
+                key={o.l}
+                onClick={() => set("hasEmi", o.k)}
                 className={cn(
-                  "relative h-12 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97]",
-                  active
-                    ? "border-transparent text-white shadow-md"
-                    : "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300",
+                  "rounded-lg px-6 py-2 text-sm font-semibold transition",
+                  active ? "text-white shadow" : "text-gray-600",
                 )}
-                style={active ? { background: BRAND.primary } : undefined}
+                style={active ? { background: GREEN_ACCENT } : undefined}
               >
-                {d}
-                <span className={cn("ml-0.5 text-[10px] font-normal", active ? "opacity-80" : "text-gray-400")}>
-                  {ordinal(d)}
-                </span>
+                {o.l}
               </button>
             );
           })}
         </div>
 
-        <p className="mt-3 text-xs text-gray-500">
-          Used only for salary countdown and budget insights.
-        </p>
-      </motion.div>
+        {s.hasEmi && (
+          <div className="mt-4 space-y-4 rounded-2xl bg-gray-50 p-4">
+            <div>
+              <label className="text-sm font-semibold text-gray-800">Total monthly EMI amount</label>
+              <div className="relative mt-2">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-700">₹</span>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  value={s.emi}
+                  onChange={(e) => set("emi", e.target.value)}
+                  placeholder="0"
+                  className="h-12 rounded-xl border-gray-200 bg-white pl-9 text-base font-semibold tabular-nums"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-800">How many active loans?</label>
+              <ChipGrid options={["1", "2", "3", "4+"]} value={s.loans} onChange={(v) => set("loans", v)} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-function ordinal(n: number) {
-  if (n === 1) return "st";
-  if (n === 5 || n === 25) return "th";
-  if (n === 10 || n === 15 || n === 30) return "th";
-  return "th";
-}
-
-function GoalStep({
-  goal, setGoal,
-}: { goal: Goal | null; setGoal: (g: Goal) => void }) {
+/* ---------------- STEP 5: GOAL ---------------- */
+function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: State[K]) => void }) {
   return (
-    <div className="pt-2">
-      <h1 className="font-display text-2xl font-bold tracking-tight">
-        What would you like help with first?
-      </h1>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        Pick one — you can change this anytime.
+    <div>
+      <p className="text-[11px] font-bold tracking-wider" style={{ color: GREEN_ACCENT }}>
+        STEP 5 OF 5 · YOUR FIRST GOAL
       </p>
+      <h1 className="mt-2 text-[24px] font-bold leading-tight">What's your #1 financial goal right now?</h1>
+      <p className="mt-1 text-sm text-gray-500">Pick one — you can add more later</p>
 
-      <div className="mt-6 space-y-3">
-        {GOALS.map((g, i) => {
-          const active = goal === g.id;
-          const Icon = g.icon;
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        {GOALS.map((g) => {
+          const active = s.goal === g.id;
           return (
-            <motion.button
+            <button
               key={g.id}
-              onClick={() => setGoal(g.id)}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, delay: i * 0.05 }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={() => set("goal", g.id)}
               className={cn(
-                "relative flex w-full items-center gap-4 rounded-2xl border bg-white p-4 text-left shadow-sm transition-all",
-                active ? "border-transparent shadow-md" : "border-gray-100 hover:border-gray-200",
+                "relative flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-all",
+                active ? "bg-emerald-50" : "border-gray-200 bg-white hover:border-gray-300",
               )}
-              style={active ? { boxShadow: `0 0 0 2px ${BRAND.primary}, 0 8px 24px -10px ${BRAND.primary}55` } : undefined}
+              style={active ? { borderColor: GREEN_ACCENT } : undefined}
             >
-              <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                style={{
-                  background: active ? g.tint : `${g.tint}1a`,
-                  color: active ? "white" : g.tint,
-                }}
-              >
-                <Icon className="h-5 w-5" />
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">{g.label}</p>
-                <p className="mt-0.5 text-xs text-gray-500">{g.sub}</p>
-              </div>
-              {active && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: BRAND.accent }}
-                >
-                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
-                </motion.span>
+              {g.recommended && (
+                <span className="absolute right-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-bold text-white"
+                  style={{ background: GREEN_ACCENT }}>
+                  RECOMMENDED
+                </span>
               )}
-            </motion.button>
+              <span className="text-3xl">{g.emoji}</span>
+              <span className="text-[14px] font-bold text-gray-900">{g.title}</span>
+              <span className="text-[11px] text-gray-500">{g.sub}</span>
+            </button>
           );
         })}
       </div>
+
+      {s.goal && (
+        <div className="mt-5 space-y-4 rounded-2xl bg-gray-50 p-4">
+          <div>
+            <label className="text-sm font-semibold text-gray-800">Target amount</label>
+            <div className="relative mt-2">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-700">₹</span>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={s.goalAmount}
+                onChange={(e) => set("goalAmount", e.target.value)}
+                placeholder="0"
+                className="h-12 rounded-xl border-gray-200 bg-white pl-9 text-base font-semibold tabular-nums"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-gray-800">By when?</label>
+            <ChipGrid options={HORIZONS} value={s.goalHorizon} onChange={(v) => set("goalHorizon", v)} />
+          </div>
+          <button
+            onClick={() => { set("goalAmount", ""); set("goalHorizon", ""); }}
+            className="text-xs font-semibold text-gray-500 underline"
+          >
+            Skip for now
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-function FirstDashboardStep() {
-  return (
-    <div className="pt-2">
-      {/* Welcome card */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg"
-        style={{
-          background: "linear-gradient(135deg, #1A56DB 0%, #3B82F6 100%)",
-          boxShadow: "0 12px 32px -10px rgba(26, 86, 219, 0.4)",
-        }}
-      >
-        <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
-        <h2 className="text-lg font-bold">You're all set 🎉</h2>
-        <p className="mt-1 text-sm text-white/85">
-          Let's start understanding your money better.
-        </p>
-      </motion.div>
-
-      {/* Salary + Budget ring */}
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.05 }}
-          className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
-        >
-          <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
-            <IndianRupee className="h-3.5 w-3.5" /> Salary
-          </div>
-          <p className="mt-2 text-lg font-bold text-gray-900">₹--,---</p>
-          <Shimmer className="mt-2 h-2 w-16 rounded-full" />
-          <p className="mt-2 text-[11px] text-gray-400">Next pay in --d</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
-        >
-          <BudgetRing />
-          <p className="mt-2 text-[11px] font-medium text-gray-500">Budget</p>
-        </motion.div>
-      </div>
-
-      {/* Empty insights */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.15 }}
-        className="mt-3 rounded-2xl border border-dashed border-gray-200 bg-white p-5 text-center"
-      >
-        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
-          <Sparkles className="h-5 w-5" />
-        </div>
-        <p className="mt-2 text-sm font-semibold text-gray-900">No insights yet</p>
-        <p className="mt-1 text-xs text-gray-500">
-          Add a few expenses and we'll surface smart patterns here.
-        </p>
-      </motion.div>
-
-      {/* Analytics placeholder */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="mt-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
-            <BarChart3 className="h-3.5 w-3.5" /> Spending analytics
-          </div>
-          <span className="text-[10px] font-medium text-gray-400">This week</span>
-        </div>
-        <div className="mt-3 flex h-20 items-end gap-2">
-          {[35, 60, 25, 80, 45, 70, 50].map((h, i) => (
-            <Shimmer key={i} className="flex-1 rounded-md" style={{ height: `${h}%` }} />
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Motivational insight */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.25 }}
-        className="mt-4 flex items-start gap-3 rounded-2xl p-4"
-        style={{ background: `${BRAND.accent}10` }}
-      >
-        <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
-          style={{ background: BRAND.accent, color: "white" }}
-        >
-          <Plus className="h-4 w-4" />
-        </div>
-        <p className="text-xs leading-relaxed text-gray-700">
-          <span className="font-semibold text-gray-900">Pro tip:</span> If you track expenses daily,
-          most users save <span className="font-semibold">₹2,000–₹5,000</span> monthly.
-        </p>
-      </motion.div>
-    </div>
-  );
-}
-
-function BudgetRing() {
-  const r = 22;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
-      <circle cx="32" cy="32" r={r} stroke="#E5E7EB" strokeWidth="6" fill="none" />
-      <motion.circle
-        cx="32" cy="32" r={r}
-        stroke={BRAND.primary}
-        strokeWidth="6"
-        strokeLinecap="round"
-        fill="none"
-        strokeDasharray={c}
-        initial={{ strokeDashoffset: c }}
-        animate={{ strokeDashoffset: c * 0.35 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
-      />
-    </svg>
-  );
-}
-
-function Shimmer({ className, style }: { className?: string; style?: React.CSSProperties }) {
+/* ---------------- COMPLETION: LOADING ---------------- */
+function LoadingScreen() {
   return (
     <div
-      className={cn("relative overflow-hidden bg-gray-100", className)}
-      style={style}
+      className="flex min-h-screen w-full flex-col items-center justify-center px-6 text-center text-white"
+      style={{ background: `linear-gradient(to bottom, ${GREEN} 0%, ${GREEN_DARK} 100%)` }}
     >
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)",
-        }}
-        animate={{ x: ["-100%", "100%"] }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-      />
+      <div className="flex items-center gap-2">
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="h-3 w-3 rounded-full bg-white"
+            animate={{ y: [0, -8, 0], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
+          />
+        ))}
+      </div>
+      <p className="mt-6 max-w-xs text-[16px] leading-relaxed">
+        Building your personalized survival system...
+      </p>
+    </div>
+  );
+}
+
+/* ---------------- COMPLETION: READY ---------------- */
+function ReadyScreen({
+  name, salary, payDate, dailyLimit, goalTitle, onOpen,
+}: {
+  name: string; salary: number; payDate: string; dailyLimit: number; goalTitle: string; onOpen: () => void;
+}) {
+  return (
+    <div
+      className="flex min-h-screen w-full flex-col px-6 py-10 text-white"
+      style={{ background: `linear-gradient(to bottom, ${GREEN} 0%, ${GREEN_DARK} 100%)` }}
+    >
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 220, damping: 14 }}
+          className="flex h-20 w-20 items-center justify-center rounded-full bg-white"
+        >
+          <Check className="h-10 w-10" style={{ color: GREEN_ACCENT }} strokeWidth={3} />
+        </motion.div>
+
+        <h1 className="mt-6 text-[26px] font-bold">You're all set, {name || "friend"}! 🎉</h1>
+
+        <div className="mt-6 w-full max-w-sm rounded-2xl border-2 bg-white p-5 text-left text-gray-900" style={{ borderColor: GREEN_ACCENT }}>
+          <p className="text-[11px] font-bold tracking-wider" style={{ color: GREEN_ACCENT }}>YOUR SURVIVAL SYSTEM</p>
+          <div className="mt-3 space-y-2 text-sm">
+            <p>💰 Salary: <span className="font-bold tabular-nums">₹{fmt(salary)}</span></p>
+            <p>📅 Payday: <span className="font-bold">{payDate || "—"} monthly</span></p>
+            <p>🎯 Daily limit: <span className="font-bold tabular-nums">₹{fmt(dailyLimit)}/day</span></p>
+            <p>🛡️ Goal: <span className="font-bold">{goalTitle}</span></p>
+            <p>📊 Starting score: <span className="font-bold">70</span></p>
+          </div>
+        </div>
+
+        <p className="mt-6 max-w-sm text-[14px] leading-relaxed text-white/85">
+          The average Indian salary earner saves ₹0 by month end. You're already ahead — you have a plan. 💪
+        </p>
+      </div>
+
+      <button
+        onClick={onOpen}
+        className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-[15px] font-bold shadow-lg active:scale-[0.98]"
+        style={{ color: GREEN_DARK }}
+      >
+        Open My Dashboard
+        <ArrowRight className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
+/* ---------------- helpers ---------------- */
+function ChipGrid({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {options.map((opt) => {
+        const active = value === opt;
+        return (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            className={cn(
+              "rounded-full border-2 px-4 py-2 text-sm font-semibold transition-all",
+              active ? "text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-300",
+            )}
+            style={active ? { background: GREEN_ACCENT, borderColor: GREEN_ACCENT } : undefined}
+          >
+            {opt}
+          </button>
+        );
+      })}
     </div>
   );
 }
