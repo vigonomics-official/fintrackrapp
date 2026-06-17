@@ -26,7 +26,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1.0" },
       { title: "FinTrackr — Smart Finance Tracker" },
       { name: "description", content: "Track expenses, budgets, investments and savings goals with a secure modern finance dashboard." },
       { property: "og:title", content: "FinTrackr — Smart Finance Tracker" },
