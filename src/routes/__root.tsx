@@ -66,7 +66,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Outlet />
+          <div className="app-container">
+            <Outlet />
+          </div>
           <Toaster richColors position="top-right" />
         </TooltipProvider>
       </AuthProvider>
