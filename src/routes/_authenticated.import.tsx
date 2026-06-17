@@ -507,7 +507,7 @@ function ImportPage() {
                             </Select>
                           </td>
                           <td className="px-3 py-2">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeRow(r.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Remove row" onClick={() => removeRow(r.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                           </td>
                         </tr>
                       ))}

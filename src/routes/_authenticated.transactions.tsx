@@ -516,7 +516,7 @@ function TransactionsPage() {
                               {!selectMode && (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 opacity-60 group-hover:opacity-100" aria-label="More">
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 opacity-60 group-hover:opacity-100" aria-label="Transaction actions">
                                       <MoreVertical className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>

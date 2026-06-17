@@ -58,6 +58,27 @@ export const Route = createFileRoute("/")({
       { property: "og:url", content: "/" },
     ],
     links: [{ rel: "canonical", href: "/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "FinTrackr",
+          url: "https://fintrackrapp.lovable.app/",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "FinTrackr",
+          url: "https://fintrackrapp.lovable.app/",
+          logo: "https://fintrackrapp.lovable.app/favicon.ico",
+        }),
+      },
+    ],
   }),
   component: Landing,
 });
@@ -332,6 +353,7 @@ function TrustSection() {
   ];
   return (
     <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
+      <h2 className="sr-only">Why FinTrackr</h2>
       <div className="grid gap-4 md:grid-cols-3">
         {items.map((it, i) => (
           <motion.div
@@ -348,7 +370,7 @@ function TrustSection() {
             >
               <it.icon className="h-5 w-5" />
             </div>
-            <h2 className="text-sm font-semibold text-gray-900">{it.title}</h2>
+            <h3 className="text-sm font-semibold text-gray-900">{it.title}</h3>
             <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
           </motion.div>
         ))}

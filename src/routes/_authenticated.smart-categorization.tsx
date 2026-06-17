@@ -249,7 +249,7 @@ function SmartCategorizationPage() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeRule(r.id)} className="h-8 w-8 shrink-0">
+                    <Button variant="ghost" size="icon" aria-label="Delete rule" onClick={() => removeRule(r.id)} className="h-8 w-8 shrink-0">
                       <Trash2 className="h-4 w-4 text-muted-foreground" />
                     </Button>
                   </li>
@@ -454,7 +454,7 @@ function SuggestionCard({
               {merchant.prediction.category && <> · {merchant.prediction.confidence}% match</>}
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onIgnore} className="h-8 w-8">
+          <Button variant="ghost" size="icon" aria-label="Ignore suggestion" onClick={onIgnore} className="h-8 w-8">
             <X className="h-4 w-4 text-muted-foreground" />
           </Button>
         </div>
