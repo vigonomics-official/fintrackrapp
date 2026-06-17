@@ -645,8 +645,8 @@ function ReadyScreen({
 
       <button
         onClick={onOpen}
-        className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-[15px] font-bold shadow-lg active:scale-[0.98]"
-        style={{ color: GREEN_DARK }}
+        className="mt-6 flex h-14 w-full items-center justify-center gap-2 text-[15px] shadow-lg active:scale-[0.98]"
+        style={{ background: GREEN, color: "#FFFFFF", fontWeight: 600, borderRadius: 12 }}
       >
         Open My Dashboard
         <ArrowRight className="h-5 w-5" />
