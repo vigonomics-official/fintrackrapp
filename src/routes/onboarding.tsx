@@ -242,8 +242,8 @@ function OnboardingPage() {
           <Button
             onClick={() => (step < 5 ? setStep(step + 1) : finish())}
             disabled={!canNext || saving}
-            className="h-12 w-full rounded-2xl text-base font-semibold shadow-md transition-transform active:scale-[0.98] disabled:opacity-50"
-            style={{ background: GREEN_ACCENT, color: "white" }}
+            className="h-12 w-full text-base shadow-md transition-transform active:scale-[0.98] disabled:opacity-50"
+            style={{ background: GREEN, color: "#FFFFFF", fontWeight: 600, borderRadius: 12 }}
           >
             {step === 5 ? "Build My Survival System" : "Next"}
             <ArrowRight className="ml-2 h-5 w-5" />
