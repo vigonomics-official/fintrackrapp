@@ -210,13 +210,13 @@ function OnboardingPage() {
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
               <motion.div
                 className="h-full rounded-full"
-                style={{ background: GREEN_ACCENT }}
+                style={{ background: GREEN }}
                 initial={false}
-                animate={{ width: `${(step - 1) / totalSteps * 100 + 20}%` }}
+                animate={{ width: `${(step / totalSteps) * 100}%` }}
                 transition={{ type: "spring", stiffness: 120, damping: 20 }}
               />
             </div>
-            <p className="mt-1 text-[11px] font-semibold tracking-wide text-gray-500">{step - 1} of {totalSteps}</p>
+            <p className="mt-1 text-[11px] font-semibold tracking-wide text-gray-500">Step {step} of {totalSteps}</p>
           </div>
         </div>
 
