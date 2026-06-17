@@ -218,9 +218,6 @@
     position: relative;
     overflow-x: clip;
   }
-  @media (min-width: 768px) {
-    .app-container { max-width: 100%; }
-  }
   .bg-gradient-primary { background-image: var(--gradient-primary); }
   .bg-gradient-gold { background-image: var(--gradient-gold); }
   .bg-gradient-hero { background-image: var(--gradient-hero); }
