@@ -210,13 +210,13 @@ function OnboardingPage() {
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
               <motion.div
                 className="h-full rounded-full"
-                style={{ background: GREEN_ACCENT }}
+                style={{ background: GREEN }}
                 initial={false}
-                animate={{ width: `${(step - 1) / totalSteps * 100 + 20}%` }}
+                animate={{ width: `${(step / totalSteps) * 100}%` }}
                 transition={{ type: "spring", stiffness: 120, damping: 20 }}
               />
             </div>
-            <p className="mt-1 text-[11px] font-semibold tracking-wide text-gray-500">{step - 1} of {totalSteps}</p>
+            <p className="mt-1 text-[11px] font-semibold tracking-wide text-gray-500">Step {step} of {totalSteps}</p>
           </div>
         </div>
 
@@ -242,8 +242,8 @@ function OnboardingPage() {
           <Button
             onClick={() => (step < 5 ? setStep(step + 1) : finish())}
             disabled={!canNext || saving}
-            className="h-12 w-full rounded-2xl text-base font-semibold shadow-md transition-transform active:scale-[0.98] disabled:opacity-50"
-            style={{ background: GREEN_ACCENT, color: "white" }}
+            className="h-12 w-full text-base shadow-md transition-transform active:scale-[0.98] disabled:opacity-50"
+            style={{ background: GREEN, color: "#FFFFFF", fontWeight: 600, borderRadius: 12 }}
           >
             {step === 5 ? "Build My Survival System" : "Next"}
             <ArrowRight className="ml-2 h-5 w-5" />
@@ -645,8 +645,8 @@ function ReadyScreen({
 
       <button
         onClick={onOpen}
-        className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-[15px] font-bold shadow-lg active:scale-[0.98]"
-        style={{ color: GREEN_DARK }}
+        className="mt-6 flex h-14 w-full items-center justify-center gap-2 text-[15px] shadow-lg active:scale-[0.98]"
+        style={{ background: GREEN, color: "#FFFFFF", fontWeight: 600, borderRadius: 12 }}
       >
         Open My Dashboard
         <ArrowRight className="h-5 w-5" />
