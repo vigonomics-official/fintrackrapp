@@ -174,15 +174,34 @@
 @layer base {
   * {
     border-color: var(--color-border);
+    box-sizing: border-box;
+    -webkit-text-size-adjust: 100%;
   }
   html {
     font-family: var(--font-sans);
+    font-size: 16px;
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "ss01", "cv11";
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: clip;
+  }
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: clip;
+  }
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
   }
   h1, h2, h3, h4, h5 {
     font-family: var(--font-display);
@@ -191,6 +210,14 @@
 }
 
 @layer utilities {
+  .app-container {
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: clip;
+  }
   .bg-gradient-primary { background-image: var(--gradient-primary); }
   .bg-gradient-gold { background-image: var(--gradient-gold); }
   .bg-gradient-hero { background-image: var(--gradient-hero); }
