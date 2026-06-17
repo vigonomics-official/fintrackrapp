@@ -376,10 +376,10 @@ function SmsIntelligencePage() {
                     {isEdit ? (
                       <div className="flex items-center gap-2">
                         <Input value={draft} onChange={(e) => setDraft(e.target.value)} className="h-8 w-36 text-xs" />
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setItems(items.map(x => x.id === it.id ? { ...x, category: draft || x.category } : x)); setEditing(null); }}>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Confirm category" onClick={() => { setItems(items.map(x => x.id === it.id ? { ...x, category: draft || x.category } : x)); setEditing(null); }}>
                           <Check className="h-4 w-4 text-primary" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditing(null)}>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Cancel edit" onClick={() => setEditing(null)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>

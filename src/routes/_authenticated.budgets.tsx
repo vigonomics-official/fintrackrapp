@@ -152,10 +152,10 @@ function BudgetsPage() {
                     <h3 className="truncate font-display text-sm font-semibold">{c?.name ?? "Category"}</h3>
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(b.id, b.category_id!, b.monthly_limit)}>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Edit budget" onClick={() => openEdit(b.id, b.category_id!, b.monthly_limit)}>
                       <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => remove(b.id)}>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Delete budget" onClick={() => remove(b.id)}>
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
                   </div>
