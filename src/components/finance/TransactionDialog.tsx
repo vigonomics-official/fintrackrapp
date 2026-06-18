@@ -142,17 +142,31 @@ export function TransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-32px)] max-w-md overflow-x-hidden p-4 sm:p-6">
+      <DialogContent
+        className="overflow-x-hidden sm:max-w-md"
+        style={{
+          width: "100%",
+          maxWidth: "100vw",
+          left: 0,
+          right: 0,
+          margin: 0,
+          padding: 16,
+          boxSizing: "border-box",
+          transform: "translateY(-50%)",
+          top: "50%",
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{edit ? "Edit transaction" : "Add transaction"}</DialogTitle>
           <DialogDescription>Track money in, out, or moved.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-3 gap-2">
+        <form onSubmit={onSubmit} className="w-full space-y-4" style={{ boxSizing: "border-box" }}>
+          <div className="flex w-full" style={{ gap: 8 }}>
             {(["expense", "income", "transfer"] as const).map((t) => (
               <button type="button" key={t}
                 onClick={() => form.setValue("type", t)}
-                className={`rounded-lg border px-3 py-2 text-sm font-medium capitalize transition ${
+                style={{ flex: 1, minWidth: 0, boxSizing: "border-box" }}
+                className={`truncate rounded-lg border px-2 py-2 text-sm font-medium capitalize transition ${
                   watchType === t ? "border-primary bg-primary/10 text-primary" : "hover:bg-muted"
                 }`}>{t}</button>
             ))}
