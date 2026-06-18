@@ -195,7 +195,7 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
       )}
 
       {/* Comparison */}
-      {comparisons.length > 0 && range !== "year" && days >= 7 && prevExpense > 0 && (
+      {comparisons.length > 0 && range !== "year" && days >= 10 && rangeTxs.length >= 5 && prevExpense > 0 && (
         <Card className="shadow-soft">
           <CardContent className="space-y-2 p-4">
             <div className="flex items-baseline justify-between">
