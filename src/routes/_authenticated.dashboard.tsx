@@ -585,14 +585,15 @@ function Dashboard() {
             {budgets.length === 0 ? (
               <p className="text-sm text-muted-foreground">No budgets set yet.</p>
             ) : (() => {
-              const seen = new Set<string>();
-              const unique = budgets.filter((b) => {
+              const byCat = new Map<string, typeof budgets[number]>();
+              for (const b of budgets) {
                 const key = b.category_id ?? `__none_${b.id}`;
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-              });
-              return unique.slice(0, 5);
+                const existing = byCat.get(key);
+                if (!existing || (b.monthly_limit ?? 0) > (existing.monthly_limit ?? 0)) {
+                  byCat.set(key, b);
+                }
+              }
+              return [...byCat.values()].slice(0, 5);
             })().map((b) => {
               const c = categories.find(x => x.id === b.category_id);
               const name = simplifyCategory(c?.name);

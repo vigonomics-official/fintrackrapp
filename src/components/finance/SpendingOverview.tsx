@@ -131,15 +131,7 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
           </div>
 
           <div className="flex items-baseline justify-between gap-3">
-            {income > 0 ? (
-              <div>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Income</p>
-                <p className="font-display text-lg font-bold tabular-nums text-success">
-                  {formatCurrency(income, currency)}
-                </p>
-              </div>
-            ) : null}
-            <div className={income > 0 ? "text-right" : "ml-auto text-right"}>
+            <div className="ml-auto text-right">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Spent So Far</p>
               <p className="font-display text-xl font-bold tabular-nums" style={{ color: "#374151" }}>
                 {formatCurrency(Math.abs(expense), currency)}
@@ -203,7 +195,7 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
       )}
 
       {/* Comparison */}
-      {comparisons.length > 0 && range !== "year" && days >= 7 && prevExpense > 0 && (
+      {comparisons.length > 0 && range !== "year" && days >= 10 && rangeTxs.length >= 5 && prevExpense > 0 && (
         <Card className="shadow-soft">
           <CardContent className="space-y-2 p-4">
             <div className="flex items-baseline justify-between">
