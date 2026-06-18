@@ -317,7 +317,7 @@ function TransactionsPage() {
         }
       />
 
-      <div className="space-y-4 px-5 py-5 md:px-10">
+      <div className="space-y-4 px-4 py-5 md:px-10">
         {/* Date range indicator */}
         <p className="text-[12px] text-muted-foreground">{rangeLabel}</p>
 

@@ -10,7 +10,7 @@ const TABS = [
 export function ExpensesTabs() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <div className="sticky top-0 z-10 border-b bg-card/80 px-5 backdrop-blur md:px-10">
+    <div className="sticky top-0 z-10 border-b bg-card/80 px-4 backdrop-blur md:px-10">
       <div className="flex gap-1 overflow-x-auto">
         {TABS.map((t) => {
           const active = path === t.to || path.startsWith(t.to + "/");
