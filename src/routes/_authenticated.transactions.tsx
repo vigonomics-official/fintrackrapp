@@ -367,7 +367,7 @@ function TransactionsPage() {
 
 
         {/* Fix uncategorized */}
-        {uncategorized.length > 0 && (
+        {rangeKey === "month" && uncategorized.length > 0 && (
           <Card className="border-orange-200 bg-orange-50 shadow-soft dark:border-orange-900/50 dark:bg-orange-950/30">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
