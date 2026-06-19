@@ -62,8 +62,8 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
   return (
     <div className="space-y-3">
       <div
-        className="grid w-full grid-cols-4 rounded-[24px] p-1"
-        style={{ background: "#F3F4F6" }}
+        className="flex w-full items-stretch gap-1 overflow-hidden rounded-[24px] p-1"
+        style={{ background: "#F3F4F6", boxSizing: "border-box" }}
         role="tablist"
       >
         {OPTIONS.map((o) => {
@@ -75,14 +75,18 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
               aria-selected={active}
               onClick={() => onChange(o.key)}
               className={cn(
-                "w-full rounded-[20px] py-2 text-[13px] transition-colors",
+                "min-w-0 flex-1 truncate rounded-[20px] text-center text-[13px] transition-colors",
                 active ? "font-semibold text-white" : "font-medium"
               )}
-              style={
-                active
+              style={{
+                padding: "8px 4px",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                ...(active
                   ? { background: "#1A6B4A", color: "#ffffff" }
-                  : { background: "transparent", color: "#9CA3AF" }
-              }
+                  : { background: "transparent", color: "#9CA3AF" }),
+              }}
             >
               {o.label}
             </button>
