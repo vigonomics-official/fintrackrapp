@@ -120,24 +120,51 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
     custom: "selected period",
   }[range];
 
+  const headingLabel = {
+    week: "This Week's Spending",
+    month: "This Month's Spending",
+    year: "This Year's Spending",
+    custom: "Selected Period Spending",
+  }[range];
+
+  const formatAmount = (amt: number) => {
+    if (amt > 99999) {
+      return `₹${(amt / 100000).toFixed(2)}L`;
+    }
+    return formatCurrency(Math.abs(amt), currency);
+  };
+
   return (
     <div className="space-y-3">
       {/* This month's spending */}
       <Card className="shadow-soft">
         <CardContent className="space-y-3 p-4">
-          <div className="flex items-baseline justify-between">
-            <p className="text-sm font-semibold">This Month's Spending</p>
-            <p className="text-[11px] text-muted-foreground">{rangeLabel}</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="min-w-0 truncate text-sm font-semibold">{headingLabel}</p>
+            <p className="shrink-0 text-[11px] text-muted-foreground">{rangeLabel}</p>
           </div>
 
           <div className="flex items-baseline justify-between gap-3">
-            <div className="ml-auto text-right">
+            <div className="ml-auto min-w-0 max-w-full text-right">
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Spent So Far</p>
-              <p className="font-display text-xl font-bold tabular-nums" style={{ color: "#374151" }}>
-                {formatCurrency(Math.abs(expense), currency)}
+              <p
+                className="font-display font-bold tabular-nums"
+                style={{
+                  color: "#374151",
+                  fontSize: "clamp(18px, 5vw, 28px)",
+                  lineHeight: 1.1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  maxWidth: "100%",
+                }}
+                title={formatCurrency(Math.abs(expense), currency)}
+              >
+                {formatAmount(expense)}
               </p>
             </div>
           </div>
+
 
 
           {topCats.length > 0 ? (
