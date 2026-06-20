@@ -391,12 +391,19 @@ function TransactionsPage() {
         {/* Search + filter toggle */}
         <Card className="shadow-soft">
           <CardContent className="space-y-3 p-3">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
+            <div className="flex items-center gap-2">
+              <div className="relative min-w-0 flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="pl-9" />
+                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="w-full pl-9" />
               </div>
-              <Button variant="outline" size="icon" className="md:hidden" onClick={() => setShowFilters(s => !s)} aria-label="Filters">
+              <Button
+                variant="outline"
+                size="icon"
+                className="md:hidden shrink-0"
+                style={{ width: 40, height: 40, minWidth: 40 }}
+                onClick={() => setShowFilters(s => !s)}
+                aria-label="Filters"
+              >
                 <Filter className="h-4 w-4" />
               </Button>
             </div>

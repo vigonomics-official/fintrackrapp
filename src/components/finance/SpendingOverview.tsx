@@ -155,10 +155,11 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
             <p className="shrink-0 text-[11px] text-muted-foreground">{rangeLabel}</p>
           </div>
 
-          <div className="flex items-baseline justify-between gap-3">
+          <div className="flex items-baseline gap-3">
+            <div style={{ flex: 1, minWidth: 0 }} />
             <div
-              className="ml-auto text-right"
-              style={{ width: 'auto', maxWidth: '100%', overflow: 'hidden' }}
+              className="text-right"
+              style={{ width: "auto", minWidth: 90, maxWidth: "100%", overflow: "hidden" }}
             >
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{spentLabel}</p>
               <p
@@ -187,12 +188,20 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
                 const pct = Math.min(100, Math.round((c.amount / maxCat) * 100));
                 return (
                   <li key={c.id}>
-                    <div className="mb-1 flex items-center justify-between text-[13px]">
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
-                        <span className="font-medium">{c.name}</span>
+                    <div
+                      className="mb-1 text-[13px]"
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    >
+                      <span className="flex min-w-0 items-center gap-2" style={{ flex: 1 }}>
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: c.color }} />
+                        <span className="truncate font-medium">{c.name}</span>
                       </span>
-                      <span className="font-display tabular-nums">{formatCurrency(c.amount, currency)}</span>
+                      <span
+                        className="shrink-0 font-display tabular-nums"
+                        style={{ marginLeft: 12, textAlign: "right" }}
+                      >
+                        {formatCurrency(c.amount, currency)}
+                      </span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: c.color }} />
