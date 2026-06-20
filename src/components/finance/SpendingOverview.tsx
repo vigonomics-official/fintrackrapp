@@ -127,11 +127,22 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
     custom: "Selected Period Spending",
   }[range];
 
-  const formatAmount = (amt: number) => {
-    if (amt > 99999) {
-      return `₹${(amt / 100000).toFixed(2)}L`;
+  const spentLabel = {
+    week: "THIS WEEK",
+    month: "THIS MONTH",
+    year: "THIS YEAR",
+    custom: "TOTAL SPENT",
+  }[range];
+
+  const formatAmount = (amount: number) => {
+    const abs = Math.abs(amount);
+    if (abs >= 100000) {
+      return '₹' + (abs / 100000).toFixed(2) + 'L';
     }
-    return formatCurrency(Math.abs(amt), currency);
+    if (abs >= 1000) {
+      return '₹' + Math.round(abs).toLocaleString('en-IN');
+    }
+    return '₹' + Math.round(abs);
   };
 
   return (
@@ -145,8 +156,11 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
           </div>
 
           <div className="flex items-baseline justify-between gap-3">
-            <div className="ml-auto min-w-0 max-w-full text-right">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Spent So Far</p>
+            <div
+              className="ml-auto text-right"
+              style={{ width: 'auto', maxWidth: '100%', overflow: 'hidden' }}
+            >
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{spentLabel}</p>
               <p
                 className="font-display font-bold tabular-nums"
                 style={{

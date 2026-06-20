@@ -62,8 +62,17 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
   return (
     <div className="space-y-3">
       <div
-        className="flex w-full items-stretch gap-1 overflow-hidden rounded-[24px] p-1"
-        style={{ background: "#F3F4F6", boxSizing: "border-box" }}
+        style={{
+          display: 'flex',
+          width: '100%',
+          maxWidth: '100%',
+          backgroundColor: '#f3f4f6',
+          borderRadius: '24px',
+          padding: '4px',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
+          gap: '4px',
+        }}
         role="tablist"
       >
         {OPTIONS.map((o) => {
@@ -74,15 +83,19 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
               role="tab"
               aria-selected={active}
               onClick={() => onChange(o.key)}
-              className={cn(
-                "min-w-0 flex-1 truncate rounded-[20px] text-center text-[13px] transition-colors",
-                active ? "font-semibold text-white" : "font-medium"
-              )}
+              className={cn("transition-colors", active ? "font-semibold" : "font-medium")}
               style={{
-                padding: "8px 4px",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                flex: 1,
+                minWidth: 0,
+                padding: '8px 2px',
+                fontSize: '12px',
+                fontWeight: 500,
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                borderRadius: '20px',
+                border: 'none',
                 ...(active
                   ? { background: "#1A6B4A", color: "#ffffff" }
                   : { background: "transparent", color: "#9CA3AF" }),
