@@ -155,10 +155,11 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
             <p className="shrink-0 text-[11px] text-muted-foreground">{rangeLabel}</p>
           </div>
 
-          <div className="flex items-baseline justify-between gap-3">
+          <div className="flex items-baseline gap-3">
+            <div style={{ flex: 1, minWidth: 0 }} />
             <div
-              className="ml-auto text-right"
-              style={{ width: 'auto', maxWidth: '100%', overflow: 'hidden' }}
+              className="text-right"
+              style={{ width: "auto", minWidth: 90, maxWidth: "100%", overflow: "hidden" }}
             >
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{spentLabel}</p>
               <p
