@@ -108,31 +108,29 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
       </div>
 
       {value === "custom" && (
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="mb-1 block text-[11px] text-muted-foreground">From</label>
-              <Input
-                type="date"
-                value={custom.from}
-                onChange={(e) => onCustomChange({ ...custom, from: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] text-muted-foreground">To</label>
-              <Input
-                type="date"
-                value={custom.to}
-                onChange={(e) => onCustomChange({ ...custom, to: e.target.value })}
-              />
-            </div>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, width: "100%" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <label className="mb-1 block text-[11px] text-muted-foreground">From</label>
+            <Input
+              type="date"
+              value={custom.from}
+              onChange={(e) => onCustomChange({ ...custom, from: e.target.value })}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <label className="mb-1 block text-[11px] text-muted-foreground">To</label>
+            <Input
+              type="date"
+              value={custom.to}
+              onChange={(e) => onCustomChange({ ...custom, to: e.target.value })}
+            />
           </div>
           <Button
-            className="w-full text-white hover:opacity-90"
-            style={{ background: "#1A6B4A" }}
+            className="text-white hover:opacity-90"
+            style={{ background: "#1A6B4A", flexShrink: 0 }}
             onClick={() => onChange("custom")}
           >
-            Apply Filter
+            Apply
           </Button>
         </div>
       )}
