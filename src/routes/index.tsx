@@ -151,7 +151,7 @@ function HeroMockup() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-medium text-gray-500">Good morning, Aarav</p>
+              <p className="text-[11px] font-medium text-gray-600">Good morning, Aarav</p>
               <p className="text-base font-semibold text-gray-900">November Overview</p>
             </div>
             <div
@@ -193,12 +193,12 @@ function HeroMockup() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[10px] font-medium text-gray-500">Spent</span>
+                <span className="text-[10px] font-medium text-gray-600">Spent</span>
                 <span className="text-base font-bold text-gray-900">68%</span>
               </div>
             </div>
             <div className="flex-1">
-              <p className="text-[11px] font-medium text-gray-500">Remaining balance</p>
+              <p className="text-[11px] font-medium text-gray-600">Remaining balance</p>
               <p className="font-display text-2xl font-bold text-gray-900">₹ 12,840</p>
               <p
                 className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold"
@@ -224,7 +224,7 @@ function HeroMockup() {
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
                   Smart insight
                 </p>
                 <p className="mt-0.5 text-[12px] font-medium leading-snug text-gray-800">
@@ -243,7 +243,7 @@ function HeroMockup() {
         transition={{ delay: 0.7 }}
         className="absolute -left-4 top-28 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
       >
-        <p className="text-[10px] text-gray-500">Saved this month</p>
+        <p className="text-[10px] text-gray-600">Saved this month</p>
         <p className="text-sm font-bold" style={{ color: BRAND.accent }}>+ ₹ 2,340</p>
       </motion.div>
 
@@ -253,7 +253,7 @@ function HeroMockup() {
         transition={{ delay: 0.9 }}
         className="absolute -right-4 bottom-20 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
       >
-        <p className="text-[10px] text-gray-500">Daily streak</p>
+        <p className="text-[10px] text-gray-600">Daily streak</p>
         <p className="text-sm font-bold text-gray-900">🔥 28 days</p>
       </motion.div>
     </motion.div>
@@ -329,7 +329,7 @@ function Hero() {
         </motion.div>
 
         {/* Trust row */}
-        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium text-gray-500 md:text-xs">
+        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium text-gray-600 md:text-xs">
           {["No bank login needed", "Built for India", "Setup in under 60 seconds"].map((t) => (
             <div key={t} className="inline-flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
@@ -406,7 +406,7 @@ function ProblemSection() {
               <it.icon className="h-4 w-4" />
             </div>
             <h3 className="mt-3 text-sm font-semibold text-gray-900">{it.title}</h3>
-            <p className="mt-1 text-[12px] leading-snug text-gray-500">{it.desc}</p>
+            <p className="mt-1 text-[12px] leading-snug text-gray-600">{it.desc}</p>
           </motion.div>
         ))}
       </div>
@@ -527,7 +527,7 @@ function SmartFeatures() {
         </div>
 
         <div className="mt-10 rounded-3xl border border-gray-100 bg-gray-50/70 p-6 md:p-8">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest text-gray-500">
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-gray-600">
             How it learns
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -616,7 +616,7 @@ function DashboardShowcase() {
             viewport={{ once: true }}
             className="lg:col-span-5 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
-            <p className="text-xs font-medium text-gray-500">November · Budget</p>
+            <p className="text-xs font-medium text-gray-600">November · Budget</p>
             <div className="mt-4 flex items-center gap-5">
               <div className="relative h-28 w-28 shrink-0">
                 <svg viewBox="0 0 36 36" className="h-28 w-28 -rotate-90">
@@ -636,12 +636,12 @@ function DashboardShowcase() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-medium text-gray-500">Spent</span>
+                  <span className="text-[10px] font-medium text-gray-600">Spent</span>
                   <span className="font-display text-lg font-bold text-gray-900">72%</span>
                 </div>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Remaining</p>
+                <p className="text-xs text-gray-600">Remaining</p>
                 <p className="font-display text-3xl font-bold text-gray-900">₹ 9,441</p>
                 <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                   <CalendarClock className="h-3 w-3" /> Salary in 5 days
@@ -660,7 +660,7 @@ function DashboardShowcase() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500">Savings goal · Goa trip</p>
+                <p className="text-xs font-medium text-gray-600">Savings goal · Goa trip</p>
                 <p className="font-display text-2xl font-bold text-gray-900">
                   ₹ 38,200 <span className="text-sm font-medium text-gray-600">/ 50,000</span>
                 </p>
@@ -682,7 +682,7 @@ function DashboardShowcase() {
                 style={{ background: `linear-gradient(90deg, ${BRAND.primary}, ${BRAND.accent})` }}
               />
             </div>
-            <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500">
+            <div className="mt-3 flex items-center justify-between text-[11px] text-gray-600">
               <span>76% complete</span>
               <span>On track for Dec 18</span>
             </div>
@@ -751,7 +751,7 @@ function DashboardShowcase() {
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-gray-900">{t.name}</p>
-                      <p className="text-[10px] text-gray-500">{t.tag}</p>
+                      <p className="text-[10px] text-gray-600">{t.tag}</p>
                     </div>
                   </div>
                   <p className="text-xs font-bold text-gray-900">− ₹ {t.amt.toLocaleString("en-IN")}</p>
@@ -817,7 +817,7 @@ function HowItWorks() {
       <div className="mx-auto max-w-6xl px-5">
         <div className="text-center">
           <h2 className="font-display text-xl font-bold text-gray-900 md:text-2xl">How it works</h2>
-          <p className="mt-1 text-xs text-gray-500">Three steps. No spreadsheets.</p>
+          <p className="mt-1 text-xs text-gray-600">Three steps. No spreadsheets.</p>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {steps.map((s, i) => (
@@ -837,7 +837,7 @@ function HowItWorks() {
               </span>
               <div>
                 <h3 className="text-sm font-semibold text-gray-900">{s.title}</h3>
-                <p className="mt-0.5 text-[12px] leading-snug text-gray-500">{s.desc}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-gray-600">{s.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -892,7 +892,7 @@ function StatsStrip() {
             <p className="font-display text-xl font-bold text-gray-900 md:text-3xl" style={{ color: BRAND.primary }}>
               <Counter to={s.to} prefix={s.prefix} suffix={s.suffix} />
             </p>
-            <p className="mt-1 text-[10px] font-medium text-gray-500 md:text-xs">{s.label}</p>
+            <p className="mt-1 text-[10px] font-medium text-gray-600 md:text-xs">{s.label}</p>
           </div>
         ))}
       </div>
@@ -950,7 +950,7 @@ function Testimonials() {
               whileHover={{ y: -6 }}
               className={`group relative rounded-3xl bg-gradient-to-br ${c.grad} p-6 ring-1 ${c.ring} shadow-[0_10px_40px_-20px_rgba(17,24,39,0.18)] transition-shadow hover:shadow-[0_24px_60px_-20px_rgba(17,24,39,0.25)]`}
             >
-              <Quote className="absolute right-5 top-5 h-7 w-7 text-white/85" />
+              <Quote className="absolute right-5 top-5 h-7 w-7 text-white/95" />
               <p className="text-sm leading-relaxed text-gray-800">"{c.quote}"</p>
               <div className="mt-6 flex items-center gap-3">
                 <div
@@ -961,7 +961,7 @@ function Testimonials() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{c.name}</p>
-                  <p className="text-[11px] text-gray-500">{c.role}</p>
+                  <p className="text-[11px] text-gray-600">{c.role}</p>
                 </div>
               </div>
             </motion.div>
@@ -1001,7 +1001,7 @@ function FinalCTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.05 }}
-          className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/80 md:text-base"
+          className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/90 md:text-base"
         >
           Join Indian salary earners who finally understand where their money goes.
         </motion.p>
@@ -1038,7 +1038,7 @@ function FinalCTA() {
           initial={{ opacity: 1 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-5 text-xs font-medium text-white/80"
+          className="mt-5 text-xs font-medium text-white/90"
         >
           No credit card required · Takes 30 seconds
         </motion.p>
@@ -1069,13 +1069,13 @@ function Footer() {
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo />
-          <p className="mt-3 max-w-xs text-xs text-gray-500">
+          <p className="mt-3 max-w-xs text-xs text-gray-600">
             An intelligent money control center built for Indian salary life.
           </p>
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">{c.title}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-600">{c.title}</p>
             <ul className="mt-3 space-y-2">
               {c.links.map((l) => (
                 <li key={l.label}>
@@ -1093,10 +1093,10 @@ function Footer() {
       </div>
       <div className="border-t border-gray-100">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-5 sm:flex-row">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-600">
             © {new Date().getFullYear()} FinTrackr
           </p>
-          <p className="inline-flex items-center gap-1 text-xs text-gray-500">
+          <p className="inline-flex items-center gap-1 text-xs text-gray-600">
             Made with <Heart className="h-3 w-3 fill-red-500 text-red-500" /> in India
           </p>
         </div>
