@@ -1,18 +1,17 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import { friendlyError } from "@/lib/error-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberMerchant } from "@/lib/categorization";
 import { useAuth } from "@/lib/auth-context";
 import { useCategories, type Transaction } from "@/hooks/use-finance";
 import { PAYMENT_METHODS } from "@/lib/constants";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +54,7 @@ export function TransactionDialog({
   const { data: categories = [] } = useCategories();
   const [submitting, setSubmitting] = useState(false);
   const amountRef = useRef<HTMLInputElement | null>(null);
+  const sheetRef = useRef<HTMLDivElement | null>(null);
   const [selectedQuick, setSelectedQuick] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -69,7 +69,6 @@ export function TransactionDialog({
   });
 
   const watchType = form.watch("type");
-  
 
   useEffect(() => {
     if (open) {
@@ -96,6 +95,24 @@ export function TransactionDialog({
       setTimeout(() => amountRef.current?.focus(), 60);
     }
   }, [open, edit, form]);
+
+  // Lock body scroll while open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    // Debug: verify sheet width matches viewport width
+    if (typeof window !== "undefined") {
+      requestAnimationFrame(() => {
+        const w = sheetRef.current?.offsetWidth ?? 0;
+        if (Math.abs(w - window.innerWidth) > 2) {
+          // eslint-disable-next-line no-console
+          console.warn("[TransactionDialog] width mismatch", { sheet: w, viewport: window.innerWidth });
+        }
+      });
+    }
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
 
   const filteredCats = categories.filter((c) => watchType === "transfer" || c.type === watchType);
 
@@ -127,7 +144,6 @@ export function TransactionDialog({
     const { error } = await op;
     setSubmitting(false);
     if (error) return toast.error(friendlyError(error));
-    // Learn merchant → category mapping so future imports auto-categorize
     if (values.category_id && values.notes?.trim()) {
       const catName = categories.find((c) => c.id === values.category_id)?.name;
       const merchant = values.notes.trim().split(" — ")[0];
@@ -140,26 +156,66 @@ export function TransactionDialog({
 
   const { ref: amountRegisterRef, ...amountRegister } = form.register("amount");
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="overflow-x-hidden sm:max-w-md"
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={edit ? "Edit transaction" : "Add transaction"}
+      onClick={(e) => { if (e.target === e.currentTarget) onOpenChange(false); }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        width: "100vw",
+        height: "100dvh",
+        background: "rgba(0,0,0,0.5)",
+        zIndex: 9999,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-end",
+      }}
+    >
+      <div
+        ref={sheetRef}
         style={{
-          width: "100%",
+          position: "relative",
+          width: "100vw",
           maxWidth: "100vw",
-          left: 0,
-          right: 0,
-          margin: 0,
-          padding: 16,
+          minWidth: "100vw",
+          background: "hsl(var(--background))",
+          color: "hsl(var(--foreground))",
+          borderRadius: "20px 20px 0 0",
+          padding: "20px 16px",
           boxSizing: "border-box",
-          transform: "translateY(-50%)",
-          top: "50%",
+          maxHeight: "90dvh",
+          overflowY: "auto",
         }}
       >
-        <DialogHeader>
-          <DialogTitle>{edit ? "Edit transaction" : "Add transaction"}</DialogTitle>
-          <DialogDescription>Track money in, out, or moved.</DialogDescription>
-        </DialogHeader>
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          aria-label="Close"
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            background: "transparent",
+            border: "none",
+            padding: 6,
+            cursor: "pointer",
+            color: "inherit",
+          }}
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <div className="mb-3">
+          <h2 className="text-lg font-semibold leading-none tracking-tight">
+            {edit ? "Edit transaction" : "Add transaction"}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">Track money in, out, or moved.</p>
+        </div>
+
         <form onSubmit={onSubmit} className="w-full space-y-4" style={{ boxSizing: "border-box" }}>
           <div className="flex w-full" style={{ gap: 8 }}>
             {(["expense", "income", "transfer"] as const).map((t) => (
@@ -246,7 +302,8 @@ export function TransactionDialog({
             {submitting ? "Saving…" : edit ? "Save changes" : "Add transaction"}
           </Button>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>,
+    document.body,
   );
 }
