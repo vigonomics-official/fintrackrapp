@@ -143,21 +143,17 @@ export function TransactionDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="overflow-x-hidden overflow-y-auto border-0 p-0"
+        className="overflow-x-hidden sm:max-w-md"
         style={{
-          position: "fixed",
+          width: "100%",
+          maxWidth: "100vw",
           left: 0,
           right: 0,
-          bottom: 0,
-          top: "auto",
-          transform: "none",
-          width: "100vw",
-          maxWidth: "100vw",
           margin: 0,
-          padding: "20px 16px",
-          borderRadius: "20px 20px 0 0",
+          padding: 16,
           boxSizing: "border-box",
-          maxHeight: "90vh",
+          transform: "translateY(-50%)",
+          top: "50%",
         }}
       >
         <DialogHeader>
