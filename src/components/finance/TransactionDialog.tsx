@@ -174,21 +174,22 @@ export function TransactionDialog({
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-end",
+        overflow: "hidden",
       }}
     >
       <div
         ref={sheetRef}
         style={{
           position: "relative",
-          width: "100vw",
+          zIndex: 10000,
+          width: "100%",
           maxWidth: "100vw",
-          minWidth: "100vw",
-          background: "hsl(var(--background))",
+          background: "white",
           color: "hsl(var(--foreground))",
           borderRadius: "20px 20px 0 0",
           padding: "20px 16px",
           boxSizing: "border-box",
-          maxHeight: "90dvh",
+          maxHeight: "90vh",
           overflowY: "auto",
         }}
       >
