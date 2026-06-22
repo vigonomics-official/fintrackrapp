@@ -286,7 +286,7 @@ export function TransactionDialog({
             <Label>Payment method</Label>
             <Select value={form.watch("payment_method")} onValueChange={(v) => form.setValue("payment_method", v as any)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[10001]">
                 {PAYMENT_METHODS.map((p) => (
                   <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                 ))}
