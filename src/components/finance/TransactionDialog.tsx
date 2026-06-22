@@ -174,21 +174,22 @@ export function TransactionDialog({
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-end",
+        overflow: "hidden",
       }}
     >
       <div
         ref={sheetRef}
         style={{
           position: "relative",
-          width: "100vw",
+          zIndex: 10000,
+          width: "100%",
           maxWidth: "100vw",
-          minWidth: "100vw",
-          background: "hsl(var(--background))",
+          background: "white",
           color: "hsl(var(--foreground))",
           borderRadius: "20px 20px 0 0",
           padding: "20px 16px",
           boxSizing: "border-box",
-          maxHeight: "90dvh",
+          maxHeight: "90vh",
           overflowY: "auto",
         }}
       >
@@ -285,7 +286,7 @@ export function TransactionDialog({
             <Label>Payment method</Label>
             <Select value={form.watch("payment_method")} onValueChange={(v) => form.setValue("payment_method", v as any)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[10001]">
                 {PAYMENT_METHODS.map((p) => (
                   <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                 ))}
