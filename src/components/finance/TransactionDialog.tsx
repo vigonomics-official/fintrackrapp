@@ -184,28 +184,28 @@ export function TransactionDialog({
           overflowY: "auto",
         }}
       >
-        <button
-          type="button"
-          onClick={() => onOpenChange(false)}
-          aria-label="Close"
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            background: "transparent",
-            border: "none",
-            padding: 6,
-            cursor: "pointer",
-            color: "inherit",
-          }}
-        >
-          <X className="h-5 w-5" />
-        </button>
-        <div className="mb-3 w-full" style={{ boxSizing: "border-box" }}>
-          <h2 className="text-lg font-semibold leading-none tracking-tight">
-            {edit ? "Edit transaction" : "Add transaction"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">Track money in, out, or moved.</p>
+        <div className="mb-3 flex w-full items-start justify-between gap-3" style={{ boxSizing: "border-box" }}>
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold leading-none tracking-tight">
+              {edit ? "Edit transaction" : "Add transaction"}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">Track money in, out, or moved.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close"
+            style={{
+              background: "transparent",
+              border: "none",
+              padding: 6,
+              cursor: "pointer",
+              color: "inherit",
+              flexShrink: 0,
+            }}
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <form onSubmit={onSubmit} className="w-full space-y-4" style={{ boxSizing: "border-box" }}>
