@@ -101,16 +101,6 @@ export function TransactionDialog({
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    // Debug: verify sheet width matches viewport width
-    if (typeof window !== "undefined") {
-      requestAnimationFrame(() => {
-        const w = sheetRef.current?.offsetWidth ?? 0;
-        if (Math.abs(w - window.innerWidth) > 2) {
-          // eslint-disable-next-line no-console
-          console.warn("[TransactionDialog] width mismatch", { sheet: w, viewport: window.innerWidth });
-        }
-      });
-    }
     return () => { document.body.style.overflow = prev; };
   }, [open]);
 
@@ -183,7 +173,8 @@ export function TransactionDialog({
           position: "relative",
           zIndex: 10000,
           width: "100%",
-          maxWidth: "100vw",
+          maxWidth: 430,
+          margin: "0 auto",
           background: "white",
           color: "hsl(var(--foreground))",
           borderRadius: "20px 20px 0 0",
@@ -210,7 +201,7 @@ export function TransactionDialog({
         >
           <X className="h-5 w-5" />
         </button>
-        <div className="mb-3">
+        <div className="mb-3 w-full" style={{ boxSizing: "border-box" }}>
           <h2 className="text-lg font-semibold leading-none tracking-tight">
             {edit ? "Edit transaction" : "Add transaction"}
           </h2>
@@ -218,7 +209,7 @@ export function TransactionDialog({
         </div>
 
         <form onSubmit={onSubmit} className="w-full space-y-4" style={{ boxSizing: "border-box" }}>
-          <div className="flex w-full" style={{ gap: 8 }}>
+          <div className="flex w-full" style={{ gap: 8, boxSizing: "border-box" }}>
             {(["expense", "income", "transfer"] as const).map((t) => (
               <button type="button" key={t}
                 onClick={() => form.setValue("type", t)}
@@ -229,10 +220,14 @@ export function TransactionDialog({
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
+          <div
+            className="w-full"
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, boxSizing: "border-box" }}
+          >
+            <div className="min-w-0" style={{ width: "100%", boxSizing: "border-box" }}>
               <Label>Amount</Label>
               <Input
+                className="w-full"
                 type="number"
                 inputMode="decimal"
                 step="0.01"
@@ -248,15 +243,18 @@ export function TransactionDialog({
                 <p className="mt-1 text-xs text-destructive">{form.formState.errors.amount.message}</p>
               )}
             </div>
-            <div>
+            <div className="min-w-0" style={{ width: "100%", boxSizing: "border-box" }}>
               <Label>Date</Label>
-              <Input type="date" {...form.register("transaction_date")} />
+              <Input className="w-full" type="date" {...form.register("transaction_date")} />
             </div>
           </div>
 
-          <div>
+          <div className="w-full" style={{ boxSizing: "border-box" }}>
             <Label>Category</Label>
-            <div className="mt-2 grid grid-cols-4 gap-2">
+            <div
+              className="mt-2 w-full"
+              style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, boxSizing: "border-box" }}
+            >
               {QUICK_CATS.map((q) => {
                 const id = findCategoryId(q);
                 const selected = selectedQuick === q.name;
@@ -268,7 +266,8 @@ export function TransactionDialog({
                       setSelectedQuick(q.name);
                       form.setValue("category_id", id ?? undefined);
                     }}
-                    className={`flex h-16 min-w-0 flex-col items-center justify-center rounded-lg border p-1 text-[11px] font-medium opacity-100 transition ${
+                    style={{ width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                    className={`flex h-16 flex-col items-center justify-center rounded-lg border p-1 text-[11px] font-medium opacity-100 transition ${
                       selected
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-muted text-foreground hover:bg-muted/70"
@@ -282,10 +281,10 @@ export function TransactionDialog({
             </div>
           </div>
 
-          <div>
+          <div className="w-full" style={{ boxSizing: "border-box" }}>
             <Label>Payment method</Label>
             <Select value={form.watch("payment_method")} onValueChange={(v) => form.setValue("payment_method", v as any)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
               <SelectContent className="z-[10001]">
                 {PAYMENT_METHODS.map((p) => (
                   <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
@@ -294,9 +293,9 @@ export function TransactionDialog({
             </Select>
           </div>
 
-          <div>
+          <div className="w-full" style={{ boxSizing: "border-box" }}>
             <Label>Notes</Label>
-            <Textarea rows={2} {...form.register("notes")} />
+            <Textarea className="w-full" rows={2} {...form.register("notes")} />
           </div>
 
           <Button type="submit" disabled={submitting} className="w-full bg-gradient-primary shadow-elegant">
