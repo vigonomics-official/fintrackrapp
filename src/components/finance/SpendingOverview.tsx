@@ -159,14 +159,14 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
             <div style={{ flex: 1, minWidth: 0 }} />
             <div
               className="text-right"
-              style={{ width: "auto", minWidth: 90, maxWidth: "100%", overflow: "hidden" }}
+              style={{ width: "auto", minWidth: 0, maxWidth: "100%", overflow: "hidden" }}
             >
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{spentLabel}</p>
               <p
                 className="font-display font-bold tabular-nums"
                 style={{
                   color: "#374151",
-                  fontSize: "clamp(18px, 5vw, 28px)",
+                  fontSize: "clamp(18px, 4vw, 32px)",
                   lineHeight: 1.1,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
