@@ -156,7 +156,7 @@ function AuthenticatedLayout() {
       {!fabHidden && (
         <button
           onClick={handleFab}
-          className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow ring-4 ring-background transition-transform active:scale-95 hover:scale-105 md:bottom-8 md:right-8"
+          className="fixed bottom-[90px] right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow ring-4 ring-background transition-transform active:scale-95 hover:scale-105 md:bottom-8 md:right-8"
           aria-label="Quick action"
         >
           <Plus className="h-6 w-6" />

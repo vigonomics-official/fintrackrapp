@@ -108,8 +108,8 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
       </div>
 
       {value === "custom" && (
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, width: "100%" }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex flex-col gap-2 md:flex-row md:items-end" style={{ width: "100%" }}>
+          <div className="min-w-0 flex-1">
             <label className="mb-1 block text-[11px] text-muted-foreground">From</label>
             <Input
               type="date"
@@ -117,7 +117,7 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
               onChange={(e) => onCustomChange({ ...custom, from: e.target.value })}
             />
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="min-w-0 flex-1">
             <label className="mb-1 block text-[11px] text-muted-foreground">To</label>
             <Input
               type="date"
@@ -126,7 +126,7 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
             />
           </div>
           <Button
-            className="text-white hover:opacity-90"
+            className="w-full text-white hover:opacity-90 md:w-auto"
             style={{ background: "#1A6B4A", flexShrink: 0 }}
             onClick={() => onChange("custom")}
           >
