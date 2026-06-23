@@ -275,23 +275,23 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
           <CardContent className="space-y-3 p-4">
             <p className="text-sm font-semibold">Year so far</p>
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Highest month</p>
                 <p className="text-sm font-semibold">{yearly.highestMonth}</p>
-                <p className="text-[11px] tabular-nums text-muted-foreground">{formatCurrency(yearly.highestMonthAmt, currency)}</p>
+                <p className="truncate text-[11px] tabular-nums text-muted-foreground">{formatCurrency(yearly.highestMonthAmt, currency)}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Biggest category</p>
                 <p className="truncate text-sm font-semibold">{yearly.topCat}</p>
-                <p className="text-[11px] tabular-nums text-muted-foreground">{formatCurrency(yearly.topCatAmt, currency)}</p>
+                <p className="truncate text-[11px] tabular-nums text-muted-foreground">{formatCurrency(yearly.topCatAmt, currency)}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total EMI</p>
-                <p className="font-display text-sm font-bold tabular-nums">{formatCurrency(yearly.emi, currency)}</p>
+                <p className="truncate font-display text-sm font-bold tabular-nums">{formatCurrency(yearly.emi, currency)}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total savings</p>
-                <p className="font-display text-sm font-bold tabular-nums text-success">{formatCurrency(yearly.savings, currency)}</p>
+                <p className="truncate font-display text-sm font-bold tabular-nums text-success">{formatCurrency(yearly.savings, currency)}</p>
               </div>
             </div>
             {/* mini trend */}
