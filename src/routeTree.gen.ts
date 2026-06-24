@@ -33,6 +33,10 @@ import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated.
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
+import { Route as AuthenticatedInsightsWeeklyRouteImport } from './routes/_authenticated.insights.weekly'
+import { Route as AuthenticatedInsightsBehaviorRouteImport } from './routes/_authenticated.insights.behavior'
+import { Route as AuthenticatedInsightsAlertsRouteImport } from './routes/_authenticated.insights.alerts'
+import { Route as AuthenticatedInsightsAiRouteImport } from './routes/_authenticated.insights.ai'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -158,6 +162,29 @@ const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
   path: '/budgets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInsightsWeeklyRoute =
+  AuthenticatedInsightsWeeklyRouteImport.update({
+    id: '/weekly',
+    path: '/weekly',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
+const AuthenticatedInsightsBehaviorRoute =
+  AuthenticatedInsightsBehaviorRouteImport.update({
+    id: '/behavior',
+    path: '/behavior',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
+const AuthenticatedInsightsAlertsRoute =
+  AuthenticatedInsightsAlertsRouteImport.update({
+    id: '/alerts',
+    path: '/alerts',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
+const AuthenticatedInsightsAiRoute = AuthenticatedInsightsAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AuthenticatedInsightsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -172,7 +199,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/import': typeof AuthenticatedImportRoute
-  '/insights': typeof AuthenticatedInsightsRoute
+  '/insights': typeof AuthenticatedInsightsRouteWithChildren
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
   '/menu': typeof AuthenticatedMenuRoute
@@ -183,6 +210,10 @@ export interface FileRoutesByFullPath {
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
+  '/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
+  '/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -197,7 +228,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/import': typeof AuthenticatedImportRoute
-  '/insights': typeof AuthenticatedInsightsRoute
+  '/insights': typeof AuthenticatedInsightsRouteWithChildren
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
   '/menu': typeof AuthenticatedMenuRoute
@@ -208,6 +239,10 @@ export interface FileRoutesByTo {
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
+  '/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
+  '/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -224,7 +259,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
-  '/_authenticated/insights': typeof AuthenticatedInsightsRoute
+  '/_authenticated/insights': typeof AuthenticatedInsightsRouteWithChildren
   '/_authenticated/investments': typeof AuthenticatedInvestmentsRoute
   '/_authenticated/loans': typeof AuthenticatedLoansRoute
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
@@ -235,6 +270,10 @@ export interface FileRoutesById {
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
+  '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/_authenticated/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
+  '/_authenticated/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
+  '/_authenticated/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -262,6 +301,10 @@ export interface FileRouteTypes {
     | '/sms-intelligence'
     | '/split-settle'
     | '/transactions'
+    | '/insights/ai'
+    | '/insights/alerts'
+    | '/insights/behavior'
+    | '/insights/weekly'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -287,6 +330,10 @@ export interface FileRouteTypes {
     | '/sms-intelligence'
     | '/split-settle'
     | '/transactions'
+    | '/insights/ai'
+    | '/insights/alerts'
+    | '/insights/behavior'
+    | '/insights/weekly'
   id:
     | '__root__'
     | '/'
@@ -313,6 +360,10 @@ export interface FileRouteTypes {
     | '/_authenticated/sms-intelligence'
     | '/_authenticated/split-settle'
     | '/_authenticated/transactions'
+    | '/_authenticated/insights/ai'
+    | '/_authenticated/insights/alerts'
+    | '/_authenticated/insights/behavior'
+    | '/_authenticated/insights/weekly'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -496,8 +547,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/insights/weekly': {
+      id: '/_authenticated/insights/weekly'
+      path: '/weekly'
+      fullPath: '/insights/weekly'
+      preLoaderRoute: typeof AuthenticatedInsightsWeeklyRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
+    '/_authenticated/insights/behavior': {
+      id: '/_authenticated/insights/behavior'
+      path: '/behavior'
+      fullPath: '/insights/behavior'
+      preLoaderRoute: typeof AuthenticatedInsightsBehaviorRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
+    '/_authenticated/insights/alerts': {
+      id: '/_authenticated/insights/alerts'
+      path: '/alerts'
+      fullPath: '/insights/alerts'
+      preLoaderRoute: typeof AuthenticatedInsightsAlertsRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
+    '/_authenticated/insights/ai': {
+      id: '/_authenticated/insights/ai'
+      path: '/ai'
+      fullPath: '/insights/ai'
+      preLoaderRoute: typeof AuthenticatedInsightsAiRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
   }
 }
+
+interface AuthenticatedInsightsRouteChildren {
+  AuthenticatedInsightsAiRoute: typeof AuthenticatedInsightsAiRoute
+  AuthenticatedInsightsAlertsRoute: typeof AuthenticatedInsightsAlertsRoute
+  AuthenticatedInsightsBehaviorRoute: typeof AuthenticatedInsightsBehaviorRoute
+  AuthenticatedInsightsWeeklyRoute: typeof AuthenticatedInsightsWeeklyRoute
+}
+
+const AuthenticatedInsightsRouteChildren: AuthenticatedInsightsRouteChildren = {
+  AuthenticatedInsightsAiRoute: AuthenticatedInsightsAiRoute,
+  AuthenticatedInsightsAlertsRoute: AuthenticatedInsightsAlertsRoute,
+  AuthenticatedInsightsBehaviorRoute: AuthenticatedInsightsBehaviorRoute,
+  AuthenticatedInsightsWeeklyRoute: AuthenticatedInsightsWeeklyRoute,
+}
+
+const AuthenticatedInsightsRouteWithChildren =
+  AuthenticatedInsightsRoute._addFileChildren(
+    AuthenticatedInsightsRouteChildren,
+  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
@@ -505,7 +603,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
-  AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
+  AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRouteWithChildren
   AuthenticatedInvestmentsRoute: typeof AuthenticatedInvestmentsRoute
   AuthenticatedLoansRoute: typeof AuthenticatedLoansRoute
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
@@ -524,7 +622,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
-  AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
+  AuthenticatedInsightsRoute: AuthenticatedInsightsRouteWithChildren,
   AuthenticatedInvestmentsRoute: AuthenticatedInvestmentsRoute,
   AuthenticatedLoansRoute: AuthenticatedLoansRoute,
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,
