@@ -33,6 +33,7 @@ import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated.
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
+import { Route as AuthenticatedInsightsWeeklyRouteImport } from './routes/_authenticated.insights.weekly'
 import { Route as AuthenticatedInsightsAlertsRouteImport } from './routes/_authenticated.insights.alerts'
 import { Route as AuthenticatedInsightsAiRouteImport } from './routes/_authenticated.insights.ai'
 
@@ -160,6 +161,12 @@ const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
   path: '/budgets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInsightsWeeklyRoute =
+  AuthenticatedInsightsWeeklyRouteImport.update({
+    id: '/weekly',
+    path: '/weekly',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
 const AuthenticatedInsightsAlertsRoute =
   AuthenticatedInsightsAlertsRouteImport.update({
     id: '/alerts',
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
+  '/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -225,6 +233,7 @@ export interface FileRoutesByTo {
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
+  '/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -254,6 +263,7 @@ export interface FileRoutesById {
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/_authenticated/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
+  '/_authenticated/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/insights/ai'
     | '/insights/alerts'
+    | '/insights/weekly'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/insights/ai'
     | '/insights/alerts'
+    | '/insights/weekly'
   id:
     | '__root__'
     | '/'
@@ -338,6 +350,7 @@ export interface FileRouteTypes {
     | '/_authenticated/transactions'
     | '/_authenticated/insights/ai'
     | '/_authenticated/insights/alerts'
+    | '/_authenticated/insights/weekly'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -521,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/insights/weekly': {
+      id: '/_authenticated/insights/weekly'
+      path: '/weekly'
+      fullPath: '/insights/weekly'
+      preLoaderRoute: typeof AuthenticatedInsightsWeeklyRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
     '/_authenticated/insights/alerts': {
       id: '/_authenticated/insights/alerts'
       path: '/alerts'
@@ -541,11 +561,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedInsightsRouteChildren {
   AuthenticatedInsightsAiRoute: typeof AuthenticatedInsightsAiRoute
   AuthenticatedInsightsAlertsRoute: typeof AuthenticatedInsightsAlertsRoute
+  AuthenticatedInsightsWeeklyRoute: typeof AuthenticatedInsightsWeeklyRoute
 }
 
 const AuthenticatedInsightsRouteChildren: AuthenticatedInsightsRouteChildren = {
   AuthenticatedInsightsAiRoute: AuthenticatedInsightsAiRoute,
   AuthenticatedInsightsAlertsRoute: AuthenticatedInsightsAlertsRoute,
+  AuthenticatedInsightsWeeklyRoute: AuthenticatedInsightsWeeklyRoute,
 }
 
 const AuthenticatedInsightsRouteWithChildren =
