@@ -33,6 +33,7 @@ import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated.
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
+import { Route as AuthenticatedInsightsAlertsRouteImport } from './routes/_authenticated.insights.alerts'
 import { Route as AuthenticatedInsightsAiRouteImport } from './routes/_authenticated.insights.ai'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -159,6 +160,12 @@ const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
   path: '/budgets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInsightsAlertsRoute =
+  AuthenticatedInsightsAlertsRouteImport.update({
+    id: '/alerts',
+    path: '/alerts',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
 const AuthenticatedInsightsAiRoute = AuthenticatedInsightsAiRouteImport.update({
   id: '/ai',
   path: '/ai',
@@ -190,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -216,6 +224,7 @@ export interface FileRoutesByTo {
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -244,6 +253,7 @@ export interface FileRoutesById {
   '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/_authenticated/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/split-settle'
     | '/transactions'
     | '/insights/ai'
+    | '/insights/alerts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/split-settle'
     | '/transactions'
     | '/insights/ai'
+    | '/insights/alerts'
   id:
     | '__root__'
     | '/'
@@ -325,6 +337,7 @@ export interface FileRouteTypes {
     | '/_authenticated/split-settle'
     | '/_authenticated/transactions'
     | '/_authenticated/insights/ai'
+    | '/_authenticated/insights/alerts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -508,6 +521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/insights/alerts': {
+      id: '/_authenticated/insights/alerts'
+      path: '/alerts'
+      fullPath: '/insights/alerts'
+      preLoaderRoute: typeof AuthenticatedInsightsAlertsRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
     '/_authenticated/insights/ai': {
       id: '/_authenticated/insights/ai'
       path: '/ai'
@@ -520,10 +540,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedInsightsRouteChildren {
   AuthenticatedInsightsAiRoute: typeof AuthenticatedInsightsAiRoute
+  AuthenticatedInsightsAlertsRoute: typeof AuthenticatedInsightsAlertsRoute
 }
 
 const AuthenticatedInsightsRouteChildren: AuthenticatedInsightsRouteChildren = {
   AuthenticatedInsightsAiRoute: AuthenticatedInsightsAiRoute,
+  AuthenticatedInsightsAlertsRoute: AuthenticatedInsightsAlertsRoute,
 }
 
 const AuthenticatedInsightsRouteWithChildren =
