@@ -76,21 +76,22 @@ function ReportPage() {
       : null;
 
     // Biggest win: category most under budget (or most disciplined)
-    let bestWin: { name: string; saved: number } | null = null as { name: string; saved: number } | null;
     const spendByCat = new Map<string, number>();
     expenses.forEach(t => {
       const k = t.category_id ?? "uncategorized";
       spendByCat.set(k, (spendByCat.get(k) ?? 0) + t.amount);
     });
-    budgets.forEach(b => {
-      if (!b.category_id || b.monthly_limit <= 0) return;
-      const spent = spendByCat.get(b.category_id) ?? 0;
-      const saved = b.monthly_limit - spent;
-      if (saved > 0 && (!bestWin || saved > bestWin.saved)) {
+    const wins = budgets
+      .filter(b => b.category_id && b.monthly_limit > 0)
+      .map(b => {
+        const spent = spendByCat.get(b.category_id!) ?? 0;
+        const saved = b.monthly_limit - spent;
         const c = categories.find(x => x.id === b.category_id);
-        bestWin = { name: c?.name ?? "Category", saved };
-      }
-    });
+        return { name: c?.name ?? "Category", saved };
+      })
+      .filter(w => w.saved > 0)
+      .sort((a, b) => b.saved - a.saved);
+    const bestWin: { name: string; saved: number } | null = wins[0] ?? null;
 
     // Budget score: % of budgets respected
     let budgetScore = 100;
