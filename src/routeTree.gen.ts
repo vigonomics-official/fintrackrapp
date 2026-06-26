@@ -34,6 +34,8 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
 import { Route as AuthenticatedInsightsWeeklyRouteImport } from './routes/_authenticated.insights.weekly'
+import { Route as AuthenticatedInsightsReportRouteImport } from './routes/_authenticated.insights.report'
+import { Route as AuthenticatedInsightsCoachRouteImport } from './routes/_authenticated.insights.coach'
 import { Route as AuthenticatedInsightsBehaviorRouteImport } from './routes/_authenticated.insights.behavior'
 import { Route as AuthenticatedInsightsAlertsRouteImport } from './routes/_authenticated.insights.alerts'
 import { Route as AuthenticatedInsightsAiRouteImport } from './routes/_authenticated.insights.ai'
@@ -168,6 +170,18 @@ const AuthenticatedInsightsWeeklyRoute =
     path: '/weekly',
     getParentRoute: () => AuthenticatedInsightsRoute,
   } as any)
+const AuthenticatedInsightsReportRoute =
+  AuthenticatedInsightsReportRouteImport.update({
+    id: '/report',
+    path: '/report',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
+const AuthenticatedInsightsCoachRoute =
+  AuthenticatedInsightsCoachRouteImport.update({
+    id: '/coach',
+    path: '/coach',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
 const AuthenticatedInsightsBehaviorRoute =
   AuthenticatedInsightsBehaviorRouteImport.update({
     id: '/behavior',
@@ -213,6 +227,8 @@ export interface FileRoutesByFullPath {
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
   '/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
+  '/insights/coach': typeof AuthenticatedInsightsCoachRoute
+  '/insights/report': typeof AuthenticatedInsightsReportRoute
   '/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRoutesByTo {
@@ -242,6 +258,8 @@ export interface FileRoutesByTo {
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
   '/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
+  '/insights/coach': typeof AuthenticatedInsightsCoachRoute
+  '/insights/report': typeof AuthenticatedInsightsReportRoute
   '/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRoutesById {
@@ -273,6 +291,8 @@ export interface FileRoutesById {
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/_authenticated/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
   '/_authenticated/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
+  '/_authenticated/insights/coach': typeof AuthenticatedInsightsCoachRoute
+  '/_authenticated/insights/report': typeof AuthenticatedInsightsReportRoute
   '/_authenticated/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
 }
 export interface FileRouteTypes {
@@ -304,6 +324,8 @@ export interface FileRouteTypes {
     | '/insights/ai'
     | '/insights/alerts'
     | '/insights/behavior'
+    | '/insights/coach'
+    | '/insights/report'
     | '/insights/weekly'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -333,6 +355,8 @@ export interface FileRouteTypes {
     | '/insights/ai'
     | '/insights/alerts'
     | '/insights/behavior'
+    | '/insights/coach'
+    | '/insights/report'
     | '/insights/weekly'
   id:
     | '__root__'
@@ -363,6 +387,8 @@ export interface FileRouteTypes {
     | '/_authenticated/insights/ai'
     | '/_authenticated/insights/alerts'
     | '/_authenticated/insights/behavior'
+    | '/_authenticated/insights/coach'
+    | '/_authenticated/insights/report'
     | '/_authenticated/insights/weekly'
   fileRoutesById: FileRoutesById
 }
@@ -554,6 +580,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInsightsWeeklyRouteImport
       parentRoute: typeof AuthenticatedInsightsRoute
     }
+    '/_authenticated/insights/report': {
+      id: '/_authenticated/insights/report'
+      path: '/report'
+      fullPath: '/insights/report'
+      preLoaderRoute: typeof AuthenticatedInsightsReportRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
+    '/_authenticated/insights/coach': {
+      id: '/_authenticated/insights/coach'
+      path: '/coach'
+      fullPath: '/insights/coach'
+      preLoaderRoute: typeof AuthenticatedInsightsCoachRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
     '/_authenticated/insights/behavior': {
       id: '/_authenticated/insights/behavior'
       path: '/behavior'
@@ -582,6 +622,8 @@ interface AuthenticatedInsightsRouteChildren {
   AuthenticatedInsightsAiRoute: typeof AuthenticatedInsightsAiRoute
   AuthenticatedInsightsAlertsRoute: typeof AuthenticatedInsightsAlertsRoute
   AuthenticatedInsightsBehaviorRoute: typeof AuthenticatedInsightsBehaviorRoute
+  AuthenticatedInsightsCoachRoute: typeof AuthenticatedInsightsCoachRoute
+  AuthenticatedInsightsReportRoute: typeof AuthenticatedInsightsReportRoute
   AuthenticatedInsightsWeeklyRoute: typeof AuthenticatedInsightsWeeklyRoute
 }
 
@@ -589,6 +631,8 @@ const AuthenticatedInsightsRouteChildren: AuthenticatedInsightsRouteChildren = {
   AuthenticatedInsightsAiRoute: AuthenticatedInsightsAiRoute,
   AuthenticatedInsightsAlertsRoute: AuthenticatedInsightsAlertsRoute,
   AuthenticatedInsightsBehaviorRoute: AuthenticatedInsightsBehaviorRoute,
+  AuthenticatedInsightsCoachRoute: AuthenticatedInsightsCoachRoute,
+  AuthenticatedInsightsReportRoute: AuthenticatedInsightsReportRoute,
   AuthenticatedInsightsWeeklyRoute: AuthenticatedInsightsWeeklyRoute,
 }
 
