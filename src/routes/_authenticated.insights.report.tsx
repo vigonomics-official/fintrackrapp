@@ -76,7 +76,7 @@ function ReportPage() {
       : null;
 
     // Biggest win: category most under budget (or most disciplined)
-    let bestWin: { name: string; saved: number } | null = null;
+    let bestWin: { name: string; saved: number } | null = null as { name: string; saved: number } | null;
     const spendByCat = new Map<string, number>();
     expenses.forEach(t => {
       const k = t.category_id ?? "uncategorized";
