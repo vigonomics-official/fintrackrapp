@@ -291,7 +291,7 @@ function TransactionsPage() {
   };
 
   return (
-    <div>
+    <PageShell>
       <ExpensesTabs />
       <PageHeader
         title="Expenses"
@@ -317,9 +317,10 @@ function TransactionsPage() {
         }
       />
 
-      <div className="space-y-4 px-5 py-5 md:px-10">
+      <PageContainer className="space-y-4">
         {/* Date range indicator */}
         <p className="text-[12px] text-muted-foreground">{rangeLabel}</p>
+
 
         {/* Import success banner */}
         {importBanner && (
