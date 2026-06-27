@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { Sparkles, AlertTriangle, LineChart, ChevronRight, BarChart3, FileBarChart, CalendarDays } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { PageShell, PageContainer } from "@/components/finance/PageContainer";
 import { cn } from "@/lib/utils";
 import { useTransactions, useCategories, useBudgets, useLoans, useProfile, monthKey } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
