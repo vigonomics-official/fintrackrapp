@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { PageShell, PageContainer } from "@/components/finance/PageContainer";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
 import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
 import { SpendingOverview } from "@/components/finance/SpendingOverview";
@@ -291,7 +292,7 @@ function TransactionsPage() {
   };
 
   return (
-    <div>
+    <PageShell>
       <ExpensesTabs />
       <PageHeader
         title="Expenses"
@@ -317,9 +318,10 @@ function TransactionsPage() {
         }
       />
 
-      <div className="space-y-4 px-5 py-5 md:px-10">
+      <PageContainer className="space-y-4">
         {/* Date range indicator */}
         <p className="text-[12px] text-muted-foreground">{rangeLabel}</p>
+
 
         {/* Import success banner */}
         {importBanner && (
@@ -548,7 +550,7 @@ function TransactionsPage() {
             })}
           </div>
         )}
-      </div>
+      </PageContainer>
 
       {selectMode && selected.size > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 shadow-elegant backdrop-blur md:left-64">
@@ -570,6 +572,6 @@ function TransactionsPage() {
       )}
 
       <TransactionDialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditing(undefined); }} edit={editing} />
-    </div>
+    </PageShell>
   );
 }
