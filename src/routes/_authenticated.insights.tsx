@@ -118,10 +118,10 @@ function InsightsPage() {
   const monthLabel = now.toLocaleString(undefined, { month: "long", year: "numeric" });
 
   return (
-    <div className="w-full overflow-x-hidden">
+    <PageShell>
       <PageHeader title="Insights" subtitle="Your money, decoded." />
 
-      <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 md:px-10">
+      <PageContainer>
         {/* Summary card */}
         <div
           className="mb-4 rounded-2xl border border-success/20 bg-success/10 p-4 shadow-soft"
