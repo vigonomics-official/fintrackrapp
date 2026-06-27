@@ -148,7 +148,7 @@ function AuthenticatedLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 pb-24 md:pb-0">
+      <main className="w-full min-w-0 max-w-full flex-1 overflow-x-hidden pb-24 md:pb-0">
         <Outlet />
       </main>
 
