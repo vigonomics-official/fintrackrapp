@@ -549,7 +549,7 @@ function TransactionsPage() {
             })}
           </div>
         )}
-      </div>
+      </PageContainer>
 
       {selectMode && selected.size > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 shadow-elegant backdrop-blur md:left-64">
@@ -571,6 +571,6 @@ function TransactionsPage() {
       )}
 
       <TransactionDialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditing(undefined); }} edit={editing} />
-    </div>
+    </PageShell>
   );
 }
