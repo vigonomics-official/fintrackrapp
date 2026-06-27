@@ -269,8 +269,8 @@ function InsightsPage() {
             }
           />
         </div>
-      </div>
-    </div>
+      </PageContainer>
+    </PageShell>
   );
 }
 
