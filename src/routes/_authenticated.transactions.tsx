@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { PageShell, PageContainer } from "@/components/finance/PageContainer";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
 import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
 import { SpendingOverview } from "@/components/finance/SpendingOverview";
