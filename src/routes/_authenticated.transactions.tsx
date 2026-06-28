@@ -432,7 +432,7 @@ function TransactionsPage() {
 
         {/* Grouped list */}
         {filtered.length === 0 ? (
-          <Card className="shadow-soft"><CardContent className="py-12 text-center text-sm text-muted-foreground">No transactions match.</CardContent></Card>
+          <Card className="shadow-soft rounded-2xl"><CardContent className="py-12 text-center text-sm text-muted-foreground">No transactions match.</CardContent></Card>
         ) : (
           <div className="space-y-3">
             {grouped.map(([date, items]) => {
@@ -445,7 +445,7 @@ function TransactionsPage() {
                       {dayTotal >= 0 ? "+" : "−"}{formatCurrency(Math.abs(dayTotal), currency)}
                     </p>
                   </div>
-                  <Card className="shadow-soft">
+                    <Card className="shadow-soft rounded-2xl">
                     <CardContent className="p-0">
                       <ul className="divide-y">
                         {items.map((t) => {
@@ -467,14 +467,14 @@ function TransactionsPage() {
                             .replace(/\s{2,}/g, " ")
                             .trim();
                           const fullTitle = cleanTitle || c?.name || "Unknown Merchant";
-                          const title = fullTitle.length > 20 ? fullTitle.slice(0, 20).trimEnd() + "…" : fullTitle;
+                          
                           const pmLabel = t.payment_method.replace("_", " ").toUpperCase();
                           const isUncategorized = !c && t.type !== "transfer";
                           const iconBg = isUncategorized ? "#f9731614" : (c?.color ?? "#94a3b8") + "1f";
                           const iconColor = isUncategorized ? "#ea580c" : (c?.color ?? "#64748b");
                           const isChecked = selected.has(t.id);
                           return (
-                            <li key={t.id} className="group flex items-center gap-2 px-3 py-3 transition-colors hover:bg-muted/40">
+                            <li key={t.id} className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40">
                               {selectMode && (
                                 <Checkbox
                                   checked={isChecked}
@@ -488,8 +488,8 @@ function TransactionsPage() {
                                   if (selectMode) { toggleSelect(t.id); return; }
                                   setEditing(t); setDialogOpen(true);
                                 }}
-                                className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                                aria-label={`View ${title}`}
+                                className="flex min-w-0 flex-1 items-center gap-3.5 text-left"
+                                aria-label={`View ${fullTitle}`}
                                 title={fullTitle}
                               >
                                 <span
@@ -499,8 +499,8 @@ function TransactionsPage() {
                                   {fullTitle.charAt(0).toUpperCase()}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-[14px] font-medium leading-tight text-foreground">{title}</p>
-                                  <div className="mt-1 flex items-center gap-1.5">
+                                  <p className="truncate text-[14px] font-medium leading-tight text-foreground">{fullTitle}</p>
+                                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5 min-w-0">
                                     {c?.name ? (
                                       <span className="truncate rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                                         {c.name}
@@ -514,11 +514,11 @@ function TransactionsPage() {
                                       {pmLabel}
                                     </span>
                                     {shortTime && (
-                                      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground/80">{shortTime}</span>
+                                      <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground/80">{shortTime}</span>
                                     )}
                                   </div>
                                 </div>
-                                <p className={`shrink-0 whitespace-nowrap pl-1 font-display text-[15px] font-semibold tabular-nums ${t.type === "income" ? "text-success" : t.type === "expense" ? "text-foreground" : "text-muted-foreground"}`}>
+                                <p className={`shrink-0 whitespace-nowrap text-nowrap pl-1 font-display text-[15px] font-semibold tabular-nums ${t.type === "income" ? "text-success" : t.type === "expense" ? "text-foreground" : "text-muted-foreground"}`}>
                                   {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}{formatCurrency(t.amount, currency)}
                                 </p>
                               </button>
