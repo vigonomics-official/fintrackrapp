@@ -217,32 +217,27 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
         </CardContent>
       </Card>
 
-      {/* Smart summary */}
-      {(range === "month" || range === "week") && expense > 0 && (
-        <Card className="shadow-soft">
-          <CardContent className="grid grid-cols-2 gap-3 p-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total spent</p>
-              <p className="font-display text-base font-bold tabular-nums">{formatCurrency(expense, currency)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Daily avg</p>
-              <p className="font-display text-base font-bold tabular-nums">{formatCurrency(dailyAvg, currency)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Top category</p>
-              <p className="truncate text-sm font-semibold">{topCats[0]?.name ?? "—"}</p>
-              <p className="text-[11px] tabular-nums text-muted-foreground">{topCats[0] ? formatCurrency(topCats[0].amount, currency) : ""}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</p>
-              <p className="flex items-center gap-1.5 text-sm font-semibold">
-                <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-                {status.label}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats grid */}
+      {expense > 0 && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col justify-center rounded-2xl bg-white p-4 shadow-soft min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Spent</p>
+            <p className="truncate font-display text-base font-bold tabular-nums">{formatCurrency(expense, currency)}</p>
+          </div>
+          <div className="flex flex-col justify-center rounded-2xl bg-white p-4 shadow-soft min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Daily Average</p>
+            <p className="truncate font-display text-base font-bold tabular-nums">{formatCurrency(dailyAvg, currency)}</p>
+          </div>
+          <div className="flex flex-col justify-center rounded-2xl bg-white p-4 shadow-soft min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Highest Category</p>
+            <p className="truncate text-sm font-semibold">{topCats[0]?.name ?? "—"}</p>
+            <p className="truncate text-[11px] tabular-nums text-muted-foreground">{topCats[0] ? formatCurrency(topCats[0].amount, currency) : ""}</p>
+          </div>
+          <div className="flex flex-col justify-center rounded-2xl bg-white p-4 shadow-soft min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Transactions</p>
+            <p className="truncate font-display text-base font-bold tabular-nums">{expenseCount}</p>
+          </div>
+        </div>
       )}
 
       {/* Comparison */}
