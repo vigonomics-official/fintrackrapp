@@ -42,6 +42,7 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
     return Math.max(dates.size, 1);
   }, [rangeTxs]);
   const dailyAvg = expense / days;
+  const expenseCount = rangeTxs.filter(t => t.type === "expense").length;
 
   // Comparison vs previous window
   const prevExpense = prevRangeTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
