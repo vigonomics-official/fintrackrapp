@@ -368,9 +368,10 @@ function TransactionsPage() {
         {/* Time range filter */}
         <TimeRangeFilter
           value={rangeKey}
-          onChange={setRangeKey}
+          onChange={handleRangeChange}
           custom={customRange}
-          onCustomChange={setCustomRange}
+          onCustomChange={handleCustomChange}
+          onApply={() => setCustomApplied(true)}
         />
 
         {/* Spending overview */}
