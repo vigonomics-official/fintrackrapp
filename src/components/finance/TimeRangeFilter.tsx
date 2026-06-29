@@ -56,9 +56,10 @@ type Props = {
   onChange: (key: RangeKey) => void;
   custom: DateRange;
   onCustomChange: (r: DateRange) => void;
+  onApply?: () => void;
 };
 
-export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Props) {
+export function TimeRangeFilter({ value, onChange, custom, onCustomChange, onApply }: Props) {
   return (
     <div className="space-y-3">
       <div
@@ -108,7 +109,7 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
       </div>
 
       {value === "custom" && (
-        <div className="flex flex-col gap-2 md:flex-row md:items-end" style={{ width: "100%" }}>
+        <div className="flex flex-col gap-3 md:flex-row md:items-end" style={{ width: "100%" }}>
           <div className="min-w-0 flex-1">
             <label className="mb-1 block text-[11px] text-muted-foreground">From</label>
             <Input
@@ -128,7 +129,10 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Pro
           <Button
             className="w-full text-white hover:opacity-90 md:w-auto"
             style={{ background: "#1A6B4A", flexShrink: 0 }}
-            onClick={() => onChange("custom")}
+            onClick={() => {
+              onChange("custom");
+              onApply?.();
+            }}
           >
             Apply
           </Button>

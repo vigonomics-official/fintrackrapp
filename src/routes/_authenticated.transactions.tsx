@@ -65,7 +65,24 @@ function TransactionsPage() {
   const [rangeKey, setRangeKey] = useState<RangeKey>("month");
   const todayIso = new Date().toISOString().slice(0, 10);
   const [customRange, setCustomRange] = useState<DateRange>({ from: todayIso, to: todayIso });
+  const [customApplied, setCustomApplied] = useState(false);
   const { settings: salarySettings } = useSalarySettings();
+
+  const formatShortDate = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return `${d} ${months[m - 1]} ${y}`;
+  };
+
+  const handleRangeChange = (key: RangeKey) => {
+    if (key !== "custom") setCustomApplied(false);
+    setRangeKey(key);
+  };
+
+  const handleCustomChange = (r: DateRange) => {
+    setCustomApplied(false);
+    setCustomRange(r);
+  };
   const baseRange = useMemo(() => computeRange(rangeKey, customRange), [rangeKey, customRange]);
   // For "Month": align with current salary cycle (most recent salary tx, else payDay setting).
   const range = useMemo<DateRange>(() => {
@@ -351,10 +368,18 @@ function TransactionsPage() {
         {/* Time range filter */}
         <TimeRangeFilter
           value={rangeKey}
-          onChange={setRangeKey}
+          onChange={handleRangeChange}
           custom={customRange}
-          onCustomChange={setCustomRange}
+          onCustomChange={handleCustomChange}
+          onApply={() => setCustomApplied(true)}
         />
+
+        {/* Custom range indicator */}
+        {rangeKey === "custom" && customApplied && (
+          <p className="text-[12px] text-muted-foreground">
+            Showing: {formatShortDate(range.from)} → {formatShortDate(range.to)}
+          </p>
+        )}
 
         {/* Spending overview */}
         <SpendingOverview
