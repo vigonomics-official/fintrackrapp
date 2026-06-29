@@ -374,6 +374,13 @@ function TransactionsPage() {
           onApply={() => setCustomApplied(true)}
         />
 
+        {/* Custom range indicator */}
+        {rangeKey === "custom" && customApplied && (
+          <p className="text-[12px] text-muted-foreground">
+            Showing: {formatShortDate(range.from)} → {formatShortDate(range.to)}
+          </p>
+        )}
+
         {/* Spending overview */}
         <SpendingOverview
           range={rangeKey}
