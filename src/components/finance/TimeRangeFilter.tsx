@@ -56,9 +56,10 @@ type Props = {
   onChange: (key: RangeKey) => void;
   custom: DateRange;
   onCustomChange: (r: DateRange) => void;
+  onApply?: () => void;
 };
 
-export function TimeRangeFilter({ value, onChange, custom, onCustomChange }: Props) {
+export function TimeRangeFilter({ value, onChange, custom, onCustomChange, onApply }: Props) {
   return (
     <div className="space-y-3">
       <div
