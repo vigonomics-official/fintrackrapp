@@ -392,26 +392,25 @@ function TransactionsPage() {
 
         {/* Search + filter toggle */}
         <Card className="shadow-soft">
-          <CardContent className="space-y-3 p-3">
-            <div className="flex items-center gap-2">
+          <CardContent className="space-y-4 p-4">
+            <div className="flex items-center gap-3">
               <div className="relative min-w-0 flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="w-full pl-9" />
+                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="h-10 w-full pl-9" />
               </div>
               <Button
                 variant="outline"
                 size="icon"
-                className="md:hidden shrink-0"
-                style={{ width: 40, height: 40, minWidth: 40 }}
+                className="md:hidden h-10 w-10 shrink-0"
                 onClick={() => setShowFilters(s => !s)}
                 aria-label="Filters"
               >
                 <Filter className="h-4 w-4" />
               </Button>
             </div>
-            <div className={`flex flex-wrap gap-2 ${showFilters ? "" : "hidden md:flex"}`}>
+            <div className={`flex flex-wrap gap-3 ${showFilters ? "" : "hidden md:flex"}`}>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full flex-1 md:w-36 md:flex-none"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-10 w-full flex-1 md:w-36 md:flex-none"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All types</SelectItem>
                   <SelectItem value="income">Income</SelectItem>
@@ -420,7 +419,7 @@ function TransactionsPage() {
                 </SelectContent>
               </Select>
               <Select value={catFilter} onValueChange={setCatFilter}>
-                <SelectTrigger className="w-full flex-1 md:w-44 md:flex-none"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-10 w-full flex-1 md:w-44 md:flex-none"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All categories</SelectItem>
                   {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
