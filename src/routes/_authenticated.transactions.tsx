@@ -456,7 +456,31 @@ function TransactionsPage() {
 
         {/* Grouped list */}
         {filtered.length === 0 ? (
-          <Card className="shadow-soft rounded-2xl"><CardContent className="py-12 text-center text-sm text-muted-foreground">No transactions match.</CardContent></Card>
+          <Card className="shadow-soft rounded-2xl">
+            <CardContent className="flex flex-col items-center gap-4 py-14 px-6 text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="9" y1="9" x2="15" y2="9" />
+                  <line x1="9" y1="13" x2="15" y2="13" />
+                  <line x1="9" y1="17" x2="11" y2="17" />
+                </svg>
+              </span>
+              <div className="space-y-1">
+                <p className="text-base font-semibold text-foreground">No transactions found</p>
+                <p className="text-sm text-muted-foreground">Try changing your filters or import transactions.</p>
+              </div>
+              {(q || typeFilter !== "all" || catFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setQ(""); setTypeFilter("all"); setCatFilter("all"); }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-3">
             {grouped.map(([date, items]) => {
