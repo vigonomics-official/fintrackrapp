@@ -188,23 +188,17 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
               {topCats.map((c) => {
                 const pct = Math.min(100, Math.round((c.amount / maxCat) * 100));
                 return (
-                  <li key={c.id}>
-                    <div
-                      className="mb-1 text-[13px]"
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                    >
-                      <span className="flex min-w-0 items-center gap-2" style={{ flex: 1 }}>
+                  <li key={c.id} className="min-w-0">
+                    <div className="mb-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-[13px]">
+                      <span className="flex min-w-0 items-center gap-2">
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: c.color }} />
                         <span className="truncate font-medium">{c.name}</span>
                       </span>
-                      <span
-                        className="shrink-0 font-display tabular-nums"
-                        style={{ marginLeft: 12, textAlign: "right" }}
-                      >
+                      <span className="shrink-0 text-right font-display tabular-nums">
                         {formatCurrency(c.amount, currency)}
                       </span>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: c.color }} />
                     </div>
                   </li>
