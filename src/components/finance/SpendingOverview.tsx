@@ -87,20 +87,24 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
     if (range !== "year") return null;
     const year = new Date().getFullYear();
     const inYear = allTxs.filter(t => new Date(t.transaction_date).getFullYear() === year);
+    const expenses = inYear.filter(t => t.type === "expense");
     const byMonth = new Array(12).fill(0);
-    inYear.filter(t => t.type === "expense").forEach(t => {
+    expenses.forEach(t => {
       byMonth[new Date(t.transaction_date).getMonth()] += t.amount;
     });
     let maxMonth = 0;
     byMonth.forEach((v, i) => { if (v > byMonth[maxMonth]) maxMonth = i; });
     const top = topCategoryTotals(inYear, categories, 1)[0];
-    const emiCat = categories.find(c => /emi|loan/i.test(c.name));
-    const emi = emiCat
-      ? inYear.filter(t => t.type === "expense" && t.category_id === emiCat.id).reduce((s, t) => s + t.amount, 0)
-      : inYear.filter(t => t.type === "expense" && /emi|loan/i.test(t.notes ?? "")).reduce((s, t) => s + t.amount, 0);
-    const inc = inYear.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
-    const exp = inYear.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    const savings = Math.max(inc - exp, 0);
+    const totalExp = expenses.reduce((s, t) => s + t.amount, 0);
+    const activeMonths = byMonth.filter(v => v > 0).length || 1;
+    const avgMonthly = totalExp / activeMonths;
+    const largest = expenses.reduce<Transaction | null>(
+      (acc, t) => (!acc || t.amount > acc.amount ? t : acc),
+      null
+    );
+    const largestCatName = largest
+      ? (categories.find(c => c.id === largest.category_id)?.name ?? "Other")
+      : "—";
     return {
       highestMonth: byMonth[maxMonth] > 0
         ? new Date(year, maxMonth, 1).toLocaleString(undefined, { month: "long" })
@@ -108,8 +112,10 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
       highestMonthAmt: byMonth[maxMonth],
       topCat: top?.name ?? "—",
       topCatAmt: top?.amount ?? 0,
-      emi,
-      savings,
+      avgMonthly,
+      largestAmt: largest?.amount ?? 0,
+      largestCatName,
+      largestDate: largest?.transaction_date ?? "",
       byMonth,
     };
   }, [range, allTxs, categories]);
