@@ -87,20 +87,24 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
     if (range !== "year") return null;
     const year = new Date().getFullYear();
     const inYear = allTxs.filter(t => new Date(t.transaction_date).getFullYear() === year);
+    const expenses = inYear.filter(t => t.type === "expense");
     const byMonth = new Array(12).fill(0);
-    inYear.filter(t => t.type === "expense").forEach(t => {
+    expenses.forEach(t => {
       byMonth[new Date(t.transaction_date).getMonth()] += t.amount;
     });
     let maxMonth = 0;
     byMonth.forEach((v, i) => { if (v > byMonth[maxMonth]) maxMonth = i; });
     const top = topCategoryTotals(inYear, categories, 1)[0];
-    const emiCat = categories.find(c => /emi|loan/i.test(c.name));
-    const emi = emiCat
-      ? inYear.filter(t => t.type === "expense" && t.category_id === emiCat.id).reduce((s, t) => s + t.amount, 0)
-      : inYear.filter(t => t.type === "expense" && /emi|loan/i.test(t.notes ?? "")).reduce((s, t) => s + t.amount, 0);
-    const inc = inYear.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
-    const exp = inYear.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    const savings = Math.max(inc - exp, 0);
+    const totalExp = expenses.reduce((s, t) => s + t.amount, 0);
+    const activeMonths = byMonth.filter(v => v > 0).length || 1;
+    const avgMonthly = totalExp / activeMonths;
+    const largest = expenses.reduce<Transaction | null>(
+      (acc, t) => (!acc || t.amount > acc.amount ? t : acc),
+      null
+    );
+    const largestCatName = largest
+      ? (categories.find(c => c.id === largest.category_id)?.name ?? "Other")
+      : "—";
     return {
       highestMonth: byMonth[maxMonth] > 0
         ? new Date(year, maxMonth, 1).toLocaleString(undefined, { month: "long" })
@@ -108,8 +112,10 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
       highestMonthAmt: byMonth[maxMonth],
       topCat: top?.name ?? "—",
       topCatAmt: top?.amount ?? 0,
-      emi,
-      savings,
+      avgMonthly,
+      largestAmt: largest?.amount ?? 0,
+      largestCatName,
+      largestDate: largest?.transaction_date ?? "",
       byMonth,
     };
   }, [range, allTxs, categories]);
@@ -266,39 +272,50 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
             <p className="text-sm font-semibold">Year so far</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Highest month</p>
-                <p className="text-sm font-semibold">{yearly.highestMonth}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Highest spending month</p>
+                <p className="truncate text-sm font-semibold">{yearly.highestMonth}</p>
                 <p className="truncate text-[11px] tabular-nums text-muted-foreground">{formatCurrency(yearly.highestMonthAmt, currency)}</p>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Biggest category</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Largest category</p>
                 <p className="truncate text-sm font-semibold">{yearly.topCat}</p>
                 <p className="truncate text-[11px] tabular-nums text-muted-foreground">{formatCurrency(yearly.topCatAmt, currency)}</p>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total EMI</p>
-                <p className="truncate font-display text-sm font-bold tabular-nums">{formatCurrency(yearly.emi, currency)}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg monthly spending</p>
+                <p className="truncate font-display text-sm font-bold tabular-nums">{formatCurrency(yearly.avgMonthly, currency)}</p>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total savings</p>
-                <p className="truncate font-display text-sm font-bold tabular-nums text-success">{formatCurrency(yearly.savings, currency)}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Largest expense</p>
+                <p className="truncate font-display text-sm font-bold tabular-nums">{formatCurrency(yearly.largestAmt, currency)}</p>
+                <p className="truncate text-[11px] text-muted-foreground">{yearly.largestCatName}</p>
               </div>
             </div>
-            {/* mini trend */}
-            <div className="flex h-12 items-end gap-1 pt-1">
-              {yearly.byMonth.map((v, i) => {
-                const max = Math.max(...yearly.byMonth, 1);
-                const h = Math.max(4, Math.round((v / max) * 100));
-                const now = new Date().getMonth();
-                return (
-                  <div
-                    key={i}
-                    className={`flex-1 rounded-sm ${i === now ? "bg-primary" : "bg-muted-foreground/30"}`}
-                    style={{ height: `${h}%` }}
-                    title={`${new Date(2000, i, 1).toLocaleString(undefined, { month: "short" })}: ${formatCurrency(v, currency)}`}
-                  />
-                );
-              })}
+            {/* Monthly spending trend */}
+            <div className="space-y-1.5 pt-1">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Monthly spending trend</p>
+              <div className="flex h-16 items-end gap-1">
+                {yearly.byMonth.map((v, i) => {
+                  const max = Math.max(...yearly.byMonth, 1);
+                  const h = Math.max(4, Math.round((v / max) * 100));
+                  const now = new Date().getMonth();
+                  return (
+                    <div
+                      key={i}
+                      className={`flex-1 rounded-sm ${i === now ? "bg-primary" : "bg-muted-foreground/30"}`}
+                      style={{ height: `${h}%` }}
+                      title={`${new Date(2000, i, 1).toLocaleString(undefined, { month: "short" })}: ${formatCurrency(v, currency)}`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex gap-1">
+                {yearly.byMonth.map((_, i) => (
+                  <div key={i} className="flex-1 text-center text-[9px] text-muted-foreground">
+                    {new Date(2000, i, 1).toLocaleString(undefined, { month: "narrow" })}
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
