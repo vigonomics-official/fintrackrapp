@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { Sparkles, Calendar, AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus } from "lucide-react";
+import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -143,50 +143,6 @@ function Dashboard() {
     return list.slice(0, 5);
   }, [budgets, catStats, categories, survival, currency]);
 
-  // AI actionable insight — practical recommendations
-  const insight = useMemo(() => {
-    const top = catStats.topCat;
-    if (top && top[1] > 0) {
-      const [name, monthSpend] = top;
-      if (name === "Food") {
-        const orderCost = Math.max(250, Math.round((monthSpend / 30) * 0.6));
-        const save = orderCost * 8; // ~2 orders/week
-        return {
-          title: "Save Opportunity",
-          action: "Reduce food delivery by 2 orders this week",
-          save: `${formatCurrency(save, currency)}/month`,
-        };
-      }
-      if (name === "Travel") {
-        const dailyCut = Math.max(40, Math.round((monthSpend * 0.2) / 30 / 10) * 10);
-        return {
-          title: "Save Opportunity",
-          action: `Reduce transport spending by ${formatCurrency(dailyCut, currency)}/day`,
-          save: `${formatCurrency(dailyCut * 30, currency)}/month`,
-        };
-      }
-      if (name === "Shopping") {
-        return {
-          title: "Save Opportunity",
-          action: "Skip 1 non-essential shopping order this week",
-          save: `${formatCurrency(Math.round(monthSpend * 0.15), currency)}/month`,
-        };
-      }
-      const dailyCut = Math.max(20, Math.round((monthSpend * 0.17) / 30 / 10) * 10);
-      return {
-        title: "Save Opportunity",
-        action: `Reduce ${name.toLowerCase()} spending by ${formatCurrency(dailyCut, currency)}/day`,
-        save: `${formatCurrency(dailyCut * 30, currency)}/month`,
-      };
-    }
-    return {
-      title: "Save Opportunity",
-      action: `Stay under ${formatCurrency(survival.safeDaily, currency)}/day this week`,
-      save: `${formatCurrency(Math.max(200, Math.round(survival.safeDaily * 0.2)) * 30, currency)}/month`,
-    };
-  }, [catStats, currency, survival.safeDaily]);
-
-  const recent = useMemo(() => transactions.slice(0, 6), [transactions]);
   const hasExpenses = useMemo(() => transactions.some(t => t.type === "expense"), [transactions]);
 
   const greeting = (() => {
@@ -409,48 +365,6 @@ function Dashboard() {
           );
         })()}
 
-        {/* 3. Next Salary Card */}
-        <Card className="shadow-soft">
-          <CardContent className="p-4 md:p-5">
-            <div className="flex items-center gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Calendar className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Next salary</p>
-                <p className="font-display text-lg font-bold leading-tight">{survival.days} day{survival.days === 1 ? "" : "s"} left</p>
-                <p className="text-[11px] text-muted-foreground">
-                  Around {survival.nextSalary.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                </p>
-              </div>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="rounded-xl bg-muted/40 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended</p>
-                <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{formatCurrency(survival.safeDaily, currency)}/day</p>
-              </div>
-              <div className="rounded-xl bg-success/10 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-success/80">Stretch goal</p>
-                <p className="mt-0.5 font-display text-sm font-semibold tabular-nums text-success">{formatCurrency(survival.stretchDaily, currency)}/day</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 4. AI Insight (actionable save opportunity) */}
-        <Card className="shadow-soft">
-          <CardContent className="flex items-start gap-3 p-4 md:p-5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-gold-foreground">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{insight.title}</p>
-              <p className="mt-1 text-sm text-foreground/90">{insight.action}</p>
-              <p className="mt-2 text-[11px] uppercase tracking-wider text-muted-foreground">Potential savings</p>
-              <p className="font-display text-lg font-bold text-success tabular-nums">{insight.save}</p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* 5. Can I buy this? (compact inline) */}
         <Card className="shadow-soft">
@@ -487,63 +401,9 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* 6. Smart Transactions */}
-        <Card className="shadow-soft">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="flex items-center gap-2 font-display text-base">
-              <Wallet className="h-4 w-4 text-primary" /> Smart transactions
-            </CardTitle>
-            <Link to="/transactions" className="text-xs font-medium text-primary hover:underline">View all</Link>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {recent.length === 0 ? (
-              <p className="py-2 text-sm text-muted-foreground">No transactions yet.</p>
-            ) : recent.map(t => {
-              const catName = categories.find(c => c.id === t.category_id)?.name;
-              const simple = simplifyCategory(catName);
-              const isIncome = t.type === "income";
-              const title = isIncome ? "Salary Credited" : (catName || simple);
-
-              // Determine if this category is over-budget or surged this month
-              const budget = budgets.find(b => b.category_id === t.category_id);
-              const spentInCat = catStats.thisM.get(simple) ?? 0;
-              const overBudget = budget ? spentInCat > budget.monthly_limit : false;
-              const prevCat = catStats.lastM.get(simple) ?? 0;
-              const surged = prevCat > 0 && spentInCat > prevCat * 1.2;
-
-              let label = "Optional Expense";
-              let labelCls = "text-muted-foreground";
-              if (isIncome) {
-                label = "Income Received ✅";
-                labelCls = "text-success";
-              } else if (ESSENTIAL.has(simple)) {
-                label = "Essential Expense";
-                labelCls = "text-foreground/70";
-              } else if (overBudget) {
-                label = "Budget Alert ⚠";
-                labelCls = "text-destructive";
-              } else if (simple === "Food" && survival.safeDaily > 0 && t.amount > survival.safeDaily * 0.5) {
-                label = "Above Safe Limit ⚠";
-                labelCls = "text-destructive";
-              } else if (surged) {
-                label = "Spending Up This Month";
-                labelCls = "text-gold-foreground";
-              }
-
-              return (
-                <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{title}</p>
-                    <p className={`truncate text-[11px] ${labelCls}`}>{label}</p>
-                  </div>
-                  <p className={`shrink-0 font-display text-sm font-semibold tabular-nums ${isIncome ? "text-success" : ""}`}>
-                    {isIncome ? "+" : ""}{formatCurrency(t.amount, currency)}
-                  </p>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+        <Link to="/transactions" className="flex items-center justify-center gap-2 rounded-xl border bg-card p-4 shadow-soft text-sm font-medium text-primary transition-colors hover:bg-accent">
+          View all <ArrowRight className="h-4 w-4" />
+        </Link>
 
         {/* 7. Spending Risks */}
         <Card className="shadow-soft">
