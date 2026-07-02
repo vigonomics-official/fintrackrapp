@@ -212,21 +212,20 @@ function MonthlyPlan() {
       {/* Financial Health Score */}
       {s.hasIncome && <HealthScoreCard s={s} outstanding={outstanding} />}
 
-      <Card className="border-primary/20 bg-primary/5 shadow-soft">
-        <CardContent className="space-y-1.5 p-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">AI Planner Insight</p>
-          </div>
-          <p className="text-sm leading-relaxed text-foreground">
-            {!s.hasIncome
-              ? "Add this month's salary so we can guide your spending until next payday."
-              : safe
-                ? `At your current pace, you'll finish the month with about ${formatCurrency(Math.max(0, s.forecastBalance), s.currency)} left. Keep daily spending under ${formatCurrency(s.safeDaily, s.currency)}.`
-                : `At your current pace, you may run short before salary. Trim daily spending below ${formatCurrency(s.safeDaily, s.currency)} to recover into a safe zone.`}
-          </p>
-        </CardContent>
-      </Card>
+      <Link
+        to="/insights/coach"
+        preload="intent"
+        className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 shadow-soft transition-colors hover:bg-primary/10"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+          <Sparkles className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground">Want personalized advice?</p>
+          <p className="truncate text-xs text-muted-foreground">Visit AI Coach in Insights</p>
+        </div>
+        <ArrowRight className="h-4 w-4 shrink-0 text-primary" />
+      </Link>
     </div>
   );
 }

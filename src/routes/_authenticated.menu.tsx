@@ -42,7 +42,7 @@ const GROUPS: Group[] = [
     items: [
       { label: "SMS Intelligence", icon: MessageSquareText, to: "/sms-intelligence", description: "Auto-detect UPI & SMS spends" },
       { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants" },
-      { label: "Smart Financial Insights", icon: Sparkles, to: "/insights", description: "AI insights on your money" },
+      
     ],
   },
   {
