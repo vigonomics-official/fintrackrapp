@@ -139,7 +139,7 @@ function MonthlyPlan() {
       : forecast >= -2000
         ? "Slight overspend risk ⚠️"
         : "Reduce daily spend to recover";
-  const safe = forecast >= 0;
+  
   const zone =
     s.score >= 70
       ? { dot: "🟢", label: "Safe Zone", tone: "bg-success/20 text-success" }
