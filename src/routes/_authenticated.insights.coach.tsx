@@ -388,7 +388,7 @@ function CoachPage() {
               <Card className="p-4 shadow-soft">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Largest expense</p>
                 <p className="mt-1 font-display text-sm font-semibold">
-                  {largestExpense.description || "Expense"} — {formatCurrency(largestExpense.amount, currency)}
+                  {largestExpense.notes || categories.find(c => c.id === largestExpense.category_id)?.name || "Expense"} — {formatCurrency(largestExpense.amount, currency)}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {new Date(largestExpense.transaction_date).toLocaleDateString()}
