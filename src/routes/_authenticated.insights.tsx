@@ -209,14 +209,6 @@ function InsightsPage() {
             </Card>
           </Link>
 
-          {/* Card 3 — AI Insights */}
-          <InsightLink
-            to="/insights/ai"
-            icon={<Sparkles className="h-5 w-5" strokeWidth={1.8} />}
-            tone="bg-primary/10 text-primary"
-            title="AI Insights"
-            subtitle="Smart guidance based on your spending."
-          />
 
           {/* Card 4 — Danger Alerts */}
           <InsightLink
