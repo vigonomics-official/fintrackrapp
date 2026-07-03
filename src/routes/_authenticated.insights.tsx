@@ -115,6 +115,7 @@ function InsightsPage() {
   }, [txs, categories, now]);
 
   const cycleFinished = survival.daysRemaining === 0;
+  const reportReady = now.getDate() >= 25;
   const monthLabel = now.toLocaleString(undefined, { month: "long", year: "numeric" });
 
   return (
@@ -201,10 +202,18 @@ function InsightsPage() {
                 <p className="truncate text-sm font-semibold">Monthly Report Card</p>
                 <p className="truncate text-xs text-muted-foreground">Your monthly financial summary</p>
               </div>
-              {cycleFinished ? (
-                <span className="shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-semibold text-success">Ready</span>
+              {reportReady ? (
+                <span
+                  className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+                  style={{ backgroundColor: "#16a34a" }}
+                >
+                  Ready
+                </span>
               ) : (
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground">
+                  Available 25th
+                  <ChevronRight className="h-4 w-4" />
+                </span>
               )}
             </Card>
           </Link>

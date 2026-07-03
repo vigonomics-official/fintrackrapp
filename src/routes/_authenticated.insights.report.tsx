@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/finance/PageHeader";
 import {
   useTransactions, useCategories, useBudgets, useLoans, useProfile, monthKey,
@@ -8,41 +9,28 @@ import {
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/insights/report")({
   component: ReportPage,
   head: () => ({ meta: [{ title: "Monthly Report Card — FinTrackr" }] }),
 });
 
-function grade(score: number): { letter: string; tone: string } {
-  if (score >= 90) return { letter: "A+", tone: "text-success" };
-  if (score >= 80) return { letter: "A", tone: "text-success" };
-  if (score >= 70) return { letter: "B", tone: "text-primary" };
-  if (score >= 60) return { letter: "C", tone: "text-gold-foreground" };
-  if (score >= 50) return { letter: "D", tone: "text-gold-foreground" };
-  return { letter: "F", tone: "text-destructive" };
+const fmt = (n: number, currency = "INR") => formatCurrency(n, currency).replace(/\.00$/, "");
+
+function statusForScore(score: number) {
+  if (score >= 90) return { label: "🏆 Excellent Survivor" };
+  if (score >= 75) return { label: "🟢 Financially Healthy" };
+  if (score >= 60) return { label: "🟡 Getting There" };
+  return { label: "🔴 Needs Attention" };
 }
 
-function ScoreCard({ title, score, hint }: { title: string; score: number; hint: string }) {
-  const g = grade(score);
-  return (
-    <Card className="p-4 shadow-soft">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">{title}</p>
-          <p className="mt-0.5 font-display text-2xl font-bold">
-            {score}<span className="text-sm text-muted-foreground">/100</span>
-          </p>
-        </div>
-        <span className={cn("font-display text-3xl font-bold", g.tone)}>{g.letter}</span>
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-        <div className={cn("h-full rounded-full", score >= 70 ? "bg-success" : score >= 50 ? "bg-gold" : "bg-destructive")} style={{ width: `${score}%` }} />
-      </div>
-      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
-    </Card>
-  );
+function weekRange(cycleStart: Date, idx: number) {
+  const start = new Date(cycleStart);
+  start.setDate(start.getDate() + idx * 7);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const f = (d: Date) => d.toLocaleString(undefined, { day: "numeric", month: "short" });
+  return { start, end, label: `${f(start)}–${f(end)}` };
 }
 
 function ReportPage() {
@@ -60,87 +48,159 @@ function ReportPage() {
     [txs, loans, settings, now],
   );
 
-  const monthData = useMemo(() => {
-    const ym = `${now.getFullYear()}-${now.getMonth()}`;
-    const monthTxs = txs.filter(t => {
-      const d = new Date(t.transaction_date);
-      return `${d.getFullYear()}-${d.getMonth()}` === ym;
+  // Previous cycle survival — approximate by prior month window
+  const prevScore = useMemo(() => {
+    const prevNow = new Date(survival.lastSalaryDate);
+    prevNow.setDate(prevNow.getDate() - 1);
+    const s = computeSurvival({ transactions: txs, loans, salarySettings: settings, now: prevNow });
+    return s.score;
+  }, [txs, loans, settings, survival.lastSalaryDate]);
+
+  const cycleStart = survival.lastSalaryDate;
+  const cycleTxs = useMemo(() => {
+    const startKey = cycleStart.toISOString().slice(0, 10);
+    const todayKey = now.toISOString().slice(0, 10);
+    return txs.filter(t => {
+      const k = String(t.transaction_date).slice(0, 10);
+      return k >= startKey && k <= todayKey;
     });
-    const expenses = monthTxs.filter(t => t.type === "expense");
-    const income = monthTxs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
-    const totalSpent = expenses.reduce((s, t) => s + t.amount, 0);
+  }, [txs, cycleStart, now]);
 
-    // Biggest expense
-    const biggest = expenses.length
-      ? expenses.reduce((m, t) => (t.amount > m.amount ? t : m), expenses[0])
-      : null;
+  const expenses = cycleTxs.filter(t => t.type === "expense");
+  const totalSpent = expenses.reduce((s, t) => s + t.amount, 0);
+  const totalSaved = Math.max(0, survival.salary - totalSpent);
 
-    // Biggest win: category most under budget (or most disciplined)
-    const spendByCat = new Map<string, number>();
+  // Days under budget
+  const cycleDays = useMemo(() => {
+    const days: string[] = [];
+    const d = new Date(cycleStart);
+    while (d <= now) {
+      days.push(d.toISOString().slice(0, 10));
+      d.setDate(d.getDate() + 1);
+    }
+    return days;
+  }, [cycleStart, now]);
+  const safeDaily = survival.safeDaily || (survival.salary > 0 ? survival.salary / 30 : 0);
+  const daysUnderBudget = useMemo(() => {
+    if (!safeDaily) return 0;
+    const perDay = new Map<string, number>();
+    expenses.forEach(t => {
+      const k = String(t.transaction_date).slice(0, 10);
+      perDay.set(k, (perDay.get(k) ?? 0) + t.amount);
+    });
+    return cycleDays.filter(k => (perDay.get(k) ?? 0) < safeDaily).length;
+  }, [expenses, cycleDays, safeDaily]);
+
+  // Category rollup
+  const catRows = useMemo(() => {
+    const map = new Map<string, number>();
     expenses.forEach(t => {
       const k = t.category_id ?? "uncategorized";
-      spendByCat.set(k, (spendByCat.get(k) ?? 0) + t.amount);
+      map.set(k, (map.get(k) ?? 0) + t.amount);
     });
-    const wins = budgets
-      .filter(b => b.category_id && b.monthly_limit > 0)
-      .map(b => {
-        const spent = spendByCat.get(b.category_id!) ?? 0;
-        const saved = b.monthly_limit - spent;
-        const c = categories.find(x => x.id === b.category_id);
-        return { name: c?.name ?? "Category", saved };
-      })
-      .filter(w => w.saved > 0)
+    return [...map.entries()].map(([cid, spent]) => {
+      const cat = categories.find(c => c.id === cid);
+      const budget = budgets.find(b => b.category_id === cid)?.monthly_limit ?? 0;
+      const pct = budget > 0 ? (spent / budget) * 100 : 0;
+      return {
+        id: cid,
+        name: cat?.name ?? "Uncategorized",
+        color: cat?.color ?? "#9ca3af",
+        spent, budget, pct,
+      };
+    }).sort((a, b) => b.spent - a.spent);
+  }, [expenses, categories, budgets]);
+
+  // Biggest win: category most under budget (by absolute saving)
+  const biggestWin = useMemo(() => {
+    const wins = catRows
+      .filter(r => r.budget > 0 && r.spent < r.budget)
+      .map(r => ({ name: r.name, saved: r.budget - r.spent, pct: Math.round((1 - r.spent / r.budget) * 100) }))
       .sort((a, b) => b.saved - a.saved);
-    const bestWin: { name: string; saved: number } | null = wins[0] ?? null;
+    return wins[0] ?? null;
+  }, [catRows]);
 
-    // Budget score: % of budgets respected
-    let budgetScore = 100;
-    if (budgets.length > 0) {
-      const respected = budgets.filter(b => {
-        const spent = b.category_id ? (spendByCat.get(b.category_id) ?? 0) : 0;
-        return spent <= b.monthly_limit;
-      }).length;
-      budgetScore = Math.round((respected / budgets.length) * 100);
+  // Biggest overspend for tip
+  const biggestOver = useMemo(() => {
+    const overs = catRows.filter(r => r.budget > 0 && r.spent > r.budget)
+      .sort((a, b) => (b.spent - b.budget) - (a.spent - a.budget));
+    return overs[0] ?? null;
+  }, [catRows]);
+
+  // Weekly breakdown (up to 4 weeks from cycle start)
+  const weeks = useMemo(() => {
+    const weeklyBudget = survival.salary > 0 ? survival.salary / 4 : 0;
+    return Array.from({ length: 4 }).map((_, i) => {
+      const { start, end, label } = weekRange(cycleStart, i);
+      const spent = expenses.reduce((s, t) => {
+        const d = new Date(t.transaction_date);
+        return d >= start && d <= end ? s + t.amount : s;
+      }, 0);
+      const upcoming = start > now;
+      return { i: i + 1, label, spent, budget: weeklyBudget, upcoming };
+    });
+  }, [expenses, cycleStart, now, survival.salary]);
+
+  // Highest spending week for story line 1
+  const heaviestWeek = useMemo(() => {
+    const past = weeks.filter(w => !w.upcoming);
+    if (!past.length) return null;
+    return past.reduce((m, w) => (w.spent > m.spent ? w : m), past[0]);
+  }, [weeks]);
+
+  const monthName = now.toLocaleString(undefined, { month: "long" });
+  const monthYearShort = now.toLocaleString(undefined, { month: "long", year: "numeric" });
+  const status = statusForScore(survival.score);
+
+  const momentum =
+    survival.score > prevScore ? "↑ Better than last month 💪"
+    : survival.score === prevScore ? "Consistent performance 👍"
+    : "Room to improve next month 📈";
+
+  // Story line 3
+  const tip = useMemo(() => {
+    if (!biggestOver) return "Keep it up! Try saving ₹500 more next month.";
+    const n = biggestOver.name.toLowerCase();
+    if (n.includes("food") || n.includes("dining")) return "Next month, cook 3 meals/week to save ₹800 more.";
+    if (n.includes("transport") || n.includes("travel")) return "Consider carpooling to reduce travel costs.";
+    if (n.includes("shopping")) return "Try a no-shopping week to reset your spending habit.";
+    return `Trim ${biggestOver.name} next month to boost your score.`;
+  }, [biggestOver]);
+
+  const shareRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
+
+  const shareText = `I survived ${monthYearShort} with a Survival Score of ${survival.score}/100 on FinTrackr! 💪 #FinTrackr #SalarySurvival`;
+
+  const onShare = async () => {
+    try {
+      if (navigator.share) await navigator.share({ text: shareText });
+      else await navigator.clipboard.writeText(shareText);
+    } catch {}
+  };
+
+  const onSaveImage = async () => {
+    if (!shareRef.current) return;
+    setSaving(true);
+    try {
+      const mod = await import("html-to-image");
+      const dataUrl = await mod.toPng(shareRef.current, { pixelRatio: 2, backgroundColor: "#0d3d2a" });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `FinTrackr-${monthName}-${now.getFullYear()}.png`;
+      a.click();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
     }
-
-    // Spending score: relative to safe daily * days elapsed
-    let spendingScore = 75;
-    if (survival.hasIncome && survival.salary > 0) {
-      const ratio = totalSpent / survival.salary;
-      spendingScore = Math.max(0, Math.min(100, Math.round(100 - ratio * 100)));
-    }
-
-    // Savings score: salaryLeft ratio
-    let savingsScore = 50;
-    if (survival.hasIncome && survival.salary > 0) {
-      savingsScore = Math.max(0, Math.min(100, Math.round((survival.salaryLeft / survival.salary) * 100)));
-    }
-
-    return { totalSpent, income, biggest, bestWin, budgetScore, spendingScore, savingsScore, txCount: expenses.length };
-  }, [txs, budgets, categories, survival, now]);
-
-  const biggestCat = monthData.biggest
-    ? categories.find(c => c.id === monthData.biggest!.category_id)?.name ?? "Uncategorized"
-    : null;
-
-  const recommendation = useMemo(() => {
-    if (!txs.length) return "Start logging expenses to unlock your monthly report.";
-    if (survival.forecastBalance < 0) {
-      return `Pull back this week — you're projected to overspend by ${formatCurrency(Math.abs(survival.forecastBalance), currency)}. Cap daily spending at ${formatCurrency(survival.safeDaily, currency)}.`;
-    }
-    if (monthData.savingsScore >= 60) {
-      return `Great month so far. Lock in ${formatCurrency(Math.round(survival.salaryLeft * 0.5), currency)} into savings before payday.`;
-    }
-    return `Trim discretionary spending and aim to keep daily spend below ${formatCurrency(survival.safeDaily, currency)}.`;
-  }, [txs.length, survival, monthData.savingsScore, currency]);
-
-  const monthLabel = now.toLocaleString(undefined, { month: "long", year: "numeric" });
+  };
 
   if (!txs.length) {
     return (
-      <div className="w-full overflow-x-hidden">
-        <PageHeader title="Monthly Report Card" subtitle={monthLabel} />
-        <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 md:px-10">
+      <div className="w-full overflow-x-hidden" style={{ backgroundColor: "#FAFAF7" }}>
+        <PageHeader title={`${monthYearShort} · Report Card`} subtitle="Your salary survival story" />
+        <div className="mx-auto w-full max-w-3xl px-4 py-5">
           <Card className="p-5 text-center shadow-soft">
             <p className="text-sm font-semibold">No data yet for this month</p>
             <p className="mt-1 text-xs text-muted-foreground">Add a few expenses to generate your report card.</p>
@@ -150,76 +210,258 @@ function ReportPage() {
     );
   }
 
+  const spendingTarget = biggestOver ? Math.round(totalSpent * 0.95) : totalSpent;
+  const savingsTarget = Math.round(survival.salary * 0.1);
+
   return (
-    <div className="w-full overflow-x-hidden">
-      <PageHeader title="Monthly Report Card" subtitle={monthLabel} />
-      <div className="mx-auto w-full max-w-3xl space-y-3 px-4 py-5 sm:px-6 md:px-10">
-        <div className="grid grid-cols-2 gap-3">
-          <ScoreCard title="Survival" score={survival.score} hint="Overall financial health" />
-          <ScoreCard title="Budget" score={monthData.budgetScore} hint="Budgets respected" />
-          <ScoreCard title="Spending" score={monthData.spendingScore} hint="Vs your salary" />
-          <ScoreCard title="Savings" score={monthData.savingsScore} hint="% of salary left" />
+    <div className="w-full overflow-x-hidden" style={{ backgroundColor: "#FAFAF7" }}>
+      <PageHeader title={`${monthYearShort} · Report Card`} subtitle="Your salary survival story" />
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5">
+
+        {/* SECTION 1 — Hero */}
+        <div
+          className="rounded-2xl p-6 text-center text-white shadow-soft"
+          style={{ background: "linear-gradient(180deg, #1a6b4a 0%, #0d3d2a 100%)", borderRadius: 16 }}
+        >
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-white/70">
+            {monthYearShort.toUpperCase()} SURVIVAL SCORE
+          </p>
+          <div className="mt-3 flex items-baseline justify-center">
+            <span className="font-display font-extrabold" style={{ fontSize: 72, lineHeight: 1 }}>
+              {survival.hasIncome ? survival.score : "—"}
+            </span>
+            {survival.hasIncome && (
+              <span className="ml-1 font-semibold text-white/70" style={{ fontSize: 28 }}>/100</span>
+            )}
+          </div>
+          <div className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
+            {status.label}
+          </div>
+          <p className="mt-2 text-sm text-white/85">{momentum}</p>
         </div>
 
-        <Card className="p-4 shadow-soft">
-          <p className="text-xs text-muted-foreground">Biggest Expense</p>
-          {monthData.biggest ? (
-            <div className="mt-1 flex items-baseline justify-between gap-3">
-              <p className="min-w-0 truncate font-display text-base font-semibold">
-                {biggestCat}
-                {monthData.biggest.notes ? <span className="ml-1 text-xs font-normal text-muted-foreground">· {monthData.biggest.notes}</span> : null}
-              </p>
-              <p className="shrink-0 font-display text-lg font-bold text-destructive">
-                {formatCurrency(monthData.biggest.amount, currency)}
-              </p>
-            </div>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">No expenses yet.</p>
-          )}
-        </Card>
+        {/* SECTION 2 — Key Stats Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard
+            icon="📅"
+            label="Days Under Budget"
+            value={`${daysUnderBudget} of ${cycleDays.length} days`}
+            sub={daysUnderBudget >= cycleDays.length * 0.6 ? "✅ Good discipline" : "Keep pushing"}
+          />
+          <StatCard
+            icon="💰"
+            label="Total Saved"
+            value={totalSaved > 0 ? fmt(totalSaved, currency) : fmt(0, currency)}
+            subClass={totalSaved > 0 ? "text-success" : "text-destructive"}
+            sub={totalSaved > 0 ? "This cycle" : "Overspent"}
+          />
+          <StatCard icon="📊" label="Total Spent" value={fmt(totalSpent, currency)} sub="This cycle" />
+          <StatCard
+            icon="🏆"
+            label="Biggest Win"
+            value={biggestWin ? `${biggestWin.name} -${biggestWin.pct}%` : "—"}
+            sub={biggestWin ? "vs budget" : "Set budgets to unlock"}
+          />
+        </div>
 
-        <Card className="p-4 shadow-soft">
-          <p className="text-xs text-muted-foreground">Biggest Win</p>
-          {monthData.bestWin ? (
-            <div className="mt-1 flex items-baseline justify-between gap-3">
-              <p className="min-w-0 truncate font-display text-base font-semibold">{monthData.bestWin.name}</p>
-              <p className="shrink-0 font-display text-lg font-bold text-success">
-                {formatCurrency(monthData.bestWin.saved, currency)} saved
-              </p>
+        {/* SECTION 3 — Category Report */}
+        <div>
+          <h2 className="mb-2 text-base font-bold">Where Your Money Went</h2>
+          <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
+            {catRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No categorized expenses yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {catRows.slice(0, 6).map(r => {
+                  const pct = r.budget > 0 ? Math.min(100, r.pct) : 0;
+                  const barColor =
+                    r.budget === 0 ? "#9ca3af"
+                    : r.pct > 100 ? "#dc2626"
+                    : r.pct >= 80 ? "#f97316"
+                    : "#16a34a";
+                  const statusText =
+                    r.budget === 0 ? { t: "— Set budget", c: "text-muted-foreground" }
+                    : r.pct > 100 ? { t: "🔴 Over budget", c: "text-destructive" }
+                    : r.pct >= 80 ? { t: "⚠️ Near limit", c: "text-gold-foreground" }
+                    : { t: "✅ Under budget", c: "text-success" };
+                  return (
+                    <li key={r.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: r.color }} />
+                          <span className="truncate text-sm font-semibold">{r.name}</span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {r.budget > 0
+                            ? `${fmt(r.spent, currency)} of ${fmt(r.budget, currency)} budget`
+                            : `${fmt(r.spent, currency)} · no budget`}
+                        </p>
+                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold">{fmt(r.spent, currency)}</p>
+                        <p className={`text-[10px] ${statusText.c}`}>{statusText.t}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {catRows.length > 6 && (
+              <Link to="/transactions" className="mt-3 block text-right text-xs font-semibold text-success">
+                View all →
+              </Link>
+            )}
+          </Card>
+        </div>
+
+        {/* SECTION 4 — Month Story */}
+        <div>
+          <h2 className="mb-2 text-base font-bold">Your Month in 3 Lines</h2>
+          <Card
+            className="p-4 shadow-soft"
+            style={{ borderRadius: 12, borderLeft: "4px solid #16a34a" }}
+          >
+            <ul className="space-y-2 text-sm">
+              <li>
+                {heaviestWeek
+                  ? <>Your heaviest spending was in <b>Week {heaviestWeek.i}</b> ({heaviestWeek.label}).</>
+                  : "Not enough weekly data yet."}
+              </li>
+              <li>
+                {biggestWin
+                  ? <>You saved the most on <b>{biggestWin.name}</b>, spending {fmt(biggestWin.saved, currency)} less than budget.</>
+                  : "Set category budgets to spot your biggest wins."}
+              </li>
+              <li>{tip}</li>
+            </ul>
+          </Card>
+        </div>
+
+        {/* SECTION 5 — Weekly Breakdown */}
+        <div>
+          <h2 className="mb-2 text-base font-bold">Week by Week</h2>
+          <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
+            <ul className="space-y-3">
+              {weeks.map(w => {
+                const pct = w.budget > 0 ? Math.min(100, (w.spent / w.budget) * 100) : 0;
+                const over = w.budget > 0 && w.spent > w.budget;
+                return (
+                  <li key={w.i} className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                    <span className="text-xs font-semibold whitespace-nowrap">Week {w.i} · {w.label}</span>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, backgroundColor: over ? "#dc2626" : "#16a34a" }}
+                      />
+                    </div>
+                    <span className="text-right text-xs font-semibold whitespace-nowrap">
+                      {w.upcoming ? "— Upcoming" : `${fmt(w.spent, currency)} ${over ? "🔴" : "✅"}`}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        </div>
+
+        {/* SECTION 6 — Shareable */}
+        <div>
+          <h2 className="text-base font-bold">Share Your Report</h2>
+          <p className="mb-2 text-xs text-muted-foreground">Show how well you managed this month 💪</p>
+          <div
+            ref={shareRef}
+            className="rounded-2xl p-6 text-white shadow-soft"
+            style={{ background: "linear-gradient(180deg, #1a6b4a 0%, #0d3d2a 100%)", borderRadius: 16 }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-display text-lg font-bold">FinTrackr</span>
+              <span className="text-xl">🏆</span>
             </div>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {budgets.length === 0 ? "Set monthly budgets to unlock wins." : "No category came in under budget yet."}
+            <p className="mt-0.5 text-xs text-white/80">{monthYearShort} · Report Card</p>
+            <div className="my-3 h-px bg-white/20" />
+            <div className="py-2 text-center">
+              <p className="font-display text-5xl font-extrabold">
+                {survival.hasIncome ? survival.score : "—"}<span className="text-2xl text-white/70">/100</span>
+              </p>
+              <p className="mt-1 text-sm text-white/85">Survival Score</p>
+              <p className="mt-1 text-sm font-semibold">{status.label}</p>
+            </div>
+            <div className="my-3 h-px bg-white/20" />
+            <ul className="space-y-1 text-sm">
+              <li>💰 Saved {fmt(totalSaved, currency)}</li>
+              <li>📅 Under budget {daysUnderBudget} days</li>
+              <li>🏆 Best: {biggestWin?.name ?? "—"}</li>
+            </ul>
+            <div className="my-3 h-px bg-white/20" />
+            <p className="text-center text-[11px] text-white/70">
+              Made with FinTrackr · Track your salary survival
             </p>
-          )}
-        </Card>
-
-        <Card className="p-4 shadow-soft">
-          <p className="mb-2 font-display text-sm font-semibold">Month Summary</p>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div>
-              <p className="text-[10px] text-muted-foreground">Income</p>
-              <p className="mt-0.5 truncate font-display text-sm font-semibold">{formatCurrency(monthData.income, currency)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground">Spent</p>
-              <p className="mt-0.5 truncate font-display text-sm font-semibold">{formatCurrency(monthData.totalSpent, currency)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground">Transactions</p>
-              <p className="mt-0.5 font-display text-sm font-semibold">{monthData.txCount}</p>
-            </div>
           </div>
-        </Card>
+          <div className="mt-3 space-y-2">
+            <Button
+              onClick={onShare}
+              className="w-full text-white"
+              style={{ backgroundColor: "#16a34a", borderRadius: 12 }}
+            >
+              📤 Share My Report
+            </Button>
+            <Button
+              onClick={onSaveImage}
+              disabled={saving}
+              variant="outline"
+              className="w-full"
+              style={{ borderColor: "#16a34a", color: "#16a34a", borderRadius: 12 }}
+            >
+              {saving ? "Saving…" : "💾 Save as Image"}
+            </Button>
+          </div>
+        </div>
 
-        <Card
-          className="relative overflow-hidden border-0 p-4 text-white shadow-soft"
-          style={{ background: "linear-gradient(135deg, oklch(0.55 0.13 165) 0%, oklch(0.42 0.12 170) 100%)" }}
-        >
-          <p className="text-xs font-semibold uppercase tracking-wide text-white/80">AI Recommendation</p>
-          <p className="mt-1 text-sm">{recommendation}</p>
-        </Card>
+        {/* SECTION 7 — Next Month Targets */}
+        <div>
+          <h2 className="mb-2 text-base font-bold">Next Month Targets</h2>
+          <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-center gap-3">
+                <span className="text-lg">🎯</span>
+                <span>Keep spending under <b>{fmt(spendingTarget, currency)}</b></span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="text-lg">💰</span>
+                <span>Save at least <b>{fmt(savingsTarget, currency)}</b></span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="text-lg">🔥</span>
+                <span>Maintain <b>20+ day streak</b></span>
+              </li>
+            </ul>
+            <Link
+              to="/planner"
+              className="mt-3 inline-block text-xs font-semibold"
+              style={{ color: "#16a34a" }}
+            >
+              Set as My Goals →
+            </Link>
+          </Card>
+        </div>
+
       </div>
     </div>
+  );
+}
+
+function StatCard({
+  icon, label, value, sub, subClass,
+}: { icon: string; label: string; value: string; sub?: string; subClass?: string }) {
+  return (
+    <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
+      <div className="text-lg leading-none">{icon}</div>
+      <p className="mt-1.5 text-[11px] text-muted-foreground">{label}</p>
+      <p className="mt-0.5 truncate font-display text-base font-bold">{value}</p>
+      {sub && <p className={`mt-0.5 text-[10px] ${subClass ?? "text-muted-foreground"}`}>{sub}</p>}
+    </Card>
   );
 }
