@@ -115,6 +115,7 @@ function InsightsPage() {
   }, [txs, categories, now]);
 
   const cycleFinished = survival.daysRemaining === 0;
+  const reportReady = now.getDate() >= 25;
   const monthLabel = now.toLocaleString(undefined, { month: "long", year: "numeric" });
 
   return (
