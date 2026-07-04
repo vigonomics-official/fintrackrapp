@@ -169,7 +169,7 @@ function InsightsPage() {
         )}
 
         <div className="space-y-2">
-          {/* Card 1 — AI Financial Coach (featured) */}
+          {/* Card 1 — AI Salary Survival Coach (featured) */}
           <Link to="/insights/coach" preload="intent">
             <Card
               className="relative flex items-center gap-3 overflow-hidden border-0 p-4 text-white shadow-soft transition-transform active:scale-[0.99]"
@@ -180,7 +180,7 @@ function InsightsPage() {
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="truncate font-display text-sm font-semibold">AI Financial Coach</p>
+                  <p className="truncate font-display text-sm font-semibold">AI Salary Survival Coach</p>
                   <span className="rounded-full bg-white/25 px-1.5 py-0.5 text-[10px] font-bold tracking-wide">NEW</span>
                 </div>
                 <p className="mt-0.5 truncate text-xs text-white/85">

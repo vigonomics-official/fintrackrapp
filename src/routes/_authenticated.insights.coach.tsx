@@ -16,8 +16,8 @@ import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/insights/coach")({
-  component: CoachPage,
-  head: () => ({ meta: [{ title: "AI Financial Coach — FinTrackr" }] }),
+  component: SalarySurvivalCoachPage,
+  head: () => ({ meta: [{ title: "AI Salary Survival Coach — FinTrackr" }] }),
 });
 
 type Tone = "primary" | "success" | "warn" | "danger";
@@ -42,7 +42,7 @@ type Advice = {
   action?: string;
 };
 
-function CoachPage() {
+function SalarySurvivalCoachPage() {
   const { data: txs = [] } = useTransactions();
   const { data: categories = [] } = useCategories();
   const { data: budgets = [] } = useBudgets(monthKey());
@@ -306,7 +306,7 @@ function CoachPage() {
 
   return (
     <div className="w-full overflow-x-hidden">
-      <PageHeader title="AI Financial Coach" subtitle="Personalized money advice, built from your data" />
+      <PageHeader title="AI Salary Survival Coach" subtitle="Your personal salary survival assistant powered by AI." />
       <div className="mx-auto w-full max-w-3xl space-y-3 px-4 py-5 sm:px-6 md:px-10">
         {/* Greeting */}
         <Card
