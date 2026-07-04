@@ -38,6 +38,7 @@ import { Route as AuthenticatedInsightsReportRouteImport } from './routes/_authe
 import { Route as AuthenticatedInsightsCoachRouteImport } from './routes/_authenticated.insights.coach'
 import { Route as AuthenticatedInsightsBehaviorRouteImport } from './routes/_authenticated.insights.behavior'
 import { Route as AuthenticatedInsightsAlertsRouteImport } from './routes/_authenticated.insights.alerts'
+import { Route as AuthenticatedInsightsAiCoachRouteImport } from './routes/_authenticated.insights.ai-coach'
 import { Route as AuthenticatedInsightsAiRouteImport } from './routes/_authenticated.insights.ai'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -194,6 +195,12 @@ const AuthenticatedInsightsAlertsRoute =
     path: '/alerts',
     getParentRoute: () => AuthenticatedInsightsRoute,
   } as any)
+const AuthenticatedInsightsAiCoachRoute =
+  AuthenticatedInsightsAiCoachRouteImport.update({
+    id: '/ai-coach',
+    path: '/ai-coach',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
 const AuthenticatedInsightsAiRoute = AuthenticatedInsightsAiRouteImport.update({
   id: '/ai',
   path: '/ai',
@@ -225,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRoute
   '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
   '/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
   '/insights/coach': typeof AuthenticatedInsightsCoachRoute
@@ -256,6 +264,7 @@ export interface FileRoutesByTo {
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRoute
   '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
   '/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
   '/insights/coach': typeof AuthenticatedInsightsCoachRoute
@@ -289,6 +298,7 @@ export interface FileRoutesById {
   '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
+  '/_authenticated/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRoute
   '/_authenticated/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
   '/_authenticated/insights/behavior': typeof AuthenticatedInsightsBehaviorRoute
   '/_authenticated/insights/coach': typeof AuthenticatedInsightsCoachRoute
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/split-settle'
     | '/transactions'
     | '/insights/ai'
+    | '/insights/ai-coach'
     | '/insights/alerts'
     | '/insights/behavior'
     | '/insights/coach'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/split-settle'
     | '/transactions'
     | '/insights/ai'
+    | '/insights/ai-coach'
     | '/insights/alerts'
     | '/insights/behavior'
     | '/insights/coach'
@@ -385,6 +397,7 @@ export interface FileRouteTypes {
     | '/_authenticated/split-settle'
     | '/_authenticated/transactions'
     | '/_authenticated/insights/ai'
+    | '/_authenticated/insights/ai-coach'
     | '/_authenticated/insights/alerts'
     | '/_authenticated/insights/behavior'
     | '/_authenticated/insights/coach'
@@ -608,6 +621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInsightsAlertsRouteImport
       parentRoute: typeof AuthenticatedInsightsRoute
     }
+    '/_authenticated/insights/ai-coach': {
+      id: '/_authenticated/insights/ai-coach'
+      path: '/ai-coach'
+      fullPath: '/insights/ai-coach'
+      preLoaderRoute: typeof AuthenticatedInsightsAiCoachRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
     '/_authenticated/insights/ai': {
       id: '/_authenticated/insights/ai'
       path: '/ai'
@@ -620,6 +640,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedInsightsRouteChildren {
   AuthenticatedInsightsAiRoute: typeof AuthenticatedInsightsAiRoute
+  AuthenticatedInsightsAiCoachRoute: typeof AuthenticatedInsightsAiCoachRoute
   AuthenticatedInsightsAlertsRoute: typeof AuthenticatedInsightsAlertsRoute
   AuthenticatedInsightsBehaviorRoute: typeof AuthenticatedInsightsBehaviorRoute
   AuthenticatedInsightsCoachRoute: typeof AuthenticatedInsightsCoachRoute
@@ -629,6 +650,7 @@ interface AuthenticatedInsightsRouteChildren {
 
 const AuthenticatedInsightsRouteChildren: AuthenticatedInsightsRouteChildren = {
   AuthenticatedInsightsAiRoute: AuthenticatedInsightsAiRoute,
+  AuthenticatedInsightsAiCoachRoute: AuthenticatedInsightsAiCoachRoute,
   AuthenticatedInsightsAlertsRoute: AuthenticatedInsightsAlertsRoute,
   AuthenticatedInsightsBehaviorRoute: AuthenticatedInsightsBehaviorRoute,
   AuthenticatedInsightsCoachRoute: AuthenticatedInsightsCoachRoute,
