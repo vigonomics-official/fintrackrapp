@@ -170,7 +170,7 @@ function InsightsPage() {
 
         <div className="space-y-2">
           {/* Card 1 — AI Salary Survival Coach (featured) */}
-          <Link to="/insights/coach" preload="intent">
+          <Link to="/insights/ai-coach" preload="intent">
             <Card
               className="relative flex items-center gap-3 overflow-hidden border-0 p-4 text-white shadow-soft transition-transform active:scale-[0.99]"
               style={{ background: "linear-gradient(135deg, oklch(0.55 0.13 165) 0%, oklch(0.42 0.12 170) 100%)" }}
