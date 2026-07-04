@@ -33,6 +33,7 @@ import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated.
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
+import { Route as AuthenticatedInsightsIndexRouteImport } from './routes/_authenticated.insights.index'
 import { Route as AuthenticatedInsightsWeeklyRouteImport } from './routes/_authenticated.insights.weekly'
 import { Route as AuthenticatedInsightsReportRouteImport } from './routes/_authenticated.insights.report'
 import { Route as AuthenticatedInsightsCoachRouteImport } from './routes/_authenticated.insights.coach'
@@ -165,6 +166,12 @@ const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
   path: '/budgets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInsightsIndexRoute =
+  AuthenticatedInsightsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
 const AuthenticatedInsightsWeeklyRoute =
   AuthenticatedInsightsWeeklyRouteImport.update({
     id: '/weekly',
@@ -238,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/insights/coach': typeof AuthenticatedInsightsCoachRoute
   '/insights/report': typeof AuthenticatedInsightsReportRoute
   '/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
+  '/insights/': typeof AuthenticatedInsightsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -252,7 +260,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/import': typeof AuthenticatedImportRoute
-  '/insights': typeof AuthenticatedInsightsRouteWithChildren
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
   '/menu': typeof AuthenticatedMenuRoute
@@ -270,6 +277,7 @@ export interface FileRoutesByTo {
   '/insights/coach': typeof AuthenticatedInsightsCoachRoute
   '/insights/report': typeof AuthenticatedInsightsReportRoute
   '/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
+  '/insights': typeof AuthenticatedInsightsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/_authenticated/insights/coach': typeof AuthenticatedInsightsCoachRoute
   '/_authenticated/insights/report': typeof AuthenticatedInsightsReportRoute
   '/_authenticated/insights/weekly': typeof AuthenticatedInsightsWeeklyRoute
+  '/_authenticated/insights/': typeof AuthenticatedInsightsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -338,6 +347,7 @@ export interface FileRouteTypes {
     | '/insights/coach'
     | '/insights/report'
     | '/insights/weekly'
+    | '/insights/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -352,7 +362,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/goals'
     | '/import'
-    | '/insights'
     | '/investments'
     | '/loans'
     | '/menu'
@@ -370,6 +379,7 @@ export interface FileRouteTypes {
     | '/insights/coach'
     | '/insights/report'
     | '/insights/weekly'
+    | '/insights'
   id:
     | '__root__'
     | '/'
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/_authenticated/insights/coach'
     | '/_authenticated/insights/report'
     | '/_authenticated/insights/weekly'
+    | '/_authenticated/insights/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -586,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/insights/': {
+      id: '/_authenticated/insights/'
+      path: '/'
+      fullPath: '/insights/'
+      preLoaderRoute: typeof AuthenticatedInsightsIndexRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
     '/_authenticated/insights/weekly': {
       id: '/_authenticated/insights/weekly'
       path: '/weekly'
@@ -646,6 +664,7 @@ interface AuthenticatedInsightsRouteChildren {
   AuthenticatedInsightsCoachRoute: typeof AuthenticatedInsightsCoachRoute
   AuthenticatedInsightsReportRoute: typeof AuthenticatedInsightsReportRoute
   AuthenticatedInsightsWeeklyRoute: typeof AuthenticatedInsightsWeeklyRoute
+  AuthenticatedInsightsIndexRoute: typeof AuthenticatedInsightsIndexRoute
 }
 
 const AuthenticatedInsightsRouteChildren: AuthenticatedInsightsRouteChildren = {
@@ -656,6 +675,7 @@ const AuthenticatedInsightsRouteChildren: AuthenticatedInsightsRouteChildren = {
   AuthenticatedInsightsCoachRoute: AuthenticatedInsightsCoachRoute,
   AuthenticatedInsightsReportRoute: AuthenticatedInsightsReportRoute,
   AuthenticatedInsightsWeeklyRoute: AuthenticatedInsightsWeeklyRoute,
+  AuthenticatedInsightsIndexRoute: AuthenticatedInsightsIndexRoute,
 }
 
 const AuthenticatedInsightsRouteWithChildren =
