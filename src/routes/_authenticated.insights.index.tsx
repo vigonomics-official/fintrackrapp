@@ -10,7 +10,7 @@ import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 
-export const Route = createFileRoute("/_authenticated/insights")({
+export const Route = createFileRoute("/_authenticated/insights/")({
   component: InsightsPage,
   head: () => ({
     meta: [
