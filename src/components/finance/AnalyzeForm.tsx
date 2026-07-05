@@ -58,10 +58,27 @@ const INITIAL: FormState = {
 
 export const COACH_INPUT_STORAGE_KEY = "fintrackr:ai-coach:last-input";
 
-export function AnalyzeForm() {
+export type AnalyzeFormProps = {
+  initial?: Partial<CoachAnalysisInput>;
+  autoFilled?: ReadonlySet<string>;
+};
+
+export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
   const navigate = useNavigate();
-  const [form, setForm] = useState<FormState>(INITIAL);
+  const [form, setForm] = useState<FormState>(() => {
+    if (!initial) return INITIAL;
+    const seed: FormState = { ...INITIAL };
+    for (const f of NUMERIC_FIELDS) {
+      const v = (initial as Record<string, unknown>)[f.key];
+      if (typeof v === "number" && Number.isFinite(v) && v > 0) seed[f.key] = String(v);
+    }
+    if (initial.salaryDate) seed.salaryDate = initial.salaryDate;
+    if (initial.financialGoal) seed.financialGoal = initial.financialGoal;
+    if (initial.customGoalNote) seed.customGoalNote = initial.customGoalNote;
+    return seed;
+  });
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const isAuto = (k: string) => !!autoFilled?.has(k);
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -132,7 +149,14 @@ export function AnalyzeForm() {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {NUMERIC_FIELDS.map((f) => (
-            <FieldWrap key={f.key} id={f.key} label={f.label} required={f.required} error={errors[f.key]}>
+            <FieldWrap
+              key={f.key}
+              id={f.key}
+              label={f.label}
+              required={f.required}
+              error={errors[f.key]}
+              hint={isAuto(f.key) ? "Auto-filled from your transaction history" : undefined}
+            >
               <Input
                 id={f.key}
                 type="number"
@@ -146,7 +170,13 @@ export function AnalyzeForm() {
             </FieldWrap>
           ))}
 
-          <FieldWrap id="salaryDate" label="Salary Date" required error={errors.salaryDate}>
+          <FieldWrap
+            id="salaryDate"
+            label="Salary Date"
+            required
+            error={errors.salaryDate}
+            hint={isAuto("salaryDate") ? "Auto-filled from your transaction history" : undefined}
+          >
             <Input
               id="salaryDate"
               type="date"
@@ -202,6 +232,7 @@ function FieldWrap({
   label,
   required,
   error,
+  hint,
   className,
   children,
 }: {
@@ -209,6 +240,7 @@ function FieldWrap({
   label: string;
   required?: boolean;
   error?: string;
+  hint?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -218,7 +250,11 @@ function FieldWrap({
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       {children}
-      {error && <p className="text-[11px] font-medium text-destructive">{error}</p>}
+      {error ? (
+        <p className="text-[11px] font-medium text-destructive">{error}</p>
+      ) : hint ? (
+        <p className="text-[11px] font-medium text-primary/80">{hint}</p>
+      ) : null}
     </div>
   );
 }
