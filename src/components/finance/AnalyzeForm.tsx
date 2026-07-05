@@ -149,7 +149,14 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {NUMERIC_FIELDS.map((f) => (
-            <FieldWrap key={f.key} id={f.key} label={f.label} required={f.required} error={errors[f.key]}>
+            <FieldWrap
+              key={f.key}
+              id={f.key}
+              label={f.label}
+              required={f.required}
+              error={errors[f.key]}
+              hint={isAuto(f.key) ? "Auto-filled from your transaction history" : undefined}
+            >
               <Input
                 id={f.key}
                 type="number"
@@ -163,7 +170,13 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
             </FieldWrap>
           ))}
 
-          <FieldWrap id="salaryDate" label="Salary Date" required error={errors.salaryDate}>
+          <FieldWrap
+            id="salaryDate"
+            label="Salary Date"
+            required
+            error={errors.salaryDate}
+            hint={isAuto("salaryDate") ? "Auto-filled from your transaction history" : undefined}
+          >
             <Input
               id="salaryDate"
               type="date"
