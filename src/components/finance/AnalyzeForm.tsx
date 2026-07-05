@@ -232,6 +232,7 @@ function FieldWrap({
   label,
   required,
   error,
+  hint,
   className,
   children,
 }: {
@@ -239,6 +240,7 @@ function FieldWrap({
   label: string;
   required?: boolean;
   error?: string;
+  hint?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -248,7 +250,11 @@ function FieldWrap({
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       {children}
-      {error && <p className="text-[11px] font-medium text-destructive">{error}</p>}
+      {error ? (
+        <p className="text-[11px] font-medium text-destructive">{error}</p>
+      ) : hint ? (
+        <p className="text-[11px] font-medium text-primary/80">{hint}</p>
+      ) : null}
     </div>
   );
 }
