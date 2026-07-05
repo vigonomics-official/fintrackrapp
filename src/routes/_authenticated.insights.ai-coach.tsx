@@ -48,7 +48,7 @@ function AiCoachPage() {
           </TabsList>
 
           <TabsContent value="analyze" className="mt-4">
-            <Placeholder title="Analyze" body="AI Salary Survival Analysis coming soon." />
+            <AnalyzeForm />
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
             <Placeholder title="Advice" body="Personalized AI advice will appear here." />
