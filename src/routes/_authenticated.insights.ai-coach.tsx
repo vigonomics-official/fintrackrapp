@@ -1,9 +1,15 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { ArrowLeft, Sparkles, Database, PenLine, ChevronRight, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageShell, PageContainer } from "@/components/finance/PageContainer";
-import { AnalyzeForm } from "@/components/finance/AnalyzeForm";
+import { AnalyzeForm, COACH_INPUT_STORAGE_KEY } from "@/components/finance/AnalyzeForm";
+import { useTransactions, useCategories } from "@/hooks/use-finance";
+import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { buildCoachAutofill } from "@/lib/coach-autofill";
+import { analyzeMock, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
 
 export const Route = createFileRoute("/_authenticated/insights/ai-coach")({
   component: AiCoachRoute,
@@ -12,12 +18,16 @@ export const Route = createFileRoute("/_authenticated/insights/ai-coach")({
 
 function AiCoachRoute() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // Child routes (e.g. /results) render their own shell via <Outlet />.
   if (pathname !== "/insights/ai-coach") return <Outlet />;
   return <AiCoachPage />;
 }
 
+type AnalyzeMode = "choice" | "form";
+
 function AiCoachPage() {
+  const [mode, setMode] = useState<AnalyzeMode>("choice");
+  const [useAutoData, setUseAutoData] = useState(false);
+
   return (
     <PageShell>
       <div className="flex flex-wrap items-center gap-3 border-b bg-card/40 px-4 py-4 backdrop-blur md:px-10 md:py-6">
@@ -40,7 +50,14 @@ function AiCoachPage() {
       </div>
 
       <PageContainer>
-        <Tabs defaultValue="analyze" className="w-full">
+        <Tabs
+          defaultValue="analyze"
+          className="w-full"
+          onValueChange={() => {
+            setMode("choice");
+            setUseAutoData(false);
+          }}
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="analyze">Analyze</TabsTrigger>
             <TabsTrigger value="advice">Advice</TabsTrigger>
@@ -48,7 +65,20 @@ function AiCoachPage() {
           </TabsList>
 
           <TabsContent value="analyze" className="mt-4">
-            <AnalyzeForm />
+            {mode === "choice" ? (
+              <AnalyzeChoice
+                onManual={() => {
+                  setUseAutoData(false);
+                  setMode("form");
+                }}
+                onAuto={() => {
+                  setUseAutoData(true);
+                  setMode("form");
+                }}
+              />
+            ) : (
+              <AnalyzeFormWithAutofill useAutoData={useAutoData} onBack={() => setMode("choice")} />
+            )}
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
             <Placeholder title="Advice" body="Personalized AI advice will appear here." />
@@ -59,6 +89,144 @@ function AiCoachPage() {
         </Tabs>
       </PageContainer>
     </PageShell>
+  );
+}
+
+function AnalyzeChoice({ onAuto, onManual }: { onAuto: () => void; onManual: () => void }) {
+  const navigate = useNavigate();
+  const { data: transactions } = useTransactions();
+  const { data: categories } = useCategories();
+  const { settings } = useSalarySettings();
+
+  const autofill = useMemo(
+    () => buildCoachAutofill({ transactions, categories, salary: settings }),
+    [transactions, categories, settings],
+  );
+
+  const handleAuto = () => {
+    if (autofill.hasEnough) {
+      // Compose a full input from autofill values and jump straight to results.
+      const input: CoachAnalysisInput = {
+        monthlySalary: autofill.values.monthlySalary ?? 0,
+        salaryDate: autofill.values.salaryDate ?? new Date().toISOString().slice(0, 10),
+        currentAccountBalance: autofill.values.currentAccountBalance ?? 0,
+        monthlyRent: autofill.values.monthlyRent ?? 0,
+        monthlyFood: autofill.values.monthlyFood ?? 0,
+        monthlyTransport: autofill.values.monthlyTransport ?? 0,
+        monthlyEmi: autofill.values.monthlyEmi ?? 0,
+        monthlyBills: autofill.values.monthlyBills ?? 0,
+        monthlyInvestments: autofill.values.monthlyInvestments ?? 0,
+        currentSavings: autofill.values.currentSavings ?? 0,
+        otherMonthlyExpenses: autofill.values.otherMonthlyExpenses ?? 0,
+        financialGoal: "Emergency Fund",
+      };
+      try {
+        sessionStorage.setItem(COACH_INPUT_STORAGE_KEY, JSON.stringify(input));
+        // Warm the mock so future providers (Gemini) can hook in identically.
+        analyzeMock(input);
+      } catch {
+        /* ignore */
+      }
+      navigate({ to: "/insights/ai-coach/results" });
+      return;
+    }
+    onAuto();
+  };
+
+  const filledCount = autofill.filled.size;
+
+  return (
+    <div className="space-y-3">
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={handleAuto}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleAuto();
+          }
+        }}
+        className="cursor-pointer p-4 shadow-soft transition-colors hover:bg-muted/40 sm:p-5"
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Database className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 font-display text-sm font-semibold">
+              <span aria-hidden>🟢</span>
+              Analyze Using My FinTrackr Data
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Automatically use your salary, expenses, bills, investments and spending history.
+            </p>
+            {filledCount > 0 && (
+              <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+                <CheckCircle2 className="h-3 w-3" />
+                {autofill.hasEnough
+                  ? "Ready — we have enough to analyse instantly"
+                  : `${filledCount} field${filledCount === 1 ? "" : "s"} pre-filled from your history`}
+              </p>
+            )}
+          </div>
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+        </div>
+      </Card>
+
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={onManual}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onManual();
+          }
+        }}
+        className="cursor-pointer p-4 shadow-soft transition-colors hover:bg-muted/40 sm:p-5"
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground">
+            <PenLine className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 font-display text-sm font-semibold">
+              <span aria-hidden>✍️</span>
+              Enter Manually
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Fill in your salary, expenses and goal by hand.
+            </p>
+          </div>
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function AnalyzeFormWithAutofill({ useAutoData, onBack }: { useAutoData: boolean; onBack: () => void }) {
+  const { data: transactions } = useTransactions();
+  const { data: categories } = useCategories();
+  const { settings } = useSalarySettings();
+
+  const autofill = useMemo(
+    () => buildCoachAutofill({ transactions, categories, salary: settings }),
+    [transactions, categories, settings],
+  );
+
+  const initial = useAutoData ? autofill.values : undefined;
+  const filled = useAutoData ? autofill.filled : undefined;
+
+  return (
+    <div className="space-y-3">
+      <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 h-8 px-2 text-muted-foreground">
+        <ArrowLeft className="mr-1 h-4 w-4" />
+        Choose a different option
+      </Button>
+      <AnalyzeForm initial={initial} autoFilled={filled} />
+    </div>
   );
 }
 
