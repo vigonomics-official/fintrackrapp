@@ -1,13 +1,21 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageShell, PageContainer } from "@/components/finance/PageContainer";
+import { AnalyzeForm } from "@/components/finance/AnalyzeForm";
 
 export const Route = createFileRoute("/_authenticated/insights/ai-coach")({
-  component: AiCoachPage,
+  component: AiCoachRoute,
   head: () => ({ meta: [{ title: "AI Salary Survival Coach — FinTrackr" }] }),
 });
+
+function AiCoachRoute() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Child routes (e.g. /results) render their own shell via <Outlet />.
+  if (pathname !== "/insights/ai-coach") return <Outlet />;
+  return <AiCoachPage />;
+}
 
 function AiCoachPage() {
   return (
@@ -40,7 +48,7 @@ function AiCoachPage() {
           </TabsList>
 
           <TabsContent value="analyze" className="mt-4">
-            <Placeholder title="Analyze" body="AI Salary Survival Analysis coming soon." />
+            <AnalyzeForm />
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
             <Placeholder title="Advice" body="Personalized AI advice will appear here." />
