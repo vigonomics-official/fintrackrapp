@@ -175,7 +175,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
             label="Salary Date"
             required
             error={errors.salaryDate}
-            hint={isAuto("salaryDate") ? "Auto-filled from your transaction history" : undefined}
+            hint={isAuto("salaryDate") ? "Calculated from this month's transactions" : undefined}
           >
             <Input
               id="salaryDate"
