@@ -58,18 +58,28 @@ function ResultsPage() {
     }
   }, []);
 
+  const goToAnalyzeForm = (missingKeys: string[] = []) => {
+    try {
+      sessionStorage.setItem(COACH_OPEN_FORM_KEY, "1");
+      sessionStorage.setItem(COACH_CONFIDENCE_MISSING_KEY, JSON.stringify(missingKeys));
+    } catch {
+      /* ignore */
+    }
+    navigate({ to: "/insights/ai-coach" });
+  };
+
   if (missing) {
+    const emptyConfidence = computeConfidence(null);
     return (
       <PageShell>
         <Header />
         <PageContainer>
-          <Card className="p-6 text-center shadow-soft">
-            <p className="font-display text-sm font-semibold">No analysis data</p>
-            <p className="mt-1 text-xs text-muted-foreground">Fill in the form to run an analysis.</p>
-            <Button className="mt-4" onClick={() => navigate({ to: "/insights/ai-coach" })}>
-              Go to Analyze
-            </Button>
-          </Card>
+          <div className="space-y-3">
+            <DataConfidenceCard
+              confidence={emptyConfidence}
+              onStart={() => navigate({ to: "/insights/ai-coach" })}
+            />
+          </div>
         </PageContainer>
       </PageShell>
     );
