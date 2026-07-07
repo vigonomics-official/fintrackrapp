@@ -209,7 +209,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
               id={f.key}
               label={f.label}
               required={f.required}
-              error={errors[f.key]}
+              error={errors[f.key] ?? missingHint(f.key)}
               hint={isAuto(f.key) ? "Calculated from this month's transactions" : undefined}
             >
               <Input
@@ -220,7 +220,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
                 placeholder={f.placeholder ?? "0"}
                 value={form[f.key]}
                 onChange={(e) => setField(f.key, e.target.value)}
-                aria-invalid={!!errors[f.key]}
+                aria-invalid={!!errors[f.key] || highlightMissing.has(f.key)}
               />
             </FieldWrap>
           ))}
@@ -229,7 +229,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
             id="salaryDate"
             label="Salary Date"
             required
-            error={errors.salaryDate}
+            error={errors.salaryDate ?? missingHint("salaryDate")}
             hint={isAuto("salaryDate") ? "Calculated from this month's transactions" : undefined}
           >
             <Input
@@ -237,11 +237,16 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
               type="date"
               value={form.salaryDate}
               onChange={(e) => setField("salaryDate", e.target.value)}
-              aria-invalid={!!errors.salaryDate}
+              aria-invalid={!!errors.salaryDate || highlightMissing.has("salaryDate")}
             />
           </FieldWrap>
 
-          <FieldWrap id="financialGoal" label="Financial Goal" required error={errors.financialGoal}>
+          <FieldWrap
+            id="financialGoal"
+            label="Financial Goal"
+            required
+            error={errors.financialGoal ?? missingHint("financialGoal")}
+          >
             <Select
               value={form.financialGoal || undefined}
               onValueChange={(v) => setField("financialGoal", v as FinancialGoal)}
