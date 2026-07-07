@@ -30,6 +30,24 @@ type AnalyzeMode = "choice" | "form";
 function AiCoachPage() {
   const [mode, setMode] = useState<AnalyzeMode>("choice");
   const [useAutoData, setUseAutoData] = useState(false);
+  const [savedInput, setSavedInput] = useState<Partial<CoachAnalysisInput> | null>(null);
+
+  // If the user came from "Improve My Data" on the results page, open the
+  // form directly and pre-seed it with their last analysed input.
+  useEffect(() => {
+    try {
+      const flag = sessionStorage.getItem(COACH_OPEN_FORM_KEY);
+      if (flag) {
+        sessionStorage.removeItem(COACH_OPEN_FORM_KEY);
+        const raw = sessionStorage.getItem(COACH_INPUT_STORAGE_KEY);
+        if (raw) setSavedInput(JSON.parse(raw) as Partial<CoachAnalysisInput>);
+        setUseAutoData(!raw);
+        setMode("form");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   return (
     <PageShell>
