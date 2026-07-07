@@ -155,7 +155,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
               label={f.label}
               required={f.required}
               error={errors[f.key]}
-              hint={isAuto(f.key) ? "Auto-filled from your transaction history" : undefined}
+              hint={isAuto(f.key) ? "Calculated from this month's transactions" : undefined}
             >
               <Input
                 id={f.key}
