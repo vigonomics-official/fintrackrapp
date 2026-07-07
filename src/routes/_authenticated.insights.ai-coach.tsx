@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Sparkles, Database, PenLine, ChevronRight, CheckCircle2, RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,8 @@ import { useTransactions, useCategories } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { buildCoachAutofill } from "@/lib/coach-autofill";
 import { analyzeMock, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+
+const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
 export const Route = createFileRoute("/_authenticated/insights/ai-coach")({
   component: AiCoachRoute,
@@ -28,6 +30,24 @@ type AnalyzeMode = "choice" | "form";
 function AiCoachPage() {
   const [mode, setMode] = useState<AnalyzeMode>("choice");
   const [useAutoData, setUseAutoData] = useState(false);
+  const [savedInput, setSavedInput] = useState<Partial<CoachAnalysisInput> | null>(null);
+
+  // If the user came from "Improve My Data" on the results page, open the
+  // form directly and pre-seed it with their last analysed input.
+  useEffect(() => {
+    try {
+      const flag = sessionStorage.getItem(COACH_OPEN_FORM_KEY);
+      if (flag) {
+        sessionStorage.removeItem(COACH_OPEN_FORM_KEY);
+        const raw = sessionStorage.getItem(COACH_INPUT_STORAGE_KEY);
+        if (raw) setSavedInput(JSON.parse(raw) as Partial<CoachAnalysisInput>);
+        setUseAutoData(!raw);
+        setMode("form");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   return (
     <PageShell>
@@ -69,16 +89,25 @@ function AiCoachPage() {
             {mode === "choice" ? (
               <AnalyzeChoice
                 onManual={() => {
+                  setSavedInput(null);
                   setUseAutoData(false);
                   setMode("form");
                 }}
                 onAuto={() => {
+                  setSavedInput(null);
                   setUseAutoData(true);
                   setMode("form");
                 }}
               />
             ) : (
-              <AnalyzeFormWithAutofill useAutoData={useAutoData} onBack={() => setMode("choice")} />
+              <AnalyzeFormWithAutofill
+                useAutoData={useAutoData}
+                initialOverride={savedInput}
+                onBack={() => {
+                  setSavedInput(null);
+                  setMode("choice");
+                }}
+              />
             )}
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
@@ -207,7 +236,15 @@ function AnalyzeChoice({ onAuto, onManual }: { onAuto: () => void; onManual: () 
   );
 }
 
-function AnalyzeFormWithAutofill({ useAutoData, onBack }: { useAutoData: boolean; onBack: () => void }) {
+function AnalyzeFormWithAutofill({
+  useAutoData,
+  initialOverride,
+  onBack,
+}: {
+  useAutoData: boolean;
+  initialOverride?: Partial<CoachAnalysisInput> | null;
+  onBack: () => void;
+}) {
   const { data: transactions } = useTransactions();
   const { data: categories } = useCategories();
   const { settings } = useSalarySettings();
@@ -219,8 +256,8 @@ function AnalyzeFormWithAutofill({ useAutoData, onBack }: { useAutoData: boolean
     [transactions, categories, settings],
   );
 
-  const initial = useAutoData ? autofill.values : undefined;
-  const filled = useAutoData ? autofill.filled : undefined;
+  const initial = initialOverride ?? (useAutoData ? autofill.values : undefined);
+  const filled = initialOverride ? undefined : useAutoData ? autofill.filled : undefined;
 
   const handleRefresh = async () => {
     await Promise.all([

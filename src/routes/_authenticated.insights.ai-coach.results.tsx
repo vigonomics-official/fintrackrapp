@@ -25,6 +25,10 @@ import {
   type RiskLevel,
 } from "@/lib/ai-coach-analysis";
 import { COACH_INPUT_STORAGE_KEY } from "@/components/finance/AnalyzeForm";
+import { DataConfidenceCard } from "@/components/finance/DataConfidenceCard";
+import { computeConfidence, COACH_CONFIDENCE_MISSING_KEY } from "@/lib/coach-confidence";
+
+const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
 export const Route = createFileRoute("/_authenticated/insights/ai-coach/results")({
   component: ResultsPage,
@@ -54,18 +58,28 @@ function ResultsPage() {
     }
   }, []);
 
+  const goToAnalyzeForm = (missingKeys: string[] = []) => {
+    try {
+      sessionStorage.setItem(COACH_OPEN_FORM_KEY, "1");
+      sessionStorage.setItem(COACH_CONFIDENCE_MISSING_KEY, JSON.stringify(missingKeys));
+    } catch {
+      /* ignore */
+    }
+    navigate({ to: "/insights/ai-coach" });
+  };
+
   if (missing) {
+    const emptyConfidence = computeConfidence(null);
     return (
       <PageShell>
         <Header />
         <PageContainer>
-          <Card className="p-6 text-center shadow-soft">
-            <p className="font-display text-sm font-semibold">No analysis data</p>
-            <p className="mt-1 text-xs text-muted-foreground">Fill in the form to run an analysis.</p>
-            <Button className="mt-4" onClick={() => navigate({ to: "/insights/ai-coach" })}>
-              Go to Analyze
-            </Button>
-          </Card>
+          <div className="space-y-3">
+            <DataConfidenceCard
+              confidence={emptyConfidence}
+              onStart={() => navigate({ to: "/insights/ai-coach" })}
+            />
+          </div>
         </PageContainer>
       </PageShell>
     );
@@ -96,6 +110,16 @@ function ResultsPage() {
       <Header />
       <PageContainer>
         <div className="space-y-3">
+          {/* Data confidence — how much of the required data we have */}
+          <DataConfidenceCard
+            confidence={computeConfidence(state.input)}
+            onImprove={() =>
+              goToAnalyzeForm(
+                computeConfidence(state.input).missing.map((m) => String(m.key)),
+              )
+            }
+          />
+
           {/* Health score + key stats */}
           <Card className="p-4 shadow-soft sm:p-5">
             <div className="flex items-center gap-3">

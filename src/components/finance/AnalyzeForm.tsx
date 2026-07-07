@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FINANCIAL_GOALS, type FinancialGoal, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+import { DataConfidenceCard } from "@/components/finance/DataConfidenceCard";
+import { computeConfidence, COACH_CONFIDENCE_MISSING_KEY } from "@/lib/coach-confidence";
 
 type NumericKey =
   | "monthlySalary"
@@ -78,11 +80,36 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
     return seed;
   });
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [highlightMissing, setHighlightMissing] = useState<ReadonlySet<string>>(() => new Set());
   const isAuto = (k: string) => !!autoFilled?.has(k);
+
+  // If the user came from "Improve My Data" on the results page, we're handed
+  // the list of fields that dragged the confidence score down. Surface them
+  // as inline hints so they know exactly what to fill.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(COACH_CONFIDENCE_MISSING_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(COACH_CONFIDENCE_MISSING_KEY);
+      const keys = JSON.parse(raw);
+      if (Array.isArray(keys) && keys.length > 0) {
+        setHighlightMissing(new Set(keys.map(String)));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => (e[key] ? { ...e, [key]: undefined } : e));
+    if (highlightMissing.has(key as string)) {
+      setHighlightMissing((prev) => {
+        const next = new Set(prev);
+        next.delete(key as string);
+        return next;
+      });
+    }
   };
 
   const validate = (): boolean => {
@@ -134,8 +161,36 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
     navigate({ to: "/insights/ai-coach/results" });
   };
 
+  // Build a live Partial<CoachAnalysisInput> from form state so the
+  // DataConfidenceCard can recompute on every keystroke.
+  const liveInput = useMemo<Partial<CoachAnalysisInput>>(() => {
+    const num = (v: string) => {
+      if (v === "") return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    };
+    return {
+      monthlySalary: num(form.monthlySalary),
+      salaryDate: form.salaryDate || undefined,
+      currentAccountBalance: num(form.currentAccountBalance),
+      monthlyRent: num(form.monthlyRent),
+      monthlyFood: num(form.monthlyFood),
+      monthlyTransport: num(form.monthlyTransport),
+      monthlyEmi: num(form.monthlyEmi),
+      monthlyBills: num(form.monthlyBills),
+      monthlyInvestments: num(form.monthlyInvestments),
+      currentSavings: num(form.currentSavings),
+      otherMonthlyExpenses: num(form.otherMonthlyExpenses),
+      financialGoal: (form.financialGoal || undefined) as FinancialGoal | undefined,
+    };
+  }, [form]);
+  const liveConfidence = useMemo(() => computeConfidence(liveInput), [liveInput]);
+  const missingHint = (k: string) =>
+    highlightMissing.has(k) ? "Fill this to improve AI accuracy" : undefined;
+
   return (
-    <form onSubmit={onSubmit} noValidate>
+    <form onSubmit={onSubmit} noValidate className="space-y-3">
+      <DataConfidenceCard confidence={liveConfidence} />
       <Card className="p-4 shadow-soft sm:p-5">
         <div className="mb-4 flex items-start gap-2">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -154,7 +209,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
               id={f.key}
               label={f.label}
               required={f.required}
-              error={errors[f.key]}
+              error={errors[f.key] ?? missingHint(f.key)}
               hint={isAuto(f.key) ? "Calculated from this month's transactions" : undefined}
             >
               <Input
@@ -165,7 +220,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
                 placeholder={f.placeholder ?? "0"}
                 value={form[f.key]}
                 onChange={(e) => setField(f.key, e.target.value)}
-                aria-invalid={!!errors[f.key]}
+                aria-invalid={!!errors[f.key] || highlightMissing.has(f.key)}
               />
             </FieldWrap>
           ))}
@@ -174,7 +229,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
             id="salaryDate"
             label="Salary Date"
             required
-            error={errors.salaryDate}
+            error={errors.salaryDate ?? missingHint("salaryDate")}
             hint={isAuto("salaryDate") ? "Calculated from this month's transactions" : undefined}
           >
             <Input
@@ -182,11 +237,16 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
               type="date"
               value={form.salaryDate}
               onChange={(e) => setField("salaryDate", e.target.value)}
-              aria-invalid={!!errors.salaryDate}
+              aria-invalid={!!errors.salaryDate || highlightMissing.has("salaryDate")}
             />
           </FieldWrap>
 
-          <FieldWrap id="financialGoal" label="Financial Goal" required error={errors.financialGoal}>
+          <FieldWrap
+            id="financialGoal"
+            label="Financial Goal"
+            required
+            error={errors.financialGoal ?? missingHint("financialGoal")}
+          >
             <Select
               value={form.financialGoal || undefined}
               onValueChange={(v) => setField("financialGoal", v as FinancialGoal)}
