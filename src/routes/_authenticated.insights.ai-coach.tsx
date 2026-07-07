@@ -89,16 +89,25 @@ function AiCoachPage() {
             {mode === "choice" ? (
               <AnalyzeChoice
                 onManual={() => {
+                  setSavedInput(null);
                   setUseAutoData(false);
                   setMode("form");
                 }}
                 onAuto={() => {
+                  setSavedInput(null);
                   setUseAutoData(true);
                   setMode("form");
                 }}
               />
             ) : (
-              <AnalyzeFormWithAutofill useAutoData={useAutoData} onBack={() => setMode("choice")} />
+              <AnalyzeFormWithAutofill
+                useAutoData={useAutoData}
+                initialOverride={savedInput}
+                onBack={() => {
+                  setSavedInput(null);
+                  setMode("choice");
+                }}
+              />
             )}
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
