@@ -80,11 +80,36 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
     return seed;
   });
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [highlightMissing, setHighlightMissing] = useState<ReadonlySet<string>>(() => new Set());
   const isAuto = (k: string) => !!autoFilled?.has(k);
+
+  // If the user came from "Improve My Data" on the results page, we're handed
+  // the list of fields that dragged the confidence score down. Surface them
+  // as inline hints so they know exactly what to fill.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(COACH_CONFIDENCE_MISSING_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(COACH_CONFIDENCE_MISSING_KEY);
+      const keys = JSON.parse(raw);
+      if (Array.isArray(keys) && keys.length > 0) {
+        setHighlightMissing(new Set(keys.map(String)));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => (e[key] ? { ...e, [key]: undefined } : e));
+    if (highlightMissing.has(key as string)) {
+      setHighlightMissing((prev) => {
+        const next = new Set(prev);
+        next.delete(key as string);
+        return next;
+      });
+    }
   };
 
   const validate = (): boolean => {
