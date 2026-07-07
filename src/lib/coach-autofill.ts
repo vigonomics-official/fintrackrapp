@@ -1,4 +1,5 @@
 // Derives AI Coach input values from the user's FinTrackr history.
+// Uses ONLY the current calendar month, grouped by category totals.
 // Kept UI-agnostic and Gemini-ready — swap the source of `transactions` later
 // without changing consumers.
 
@@ -29,13 +30,25 @@ export type CoachAutofill = {
   missing: AutofillKey[];
 };
 
-const BUCKET_KEYWORDS: Record<Exclude<AutofillKey, "monthlySalary" | "salaryDate" | "currentAccountBalance" | "currentSavings" | "otherMonthlyExpenses">, string[]> = {
-  monthlyRent: ["rent", "housing", "mortgage"],
-  monthlyFood: ["food", "grocery", "groceries", "restaurant", "dining", "meal"],
-  monthlyTransport: ["transport", "fuel", "petrol", "uber", "ola", "cab", "commute", "travel"],
-  monthlyEmi: ["emi", "loan", "credit card"],
-  monthlyBills: ["bill", "utility", "utilities", "electric", "water", "internet", "phone", "mobile", "subscription"],
-  monthlyInvestments: ["invest", "sip", "mutual", "stock", "equity", "fd", "rd"],
+// Category-name matchers. Case-insensitive; matches whole-word tokens so
+// "Rent" doesn't collide with "Rental Income".
+const CATEGORY_BUCKETS: Record<
+  Exclude<
+    AutofillKey,
+    | "monthlySalary"
+    | "salaryDate"
+    | "currentAccountBalance"
+    | "otherMonthlyExpenses"
+  >,
+  string[]
+> = {
+  monthlyRent: ["rent"],
+  monthlyFood: ["food", "groceries", "grocery", "dining", "restaurant"],
+  monthlyTransport: ["transport", "transportation", "fuel", "commute", "travel"],
+  monthlyEmi: ["emi", "loan"],
+  monthlyBills: ["bills", "bill", "utilities", "utility"],
+  monthlyInvestments: ["investment", "investments", "invest", "sip"],
+  currentSavings: ["savings", "saving"],
 };
 
 const REQUIRED_FOR_SKIP: AutofillKey[] = [
@@ -49,12 +62,39 @@ const REQUIRED_FOR_SKIP: AutofillKey[] = [
   "currentSavings",
 ];
 
-function matchBucket(catName: string | undefined, sub: string | null): AutofillKey | null {
-  const hay = `${catName ?? ""} ${sub ?? ""}`.toLowerCase();
-  for (const [key, words] of Object.entries(BUCKET_KEYWORDS)) {
-    if (words.some((w) => hay.includes(w))) return key as AutofillKey;
+function bucketForCategory(catName: string | undefined): AutofillKey | null {
+  if (!catName) return null;
+  const name = catName.trim().toLowerCase();
+  for (const [key, words] of Object.entries(CATEGORY_BUCKETS)) {
+    if (words.some((w) => name === w || name.includes(w))) return key as AutofillKey;
   }
   return null;
+}
+
+/** True when the transaction date falls in the given calendar month. */
+function isInMonth(dateStr: string, year: number, month: number): boolean {
+  const d = new Date(dateStr);
+  return d.getFullYear() === year && d.getMonth() === month;
+}
+
+/** Drop obvious duplicates (same date + amount + category + type + notes). */
+function dedupe(transactions: Transaction[]): Transaction[] {
+  const seen = new Set<string>();
+  const out: Transaction[] = [];
+  for (const t of transactions) {
+    const key = [
+      t.transaction_date,
+      t.type,
+      t.amount,
+      t.category_id ?? "",
+      t.subcategory ?? "",
+      (t.notes ?? "").trim(),
+    ].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(t);
+  }
+  return out;
 }
 
 export function buildCoachAutofill(args: {
@@ -65,40 +105,55 @@ export function buildCoachAutofill(args: {
   const { transactions = [], categories = [], salary } = args;
   const catById = new Map(categories.map((c) => [c.id, c]));
 
-  // Consider the last 90 days for monthly averages.
   const now = new Date();
-  const since = new Date(now);
-  since.setDate(since.getDate() - 90);
-  const recent = transactions.filter((t) => new Date(t.transaction_date) >= since);
+  const y = now.getFullYear();
+  const m = now.getMonth();
 
-  const buckets: Record<AutofillKey, number> = {
-    monthlySalary: 0,
-    salaryDate: 0,
-    currentAccountBalance: 0,
-    monthlyRent: 0,
-    monthlyFood: 0,
-    monthlyTransport: 0,
-    monthlyEmi: 0,
-    monthlyBills: 0,
-    monthlyInvestments: 0,
-    currentSavings: 0,
-    otherMonthlyExpenses: 0,
-  };
-  let otherExpense = 0;
+  // Current-month, deduped transactions only.
+  const monthTx = dedupe(transactions.filter((t) => isInMonth(t.transaction_date, y, m)));
 
-  for (const t of recent) {
-    if (t.type !== "expense") continue;
-    const cat = t.category_id ? catById.get(t.category_id) : undefined;
-    const bucket = matchBucket(cat?.name, t.subcategory);
-    if (bucket && bucket in buckets) buckets[bucket] += t.amount;
-    else otherExpense += t.amount;
-  }
-
-  // Convert 90-day totals to monthly averages.
-  const toMonthly = (n: number) => Math.round(n / 3);
   const values: Partial<CoachAnalysisInput> = {};
   const filled = new Set<AutofillKey>();
 
+  // Salary = sum of all income transactions this month.
+  let salaryTotal = 0;
+  const bucketTotals: Record<string, number> = {};
+  let otherExpense = 0;
+
+  for (const t of monthTx) {
+    if (t.type === "income") {
+      salaryTotal += t.amount;
+      continue;
+    }
+    if (t.type !== "expense") continue;
+    const cat = t.category_id ? catById.get(t.category_id) : undefined;
+    const bucket = bucketForCategory(cat?.name);
+    if (bucket) {
+      bucketTotals[bucket] = (bucketTotals[bucket] ?? 0) + t.amount;
+    } else {
+      otherExpense += t.amount;
+    }
+  }
+
+  // Prefer the user's saved salary amount from Profile; fall back to income total.
+  if (salary.amount != null && salary.amount > 0) {
+    values.monthlySalary = salary.amount;
+    filled.add("monthlySalary");
+  } else if (salaryTotal > 0) {
+    values.monthlySalary = Math.round(salaryTotal);
+    filled.add("monthlySalary");
+  } else {
+    values.monthlySalary = 0;
+  }
+
+  // Salary date from Profile only. Leave blank if unavailable.
+  if (salary.payDay != null) {
+    const d = payDayInMonth(y, m, salary.payDay);
+    values.salaryDate = d.toISOString().slice(0, 10);
+    filled.add("salaryDate");
+  }
+
+  // Category totals (always report, defaulting to 0 when the category is absent).
   const expenseKeys: AutofillKey[] = [
     "monthlyRent",
     "monthlyFood",
@@ -106,44 +161,30 @@ export function buildCoachAutofill(args: {
     "monthlyEmi",
     "monthlyBills",
     "monthlyInvestments",
+    "currentSavings",
   ];
   for (const k of expenseKeys) {
-    if (buckets[k] > 0) {
-      (values as Record<string, number>)[k] = toMonthly(buckets[k]);
-      filled.add(k);
-    }
+    const total = Math.round(bucketTotals[k] ?? 0);
+    (values as Record<string, number>)[k] = total;
+    filled.add(k);
   }
-  if (otherExpense > 0) {
-    values.otherMonthlyExpenses = toMonthly(otherExpense);
-    filled.add("otherMonthlyExpenses");
-  }
+  values.otherMonthlyExpenses = Math.round(otherExpense);
+  filled.add("otherMonthlyExpenses");
 
-  // Salary + salary date from settings.
-  if (salary.amount != null && salary.amount > 0) {
-    values.monthlySalary = salary.amount;
-    filled.add("monthlySalary");
-  }
-  if (salary.payDay != null) {
-    const d = payDayInMonth(now.getFullYear(), now.getMonth(), salary.payDay);
-    values.salaryDate = d.toISOString().slice(0, 10);
-    filled.add("salaryDate");
-  }
-
-  // Approximate balances from all-time net cash flow (income - expense).
+  // Current Account Balance = FinTrackr net balance (all-time income − expense).
   let netAll = 0;
-  for (const t of transactions) {
+  for (const t of dedupe(transactions)) {
     if (t.type === "income") netAll += t.amount;
     else if (t.type === "expense") netAll -= t.amount;
   }
-  if (netAll > 0) {
-    values.currentAccountBalance = Math.round(netAll);
-    filled.add("currentAccountBalance");
-    // Rough split — treat 60% as savings buffer.
-    values.currentSavings = Math.round(netAll * 0.6);
-    filled.add("currentSavings");
-  }
+  values.currentAccountBalance = Math.max(0, Math.round(netAll));
+  filled.add("currentAccountBalance");
 
-  const missing = REQUIRED_FOR_SKIP.filter((k) => !filled.has(k));
+  const missing = REQUIRED_FOR_SKIP.filter((k) => {
+    const v = (values as Record<string, unknown>)[k];
+    if (k === "salaryDate") return !v;
+    return typeof v !== "number" || v <= 0;
+  });
   const hasEnough = missing.length === 0;
 
   return { values, filled, hasEnough, missing };
