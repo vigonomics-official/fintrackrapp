@@ -236,7 +236,15 @@ function AnalyzeChoice({ onAuto, onManual }: { onAuto: () => void; onManual: () 
   );
 }
 
-function AnalyzeFormWithAutofill({ useAutoData, onBack }: { useAutoData: boolean; onBack: () => void }) {
+function AnalyzeFormWithAutofill({
+  useAutoData,
+  initialOverride,
+  onBack,
+}: {
+  useAutoData: boolean;
+  initialOverride?: Partial<CoachAnalysisInput> | null;
+  onBack: () => void;
+}) {
   const { data: transactions } = useTransactions();
   const { data: categories } = useCategories();
   const { settings } = useSalarySettings();
@@ -248,8 +256,8 @@ function AnalyzeFormWithAutofill({ useAutoData, onBack }: { useAutoData: boolean
     [transactions, categories, settings],
   );
 
-  const initial = useAutoData ? autofill.values : undefined;
-  const filled = useAutoData ? autofill.filled : undefined;
+  const initial = initialOverride ?? (useAutoData ? autofill.values : undefined);
+  const filled = initialOverride ? undefined : useAutoData ? autofill.filled : undefined;
 
   const handleRefresh = async () => {
     await Promise.all([
