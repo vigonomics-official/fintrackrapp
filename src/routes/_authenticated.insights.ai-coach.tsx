@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Sparkles, Database, PenLine, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Sparkles, Database, PenLine, ChevronRight, CheckCircle2, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -210,6 +211,8 @@ function AnalyzeFormWithAutofill({ useAutoData, onBack }: { useAutoData: boolean
   const { data: transactions } = useTransactions();
   const { data: categories } = useCategories();
   const { settings } = useSalarySettings();
+  const queryClient = useQueryClient();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const autofill = useMemo(
     () => buildCoachAutofill({ transactions, categories, salary: settings }),
@@ -219,13 +222,29 @@ function AnalyzeFormWithAutofill({ useAutoData, onBack }: { useAutoData: boolean
   const initial = useAutoData ? autofill.values : undefined;
   const filled = useAutoData ? autofill.filled : undefined;
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["transactions"] }),
+      queryClient.invalidateQueries({ queryKey: ["categories"] }),
+    ]);
+    setRefreshKey((k) => k + 1);
+  };
+
   return (
     <div className="space-y-3">
-      <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 h-8 px-2 text-muted-foreground">
-        <ArrowLeft className="mr-1 h-4 w-4" />
-        Choose a different option
-      </Button>
-      <AnalyzeForm initial={initial} autoFilled={filled} />
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 h-8 px-2 text-muted-foreground">
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Choose a different option
+        </Button>
+        {useAutoData && (
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="h-8 px-2">
+            <RefreshCw className="mr-1 h-3.5 w-3.5" />
+            Refresh Data
+          </Button>
+        )}
+      </div>
+      <AnalyzeForm key={refreshKey} initial={initial} autoFilled={filled} />
     </div>
   );
 }

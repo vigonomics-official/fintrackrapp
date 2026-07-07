@@ -70,7 +70,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
     const seed: FormState = { ...INITIAL };
     for (const f of NUMERIC_FIELDS) {
       const v = (initial as Record<string, unknown>)[f.key];
-      if (typeof v === "number" && Number.isFinite(v) && v > 0) seed[f.key] = String(v);
+      if (typeof v === "number" && Number.isFinite(v) && v >= 0) seed[f.key] = String(v);
     }
     if (initial.salaryDate) seed.salaryDate = initial.salaryDate;
     if (initial.financialGoal) seed.financialGoal = initial.financialGoal;
@@ -155,7 +155,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
               label={f.label}
               required={f.required}
               error={errors[f.key]}
-              hint={isAuto(f.key) ? "Auto-filled from your transaction history" : undefined}
+              hint={isAuto(f.key) ? "Calculated from this month's transactions" : undefined}
             >
               <Input
                 id={f.key}
@@ -175,7 +175,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
             label="Salary Date"
             required
             error={errors.salaryDate}
-            hint={isAuto("salaryDate") ? "Auto-filled from your transaction history" : undefined}
+            hint={isAuto("salaryDate") ? "Calculated from this month's transactions" : undefined}
           >
             <Input
               id="salaryDate"
