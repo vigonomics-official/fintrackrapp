@@ -110,6 +110,16 @@ function ResultsPage() {
       <Header />
       <PageContainer>
         <div className="space-y-3">
+          {/* Data confidence — how much of the required data we have */}
+          <DataConfidenceCard
+            confidence={computeConfidence(state.input)}
+            onImprove={() =>
+              goToAnalyzeForm(
+                computeConfidence(state.input).missing.map((m) => String(m.key)),
+              )
+            }
+          />
+
           {/* Health score + key stats */}
           <Card className="p-4 shadow-soft sm:p-5">
             <div className="flex items-center gap-3">
