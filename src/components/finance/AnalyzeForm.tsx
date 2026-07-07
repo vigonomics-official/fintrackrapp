@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FINANCIAL_GOALS, type FinancialGoal, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+import { DataConfidenceCard } from "@/components/finance/DataConfidenceCard";
+import { computeConfidence, COACH_CONFIDENCE_MISSING_KEY } from "@/lib/coach-confidence";
 
 type NumericKey =
   | "monthlySalary"
