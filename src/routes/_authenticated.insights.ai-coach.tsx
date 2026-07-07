@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Sparkles, Database, PenLine, ChevronRight, CheckCircle2, RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,8 @@ import { useTransactions, useCategories } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { buildCoachAutofill } from "@/lib/coach-autofill";
 import { analyzeMock, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+
+const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
 export const Route = createFileRoute("/_authenticated/insights/ai-coach")({
   component: AiCoachRoute,
