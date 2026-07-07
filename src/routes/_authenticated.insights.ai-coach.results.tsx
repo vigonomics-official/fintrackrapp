@@ -25,6 +25,10 @@ import {
   type RiskLevel,
 } from "@/lib/ai-coach-analysis";
 import { COACH_INPUT_STORAGE_KEY } from "@/components/finance/AnalyzeForm";
+import { DataConfidenceCard } from "@/components/finance/DataConfidenceCard";
+import { computeConfidence, COACH_CONFIDENCE_MISSING_KEY } from "@/lib/coach-confidence";
+
+const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
 export const Route = createFileRoute("/_authenticated/insights/ai-coach/results")({
   component: ResultsPage,
