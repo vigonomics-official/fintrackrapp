@@ -5,11 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles } from "lucide-react";
+import { Sparkles, CheckCircle2, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FINANCIAL_GOALS, type FinancialGoal, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
 import { DataConfidenceCard } from "@/components/finance/DataConfidenceCard";
 import { computeConfidence, COACH_CONFIDENCE_MISSING_KEY } from "@/lib/coach-confidence";
+import { CoachSourceBadge } from "@/components/finance/CoachSourceBadge";
+import { CoachLastUpdatedCard } from "@/components/finance/CoachLastUpdatedCard";
+import { CoachSmartWarnings, computeCoachWarnings } from "@/components/finance/CoachSmartWarnings";
+import { CoachPrivacyNote } from "@/components/finance/CoachPrivacyNote";
+import type { CoachDataSource, AutofillKey } from "@/lib/coach-autofill";
 
 type NumericKey =
   | "monthlySalary"
@@ -63,9 +68,28 @@ export const COACH_INPUT_STORAGE_KEY = "fintrackr:ai-coach:last-input";
 export type AnalyzeFormProps = {
   initial?: Partial<CoachAnalysisInput>;
   autoFilled?: ReadonlySet<string>;
+  /** Per-field data source. Defaults to "auto" for keys in `autoFilled`. */
+  sources?: Partial<Record<AutofillKey, CoachDataSource>>;
+  /** Transactions used to compute the autofill (for status text). */
+  transactionCount?: number;
+  /** When the autofill was computed. */
+  computedAt?: string | null;
+  /**
+   * When true, the form starts in a read-only "Data Ready" summary — the user
+   * must explicitly press Review Data before fields become editable. This
+   * reduces accidental edits after auto-fill.
+   */
+  startLocked?: boolean;
 };
 
-export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
+export function AnalyzeForm({
+  initial,
+  autoFilled,
+  sources,
+  transactionCount = 0,
+  computedAt,
+  startLocked = false,
+}: AnalyzeFormProps = {}) {
   const navigate = useNavigate();
   const [form, setForm] = useState<FormState>(() => {
     if (!initial) return INITIAL;
@@ -81,11 +105,21 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [highlightMissing, setHighlightMissing] = useState<ReadonlySet<string>>(() => new Set());
+  // Track which auto-filled fields the user has manually overridden.
+  const [edited, setEdited] = useState<ReadonlySet<string>>(() => new Set());
+  const [locked, setLocked] = useState(startLocked);
+
   const isAuto = (k: string) => !!autoFilled?.has(k);
+  const sourceFor = (k: string): CoachDataSource => {
+    if (edited.has(k)) return "manual";
+    const provided = sources?.[k as AutofillKey];
+    if (provided) return provided;
+    if (isAuto(k)) return "auto";
+    return "manual";
+  };
 
   // If the user came from "Improve My Data" on the results page, we're handed
-  // the list of fields that dragged the confidence score down. Surface them
-  // as inline hints so they know exactly what to fill.
+  // the list of fields that dragged the confidence score down.
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(COACH_CONFIDENCE_MISSING_KEY);
@@ -94,6 +128,8 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
       const keys = JSON.parse(raw);
       if (Array.isArray(keys) && keys.length > 0) {
         setHighlightMissing(new Set(keys.map(String)));
+        // Coming from "improve" means the user WANTS to edit — unlock.
+        setLocked(false);
       }
     } catch {
       /* ignore */
@@ -103,6 +139,14 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => (e[key] ? { ...e, [key]: undefined } : e));
+    if (isAuto(key as string)) {
+      setEdited((prev) => {
+        if (prev.has(key as string)) return prev;
+        const next = new Set(prev);
+        next.add(key as string);
+        return next;
+      });
+    }
     if (highlightMissing.has(key as string)) {
       setHighlightMissing((prev) => {
         const next = new Set(prev);
@@ -134,11 +178,9 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
     return Object.keys(next).length === 0;
   };
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
+  const buildInput = (): CoachAnalysisInput => {
     const num = (v: string) => (v === "" ? 0 : Number(v));
-    const input: CoachAnalysisInput = {
+    return {
       monthlySalary: num(form.monthlySalary),
       salaryDate: form.salaryDate,
       currentAccountBalance: num(form.currentAccountBalance),
@@ -150,19 +192,27 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
       monthlyInvestments: num(form.monthlyInvestments),
       currentSavings: num(form.currentSavings),
       otherMonthlyExpenses: num(form.otherMonthlyExpenses),
-      financialGoal: form.financialGoal as FinancialGoal,
+      financialGoal: (form.financialGoal || "Emergency Fund") as FinancialGoal,
       customGoalNote: form.customGoalNote || undefined,
     };
+  };
+
+  const analyzeAndGo = () => {
+    if (!validate()) return;
     try {
-      sessionStorage.setItem(COACH_INPUT_STORAGE_KEY, JSON.stringify(input));
+      sessionStorage.setItem(COACH_INPUT_STORAGE_KEY, JSON.stringify(buildInput()));
     } catch {
-      /* ignore storage errors */
+      /* ignore */
     }
     navigate({ to: "/insights/ai-coach/results" });
   };
 
-  // Build a live Partial<CoachAnalysisInput> from form state so the
-  // DataConfidenceCard can recompute on every keystroke.
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    analyzeAndGo();
+  };
+
+  // Live confidence + warnings for the current form state.
   const liveInput = useMemo<Partial<CoachAnalysisInput>>(() => {
     const num = (v: string) => {
       if (v === "") return undefined;
@@ -184,9 +234,65 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
       financialGoal: (form.financialGoal || undefined) as FinancialGoal | undefined,
     };
   }, [form]);
+
   const liveConfidence = useMemo(() => computeConfidence(liveInput), [liveInput]);
+  const warnings = useMemo(() => computeCoachWarnings(liveInput), [liveInput]);
   const missingHint = (k: string) =>
     highlightMissing.has(k) ? "Fill this to improve AI accuracy" : undefined;
+
+  const anyAutoEdited = edited.size > 0;
+  const buttonSubtitle =
+    autoFilled && autoFilled.size > 0
+      ? anyAutoEdited
+        ? "Using mixed data (Auto + Manual)"
+        : `Using ${transactionCount} verified transaction${transactionCount === 1 ? "" : "s"}`
+      : undefined;
+
+  // "Data Ready" locked state — shown right after auto-fill, before edits.
+  if (locked) {
+    return (
+      <div className="space-y-3">
+        <DataConfidenceCard confidence={liveConfidence} />
+        <Card className="p-4 shadow-soft sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm font-semibold">✓ Data Ready</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Your financial information has been prepared.
+                {transactionCount > 0 && (
+                  <> Using {transactionCount} verified transaction{transactionCount === 1 ? "" : "s"} from this month.</>
+                )}
+              </p>
+            </div>
+          </div>
+        </Card>
+        <CoachLastUpdatedCard computedAt={computedAt ?? null} transactionCount={transactionCount} />
+        <CoachSmartWarnings warnings={warnings} />
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full sm:flex-1"
+            onClick={() => setLocked(false)}
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            Review Data
+          </Button>
+          <Button type="button" className="w-full sm:flex-1" onClick={analyzeAndGo}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            Analyze Salary
+          </Button>
+        </div>
+        {buttonSubtitle && (
+          <p className="text-center text-[11px] text-muted-foreground">{buttonSubtitle}</p>
+        )}
+        <CoachPrivacyNote />
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-3">
@@ -210,7 +316,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
               label={f.label}
               required={f.required}
               error={errors[f.key] ?? missingHint(f.key)}
-              hint={isAuto(f.key) ? "Calculated from this month's transactions" : undefined}
+              source={sourceFor(f.key)}
             >
               <Input
                 id={f.key}
@@ -230,7 +336,7 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
             label="Salary Date"
             required
             error={errors.salaryDate ?? missingHint("salaryDate")}
-            hint={isAuto("salaryDate") ? "Calculated from this month's transactions" : undefined}
+            source={sourceFor("salaryDate")}
           >
             <Input
               id="salaryDate"
@@ -277,12 +383,22 @@ export function AnalyzeForm({ initial, autoFilled }: AnalyzeFormProps = {}) {
             </FieldWrap>
           )}
         </div>
-
-        <Button type="submit" className="mt-5 w-full" size="lg">
-          <Sparkles className="mr-2 h-4 w-4" />
-          Analyze My Salary
-        </Button>
       </Card>
+
+      <CoachLastUpdatedCard computedAt={computedAt ?? null} transactionCount={transactionCount} />
+      <CoachSmartWarnings warnings={warnings} />
+
+      <div>
+        <Button type="submit" className="w-full" size="lg">
+          <Sparkles className="mr-2 h-4 w-4" />
+          Analyze Salary
+        </Button>
+        {buttonSubtitle && (
+          <p className="mt-1.5 text-center text-[11px] text-muted-foreground">{buttonSubtitle}</p>
+        )}
+      </div>
+
+      <CoachPrivacyNote />
     </form>
   );
 }
@@ -292,7 +408,7 @@ function FieldWrap({
   label,
   required,
   error,
-  hint,
+  source,
   className,
   children,
 }: {
@@ -300,7 +416,7 @@ function FieldWrap({
   label: string;
   required?: boolean;
   error?: string;
-  hint?: string;
+  source?: CoachDataSource;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -312,8 +428,8 @@ function FieldWrap({
       {children}
       {error ? (
         <p className="text-[11px] font-medium text-destructive">{error}</p>
-      ) : hint ? (
-        <p className="text-[11px] font-medium text-primary/80">{hint}</p>
+      ) : source ? (
+        <CoachSourceBadge source={source} />
       ) : null}
     </div>
   );

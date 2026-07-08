@@ -21,13 +21,24 @@ export type AutofillKey =
   | "currentSavings"
   | "otherMonthlyExpenses";
 
+/** Where a value ultimately came from. Kept as a small union so future
+ *  providers (SMS parser, CSV importer, planner) can slot in without UI
+ *  changes. */
+export type CoachDataSource = "auto" | "sms" | "manual" | "planner" | "csv";
+
 export type CoachAutofill = {
   values: Partial<CoachAnalysisInput>;
   filled: Set<AutofillKey>;
+  /** Source per autofilled field. */
+  sources: Partial<Record<AutofillKey, CoachDataSource>>;
   /** True when we have enough to skip the manual form. */
   hasEnough: boolean;
   /** Fields the user still needs to provide. */
   missing: AutofillKey[];
+  /** Number of transactions considered this month (post-dedupe). */
+  transactionCount: number;
+  /** When these values were computed. */
+  computedAt: string; // ISO
 };
 
 // Category-name matchers. Case-insensitive; matches whole-word tokens so
@@ -183,9 +194,26 @@ export function buildCoachAutofill(args: {
   const missing = REQUIRED_FOR_SKIP.filter((k) => {
     const v = (values as Record<string, unknown>)[k];
     if (k === "salaryDate") return !v;
-    return typeof v !== "number" || v <= 0;
+    // Salary + balance still require a positive value to consider "enough".
+    if (k === "monthlySalary" || k === "currentAccountBalance") {
+      return typeof v !== "number" || v <= 0;
+    }
+    // Other categories: ₹0 is a KNOWN value, so it counts as filled.
+    return typeof v !== "number" || v < 0;
   });
   const hasEnough = missing.length === 0;
 
-  return { values, filled, hasEnough, missing };
+  // Every field that we populated came from the transaction/profile pipeline.
+  const sources: Partial<Record<AutofillKey, CoachDataSource>> = {};
+  for (const k of filled) sources[k] = "auto";
+
+  return {
+    values,
+    filled,
+    sources,
+    hasEnough,
+    missing,
+    transactionCount: monthTx.length,
+    computedAt: now.toISOString(),
+  };
 }

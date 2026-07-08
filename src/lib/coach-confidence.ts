@@ -43,7 +43,9 @@ function isFieldFilled(key: keyof CoachAnalysisInput, value: unknown): boolean {
   if (key === "salaryDate" || key === "financialGoal") {
     return typeof value === "string" && value.trim().length > 0;
   }
-  return typeof value === "number" && Number.isFinite(value) && value > 0;
+  // ₹0 is a valid, KNOWN value (e.g. no EMI / no Bills). Only reduce
+  // confidence when the value is truly unknown (undefined/null/NaN).
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
 function levelFor(score: number, filled: number): ConfidenceLevel {

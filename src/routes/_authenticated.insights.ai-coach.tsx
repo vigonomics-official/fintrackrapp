@@ -133,9 +133,10 @@ function AnalyzeChoice({ onAuto, onManual }: { onAuto: () => void; onManual: () 
     [transactions, categories, settings],
   );
 
+  const hasAnyTransactions = (transactions?.length ?? 0) > 0;
+
   const handleAuto = () => {
     if (autofill.hasEnough) {
-      // Compose a full input from autofill values and jump straight to results.
       const input: CoachAnalysisInput = {
         monthlySalary: autofill.values.monthlySalary ?? 0,
         salaryDate: autofill.values.salaryDate ?? new Date().toISOString().slice(0, 10),
@@ -157,13 +158,44 @@ function AnalyzeChoice({ onAuto, onManual }: { onAuto: () => void; onManual: () 
       } catch {
         /* ignore */
       }
-      navigate({ to: "/insights/ai-coach/results" });
+      // Auto-fill was enough — open the form in locked "Data Ready" mode so
+      // the user can review before analyzing, instead of jumping straight
+      // to results and inviting accidental edits later.
+      onAuto();
       return;
     }
     onAuto();
   };
 
   const filledCount = autofill.filled.size;
+
+  // Empty state — no transactions in FinTrackr at all.
+  if (!hasAnyTransactions) {
+    return (
+      <Card className="p-5 shadow-soft">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+            <Database className="h-5 w-5" />
+          </div>
+          <p className="font-display text-sm font-semibold">No financial history found</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            You can import transactions, enable SMS tracking, or enter your data manually.
+          </p>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <Button variant="outline" size="sm" onClick={() => navigate({ to: "/import" })}>
+            Import Transactions
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate({ to: "/sms-intelligence" })}>
+            Enable SMS Tracking
+          </Button>
+          <Button size="sm" onClick={onManual}>
+            Enter Manually
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -195,7 +227,7 @@ function AnalyzeChoice({ onAuto, onManual }: { onAuto: () => void; onManual: () 
               <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-primary">
                 <CheckCircle2 className="h-3 w-3" />
                 {autofill.hasEnough
-                  ? "Ready — we have enough to analyse instantly"
+                  ? "Ready — we have enough to analyse"
                   : `${filledCount} field${filledCount === 1 ? "" : "s"} pre-filled from your history`}
               </p>
             )}
@@ -258,6 +290,12 @@ function AnalyzeFormWithAutofill({
 
   const initial = initialOverride ?? (useAutoData ? autofill.values : undefined);
   const filled = initialOverride ? undefined : useAutoData ? autofill.filled : undefined;
+  const sources = useAutoData && !initialOverride ? autofill.sources : undefined;
+  const transactionCount = useAutoData ? autofill.transactionCount : 0;
+  const computedAt = useAutoData ? autofill.computedAt : null;
+  // Only lock the "Data Ready" view when auto-fill actually populated the
+  // required fields — otherwise the user needs to type immediately.
+  const startLocked = useAutoData && !initialOverride && autofill.hasEnough;
 
   const handleRefresh = async () => {
     await Promise.all([
@@ -281,7 +319,15 @@ function AnalyzeFormWithAutofill({
           </Button>
         )}
       </div>
-      <AnalyzeForm key={refreshKey} initial={initial} autoFilled={filled} />
+      <AnalyzeForm
+        key={refreshKey}
+        initial={initial}
+        autoFilled={filled}
+        sources={sources}
+        transactionCount={transactionCount}
+        computedAt={computedAt}
+        startLocked={startLocked}
+      />
     </div>
   );
 }
