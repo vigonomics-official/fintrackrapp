@@ -290,6 +290,12 @@ function AnalyzeFormWithAutofill({
 
   const initial = initialOverride ?? (useAutoData ? autofill.values : undefined);
   const filled = initialOverride ? undefined : useAutoData ? autofill.filled : undefined;
+  const sources = useAutoData && !initialOverride ? autofill.sources : undefined;
+  const transactionCount = useAutoData ? autofill.transactionCount : 0;
+  const computedAt = useAutoData ? autofill.computedAt : null;
+  // Only lock the "Data Ready" view when auto-fill actually populated the
+  // required fields — otherwise the user needs to type immediately.
+  const startLocked = useAutoData && !initialOverride && autofill.hasEnough;
 
   const handleRefresh = async () => {
     await Promise.all([
@@ -313,7 +319,15 @@ function AnalyzeFormWithAutofill({
           </Button>
         )}
       </div>
-      <AnalyzeForm key={refreshKey} initial={initial} autoFilled={filled} />
+      <AnalyzeForm
+        key={refreshKey}
+        initial={initial}
+        autoFilled={filled}
+        sources={sources}
+        transactionCount={transactionCount}
+        computedAt={computedAt}
+        startLocked={startLocked}
+      />
     </div>
   );
 }
