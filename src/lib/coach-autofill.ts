@@ -194,9 +194,26 @@ export function buildCoachAutofill(args: {
   const missing = REQUIRED_FOR_SKIP.filter((k) => {
     const v = (values as Record<string, unknown>)[k];
     if (k === "salaryDate") return !v;
-    return typeof v !== "number" || v <= 0;
+    // Salary + balance still require a positive value to consider "enough".
+    if (k === "monthlySalary" || k === "currentAccountBalance") {
+      return typeof v !== "number" || v <= 0;
+    }
+    // Other categories: ₹0 is a KNOWN value, so it counts as filled.
+    return typeof v !== "number" || v < 0;
   });
   const hasEnough = missing.length === 0;
 
-  return { values, filled, hasEnough, missing };
+  // Every field that we populated came from the transaction/profile pipeline.
+  const sources: Partial<Record<AutofillKey, CoachDataSource>> = {};
+  for (const k of filled) sources[k] = "auto";
+
+  return {
+    values,
+    filled,
+    sources,
+    hasEnough,
+    missing,
+    transactionCount: monthTx.length,
+    computedAt: now.toISOString(),
+  };
 }
