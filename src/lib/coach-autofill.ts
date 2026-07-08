@@ -21,13 +21,24 @@ export type AutofillKey =
   | "currentSavings"
   | "otherMonthlyExpenses";
 
+/** Where a value ultimately came from. Kept as a small union so future
+ *  providers (SMS parser, CSV importer, planner) can slot in without UI
+ *  changes. */
+export type CoachDataSource = "auto" | "sms" | "manual" | "planner" | "csv";
+
 export type CoachAutofill = {
   values: Partial<CoachAnalysisInput>;
   filled: Set<AutofillKey>;
+  /** Source per autofilled field. */
+  sources: Partial<Record<AutofillKey, CoachDataSource>>;
   /** True when we have enough to skip the manual form. */
   hasEnough: boolean;
   /** Fields the user still needs to provide. */
   missing: AutofillKey[];
+  /** Number of transactions considered this month (post-dedupe). */
+  transactionCount: number;
+  /** When these values were computed. */
+  computedAt: string; // ISO
 };
 
 // Category-name matchers. Case-insensitive; matches whole-word tokens so
