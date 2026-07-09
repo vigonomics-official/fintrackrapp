@@ -29,6 +29,7 @@ function AiCoachRoute() {
 type AnalyzeMode = "choice" | "form";
 
 function AiCoachPage() {
+  const [activeTab, setActiveTab] = useState<string>("analyze");
   const [mode, setMode] = useState<AnalyzeMode>("choice");
   const [useAutoData, setUseAutoData] = useState(false);
   const [savedInput, setSavedInput] = useState<Partial<CoachAnalysisInput> | null>(null);
