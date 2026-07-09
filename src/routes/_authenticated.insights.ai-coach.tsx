@@ -73,12 +73,13 @@ function AiCoachPage() {
 
       <PageContainer>
         <Tabs
-          defaultValue="analyze"
-          className="w-full"
-          onValueChange={() => {
+          value={activeTab}
+          onValueChange={(v) => {
+            setActiveTab(v);
             setMode("choice");
             setUseAutoData(false);
           }}
+          className="w-full"
         >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="analyze">Analyze</TabsTrigger>
@@ -112,7 +113,7 @@ function AiCoachPage() {
             )}
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
-            <Placeholder title="Advice" body="Personalized AI advice will appear here." />
+            <CoachAdviceTab onGoToAnalyze={() => setActiveTab("analyze")} />
           </TabsContent>
           <TabsContent value="plan" className="mt-4">
             <Placeholder title="Plan" body="AI Monthly Plan will appear here." />
