@@ -11,6 +11,7 @@ import { useTransactions, useCategories } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { buildCoachAutofill } from "@/lib/coach-autofill";
 import { analyzeMock, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+import { CoachAdviceTab } from "@/components/finance/CoachAdviceTab";
 
 const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
@@ -28,6 +29,7 @@ function AiCoachRoute() {
 type AnalyzeMode = "choice" | "form";
 
 function AiCoachPage() {
+  const [activeTab, setActiveTab] = useState<string>("analyze");
   const [mode, setMode] = useState<AnalyzeMode>("choice");
   const [useAutoData, setUseAutoData] = useState(false);
   const [savedInput, setSavedInput] = useState<Partial<CoachAnalysisInput> | null>(null);
@@ -72,12 +74,13 @@ function AiCoachPage() {
 
       <PageContainer>
         <Tabs
-          defaultValue="analyze"
-          className="w-full"
-          onValueChange={() => {
+          value={activeTab}
+          onValueChange={(v) => {
+            setActiveTab(v);
             setMode("choice");
             setUseAutoData(false);
           }}
+          className="w-full"
         >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="analyze">Analyze</TabsTrigger>
@@ -111,7 +114,7 @@ function AiCoachPage() {
             )}
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
-            <Placeholder title="Advice" body="Personalized AI advice will appear here." />
+            <CoachAdviceTab onGoToAnalyze={() => setActiveTab("analyze")} />
           </TabsContent>
           <TabsContent value="plan" className="mt-4">
             <Placeholder title="Plan" body="AI Monthly Plan will appear here." />
