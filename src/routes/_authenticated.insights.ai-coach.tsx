@@ -11,6 +11,7 @@ import { useTransactions, useCategories } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { buildCoachAutofill } from "@/lib/coach-autofill";
 import { analyzeMock, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+import { CoachAdviceTab } from "@/components/finance/CoachAdviceTab";
 
 const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
