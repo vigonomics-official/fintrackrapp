@@ -129,7 +129,11 @@ function AiCoachPage() {
             )}
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
-            <CoachAdviceTab onGoToAnalyze={() => setActiveTab("analyze")} />
+            <CoachAdviceTab
+              onGoToAnalyze={() => setActiveTab("analyze")}
+              isActive={activeTab === "advice"}
+              analysisInput={latestInput}
+            />
           </TabsContent>
           <TabsContent value="plan" className="mt-4">
             <Placeholder title="Plan" body="AI Monthly Plan will appear here." />
