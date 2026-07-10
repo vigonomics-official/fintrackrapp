@@ -33,10 +33,22 @@ function AiCoachPage() {
   const [mode, setMode] = useState<AnalyzeMode>("choice");
   const [useAutoData, setUseAutoData] = useState(false);
   const [savedInput, setSavedInput] = useState<Partial<CoachAnalysisInput> | null>(null);
+  // Shared latest analysis input across Analyze / Advice / Plan tabs.
+  const [latestInput, setLatestInput] = useState<CoachAnalysisInput | null>(null);
+
+  const readLatestInput = (): CoachAnalysisInput | null => {
+    try {
+      const raw = sessionStorage.getItem(COACH_INPUT_STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as CoachAnalysisInput) : null;
+    } catch {
+      return null;
+    }
+  };
 
   // If the user came from "Improve My Data" on the results page, open the
   // form directly and pre-seed it with their last analysed input.
   useEffect(() => {
+    setLatestInput(readLatestInput());
     try {
       const flag = sessionStorage.getItem(COACH_OPEN_FORM_KEY);
       if (flag) {
@@ -79,6 +91,9 @@ function AiCoachPage() {
             setActiveTab(v);
             setMode("choice");
             setUseAutoData(false);
+            // Refresh shared analysis on every tab switch so Advice/Plan
+            // reflect the latest analyzed input without a re-run.
+            setLatestInput(readLatestInput());
           }}
           className="w-full"
         >
@@ -114,7 +129,11 @@ function AiCoachPage() {
             )}
           </TabsContent>
           <TabsContent value="advice" className="mt-4">
-            <CoachAdviceTab onGoToAnalyze={() => setActiveTab("analyze")} />
+            <CoachAdviceTab
+              onGoToAnalyze={() => setActiveTab("analyze")}
+              isActive={activeTab === "advice"}
+              analysisInput={latestInput}
+            />
           </TabsContent>
           <TabsContent value="plan" className="mt-4">
             <Placeholder title="Plan" body="AI Monthly Plan will appear here." />

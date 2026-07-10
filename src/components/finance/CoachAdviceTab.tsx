@@ -68,14 +68,32 @@ const difficultyStyles: Record<Difficulty, string> = {
   Hard: "border-destructive/40 bg-destructive/10 text-destructive",
 };
 
-export function CoachAdviceTab({ onGoToAnalyze }: { onGoToAnalyze: () => void }) {
+export function CoachAdviceTab({
+  onGoToAnalyze,
+  isActive = true,
+  analysisInput,
+}: {
+  onGoToAnalyze: () => void;
+  isActive?: boolean;
+  analysisInput?: CoachAnalysisInput | null;
+}) {
   const navigate = useNavigate();
-  const [input, setInput] = useState<CoachAnalysisInput | null>(null);
+  const [input, setInput] = useState<CoachAnalysisInput | null>(analysisInput ?? null);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
+  // Re-read the most recent analysis whenever the tab becomes active or the
+  // shared input changes. This keeps Analyze / Advice / Plan in sync without
+  // requiring the user to re-run the analysis.
   useEffect(() => {
-    setInput(readInput());
+    if (analysisInput) {
+      setInput(analysisInput);
+    } else {
+      setInput(readInput());
+    }
+  }, [analysisInput, isActive]);
+
+  useEffect(() => {
     setSaved(readSet(COACH_ADVICE_SAVED_KEY));
     setDismissed(readSet(COACH_ADVICE_DISMISSED_KEY));
   }, []);
