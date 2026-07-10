@@ -91,6 +91,9 @@ function AiCoachPage() {
             setActiveTab(v);
             setMode("choice");
             setUseAutoData(false);
+            // Refresh shared analysis on every tab switch so Advice/Plan
+            // reflect the latest analyzed input without a re-run.
+            setLatestInput(readLatestInput());
           }}
           className="w-full"
         >
