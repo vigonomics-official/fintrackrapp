@@ -12,6 +12,7 @@ import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { buildCoachAutofill } from "@/lib/coach-autofill";
 import { analyzeMock, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
 import { CoachAdviceTab } from "@/components/finance/CoachAdviceTab";
+import { CoachPlanTab } from "@/components/finance/CoachPlanTab";
 
 const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
@@ -136,7 +137,11 @@ function AiCoachPage() {
             />
           </TabsContent>
           <TabsContent value="plan" className="mt-4">
-            <Placeholder title="Plan" body="AI Monthly Plan will appear here." />
+            <CoachPlanTab
+              isActive={activeTab === "plan"}
+              analysisInput={latestInput}
+              onGoToAnalyze={() => setActiveTab("analyze")}
+            />
           </TabsContent>
         </Tabs>
       </PageContainer>
