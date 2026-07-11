@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Sparkles,
   Wallet,
@@ -12,6 +13,13 @@ import {
   ClipboardList,
   ShoppingBag,
   ArrowRight,
+  ChevronDown,
+  Flame,
+  Trophy,
+  Zap,
+  MoreHorizontal,
+  Circle,
+  PenLine,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +27,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/currency";
 import type { CoachAnalysisInput } from "@/lib/ai-coach-analysis";
@@ -26,6 +41,8 @@ import {
   generatePlanMock,
   enqueuePlannerTask,
   evaluatePurchase,
+  markBillPaid,
+  unmarkBillPaid,
   type MonthlyPlan,
   type BillItem,
   type BillStatus,
@@ -65,29 +82,21 @@ export function CoachPlanTab({
   const [input, setInput] = useState<CoachAnalysisInput | null>(analysisInput);
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<MonthlyPlan | null>(null);
+  const [regenTick, setRegenTick] = useState(0);
+
+  useEffect(() => { setInput(analysisInput); }, [analysisInput, isActive]);
 
   useEffect(() => {
-    setInput(analysisInput);
-  }, [analysisInput, isActive]);
-
-  useEffect(() => {
-    if (!input) {
-      setPlan(null);
-      return;
-    }
+    if (!input) { setPlan(null); return; }
     let cancelled = false;
     setLoading(true);
-    // Simulated "AI generation" pause — replace with Gemini call later.
     const t = setTimeout(() => {
       if (cancelled) return;
       setPlan(generatePlanMock(input));
       setLoading(false);
-    }, 350);
-    return () => {
-      cancelled = true;
-      clearTimeout(t);
-    };
-  }, [input]);
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [input, regenTick]);
 
   if (!input) {
     return (
@@ -101,18 +110,14 @@ export function CoachPlanTab({
             Run your Salary Analysis first to generate a personalized monthly plan.
           </p>
         </div>
-        <Button size="sm" onClick={onGoToAnalyze}>
-          Analyze Now
-        </Button>
+        <Button size="sm" onClick={onGoToAnalyze}>Analyze Now</Button>
       </Card>
     );
   }
 
-  if (loading || !plan) {
-    return <PlanLoading />;
-  }
+  if (loading || !plan) return <PlanLoading />;
 
-  return <PlanBody plan={plan} input={input} />;
+  return <PlanBody plan={plan} input={input} onRegen={() => setRegenTick((n) => n + 1)} />;
 }
 
 function PlanLoading() {
@@ -124,26 +129,28 @@ function PlanLoading() {
           <Sparkles className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1 space-y-1.5">
-          {lines.map((l) => (
-            <p key={l} className="text-xs text-muted-foreground">{l}</p>
-          ))}
+          {lines.map((l) => <p key={l} className="text-xs text-muted-foreground">{l}</p>)}
         </div>
       </div>
     </Card>
   );
 }
 
-function PlanBody({ plan, input }: { plan: MonthlyPlan; input: CoachAnalysisInput }) {
-  const applyAll = () => {
-    plan.actions.forEach((a) =>
-      enqueuePlannerTask({ id: `plan-action-${a.id}`, title: a.title, detail: a.detail }),
-    );
-    toast.success("✓ Added to Planner", { description: `${plan.actions.length} actions queued.` });
-  };
+function PlanBody({ plan, input, onRegen }: { plan: MonthlyPlan; input: CoachAnalysisInput; onRegen: () => void }) {
+  const [top, ...others] = plan.actions;
 
   return (
     <div className="space-y-4">
-      {/* SECTION 1 — Monthly Survival Plan */}
+      {/* Today's AI Summary — always first */}
+      <TodaySummaryCard plan={plan} />
+
+      {/* Data freshness chip */}
+      <FreshnessChip plan={plan} />
+
+      {/* Achievements */}
+      {plan.achievements.length > 0 && <AchievementsRow plan={plan} />}
+
+      {/* Monthly Survival Plan — expanded */}
       <SectionHeader icon={<Sparkles className="h-4 w-4 text-primary" />} title="Monthly Survival Plan" />
       <div className="grid grid-cols-2 gap-2 sm:gap-3">
         <SummaryCard icon={<Wallet className="h-4 w-4" />} label="Safe Daily Spend" value={formatCurrency(plan.summary.safeDailySpend)} tone="primary" />
@@ -152,9 +159,38 @@ function PlanBody({ plan, input }: { plan: MonthlyPlan; input: CoachAnalysisInpu
         <SummaryCard icon={<ShieldCheck className="h-4 w-4" />} label="Survival Score" value={`${plan.summary.survivalScore}%`} tone="primary" />
       </div>
 
-      {/* SECTION 2 — Salary Allocation */}
-      <SectionHeader icon={<Wallet className="h-4 w-4 text-primary" />} title="Salary Allocation" />
-      <Card className="p-4 shadow-soft">
+      {/* Today's Priority — expanded */}
+      {top && (
+        <>
+          <SectionHeader icon={<Flame className="h-4 w-4 text-destructive" />} title="Today's Priority" />
+          <PriorityCard action={top} />
+        </>
+      )}
+
+      {/* Other Recommendations — compact */}
+      {others.length > 0 && (
+        <CollapsibleSection
+          icon={<ClipboardList className="h-4 w-4 text-primary" />}
+          title="Other Recommendations"
+          summary={`${others.length} more to explore`}
+          defaultOpen={false}
+        >
+          <div className="space-y-2">
+            {others.map((a) => <CompactActionCard key={a.id} action={a} />)}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Can I Buy This — expanded */}
+      <SectionHeader icon={<ShoppingBag className="h-4 w-4 text-primary" />} title="Can I Buy This?" />
+      <BuyCheckCard plan={plan} input={input} />
+
+      {/* Collapsible sections */}
+      <CollapsibleSection
+        icon={<Wallet className="h-4 w-4 text-primary" />}
+        title="Salary Allocation"
+        summary={plan.allocation.map((s) => `${s.label} ${s.pct}%`).join(" • ")}
+      >
         <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
           {plan.allocation.map((s) => (
             <div key={s.key} className={s.tone} style={{ width: `${s.pct}%` }} aria-label={`${s.label} ${s.pct}%`} />
@@ -169,81 +205,162 @@ function PlanBody({ plan, input }: { plan: MonthlyPlan; input: CoachAnalysisInpu
             </li>
           ))}
         </ul>
-      </Card>
+      </CollapsibleSection>
 
-      {/* SECTION 3 — Weekly Spending Limits */}
-      <SectionHeader icon={<CalendarClock className="h-4 w-4 text-primary" />} title="Weekly Spending Limits" />
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {plan.weeklyLimits.map((w) => (
-          <Card key={w.week} className="p-3 shadow-soft">
-            <p className="font-display text-xs font-semibold">{w.label}</p>
-            <p className="text-[10px] text-muted-foreground">{w.range}</p>
-            <p className="mt-1 font-display text-sm font-bold tabular-nums">{formatCurrency(w.limit)}</p>
-          </Card>
-        ))}
-      </div>
-
-      {/* SECTION 4 — Bills Timeline */}
-      <SectionHeader icon={<CalendarClock className="h-4 w-4 text-primary" />} title="Bills Timeline" />
-      {plan.bills.length === 0 ? (
-        <Card className="p-4 text-center text-xs text-muted-foreground shadow-soft">
-          No recurring bills detected this month.
-        </Card>
-      ) : (
-        <Card className="divide-y p-0 shadow-soft">
-          {plan.bills.map((b) => (
-            <BillRow key={b.id} bill={b} />
+      <CollapsibleSection
+        icon={<CalendarClock className="h-4 w-4 text-primary" />}
+        title="Weekly Spending Limits"
+        summary={`4 weeks • ~${formatCurrency(plan.weeklyLimits[0]?.limit ?? 0)}/wk`}
+      >
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {plan.weeklyLimits.map((w) => (
+            <div key={w.week} className="rounded-lg border bg-muted/30 p-2.5">
+              <p className="font-display text-xs font-semibold">{w.label}</p>
+              <p className="text-[10px] text-muted-foreground">{w.range}</p>
+              <p className="mt-1 font-display text-sm font-bold tabular-nums">{formatCurrency(w.limit)}</p>
+            </div>
           ))}
-        </Card>
-      )}
-
-      {/* SECTION 5 — Goal Progress */}
-      <SectionHeader icon={<TargetIcon className="h-4 w-4 text-primary" />} title="Goal Progress" />
-      <Card className="p-4 shadow-soft">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-sm font-semibold">{plan.goal.goal}</p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Target {formatCurrency(plan.goal.target)} • ETA {plan.goal.etaMonths} months
-            </p>
-          </div>
-          <Badge variant="outline" className="h-5 shrink-0 px-1.5 text-[10px]">
-            {plan.goal.progressPct}%
-          </Badge>
         </div>
-        <Progress value={plan.goal.progressPct} className="mt-3 h-2" />
-        <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
-          <MiniStat label="Saved" value={formatCurrency(plan.goal.current)} />
-          <MiniStat label="Monthly Target" value={formatCurrency(plan.goal.monthlyTarget)} />
-          <MiniStat label="Est. Completion" value={new Date(plan.goal.estimatedCompletion).toLocaleDateString(undefined, { month: "short", year: "numeric" })} />
-          <MiniStat label="Progress" value={`${plan.goal.progressPct}%`} />
-        </div>
-      </Card>
+      </CollapsibleSection>
 
-      {/* SECTION 6 — Top AI Action Plan */}
-      <div className="flex items-center justify-between gap-2">
-        <SectionHeader icon={<Sparkles className="h-4 w-4 text-primary" />} title="Top AI Action Plan" />
-        <Button size="sm" variant="outline" className="h-8 px-2 text-xs" onClick={applyAll}>
-          <ClipboardList className="mr-1 h-3.5 w-3.5" />
-          Apply All
-        </Button>
+      <BillsSection plan={plan} onChange={onRegen} />
+
+      <CollapsibleSection
+        icon={<TargetIcon className="h-4 w-4 text-primary" />}
+        title="Goal Progress"
+        summary={`${plan.goal.goal} • ${plan.goal.progressPct}%`}
+      >
+        <GoalProgressBody plan={plan} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        icon={<Zap className="h-4 w-4 text-primary" />}
+        title="Weekly Challenges"
+        summary={`${plan.challenges.length} challenges available`}
+      >
+        <div className="space-y-2">
+          {plan.challenges.map((c) => (
+            <div key={c.id} className="rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-sm font-semibold">{c.title}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">{c.description}</p>
+                </div>
+                <Badge variant="outline" className="h-5 shrink-0 px-1.5 text-[10px]">{c.reward}</Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CollapsibleSection>
+    </div>
+  );
+}
+
+// --- Cards / building blocks ---
+
+function TodaySummaryCard({ plan }: { plan: MonthlyPlan }) {
+  const { daily } = plan;
+  const riskTone = daily.riskLevel === "Low" ? "text-success" : daily.riskLevel === "Medium" ? "text-gold" : "text-destructive";
+  const goalTone =
+    daily.goalStatus === "Ahead" ? "text-success" :
+    daily.goalStatus === "On Track" ? "text-primary" :
+    daily.goalStatus === "Behind" ? "text-gold" : "text-destructive";
+  return (
+    <Card className="p-4 shadow-soft">
+      <div className="flex items-center gap-1.5">
+        <Sparkles className="h-4 w-4 text-primary" />
+        <p className="font-display text-sm font-semibold">Today's AI Summary</p>
       </div>
-      <div className="space-y-2">
-        {plan.actions.map((a) => (
-          <ActionCard key={a.id} action={a} />
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{daily.spendingStatus}</p>
+      <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
+        <SummaryRow label="Month-end savings" value={formatCurrency(daily.expectedMonthEndSavings)} tone="text-foreground" />
+        <SummaryRow label="Risk Level" value={daily.riskLevel} tone={riskTone} />
+        <SummaryRow label={plan.goal.goal} value={daily.goalStatus} tone={goalTone} />
+        <SummaryRow label="Confidence" value={`${daily.confidence}%`} tone="text-foreground" />
+      </ul>
+    </Card>
+  );
+}
+
+function SummaryRow({ label, value, tone }: { label: string; value: string; tone: string }) {
+  return (
+    <li className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-2 py-1.5">
+      <span className="min-w-0 flex-1 truncate text-muted-foreground">{label}</span>
+      <span className={`shrink-0 font-semibold tabular-nums ${tone}`}>{value}</span>
+    </li>
+  );
+}
+
+function FreshnessChip({ plan }: { plan: MonthlyPlan }) {
+  const now = new Date();
+  const generated = new Date(plan.generatedAt);
+  const sameDay = now.toDateString() === generated.toDateString();
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <Badge variant="outline" className="h-5 gap-1 border-success/30 bg-success/10 px-1.5 text-[10px] text-success">
+        <Circle className="h-2 w-2 fill-success text-success" />
+        {sameDay ? "Updated Today" : "Updated Recently"}
+      </Badge>
+      <Badge variant="outline" className="h-5 px-1.5 text-[10px] text-muted-foreground">
+        Using {plan.monthLabel}
+      </Badge>
+    </div>
+  );
+}
+
+function AchievementsRow({ plan }: { plan: MonthlyPlan }) {
+  return (
+    <Card className="p-3 shadow-soft">
+      <div className="flex items-center gap-1.5">
+        <Trophy className="h-4 w-4 text-gold" />
+        <p className="font-display text-xs font-semibold">Achievements</p>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {plan.achievements.map((a) => (
+          <Badge key={a.id} variant="outline" className="h-6 gap-1 border-gold/30 bg-gold/10 px-2 text-[11px] text-gold-foreground">
+            <span aria-hidden>{a.emoji}</span>
+            <span className="text-foreground/90">{a.title}</span>
+          </Badge>
         ))}
       </div>
+    </Card>
+  );
+}
 
-      {/* SECTION 7 — Can I Buy This? */}
-      <SectionHeader icon={<ShoppingBag className="h-4 w-4 text-primary" />} title="Can I Buy This?" />
-      <BuyCheckCard plan={plan} input={input} />
-    </div>
+function CollapsibleSection({
+  icon, title, summary, children, defaultOpen = false,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  summary: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Card className="p-0 shadow-soft">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-muted/40">
+            <span className="shrink-0">{icon}</span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm font-semibold">{title}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{summary}</p>
+            </div>
+            <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-t px-4 py-3">{children}</div>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   );
 }
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div className="flex items-center gap-1.5 px-0.5">
+    <div className="flex items-center gap-1.5 px-0.5 pt-1">
       {icon}
       <h2 className="font-display text-sm font-semibold">{title}</h2>
     </div>
@@ -251,32 +368,80 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
 }
 
 function SummaryCard({
-  icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  tone: "primary" | "success" | "gold";
-}) {
+  icon, label, value, tone,
+}: { icon: React.ReactNode; label: string; value: string; tone: "primary" | "success" | "gold" }) {
   const toneCls =
-    tone === "success"
-      ? "bg-success/10 text-success"
-      : tone === "gold"
-        ? "bg-gold/10 text-gold"
+    tone === "success" ? "bg-success/10 text-success"
+      : tone === "gold" ? "bg-gold/10 text-gold"
         : "bg-primary/10 text-primary";
   return (
     <Card className="p-3 shadow-soft sm:p-4">
       <div className="flex items-center gap-2">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${toneCls}`}>
-          {icon}
-        </div>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${toneCls}`}>{icon}</div>
         <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">{label}</p>
       </div>
       <p className="mt-2 font-display text-base font-bold tabular-nums leading-tight sm:text-lg">{value}</p>
     </Card>
+  );
+}
+
+function PriorityCard({ action }: { action: TopAction }) {
+  const [added, setAdded] = useState(false);
+  const apply = () => {
+    enqueuePlannerTask({ id: `plan-action-${action.id}`, title: action.title, detail: action.detail });
+    setAdded(true);
+    toast.success("✓ Added to Planner", { description: action.title });
+  };
+  return (
+    <Card className="border-destructive/20 bg-destructive/5 p-4 shadow-soft">
+      <div className="flex items-start gap-2">
+        <Flame className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-sm font-semibold leading-snug">{action.title}</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{action.reason}</p>
+          <p className="mt-1 text-xs leading-relaxed">{action.detail}</p>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+        <MiniStat label="Monthly savings" value={formatCurrency(action.monthlySavings)} />
+        <MiniStat label="Score boost" value={`+${action.scoreBoost}`} />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        <Badge variant="outline" className={`h-5 px-1.5 text-[10px] ${priorityStyles[action.priority]}`}>{action.priority} Priority</Badge>
+        <Badge variant="outline" className={`h-5 px-1.5 text-[10px] ${difficultyStyles[action.difficulty]}`}>{action.difficulty}</Badge>
+      </div>
+      <div className="mt-3">
+        <Button size="sm" className="h-8 px-3 text-xs" onClick={apply} disabled={added}>
+          {added ? (<><CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Added to Planner</>) : (<><ClipboardList className="mr-1 h-3.5 w-3.5" /> Apply to Planner</>)}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+function CompactActionCard({ action }: { action: TopAction }) {
+  const [added, setAdded] = useState(false);
+  const apply = () => {
+    enqueuePlannerTask({ id: `plan-action-${action.id}`, title: action.title, detail: action.detail });
+    setAdded(true);
+    toast.success("✓ Added to Planner", { description: action.title });
+  };
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-xs font-semibold leading-snug">{action.title}</p>
+          <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{action.detail}</p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+            <Badge variant="outline" className={`h-4 px-1 text-[9px] ${priorityStyles[action.priority]}`}>{action.priority}</Badge>
+            <span className="text-[10px] text-muted-foreground">Save {formatCurrency(action.monthlySavings)}/mo • +{action.scoreBoost}</span>
+          </div>
+        </div>
+        <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-[11px]" onClick={apply} disabled={added}>
+          {added ? <CheckCircle2 className="h-3.5 w-3.5 text-success" /> : "Apply"}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -289,14 +454,59 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function BillRow({ bill }: { bill: BillItem }) {
+// --- Bills ---
+
+function BillsSection({ plan, onChange }: { plan: MonthlyPlan; onChange: () => void }) {
+  const upcomingCount = plan.bills.filter((b) => b.status !== "Paid").length;
+  const totalOwed = plan.bills.filter((b) => b.status !== "Paid").reduce((s, b) => s + b.amount, 0);
+  return (
+    <CollapsibleSection
+      icon={<CalendarClock className="h-4 w-4 text-primary" />}
+      title="Bills Timeline"
+      summary={plan.bills.length === 0 ? "No recurring bills detected" : `${upcomingCount} unpaid • ${formatCurrency(totalOwed)} remaining`}
+    >
+      {plan.bills.length === 0 ? (
+        <p className="text-center text-xs text-muted-foreground">No recurring bills detected this month.</p>
+      ) : (
+        <div className="divide-y">
+          {plan.bills.map((b) => <BillRow key={b.id} bill={b} onChange={onChange} />)}
+        </div>
+      )}
+    </CollapsibleSection>
+  );
+}
+
+function BillRow({ bill, onChange }: { bill: BillItem; onChange: () => void }) {
+  const navigate = useNavigate();
   const icon =
     bill.status === "Paid" ? <CheckCircle2 className="h-3.5 w-3.5" /> :
     bill.status === "Due Today" ? <AlertCircle className="h-3.5 w-3.5" /> :
     <Clock className="h-3.5 w-3.5" />;
+
+  const togglePaid = () => {
+    if (bill.status === "Paid") {
+      unmarkBillPaid(bill.id);
+      toast.success("Bill marked unpaid", { description: bill.name });
+    } else {
+      markBillPaid(bill.id);
+      toast.success("✓ Bill marked paid", { description: `${bill.name} • budget updated` });
+    }
+    onChange();
+  };
+
+  const openPlanner = () => {
+    enqueuePlannerTask({ id: `bill-${bill.id}`, title: `Pay ${bill.name}`, detail: `${formatCurrency(bill.amount)} due ${bill.dueLabel}` });
+    navigate({ to: "/planner" });
+  };
+
+  const editBill = () => {
+    navigate({ to: "/transactions" });
+    toast.message("Open transactions to edit this bill.");
+  };
+
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className="flex w-14 shrink-0 flex-col items-center">
+    <div className="flex items-center gap-3 py-3">
+      <div className="flex w-12 shrink-0 flex-col items-center">
         <span className="font-display text-xs font-bold leading-none">{bill.dueLabel.split(" ")[0]}</span>
         <span className="text-[10px] uppercase text-muted-foreground">{bill.dueLabel.split(" ")[1]}</span>
       </div>
@@ -308,52 +518,61 @@ function BillRow({ bill }: { bill: BillItem }) {
         {icon}
         <span className="whitespace-nowrap">{bill.status}</span>
       </Badge>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" aria-label="Bill actions">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={togglePaid}>
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            {bill.status === "Paid" ? "Mark unpaid" : "Mark paid"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={openPlanner}>
+            <ClipboardList className="mr-2 h-4 w-4" /> Open Planner
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={editBill}>
+            <PenLine className="mr-2 h-4 w-4" /> Edit Bill
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
 
-function ActionCard({ action }: { action: TopAction }) {
-  const [added, setAdded] = useState(false);
-  const apply = () => {
-    enqueuePlannerTask({ id: `plan-action-${action.id}`, title: action.title, detail: action.detail });
-    setAdded(true);
-    toast.success("✓ Added to Planner", { description: action.title });
-  };
+// --- Goal ---
+
+function GoalProgressBody({ plan }: { plan: MonthlyPlan }) {
+  const g = plan.goal;
   return (
-    <Card className="p-3 shadow-soft sm:p-4">
+    <>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-display text-sm font-semibold leading-snug">{action.title}</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{action.detail}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className={`h-5 px-1.5 text-[10px] ${priorityStyles[action.priority]}`}>
-              {action.priority} Priority
-            </Badge>
-            <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
-              Save {formatCurrency(action.monthlySavings)}/mo
-            </Badge>
-            <Badge variant="outline" className={`h-5 px-1.5 text-[10px] ${difficultyStyles[action.difficulty]}`}>
-              {action.difficulty}
-            </Badge>
-          </div>
+          <p className="font-display text-sm font-semibold">{g.goal}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Target {formatCurrency(g.target)} • ETA {g.etaMonths} months
+          </p>
         </div>
+        <Badge variant="outline" className={`h-5 shrink-0 px-1.5 text-[10px] ${g.aheadOfSchedule ? "border-success/30 bg-success/10 text-success" : "border-gold/30 bg-gold/10 text-gold"}`}>
+          {g.progressPct}%
+        </Badge>
       </div>
-      <div className="mt-3">
-        <Button size="sm" className="h-8 px-2 text-xs" onClick={apply} disabled={added}>
-          {added ? (
-            <>
-              <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Added to Planner
-            </>
-          ) : (
-            <>
-              <ClipboardList className="mr-1 h-3.5 w-3.5" /> Apply to Planner
-            </>
-          )}
-        </Button>
+      <Progress value={g.progressPct} className="mt-3 h-2" />
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+        <MiniStat label="Saved" value={formatCurrency(g.current)} />
+        <MiniStat label="Monthly Target" value={formatCurrency(g.monthlyTarget)} />
+        <MiniStat label="Est. Completion" value={new Date(g.estimatedCompletion).toLocaleDateString(undefined, { month: "short", year: "numeric" })} />
+        <MiniStat label="Days Remaining" value={`${g.daysRemaining}`} />
       </div>
-    </Card>
+      <p className={`mt-3 text-xs ${g.aheadOfSchedule ? "text-success" : "text-muted-foreground"}`}>
+        {g.motivation}
+      </p>
+    </>
   );
 }
+
+// --- Can I Buy This ---
 
 function BuyCheckCard({ plan, input }: { plan: MonthlyPlan; input: CoachAnalysisInput }) {
   const [item, setItem] = useState("");
@@ -365,9 +584,16 @@ function BuyCheckCard({ plan, input }: { plan: MonthlyPlan; input: CoachAnalysis
 
   const toneCls = useMemo(() => {
     if (!result) return "border-border bg-muted/40 text-foreground";
-    if (result.verdict === "Not Recommended") return "border-destructive/30 bg-destructive/5 text-destructive";
-    if (result.verdict === "Wait Until Salary") return "border-gold/30 bg-gold/10 text-gold-foreground";
-    return "border-success/30 bg-success/10 text-success";
+    if (result.verdict === "Not Recommended") return "border-destructive/30 bg-destructive/5";
+    if (result.verdict === "Wait Until Salary") return "border-gold/30 bg-gold/10";
+    return "border-success/30 bg-success/10";
+  }, [result]);
+
+  const verdictTone = useMemo(() => {
+    if (!result) return "text-foreground";
+    if (result.verdict === "Not Recommended") return "text-destructive";
+    if (result.verdict === "Wait Until Salary") return "text-gold";
+    return "text-success";
   }, [result]);
 
   return (
@@ -385,10 +611,7 @@ function BuyCheckCard({ plan, input }: { plan: MonthlyPlan; input: CoachAnalysis
             inputMode="decimal"
             placeholder="2499"
             value={priceStr}
-            onChange={(e) => {
-              setPriceStr(e.target.value);
-              setResult(null);
-            }}
+            onChange={(e) => { setPriceStr(e.target.value); setResult(null); }}
           />
         </div>
       </div>
@@ -399,15 +622,15 @@ function BuyCheckCard({ plan, input }: { plan: MonthlyPlan; input: CoachAnalysis
 
       {result && (
         <div className={`rounded-xl border p-3 ${toneCls}`}>
-          <p className="font-display text-sm font-semibold">{result.verdict}</p>
-          <p className="mt-1 text-xs opacity-90">{result.reason}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
-            <span>
-              Score impact <span className="font-semibold">{result.scoreImpact >= 0 ? "±0" : `${result.scoreImpact}`}</span>
-            </span>
-            <span>
-              New safe daily <span className="font-semibold">{formatCurrency(result.newSafeDailySpend)}</span>
-            </span>
+          <p className={`font-display text-sm font-semibold ${verdictTone}`}>{result.verdict}</p>
+          <p className="mt-1 text-xs leading-relaxed text-foreground/90">{result.reason}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+            <MiniStat label="Current Balance" value={formatCurrency(result.currentBalance)} />
+            <MiniStat label="Balance After" value={formatCurrency(result.balanceAfter)} />
+            <MiniStat label="New Survival Score" value={`${result.newSurvivalScore}% (${result.scoreImpact})`} />
+            <MiniStat label="New Safe Daily" value={formatCurrency(result.newSafeDailySpend)} />
+            <MiniStat label="Goal Delay" value={result.goalDelayDays === 0 ? "None" : `${result.goalDelayDays} days`} />
+            <MiniStat label="Monthly Budget Impact" value={`${result.monthlyBudgetImpactPct}%`} />
           </div>
         </div>
       )}
