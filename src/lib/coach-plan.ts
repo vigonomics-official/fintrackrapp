@@ -51,6 +51,9 @@ export type GoalProgress = {
   estimatedCompletion: string; // ISO
   etaMonths: number;
   progressPct: number;
+  daysRemaining: number;
+  aheadOfSchedule: boolean;
+  motivation: string;
 };
 
 export type TopAction = {
@@ -60,15 +63,44 @@ export type TopAction = {
   priority: ActionPriority;
   monthlySavings: number;
   difficulty: ActionDifficulty;
+  scoreBoost: number; // estimated survival-score improvement
+  reason: string; // why this is recommended
+};
+
+export type DailySummary = {
+  spendingStatus: string;
+  expectedMonthEndSavings: number;
+  riskLevel: RiskLevelLite;
+  goalStatus: "On Track" | "Behind" | "Ahead" | "At Risk";
+  confidence: number; // 0-100
+};
+
+export type RiskLevelLite = "Low" | "Medium" | "High";
+
+export type WeeklyChallenge = {
+  id: string;
+  title: string;
+  description: string;
+  reward: string;
+};
+
+export type Achievement = {
+  id: string;
+  emoji: string;
+  title: string;
 };
 
 export type MonthlyPlan = {
   summary: PlanSummary;
+  daily: DailySummary;
   allocation: AllocationSlice[];
   weeklyLimits: WeeklyLimit[];
   bills: BillItem[];
   goal: GoalProgress;
   actions: TopAction[];
+  challenges: WeeklyChallenge[];
+  achievements: Achievement[];
+  monthLabel: string; // e.g. "July Transactions"
   generatedAt: string;
 };
 
