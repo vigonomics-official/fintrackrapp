@@ -11,6 +11,7 @@ import {
 export type BillStatus = "Upcoming" | "Due Today" | "Paid";
 export type ActionPriority = "High" | "Medium" | "Low";
 export type ActionDifficulty = "Easy" | "Medium" | "Hard";
+export type RiskLevelLite = "Low" | "Medium" | "High";
 
 export type PlanSummary = {
   safeDailySpend: number;
@@ -24,13 +25,13 @@ export type AllocationSlice = {
   label: string;
   amount: number;
   pct: number;
-  tone: string; // tailwind bg-* token
+  tone: string;
 };
 
 export type WeeklyLimit = {
   week: number;
-  label: string; // "Week 1"
-  range: string; // "1–7 Jul"
+  label: string;
+  range: string;
   limit: number;
 };
 
@@ -38,8 +39,8 @@ export type BillItem = {
   id: string;
   name: string;
   amount: number;
-  dueDate: string; // ISO
-  dueLabel: string; // "15 Jul"
+  dueDate: string;
+  dueLabel: string;
   status: BillStatus;
 };
 
@@ -48,7 +49,7 @@ export type GoalProgress = {
   target: number;
   current: number;
   monthlyTarget: number;
-  estimatedCompletion: string; // ISO
+  estimatedCompletion: string;
   etaMonths: number;
   progressPct: number;
   daysRemaining: number;
@@ -60,11 +61,11 @@ export type TopAction = {
   id: string;
   title: string;
   detail: string;
+  reason: string;
   priority: ActionPriority;
   monthlySavings: number;
+  scoreBoost: number;
   difficulty: ActionDifficulty;
-  scoreBoost: number; // estimated survival-score improvement
-  reason: string; // why this is recommended
 };
 
 export type DailySummary = {
@@ -72,10 +73,8 @@ export type DailySummary = {
   expectedMonthEndSavings: number;
   riskLevel: RiskLevelLite;
   goalStatus: "On Track" | "Behind" | "Ahead" | "At Risk";
-  confidence: number; // 0-100
+  confidence: number;
 };
-
-export type RiskLevelLite = "Low" | "Medium" | "High";
 
 export type WeeklyChallenge = {
   id: string;
@@ -100,11 +99,13 @@ export type MonthlyPlan = {
   actions: TopAction[];
   challenges: WeeklyChallenge[];
   achievements: Achievement[];
-  monthLabel: string; // e.g. "July Transactions"
+  monthLabel: string;
   generatedAt: string;
 };
 
-// -------- helpers --------
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS_LONG = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
 const round = (n: number) => Math.round(n);
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
@@ -114,8 +115,7 @@ function parseDate(s: string): Date {
 }
 
 function fmtDay(d: Date): string {
-  const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return `${d.getDate()} ${m[d.getMonth()]}`;
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
 function daysInMonth(y: number, m: number): number {
@@ -127,10 +127,33 @@ function sameDay(a: Date, b: Date): boolean {
 }
 
 function billStatus(due: Date, today: Date): BillStatus {
+  const t = new Date(today); t.setHours(0, 0, 0, 0);
   if (sameDay(due, today)) return "Due Today";
-  if (due.getTime() < today.setHours(0, 0, 0, 0)) return "Paid";
+  if (due.getTime() < t.getTime()) return "Paid";
   return "Upcoming";
 }
+
+// -------- Bills paid persistence --------
+export const BILLS_PAID_KEY = "fintrackr:ai-coach:paid-bills";
+
+function readPaidIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(BILLS_PAID_KEY);
+    return new Set<string>(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+}
+function writePaidIds(ids: Set<string>) {
+  try { localStorage.setItem(BILLS_PAID_KEY, JSON.stringify([...ids])); } catch { /* ignore */ }
+}
+export function markBillPaid(id: string) {
+  const ids = readPaidIds(); ids.add(id); writePaidIds(ids);
+}
+export function unmarkBillPaid(id: string) {
+  const ids = readPaidIds(); ids.delete(id); writePaidIds(ids);
+}
+export function getPaidBills(): Set<string> { return readPaidIds(); }
 
 // -------- core generator --------
 export function generatePlanMock(
@@ -140,7 +163,7 @@ export function generatePlanMock(
   const a = analysis ?? analyzeMock(input);
   const salary = Math.max(0, input.monthlySalary);
 
-  // ----- Summary -----
+  // Cycle math
   const today = new Date();
   const salaryDate = parseDate(input.salaryDate);
   const cycleStart = new Date(salaryDate);
@@ -161,7 +184,7 @@ export function generatePlanMock(
     survivalScore: a.healthScore,
   };
 
-  // ----- Allocation (50/20/20/10 tuned to actuals) -----
+  // Allocation
   const needs = input.monthlyRent + input.monthlyBills + input.monthlyEmi + input.monthlyFood + input.monthlyTransport;
   const savings = Math.max(0, monthlySavingsTarget);
   const investments = Math.max(0, input.monthlyInvestments || round(salary * 0.1));
@@ -174,13 +197,12 @@ export function generatePlanMock(
     { key: "lifestyle", label: "Lifestyle", amount: round(lifestyle), pct: round((lifestyle / total) * 100), tone: "bg-muted-foreground/60" },
   ];
 
-  // ----- Weekly limits (variable spend = food + transport + lifestyle) -----
+  // Weekly limits
   const variablePool = Math.max(0, input.monthlyFood + input.monthlyTransport + lifestyle + input.otherMonthlyExpenses);
   const y = cycleStart.getFullYear();
   const m = cycleStart.getMonth();
   const dim = daysInMonth(y, m);
   const weekBase = variablePool / 4;
-  // Slightly front-load week 1 and taper — nudges the user to save at month-end.
   const weights = [1.1, 1.05, 0.95, 0.9];
   const weeklyLimits: WeeklyLimit[] = [1, 2, 3, 4].map((w, i) => {
     const startDay = (w - 1) * 7 + 1;
@@ -190,25 +212,21 @@ export function generatePlanMock(
     return {
       week: w,
       label: `Week ${w}`,
-      range: `${startD.getDate()}–${endD.getDate()} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m]}`,
+      range: `${startD.getDate()}–${endD.getDate()} ${MONTHS[m]}`,
       limit: round(weekBase * weights[i]),
     };
   });
 
-  // ----- Bills timeline -----
+  // Bills
   const salaryDay = salaryDate.getDate();
+  const paidIds = readPaidIds();
   const bills: BillItem[] = [];
   const push = (name: string, amount: number, offsetDays: number) => {
     if (amount <= 0) return;
     const d = new Date(y, m, clamp(salaryDay + offsetDays, 1, dim));
-    bills.push({
-      id: `${name.toLowerCase().replace(/\s+/g, "-")}-${d.toISOString().slice(0, 10)}`,
-      name,
-      amount: round(amount),
-      dueDate: d.toISOString(),
-      dueLabel: fmtDay(d),
-      status: billStatus(new Date(d), new Date()),
-    });
+    const id = `${name.toLowerCase().replace(/\s+/g, "-")}-${d.toISOString().slice(0, 10)}`;
+    const status = paidIds.has(id) ? "Paid" : billStatus(new Date(d), new Date());
+    bills.push({ id, name, amount: round(amount), dueDate: d.toISOString(), dueLabel: fmtDay(d), status });
   };
   push("Rent", input.monthlyRent, 0);
   push("Bills & Utilities", input.monthlyBills, 5);
@@ -216,8 +234,23 @@ export function generatePlanMock(
   push("Investments / SIP", input.monthlyInvestments, 2);
   bills.sort((x, z) => x.dueDate.localeCompare(z.dueDate));
 
-  // ----- Goal progress -----
+  // Goal progress
   const gf = a.goalForecast;
+  const progressPct = clamp(round((input.currentSavings / Math.max(1, gf.targetAmount)) * 100), 0, 100);
+  const completionDate = parseDate(gf.estimatedCompletion);
+  const goalDaysRemaining = Math.max(0, Math.round((completionDate.getTime() - today.getTime()) / 86_400_000));
+  // "Expected pct by now" heuristic — linear over etaMonths from a start of 0.
+  const totalEtaDays = Math.max(1, gf.etaMonths * 30);
+  const elapsedDays = Math.max(0, totalEtaDays - goalDaysRemaining);
+  const expectedPct = clamp(round((elapsedDays / totalEtaDays) * 100), 0, 100);
+  const aheadOfSchedule = progressPct >= expectedPct;
+  const gap = expectedPct - progressPct;
+  const motivation = aheadOfSchedule
+    ? "You're ahead of schedule. Keep the momentum."
+    : gap > 20
+      ? `Increase savings by ₹${Math.max(300, round(gf.monthlyTarget * 0.2))}/month to stay on target.`
+      : "You're close to on track — a small nudge this month gets you there.";
+
   const goal: GoalProgress = {
     goal: gf.goal,
     target: gf.targetAmount,
@@ -225,19 +258,84 @@ export function generatePlanMock(
     monthlyTarget: gf.monthlyTarget,
     estimatedCompletion: gf.estimatedCompletion,
     etaMonths: gf.etaMonths,
-    progressPct: clamp(round((input.currentSavings / Math.max(1, gf.targetAmount)) * 100), 0, 100),
+    progressPct,
+    daysRemaining: goalDaysRemaining,
+    aheadOfSchedule,
+    motivation,
   };
 
-  // ----- Top 5 AI Action Plan -----
+  // Actions
   const actions = buildActions(input, a);
+
+  // Daily summary
+  const paidExpenseTotal = Array.from(paidIds).reduce((sum, id) => {
+    const b = bills.find((x) => x.id === id);
+    return sum + (b ? b.amount : 0);
+  }, 0);
+  const spendingStatus =
+    a.monthlySurplus < 0
+      ? "You're spending above your salary this month — tighten discretionary spend."
+      : safeDailySpend > 0
+        ? "You are safely within your spending limit."
+        : "Spend carefully — daily buffer is tight.";
+  const riskLevel: RiskLevelLite = a.healthScore >= 70 ? "Low" : a.healthScore >= 40 ? "Medium" : "High";
+  const goalStatus: DailySummary["goalStatus"] =
+    a.monthlySurplus <= 0 ? "At Risk" : aheadOfSchedule ? "Ahead" : gap > 15 ? "Behind" : "On Track";
+  const daily: DailySummary = {
+    spendingStatus,
+    expectedMonthEndSavings: Math.max(0, round(a.monthlySurplus + paidExpenseTotal * 0)),
+    riskLevel,
+    goalStatus,
+    confidence: gf.confidence,
+  };
+
+  // Challenges (up to 4 weekly)
+  const challenges: WeeklyChallenge[] = [
+    {
+      id: "no-delivery",
+      title: "No Food Delivery Week",
+      description: "Skip food delivery for 7 days and cook or eat in.",
+      reward: `Save ₹${Math.max(300, round(input.monthlyFood * 0.15))}`,
+    },
+    {
+      id: "no-spend-weekend",
+      title: "No-Spend Weekend",
+      description: "One weekend with zero discretionary spending.",
+      reward: `Save ₹${Math.max(500, round(salary * 0.02))}`,
+    },
+    {
+      id: "review-subs",
+      title: "Subscription Audit",
+      description: "Cancel one unused subscription this week.",
+      reward: `Save ₹${Math.max(200, round(input.monthlyBills * 0.1))}/mo`,
+    },
+    {
+      id: "two-wheel",
+      title: "Two-Wheel Week",
+      description: "Walk, cycle or pool for one week.",
+      reward: `Save ₹${Math.max(300, round(input.monthlyTransport * 0.2))}`,
+    },
+  ];
+
+  // Achievements — up to 3
+  const allAchievements: Achievement[] = [];
+  if (a.monthlySurplus > 0) allAchievements.push({ id: "under-budget", emoji: "🏆", title: "Stayed under budget" });
+  if (input.monthlyInvestments > 0) allAchievements.push({ id: "invest-streak", emoji: "🏆", title: "Investment Streak" });
+  if (input.monthlyEmi === 0) allAchievements.push({ id: "no-emi", emoji: "🏆", title: "No EMI this month" });
+  if (a.savingsRate >= 20) allAchievements.push({ id: "budget-champ", emoji: "🏆", title: "Budget Champion" });
+  const achievements = allAchievements.slice(0, 3);
 
   return {
     summary,
+    daily,
     allocation,
     weeklyLimits,
     bills,
     goal,
     actions,
+    challenges,
+    achievements,
+    monthLabel: `${MONTHS_LONG[m]} Transactions`,
     generatedAt: new Date().toISOString(),
   };
 }
@@ -251,8 +349,10 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       id: "cut-food",
       title: "Reduce food delivery this week",
       detail: "Cap delivery to twice a week and cook the rest.",
+      reason: `Food is ${Math.round((input.monthlyFood / salary) * 100)}% of your salary — above the 15% healthy cap.`,
       priority: "High",
       monthlySavings: Math.max(300, Math.round(input.monthlyFood * 0.15)),
+      scoreBoost: 6,
       difficulty: "Easy",
     });
   }
@@ -261,8 +361,10 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       id: "skip-shopping",
       title: "Skip unnecessary shopping",
       detail: "Delay non-essentials until after the salary date.",
+      reason: "Discretionary spending is trending above a healthy share of income.",
       priority: "Medium",
       monthlySavings: Math.max(300, Math.round(input.otherMonthlyExpenses * 0.2)),
+      scoreBoost: 4,
       difficulty: "Easy",
     });
   }
@@ -271,8 +373,10 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       id: "bump-sip",
       title: "Increase SIP by ₹500 next month",
       detail: "Automate the bump the day after your salary lands.",
+      reason: "You have monthly surplus — compound it before it leaks.",
       priority: "Medium",
       monthlySavings: 500,
+      scoreBoost: 3,
       difficulty: "Easy",
     });
   }
@@ -281,8 +385,10 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       id: "audit-subs",
       title: "Review subscriptions on Sunday",
       detail: "Cancel anything unused in the last 30 days.",
+      reason: "Subscriptions quietly compound — a 10-minute audit usually finds one.",
       priority: "Low",
       monthlySavings: Math.max(200, Math.round(input.monthlyBills * 0.1)),
+      scoreBoost: 2,
       difficulty: "Easy",
     });
   }
@@ -290,8 +396,10 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
     id: "maintain-emergency",
     title: "Maintain emergency savings",
     detail: "Keep at least 3 months of expenses parked liquid.",
+    reason: "Buffers protect your score when the unexpected hits.",
     priority: a.risks.find((r) => r.key === "emergency")?.level === "High" ? "High" : "Medium",
     monthlySavings: Math.max(500, Math.round(salary * 0.05)),
+    scoreBoost: 5,
     difficulty: "Medium",
   });
 
@@ -300,28 +408,33 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       id: "prepay-emi",
       title: "Prepay the highest-interest EMI",
       detail: "EMIs are eating a big chunk — pay down the priciest one.",
+      reason: `EMIs are ${Math.round((input.monthlyEmi / salary) * 100)}% of your salary.`,
       priority: "High",
       monthlySavings: Math.max(500, Math.round(input.monthlyEmi * 0.05)),
+      scoreBoost: 8,
       difficulty: "Hard",
     });
   }
 
-  // Ensure exactly 5.
   const filler: TopAction[] = [
     {
       id: "weekly-review",
       title: "Do a 10-minute weekly money review",
       detail: "Every Sunday, review last week's spending in FinTrackr.",
+      reason: "Small habits compound faster than big overhauls.",
       priority: "Low",
       monthlySavings: Math.max(300, Math.round(salary * 0.01)),
+      scoreBoost: 2,
       difficulty: "Easy",
     },
     {
       id: "cash-only-weekends",
       title: "Cash-only weekends",
       detail: "Withdraw a weekend cap in cash to curb impulse buys.",
+      reason: "Cash friction reduces small impulse purchases.",
       priority: "Low",
       monthlySavings: 500,
+      scoreBoost: 2,
       difficulty: "Medium",
     },
   ];
@@ -358,14 +471,19 @@ export function enqueuePlannerTask(task: Omit<PlannerQueueTask, "createdAt" | "s
   return entry;
 }
 
-// -------- Can I Buy This? (lightweight, plan-scoped) --------
+// -------- Can I Buy This? --------
 export type BuyVerdict = "Safe to Buy" | "Wait Until Salary" | "Not Recommended";
 
 export type BuyCheckResult = {
   verdict: BuyVerdict;
   reason: string;
-  scoreImpact: number; // negative = drop
+  currentBalance: number;
+  balanceAfter: number;
+  newSurvivalScore: number;
+  scoreImpact: number;
   newSafeDailySpend: number;
+  monthlyBudgetImpactPct: number;
+  goalDelayDays: number;
 };
 
 export function evaluatePurchase(
@@ -373,40 +491,61 @@ export function evaluatePurchase(
   plan: MonthlyPlan,
   input: CoachAnalysisInput,
 ): BuyCheckResult {
+  const currentBalance = input.currentAccountBalance;
   if (price <= 0) {
     return {
       verdict: "Safe to Buy",
       reason: "Enter a price to evaluate the impact.",
+      currentBalance,
+      balanceAfter: currentBalance,
+      newSurvivalScore: plan.summary.survivalScore,
       scoreImpact: 0,
       newSafeDailySpend: plan.summary.safeDailySpend,
+      monthlyBudgetImpactPct: 0,
+      goalDelayDays: 0,
     };
   }
-  const newBalance = input.currentAccountBalance - price;
-  const daysLeft = Math.max(1, Math.round((new Date(plan.weeklyLimits[3]?.range ? new Date() : new Date()).getTime()) / 1) || 1);
-  // Simple: reduce safe daily proportionally.
-  const drop = Math.round((price / Math.max(1, plan.summary.safeDailySpend * 30)) * 15);
-  const newSafeDailySpend = Math.max(0, Math.round(plan.summary.safeDailySpend - price / 30));
 
-  if (newBalance < 0 || price > plan.summary.expectedMonthEndBalance + input.currentAccountBalance) {
+  const today = new Date();
+  const cycleEnd = new Date(parseDate(input.salaryDate));
+  cycleEnd.setMonth(cycleEnd.getMonth() + 1);
+  const daysLeft = Math.max(1, Math.round((cycleEnd.getTime() - today.getTime()) / 86_400_000));
+
+  const balanceAfter = currentBalance - price;
+  const newSafeDailySpend = Math.max(0, Math.round(plan.summary.safeDailySpend - price / daysLeft));
+  const monthlyBudgetImpactPct = clamp(round((price / Math.max(1, input.monthlySalary)) * 100), 0, 100);
+  const goalDelayDays = plan.goal.monthlyTarget > 0
+    ? Math.max(0, Math.round((price / plan.goal.monthlyTarget) * 30))
+    : 0;
+  const scoreImpact = -Math.min(40, Math.max(2, Math.round(monthlyBudgetImpactPct * 0.5) + Math.round(goalDelayDays / 3)));
+  const newSurvivalScore = clamp(plan.summary.survivalScore + scoreImpact, 0, 100);
+
+  const goalName = plan.goal.goal;
+  const explain = (base: string) =>
+    goalDelayDays > 0
+      ? `${base} Buying this delays your ${goalName} goal by ${goalDelayDays} day${goalDelayDays === 1 ? "" : "s"}.`
+      : base;
+
+  if (balanceAfter < 0 || price > currentBalance + plan.summary.expectedMonthEndBalance) {
     return {
       verdict: "Not Recommended",
-      reason: "This purchase pushes your balance into the red before next salary.",
-      scoreImpact: -Math.max(20, drop),
-      newSafeDailySpend,
+      reason: explain("This purchase pushes your balance into the red before next salary."),
+      currentBalance, balanceAfter, newSurvivalScore, scoreImpact, newSafeDailySpend,
+      monthlyBudgetImpactPct, goalDelayDays,
     };
   }
-  if (price > plan.summary.safeDailySpend * daysLeft * 0.5 || drop >= 10) {
+  if (price > plan.summary.safeDailySpend * daysLeft * 0.5 || monthlyBudgetImpactPct >= 15) {
     return {
       verdict: "Wait Until Salary",
-      reason: "You can afford it, but it noticeably tightens the rest of the month.",
-      scoreImpact: -Math.max(10, drop),
-      newSafeDailySpend,
+      reason: explain("You can afford it, but it noticeably tightens the rest of the month."),
+      currentBalance, balanceAfter, newSurvivalScore, scoreImpact, newSafeDailySpend,
+      monthlyBudgetImpactPct, goalDelayDays,
     };
   }
   return {
     verdict: "Safe to Buy",
-    reason: "Comfortably within your safe spend for the month.",
-    scoreImpact: -drop,
-    newSafeDailySpend,
+    reason: explain("Comfortably within your safe spend for the month."),
+    currentBalance, balanceAfter, newSurvivalScore, scoreImpact, newSafeDailySpend,
+    monthlyBudgetImpactPct, goalDelayDays,
   };
 }
