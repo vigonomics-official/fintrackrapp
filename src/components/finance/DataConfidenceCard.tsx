@@ -133,3 +133,38 @@ export function DataConfidenceCard({ confidence, onImprove, onStart, className }
     </Card>
   );
 }
+
+function ConfidenceDetails({ confidence }: { confidence: ConfidenceResult }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="mt-3">
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between rounded-md bg-muted/40 px-2 py-1.5 text-left text-[11px] font-medium text-foreground/80 transition-colors hover:bg-muted"
+        >
+          <span>
+            Why {confidence.score}% — {confidence.present.length} present, {confidence.missing.length} missing
+          </span>
+          <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", open && "rotate-180")} />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <ul className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+          {confidence.present.map((f) => (
+            <li key={String(f.key)} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Check className="h-3 w-3 shrink-0 text-success" />
+              <span className="min-w-0 flex-1 truncate">{f.label}</span>
+            </li>
+          ))}
+          {confidence.missing.map((f) => (
+            <li key={String(f.key)} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <X className="h-3 w-3 shrink-0 text-destructive/70" />
+              <span className="min-w-0 flex-1 truncate">{f.label}</span>
+            </li>
+          ))}
+        </ul>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
