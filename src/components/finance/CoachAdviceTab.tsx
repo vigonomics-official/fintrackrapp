@@ -11,13 +11,19 @@ import {
   X,
   ClipboardList,
   ArrowRight,
+  ChevronDown,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatCurrency } from "@/lib/currency";
 import { COACH_INPUT_STORAGE_KEY } from "@/components/finance/AnalyzeForm";
 import type { CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+import { analyzeMock } from "@/lib/ai-coach-analysis";
 import {
   generateAdviceMock,
   COACH_ADVICE_SAVED_KEY,
