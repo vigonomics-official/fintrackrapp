@@ -628,3 +628,36 @@ export function evaluatePurchase(
     monthlyBudgetImpactPct, goalDelayDays,
   };
 }
+
+// -------- Impact Preview --------
+export type ImpactPreview = {
+  survivalScore: { current: number; projected: number };
+  monthlySavings: { current: number; projected: number };
+  goalCompletion: { current: string; projected: string; monthsSaved: number };
+};
+
+export function computeImpactPreview(action: TopAction, plan: MonthlyPlan): ImpactPreview {
+  const curScore = plan.summary.survivalScore;
+  const projScore = clamp(curScore + action.scoreBoost, 0, 100);
+  const curSavings = plan.summary.monthlySavingsTarget;
+  const projSavings = curSavings + action.monthlySavings;
+
+  const g = plan.goal;
+  const remaining = Math.max(0, g.target - g.current);
+  const curMonths = g.monthlyTarget > 0 ? Math.ceil(remaining / g.monthlyTarget) : g.etaMonths;
+  const projMonthly = g.monthlyTarget + action.monthlySavings;
+  const projMonths = projMonthly > 0 ? Math.ceil(remaining / projMonthly) : curMonths;
+  const monthsSaved = Math.max(0, curMonths - projMonths);
+
+  const fmt = (months: number) => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    return d.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+  };
+  return {
+    survivalScore: { current: curScore, projected: projScore },
+    monthlySavings: { current: curSavings, projected: projSavings },
+    goalCompletion: { current: fmt(curMonths), projected: fmt(projMonths), monthsSaved },
+  };
+}
