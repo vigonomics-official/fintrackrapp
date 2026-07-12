@@ -271,29 +271,47 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
 
 function RecommendationCard({
   rec,
+  input,
   saved,
   onSave,
   onDismiss,
   onApply,
 }: {
   rec: Recommendation;
+  input: CoachAnalysisInput;
   saved: boolean;
   onSave: () => void;
   onDismiss: () => void;
   onApply: () => void;
 }) {
+  const [preview, setPreview] = useState<AdviceImpactPreview | null>(null);
+  const showPreview = () => setPreview(computeAdviceImpact(rec, input));
+  const apply = () => {
+    setPreview(computeAdviceImpact(rec, input));
+    onApply();
+  };
+
   return (
     <Card className="p-3 shadow-soft sm:p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-display text-sm font-semibold leading-snug">{rec.title}</p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{rec.explanation}</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+            <span className="font-medium text-foreground/80">Why:</span> {rec.why}
+          </p>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
               Save {formatCurrency(rec.monthlySavings)}/mo
             </Badge>
             <Badge variant="outline" className={`h-5 px-1.5 text-[10px] ${difficultyStyles[rec.difficulty]}`}>
               {rec.difficulty}
+            </Badge>
+            <Badge variant="outline" className={`h-5 px-1.5 text-[10px] ${priorityStyles[rec.priority]}`}>
+              {rec.priority}
+            </Badge>
+            <Badge variant="outline" className="h-5 px-1.5 text-[10px] text-muted-foreground">
+              <Clock className="mr-1 h-3 w-3" /> {rec.estimatedTime}
             </Badge>
           </div>
         </div>
@@ -306,6 +324,10 @@ function RecommendationCard({
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
+
+      <HowAiCalculated dataUsed={rec.dataUsed} />
+      {preview && <AdviceImpactBlock preview={preview} />}
+
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" variant="outline" className="h-8 px-2 text-xs" onClick={onSave}>
           {saved ? (
@@ -318,11 +340,112 @@ function RecommendationCard({
             </>
           )}
         </Button>
-        <Button size="sm" className="h-8 px-2 text-xs" onClick={onApply}>
+        <Button size="sm" variant="outline" className="h-8 px-2 text-xs" onClick={showPreview}>
+          <TrendingUp className="mr-1 h-3.5 w-3.5" /> Check Impact
+        </Button>
+        <Button size="sm" className="h-8 px-2 text-xs" onClick={apply}>
           <ClipboardList className="mr-1 h-3.5 w-3.5" /> Apply to Planner
         </Button>
       </div>
     </Card>
+  );
+}
+
+// --- Shared helper UI ---
+
+function HowAiCalculated({ dataUsed }: { dataUsed: string[] }) {
+  const [open, setOpen] = useState(false);
+  if (!dataUsed || dataUsed.length === 0) return null;
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="mt-3">
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between rounded-md bg-muted/40 px-2 py-1.5 text-left text-[11px] font-medium text-foreground/80 transition-colors hover:bg-muted"
+        >
+          <span>How AI calculated this</span>
+          <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <ul className="mt-2 grid grid-cols-2 gap-1">
+          {dataUsed.map((d) => (
+            <li key={d} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <CheckCircle2 className="h-3 w-3 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1 truncate">{d}</span>
+            </li>
+          ))}
+        </ul>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+type AdviceImpactPreview = {
+  score: { current: number; projected: number };
+  savings: { current: number; projected: number };
+  goal: { current: string; projected: string; monthsSaved: number };
+};
+
+function computeAdviceImpact(rec: Recommendation, input: CoachAnalysisInput): AdviceImpactPreview {
+  const result = analyzeMock(input);
+  const boostMap: Record<Priority, number> = { High: 6, Medium: 4, Low: 2 };
+  const projectedScore = Math.min(100, result.healthScore + boostMap[rec.priority]);
+  const currentSavings = Math.max(0, Math.round(result.monthlySurplus));
+  const projectedSavings = currentSavings + rec.monthlySavings;
+
+  const gf = result.goalForecast;
+  const remaining = Math.max(0, gf.targetAmount - 0);
+  const curMonths = gf.monthlyTarget > 0 ? Math.ceil(remaining / gf.monthlyTarget) : gf.etaMonths;
+  const projMonthly = gf.monthlyTarget + rec.monthlySavings;
+  const projMonths = projMonthly > 0 ? Math.ceil(remaining / projMonthly) : curMonths;
+  const monthsSaved = Math.max(0, curMonths - projMonths);
+  const fmt = (m: number) => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + m);
+    return d.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+  };
+  return {
+    score: { current: result.healthScore, projected: projectedScore },
+    savings: { current: currentSavings, projected: projectedSavings },
+    goal: { current: fmt(curMonths), projected: fmt(projMonths), monthsSaved },
+  };
+}
+
+function AdviceImpactBlock({ preview }: { preview: AdviceImpactPreview }) {
+  const scoreUp = preview.score.projected > preview.score.current;
+  const savingsUp = preview.savings.projected > preview.savings.current;
+  const goalUp = preview.goal.monthsSaved > 0;
+  return (
+    <div className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3">
+      <p className="font-display text-[11px] font-semibold uppercase tracking-wide text-success">If you follow this</p>
+      <div className="mt-2 space-y-2 text-[11px]">
+        <ImpactRow label="Survival Score" current={`${preview.score.current}`} projected={`${preview.score.projected}`} up={scoreUp} />
+        <ImpactRow label="Monthly Savings" current={formatCurrency(preview.savings.current)} projected={formatCurrency(preview.savings.projected)} up={savingsUp} />
+        <ImpactRow
+          label="Goal Completion"
+          current={preview.goal.current}
+          projected={preview.goal.projected}
+          up={goalUp}
+          note={goalUp ? `${preview.goal.monthsSaved} mo sooner` : undefined}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ImpactRow({ label, current, projected, up, note }: { label: string; current: string; projected: string; up: boolean; note?: string }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-1.5 tabular-nums">
+        <span className="text-muted-foreground/80 line-through">{current}</span>
+        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+        <span className={`font-semibold ${up ? "text-success" : "text-foreground"}`}>{projected}</span>
+        {note && <span className="text-[10px] text-success">({note})</span>}
+      </span>
+    </div>
   );
 }
 
