@@ -507,12 +507,12 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
   const seenId = new Set<string>();
   const seenTitle = new Set<string>();
   const deduped: TopAction[] = [];
-  for (const a of list) {
-    const t = a.title.trim().toLowerCase();
-    if (seenId.has(a.id) || seenTitle.has(t)) continue;
-    seenId.add(a.id);
+  for (const act of list) {
+    const t = act.title.trim().toLowerCase();
+    if (seenId.has(act.id) || seenTitle.has(t)) continue;
+    seenId.add(act.id);
     seenTitle.add(t);
-    deduped.push(a);
+    deduped.push(act);
   }
   return deduped.slice(0, 5);
 }
