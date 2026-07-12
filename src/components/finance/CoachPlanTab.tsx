@@ -165,7 +165,7 @@ function PlanBody({ plan, input, onRegen }: { plan: MonthlyPlan; input: CoachAna
       {top && (
         <>
           <SectionHeader icon={<Flame className="h-4 w-4 text-destructive" />} title="Today's Priority" />
-          <PriorityCard action={top} />
+          <PriorityCard action={top} plan={plan} />
         </>
       )}
 
