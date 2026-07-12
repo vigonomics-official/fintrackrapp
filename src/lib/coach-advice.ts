@@ -16,17 +16,24 @@ export type FeaturedAdvice = {
   id: string;
   icon: string;
   message: string;
+  why: string;
   priority: Priority;
   estimatedSavings: number;
+  estimatedTime: string;
   confidence: number; // 0-100
+  dataUsed: string[];
 };
 
 export type Recommendation = {
   id: string;
   title: string;
   explanation: string;
+  why: string;
   monthlySavings: number;
   difficulty: Difficulty;
+  estimatedTime: string;
+  priority: Priority;
+  dataUsed: string[];
 };
 
 export type QuickWin = { id: string; text: string };
