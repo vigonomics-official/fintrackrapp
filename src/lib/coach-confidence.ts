@@ -85,12 +85,17 @@ function messageFor(level: ConfidenceLevel): string {
 export function computeConfidence(input: Partial<CoachAnalysisInput> | null | undefined): ConfidenceResult {
   const total = CONFIDENCE_FIELDS.length;
   const missing: ConfidenceField[] = [];
+  const present: ConfidenceField[] = [];
   let filled = 0;
 
   for (const f of CONFIDENCE_FIELDS) {
     const v = input ? (input as Record<string, unknown>)[f.key] : undefined;
-    if (isFieldFilled(f.key, v)) filled += 1;
-    else missing.push(f);
+    if (isFieldFilled(f.key, v)) {
+      filled += 1;
+      present.push(f);
+    } else {
+      missing.push(f);
+    }
   }
 
   const score = Math.round((filled / total) * 100);
@@ -104,6 +109,7 @@ export function computeConfidence(input: Partial<CoachAnalysisInput> | null | un
     filled,
     total,
     missing,
+    present,
   };
 }
 
