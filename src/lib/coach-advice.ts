@@ -93,9 +93,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "featured-food",
       icon: "💡",
       message: `Skip food delivery twice this week to save approximately ₹${save}.`,
+      why: `Food is ${round(foodRatio)}% of your salary — above the 12% healthy cap.`,
       priority: foodRatio > 20 ? "High" : "Medium",
       estimatedSavings: save,
+      estimatedTime: "This week",
       confidence: computeConfidence(input, result),
+      dataUsed: ["Salary", "Food", "Monthly Spending"],
     };
   } else if (transportRatio > 8 && monthlyTransport > 0) {
     const save = Math.max(150, round(monthlyTransport * 0.15));
@@ -103,9 +106,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "featured-transport",
       icon: "🚌",
       message: `Pool or use public transport this week to save around ₹${save}.`,
+      why: `Transport is ${round(transportRatio)}% of your salary — above the 8% healthy range.`,
       priority: "Medium",
       estimatedSavings: save,
+      estimatedTime: "This week",
       confidence: computeConfidence(input, result),
+      dataUsed: ["Salary", "Transport"],
     };
   } else if (result.monthlySurplus > 0 && monthlyInvestments === 0) {
     const save = Math.max(500, round(monthlySalary * 0.05));
@@ -113,9 +119,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "featured-invest",
       icon: "📈",
       message: `Start a small SIP of ₹${save}/month — future you will thank you.`,
+      why: "You have monthly surplus but no active investments yet.",
       priority: "High",
       estimatedSavings: save,
+      estimatedTime: "Next month",
       confidence: computeConfidence(input, result),
+      dataUsed: ["Salary", "Investments", "Goal"],
     };
   } else {
     const save = Math.max(300, round(monthlySalary * 0.02));
@@ -123,9 +132,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "featured-default",
       icon: "💡",
       message: `Trim one small recurring expense this week to save around ₹${save}.`,
+      why: "Small recurring cuts compound into a healthier month-end balance.",
       priority: "Low",
       estimatedSavings: save,
+      estimatedTime: "This week",
       confidence: computeConfidence(input, result),
+      dataUsed: ["Salary", "Bills", "Monthly Spending"],
     };
   }
 
@@ -137,8 +149,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "rec-food",
       title: "Reduce food delivery",
       explanation: "Cook one extra meal at home per week and cap delivery to twice weekly.",
+      why: `Food spending is ${round(foodRatio)}% of your salary.`,
       monthlySavings: save,
       difficulty: pickDifficulty(save, monthlySalary),
+      estimatedTime: "This week",
+      priority: foodRatio > 15 ? "High" : "Medium",
+      dataUsed: ["Salary", "Food"],
     });
   }
   if (monthlyBills > 0) {
@@ -147,8 +163,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "rec-subs",
       title: "Audit subscriptions",
       explanation: "Cancel one streaming or app subscription you rarely use.",
+      why: "Bills often hide silent auto-renewing subscriptions.",
       monthlySavings: save,
       difficulty: "Easy",
+      estimatedTime: "10 min today",
+      priority: "Low",
+      dataUsed: ["Bills", "Previous Transactions"],
     });
   }
   if (monthlyTransport > 0) {
@@ -157,8 +177,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "rec-transport",
       title: "Lower transport costs",
       explanation: "Try a monthly pass, carpool, or cycle two days a week.",
+      why: `Transport is ${round(transportRatio)}% of your salary.`,
       monthlySavings: save,
       difficulty: pickDifficulty(save, monthlySalary),
+      estimatedTime: "This month",
+      priority: transportRatio > 12 ? "Medium" : "Low",
+      dataUsed: ["Salary", "Transport"],
     });
   }
   if (monthlyEmi > 0 && result.emiRatio >= 25) {
@@ -167,8 +191,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "rec-emi",
       title: "Prepay highest-interest EMI",
       explanation: "Use any surplus to shave months off your most expensive loan.",
+      why: `EMIs are ${round(result.emiRatio)}% of your salary.`,
       monthlySavings: save,
       difficulty: "Hard",
+      estimatedTime: "This month",
+      priority: "High",
+      dataUsed: ["Salary", "EMI", "Current Balance"],
     });
   }
   if (emergencyMonths < 6) {
@@ -177,8 +205,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "rec-emergency",
       title: "Build emergency buffer",
       explanation: "Auto-transfer a fixed amount on salary day before you spend.",
+      why: `Your buffer covers only ${emergencyMonths.toFixed(1)} months of expenses (target: 6).`,
       monthlySavings: save,
       difficulty: "Medium",
+      estimatedTime: "Ongoing",
+      priority: emergencyMonths < 3 ? "High" : "Medium",
+      dataUsed: ["Salary", "Savings", "Monthly Spending"],
     });
   }
   if (monthlyInvestments === 0 && result.monthlySurplus > 0) {
@@ -187,8 +219,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "rec-sip",
       title: "Start a monthly SIP",
       explanation: "Even 5% of your salary compounds strongly over years.",
+      why: "You have surplus but no investments running.",
       monthlySavings: save,
       difficulty: "Easy",
+      estimatedTime: "Next month",
+      priority: "High",
+      dataUsed: ["Salary", "Investments", "Goal"],
     });
   }
   if (otherMonthlyExpenses > monthlySalary * 0.1) {
@@ -197,8 +233,12 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
       id: "rec-other",
       title: "Trim discretionary spending",
       explanation: "Set a weekly cap for impulse buys and review it every Sunday.",
+      why: `Other spending is ${round((otherMonthlyExpenses / Math.max(1, monthlySalary)) * 100)}% of your salary.`,
       monthlySavings: save,
       difficulty: "Medium",
+      estimatedTime: "This week",
+      priority: "Medium",
+      dataUsed: ["Salary", "Other Expenses"],
     });
   }
   // Always-available fallbacks so we can reach 5.
@@ -206,18 +246,37 @@ export function generateAdviceMock(input: CoachAnalysisInput): CoachAdvice {
     id: "rec-review",
     title: "Weekly 10-minute money review",
     explanation: "Skim last week's transactions to catch leaks early.",
+    why: "Weekly reviews catch spending leaks before they compound.",
     monthlySavings: Math.max(200, round(monthlySalary * 0.01)),
     difficulty: "Easy",
+    estimatedTime: "10 min / week",
+    priority: "Low",
+    dataUsed: ["Previous Transactions", "Monthly Spending"],
   });
   pool.push({
     id: "rec-cap",
     title: "Set a weekend spend cap",
     explanation: "Decide your Saturday-Sunday budget before Friday evening.",
+    why: "Weekends drive most impulse spending — a cap prevents overshoot.",
     monthlySavings: Math.max(300, round(monthlySalary * 0.015)),
     difficulty: "Easy",
+    estimatedTime: "This weekend",
+    priority: "Low",
+    dataUsed: ["Salary", "Other Expenses"],
   });
 
-  const recommendations = pool.slice(0, 5);
+  // Dedupe by id and case-insensitive title, and never repeat the featured advice topic.
+  const seenId = new Set<string>([featured.id]);
+  const seenTitle = new Set<string>([featured.message.trim().toLowerCase()]);
+  const deduped: Recommendation[] = [];
+  for (const rec of pool) {
+    const t = rec.title.trim().toLowerCase();
+    if (seenId.has(rec.id) || seenTitle.has(t)) continue;
+    seenId.add(rec.id);
+    seenTitle.add(t);
+    deduped.push(rec);
+  }
+  const recommendations = deduped.slice(0, 5);
 
   // ---------- Good habits ----------
   const goodHabits: HabitNote[] = [];
