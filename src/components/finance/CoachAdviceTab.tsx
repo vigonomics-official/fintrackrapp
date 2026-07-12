@@ -211,6 +211,7 @@ export function CoachAdviceTab({
             <RecommendationCard
               key={rec.id}
               rec={rec}
+              input={input!}
               saved={saved.has(rec.id)}
               onSave={() => toggleSave(rec.id)}
               onDismiss={() => dismiss(rec.id)}
