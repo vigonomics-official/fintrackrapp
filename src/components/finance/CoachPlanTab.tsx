@@ -43,6 +43,7 @@ import {
   evaluatePurchase,
   markBillPaid,
   unmarkBillPaid,
+  computeImpactPreview,
   type MonthlyPlan,
   type BillItem,
   type BillStatus,
@@ -50,6 +51,7 @@ import {
   type ActionPriority,
   type ActionDifficulty,
   type BuyCheckResult,
+  type ImpactPreview,
 } from "@/lib/coach-plan";
 
 const priorityStyles: Record<ActionPriority, string> = {
