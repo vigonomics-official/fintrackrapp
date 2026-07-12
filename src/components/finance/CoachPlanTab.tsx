@@ -43,6 +43,7 @@ import {
   evaluatePurchase,
   markBillPaid,
   unmarkBillPaid,
+  computeImpactPreview,
   type MonthlyPlan,
   type BillItem,
   type BillStatus,
@@ -50,6 +51,7 @@ import {
   type ActionPriority,
   type ActionDifficulty,
   type BuyCheckResult,
+  type ImpactPreview,
 } from "@/lib/coach-plan";
 
 const priorityStyles: Record<ActionPriority, string> = {
@@ -163,7 +165,7 @@ function PlanBody({ plan, input, onRegen }: { plan: MonthlyPlan; input: CoachAna
       {top && (
         <>
           <SectionHeader icon={<Flame className="h-4 w-4 text-destructive" />} title="Today's Priority" />
-          <PriorityCard action={top} />
+          <PriorityCard action={top} plan={plan} />
         </>
       )}
 
@@ -176,7 +178,7 @@ function PlanBody({ plan, input, onRegen }: { plan: MonthlyPlan; input: CoachAna
           defaultOpen={false}
         >
           <div className="space-y-2">
-            {others.map((a) => <CompactActionCard key={a.id} action={a} />)}
+            {others.map((a) => <CompactActionCard key={a.id} action={a} plan={plan} />)}
           </div>
         </CollapsibleSection>
       )}
@@ -385,13 +387,16 @@ function SummaryCard({
   );
 }
 
-function PriorityCard({ action }: { action: TopAction }) {
+function PriorityCard({ action, plan }: { action: TopAction; plan: MonthlyPlan }) {
   const [added, setAdded] = useState(false);
+  const [preview, setPreview] = useState<ImpactPreview | null>(null);
   const apply = () => {
     enqueuePlannerTask({ id: `plan-action-${action.id}`, title: action.title, detail: action.detail });
+    setPreview(computeImpactPreview(action, plan));
     setAdded(true);
     toast.success("✓ Added to Planner", { description: action.title });
   };
+  const showPreview = () => setPreview(computeImpactPreview(action, plan));
   return (
     <Card className="border-destructive/20 bg-destructive/5 p-4 shadow-soft">
       <div className="flex items-start gap-2">
@@ -402,6 +407,9 @@ function PriorityCard({ action }: { action: TopAction }) {
           <p className="mt-1 text-xs leading-relaxed">{action.detail}</p>
         </div>
       </div>
+
+      <WhyThisMatters bullets={action.whyMatters} />
+
       <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
         <MiniStat label="Monthly savings" value={formatCurrency(action.monthlySavings)} />
         <MiniStat label="Score boost" value={`+${action.scoreBoost}`} />
@@ -409,8 +417,19 @@ function PriorityCard({ action }: { action: TopAction }) {
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         <Badge variant="outline" className={`h-5 px-1.5 text-[10px] ${priorityStyles[action.priority]}`}>{action.priority} Priority</Badge>
         <Badge variant="outline" className={`h-5 px-1.5 text-[10px] ${difficultyStyles[action.difficulty]}`}>{action.difficulty}</Badge>
+        <Badge variant="outline" className="h-5 px-1.5 text-[10px] text-muted-foreground">
+          <Clock className="mr-1 h-3 w-3" /> {action.estimatedTime}
+        </Badge>
       </div>
-      <div className="mt-3">
+
+      <HowAiCalculated dataUsed={action.dataUsed} />
+
+      {preview && <ImpactPreviewBlock preview={preview} />}
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={showPreview}>
+          <TrendingUp className="mr-1 h-3.5 w-3.5" /> Check Impact
+        </Button>
         <Button size="sm" className="h-8 px-3 text-xs" onClick={apply} disabled={added}>
           {added ? (<><CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Added to Planner</>) : (<><ClipboardList className="mr-1 h-3.5 w-3.5" /> Apply to Planner</>)}
         </Button>
@@ -419,10 +438,104 @@ function PriorityCard({ action }: { action: TopAction }) {
   );
 }
 
-function CompactActionCard({ action }: { action: TopAction }) {
+function WhyThisMatters({ bullets }: { bullets: string[] }) {
+  if (!bullets || bullets.length === 0) return null;
+  return (
+    <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+      <p className="font-display text-[11px] font-semibold uppercase tracking-wide text-primary">Why this matters</p>
+      <ul className="mt-1.5 space-y-1">
+        {bullets.map((b, i) => (
+          <li key={i} className="flex items-start gap-1.5 text-[11px] leading-relaxed text-foreground/90">
+            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+            <span className="min-w-0 flex-1">{b}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function HowAiCalculated({ dataUsed }: { dataUsed: string[] }) {
+  const [open, setOpen] = useState(false);
+  if (!dataUsed || dataUsed.length === 0) return null;
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="mt-3">
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between rounded-md bg-muted/40 px-2 py-1.5 text-left text-[11px] font-medium text-foreground/80 transition-colors hover:bg-muted"
+        >
+          <span>How AI calculated this</span>
+          <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <ul className="mt-2 grid grid-cols-2 gap-1">
+          {dataUsed.map((d) => (
+            <li key={d} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <CheckCircle2 className="h-3 w-3 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1 truncate">{d}</span>
+            </li>
+          ))}
+        </ul>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+function ImpactPreviewBlock({ preview }: { preview: ImpactPreview }) {
+  const scoreUp = preview.survivalScore.projected > preview.survivalScore.current;
+  const savingsUp = preview.monthlySavings.projected > preview.monthlySavings.current;
+  const goalUp = preview.goalCompletion.monthsSaved > 0;
+  return (
+    <div className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3">
+      <p className="font-display text-[11px] font-semibold uppercase tracking-wide text-success">If you follow this</p>
+      <div className="mt-2 space-y-2 text-[11px]">
+        <ImpactRow
+          label="Survival Score"
+          current={`${preview.survivalScore.current}`}
+          projected={`${preview.survivalScore.projected}`}
+          up={scoreUp}
+        />
+        <ImpactRow
+          label="Monthly Savings"
+          current={formatCurrency(preview.monthlySavings.current)}
+          projected={formatCurrency(preview.monthlySavings.projected)}
+          up={savingsUp}
+        />
+        <ImpactRow
+          label="Goal Completion"
+          current={preview.goalCompletion.current}
+          projected={preview.goalCompletion.projected}
+          up={goalUp}
+          note={goalUp ? `${preview.goalCompletion.monthsSaved} mo sooner` : undefined}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ImpactRow({ label, current, projected, up, note }: { label: string; current: string; projected: string; up: boolean; note?: string }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-1.5 tabular-nums">
+        <span className="text-muted-foreground/80 line-through">{current}</span>
+        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+        <span className={`font-semibold ${up ? "text-success" : "text-foreground"}`}>{projected}</span>
+        {note && <span className="text-[10px] text-success">({note})</span>}
+      </span>
+    </div>
+  );
+}
+
+function CompactActionCard({ action, plan }: { action: TopAction; plan: MonthlyPlan }) {
   const [added, setAdded] = useState(false);
+  const [preview, setPreview] = useState<ImpactPreview | null>(null);
+  const [open, setOpen] = useState(false);
   const apply = () => {
     enqueuePlannerTask({ id: `plan-action-${action.id}`, title: action.title, detail: action.detail });
+    setPreview(computeImpactPreview(action, plan));
     setAdded(true);
     toast.success("✓ Added to Planner", { description: action.title });
   };
@@ -434,13 +547,29 @@ function CompactActionCard({ action }: { action: TopAction }) {
           <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{action.detail}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1">
             <Badge variant="outline" className={`h-4 px-1 text-[9px] ${priorityStyles[action.priority]}`}>{action.priority}</Badge>
-            <span className="text-[10px] text-muted-foreground">Save {formatCurrency(action.monthlySavings)}/mo • +{action.scoreBoost}</span>
+            <Badge variant="outline" className={`h-4 px-1 text-[9px] ${difficultyStyles[action.difficulty]}`}>{action.difficulty}</Badge>
+            <span className="text-[10px] text-muted-foreground">Save {formatCurrency(action.monthlySavings)}/mo • +{action.scoreBoost} • {action.estimatedTime}</span>
           </div>
         </div>
         <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-[11px]" onClick={apply} disabled={added}>
           {added ? <CheckCircle2 className="h-3.5 w-3.5 text-success" /> : "Apply"}
         </Button>
       </div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="mt-2 flex w-full items-center justify-between rounded-md bg-muted/30 px-2 py-1 text-left text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted"
+      >
+        <span>Why & how</span>
+        <ChevronDown className={`h-3 w-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2">
+          <WhyThisMatters bullets={action.whyMatters} />
+          <HowAiCalculated dataUsed={action.dataUsed} />
+        </div>
+      )}
+      {preview && <ImpactPreviewBlock preview={preview} />}
     </div>
   );
 }

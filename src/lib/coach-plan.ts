@@ -57,11 +57,28 @@ export type GoalProgress = {
   motivation: string;
 };
 
+export type DataUsedField =
+  | "Salary"
+  | "Current Balance"
+  | "Monthly Spending"
+  | "Investments"
+  | "Bills"
+  | "EMI"
+  | "Food"
+  | "Transport"
+  | "Other Expenses"
+  | "Savings"
+  | "Goal"
+  | "Previous Transactions";
+
 export type TopAction = {
   id: string;
   title: string;
   detail: string;
   reason: string;
+  whyMatters: string[];
+  dataUsed: DataUsedField[];
+  estimatedTime: string;
   priority: ActionPriority;
   monthlySavings: number;
   scoreBoost: number;
@@ -343,13 +360,23 @@ export function generatePlanMock(
 function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAction[] {
   const salary = Math.max(1, input.monthlySalary);
   const list: TopAction[] = [];
+  const foodPct = Math.round((input.monthlyFood / salary) * 100);
+  const emiPct = Math.round((input.monthlyEmi / salary) * 100);
+  const otherPct = Math.round((input.otherMonthlyExpenses / salary) * 100);
 
   if (input.monthlyFood / salary > 0.15) {
     list.push({
       id: "cut-food",
       title: "Reduce food delivery this week",
       detail: "Cap delivery to twice a week and cook the rest.",
-      reason: `Food is ${Math.round((input.monthlyFood / salary) * 100)}% of your salary — above the 15% healthy cap.`,
+      reason: `Food is ${foodPct}% of your salary — above the 15% healthy cap.`,
+      whyMatters: [
+        `Food spending is ${foodPct}% of your salary vs a 15% healthy cap.`,
+        "Cutting this frees cash for savings and your goal.",
+        "Delivery is the easiest lever to pull this week.",
+      ],
+      dataUsed: ["Salary", "Food", "Monthly Spending"],
+      estimatedTime: "This week",
       priority: "High",
       monthlySavings: Math.max(300, Math.round(input.monthlyFood * 0.15)),
       scoreBoost: 6,
@@ -362,6 +389,12 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       title: "Skip unnecessary shopping",
       detail: "Delay non-essentials until after the salary date.",
       reason: "Discretionary spending is trending above a healthy share of income.",
+      whyMatters: [
+        `Other spending is ${otherPct}% of your salary — above the 8% cap.`,
+        "A 48-hour delay filters most impulse buys.",
+      ],
+      dataUsed: ["Salary", "Other Expenses", "Current Balance"],
+      estimatedTime: "This week",
       priority: "Medium",
       monthlySavings: Math.max(300, Math.round(input.otherMonthlyExpenses * 0.2)),
       scoreBoost: 4,
@@ -374,6 +407,12 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       title: "Increase SIP by ₹500 next month",
       detail: "Automate the bump the day after your salary lands.",
       reason: "You have monthly surplus — compound it before it leaks.",
+      whyMatters: [
+        `You end the month with about ${formatShort(a.monthlySurplus)} surplus.`,
+        "Automated SIP bumps compound quietly over years.",
+      ],
+      dataUsed: ["Salary", "Investments", "Monthly Spending", "Goal"],
+      estimatedTime: "Next month",
       priority: "Medium",
       monthlySavings: 500,
       scoreBoost: 3,
@@ -386,6 +425,12 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       title: "Review subscriptions on Sunday",
       detail: "Cancel anything unused in the last 30 days.",
       reason: "Subscriptions quietly compound — a 10-minute audit usually finds one.",
+      whyMatters: [
+        "Bills include recurring subscriptions that renew silently.",
+        "One cancellation typically saves 10% of monthly bills.",
+      ],
+      dataUsed: ["Bills", "Previous Transactions"],
+      estimatedTime: "10 minutes this week",
       priority: "Low",
       monthlySavings: Math.max(200, Math.round(input.monthlyBills * 0.1)),
       scoreBoost: 2,
@@ -397,6 +442,12 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
     title: "Maintain emergency savings",
     detail: "Keep at least 3 months of expenses parked liquid.",
     reason: "Buffers protect your score when the unexpected hits.",
+    whyMatters: [
+      "Your emergency buffer directly drives your survival score.",
+      "Auto-transfer on salary day makes it effortless.",
+    ],
+    dataUsed: ["Salary", "Savings", "Monthly Spending"],
+    estimatedTime: "Ongoing",
     priority: a.risks.find((r) => r.key === "emergency")?.level === "High" ? "High" : "Medium",
     monthlySavings: Math.max(500, Math.round(salary * 0.05)),
     scoreBoost: 5,
@@ -408,7 +459,13 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       id: "prepay-emi",
       title: "Prepay the highest-interest EMI",
       detail: "EMIs are eating a big chunk — pay down the priciest one.",
-      reason: `EMIs are ${Math.round((input.monthlyEmi / salary) * 100)}% of your salary.`,
+      reason: `EMIs are ${emiPct}% of your salary.`,
+      whyMatters: [
+        `EMIs are ${emiPct}% of your salary — above the 30% risk line.`,
+        "Prepaying the priciest loan first cuts total interest fastest.",
+      ],
+      dataUsed: ["Salary", "EMI", "Current Balance"],
+      estimatedTime: "This month",
       priority: "High",
       monthlySavings: Math.max(500, Math.round(input.monthlyEmi * 0.05)),
       scoreBoost: 8,
@@ -422,6 +479,9 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       title: "Do a 10-minute weekly money review",
       detail: "Every Sunday, review last week's spending in FinTrackr.",
       reason: "Small habits compound faster than big overhauls.",
+      whyMatters: ["Weekly reviews catch leaks before they grow."],
+      dataUsed: ["Previous Transactions", "Monthly Spending"],
+      estimatedTime: "10 min / week",
       priority: "Low",
       monthlySavings: Math.max(300, Math.round(salary * 0.01)),
       scoreBoost: 2,
@@ -432,6 +492,9 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
       title: "Cash-only weekends",
       detail: "Withdraw a weekend cap in cash to curb impulse buys.",
       reason: "Cash friction reduces small impulse purchases.",
+      whyMatters: ["Cash creates friction that curbs impulse buys."],
+      dataUsed: ["Salary", "Other Expenses"],
+      estimatedTime: "This weekend",
       priority: "Low",
       monthlySavings: 500,
       scoreBoost: 2,
@@ -439,7 +502,23 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
     },
   ];
   while (list.length < 5 && filler.length) list.push(filler.shift()!);
-  return list.slice(0, 5);
+
+  // Dedupe by id and by title (case-insensitive), preserving order.
+  const seenId = new Set<string>();
+  const seenTitle = new Set<string>();
+  const deduped: TopAction[] = [];
+  for (const act of list) {
+    const t = act.title.trim().toLowerCase();
+    if (seenId.has(act.id) || seenTitle.has(t)) continue;
+    seenId.add(act.id);
+    seenTitle.add(t);
+    deduped.push(act);
+  }
+  return deduped.slice(0, 5);
+}
+
+function formatShort(n: number): string {
+  return `₹${Math.round(n).toLocaleString("en-IN")}`;
 }
 
 // -------- Planner integration --------
@@ -547,5 +626,38 @@ export function evaluatePurchase(
     reason: explain("Comfortably within your safe spend for the month."),
     currentBalance, balanceAfter, newSurvivalScore, scoreImpact, newSafeDailySpend,
     monthlyBudgetImpactPct, goalDelayDays,
+  };
+}
+
+// -------- Impact Preview --------
+export type ImpactPreview = {
+  survivalScore: { current: number; projected: number };
+  monthlySavings: { current: number; projected: number };
+  goalCompletion: { current: string; projected: string; monthsSaved: number };
+};
+
+export function computeImpactPreview(action: TopAction, plan: MonthlyPlan): ImpactPreview {
+  const curScore = plan.summary.survivalScore;
+  const projScore = clamp(curScore + action.scoreBoost, 0, 100);
+  const curSavings = plan.summary.monthlySavingsTarget;
+  const projSavings = curSavings + action.monthlySavings;
+
+  const g = plan.goal;
+  const remaining = Math.max(0, g.target - g.current);
+  const curMonths = g.monthlyTarget > 0 ? Math.ceil(remaining / g.monthlyTarget) : g.etaMonths;
+  const projMonthly = g.monthlyTarget + action.monthlySavings;
+  const projMonths = projMonthly > 0 ? Math.ceil(remaining / projMonthly) : curMonths;
+  const monthsSaved = Math.max(0, curMonths - projMonths);
+
+  const fmt = (months: number) => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    return d.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+  };
+  return {
+    survivalScore: { current: curScore, projected: projScore },
+    monthlySavings: { current: curSavings, projected: projSavings },
+    goalCompletion: { current: fmt(curMonths), projected: fmt(projMonths), monthsSaved },
   };
 }
