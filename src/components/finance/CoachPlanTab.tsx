@@ -178,7 +178,7 @@ function PlanBody({ plan, input, onRegen }: { plan: MonthlyPlan; input: CoachAna
           defaultOpen={false}
         >
           <div className="space-y-2">
-            {others.map((a) => <CompactActionCard key={a.id} action={a} />)}
+            {others.map((a) => <CompactActionCard key={a.id} action={a} plan={plan} />)}
           </div>
         </CollapsibleSection>
       )}
