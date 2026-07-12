@@ -57,11 +57,28 @@ export type GoalProgress = {
   motivation: string;
 };
 
+export type DataUsedField =
+  | "Salary"
+  | "Current Balance"
+  | "Monthly Spending"
+  | "Investments"
+  | "Bills"
+  | "EMI"
+  | "Food"
+  | "Transport"
+  | "Other Expenses"
+  | "Savings"
+  | "Goal"
+  | "Previous Transactions";
+
 export type TopAction = {
   id: string;
   title: string;
   detail: string;
   reason: string;
+  whyMatters: string[];
+  dataUsed: DataUsedField[];
+  estimatedTime: string;
   priority: ActionPriority;
   monthlySavings: number;
   scoreBoost: number;
