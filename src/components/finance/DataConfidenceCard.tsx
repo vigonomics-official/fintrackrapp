@@ -105,11 +105,8 @@ export function DataConfidenceCard({ confidence, onImprove, onStart, className }
 
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{confidence.message}</p>
 
-          {confidence.missing.length > 0 && confidence.level !== "empty" && (
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              <span className="font-medium text-foreground/80">Missing:</span>{" "}
-              {confidence.missing.map((m) => m.label).join(", ")}
-            </p>
+          {confidence.level !== "empty" && (confidence.present.length > 0 || confidence.missing.length > 0) && (
+            <ConfidenceDetails confidence={confidence} />
           )}
 
           {(showImprove || showStart) && (
