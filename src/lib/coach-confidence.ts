@@ -20,6 +20,7 @@ export type ConfidenceResult = {
   filled: number;
   total: number;
   missing: ConfidenceField[];
+  present: ConfidenceField[];
 };
 
 // The 12 fields we consider "required" for a confident analysis.
