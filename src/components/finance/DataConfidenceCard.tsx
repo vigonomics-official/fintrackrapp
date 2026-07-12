@@ -1,7 +1,9 @@
-import { ShieldCheck, ShieldAlert, ShieldQuestion, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { ShieldCheck, ShieldAlert, ShieldQuestion, Sparkles, ChevronDown, Check, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import type { ConfidenceResult, ConfidenceLevel } from "@/lib/coach-confidence";
 
