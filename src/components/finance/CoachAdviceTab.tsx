@@ -164,14 +164,21 @@ export function CoachAdviceTab({
               </Badge>
             </div>
             <p className="mt-1.5 text-sm leading-relaxed">{advice.featured.message}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+              <span className="font-medium text-foreground/80">Why:</span> {advice.featured.why}
+            </p>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               <span>
                 Est. savings <span className="font-semibold text-foreground">{formatCurrency(advice.featured.estimatedSavings)}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" /> {advice.featured.estimatedTime}
               </span>
               <span>
                 Confidence <span className="font-semibold text-foreground">{advice.featured.confidence}%</span>
               </span>
             </div>
+            <HowAiCalculated dataUsed={advice.featured.dataUsed} />
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant="outline" className="h-8 px-2 text-xs" onClick={() => toggleSave(advice.featured.id)}>
                 {saved.has(advice.featured.id) ? (
