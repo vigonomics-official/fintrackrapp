@@ -7,6 +7,12 @@ import type { Transaction, Category } from "@/hooks/use-finance";
 import type { SalarySettings } from "@/hooks/use-salary-settings";
 import { payDayInMonth } from "@/lib/salary-cycle";
 import type { CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+import {
+  getFinancialProfile,
+  getRememberedBalance,
+  getRememberedSavings,
+  type FinancialProfile,
+} from "@/lib/financial-profile";
 
 export type AutofillKey =
   | "monthlySalary"
@@ -24,7 +30,7 @@ export type AutofillKey =
 /** Where a value ultimately came from. Kept as a small union so future
  *  providers (SMS parser, CSV importer, planner) can slot in without UI
  *  changes. */
-export type CoachDataSource = "auto" | "sms" | "manual" | "planner" | "csv";
+export type CoachDataSource = "auto" | "profile" | "sms" | "manual" | "planner" | "csv";
 
 export type CoachAutofill = {
   values: Partial<CoachAnalysisInput>;
@@ -112,8 +118,17 @@ export function buildCoachAutofill(args: {
   transactions: Transaction[] | undefined;
   categories: Category[] | undefined;
   salary: SalarySettings;
+  /** Overrides the Financial Profile lookup (used only for testing). */
+  profile?: FinancialProfile;
+  /**
+   * Minimum number of expense transactions in a bucket before we trust the
+   * derived monthly total. Below this the bucket is reported as unknown and
+   * the user is asked for just that field.
+   */
+  minBucketTx?: number;
 }): CoachAutofill {
-  const { transactions = [], categories = [], salary } = args;
+  const { transactions = [], categories = [], salary, minBucketTx = 2 } = args;
+  const profile = args.profile ?? getFinancialProfile();
   const catById = new Map(categories.map((c) => [c.id, c]));
 
   const now = new Date();
@@ -125,11 +140,15 @@ export function buildCoachAutofill(args: {
 
   const values: Partial<CoachAnalysisInput> = {};
   const filled = new Set<AutofillKey>();
+  const sources: Partial<Record<AutofillKey, CoachDataSource>> = {};
 
-  // Salary = sum of all income transactions this month.
+  // Track how many expense txs contributed to each bucket, to decide whether
+  // we have "enough" history to trust the derived total.
   let salaryTotal = 0;
   const bucketTotals: Record<string, number> = {};
+  const bucketCount: Record<string, number> = {};
   let otherExpense = 0;
+  let otherCount = 0;
 
   for (const t of monthTx) {
     if (t.type === "income") {
@@ -141,71 +160,144 @@ export function buildCoachAutofill(args: {
     const bucket = bucketForCategory(cat?.name);
     if (bucket) {
       bucketTotals[bucket] = (bucketTotals[bucket] ?? 0) + t.amount;
+      bucketCount[bucket] = (bucketCount[bucket] ?? 0) + 1;
     } else {
       otherExpense += t.amount;
+      otherCount += 1;
     }
   }
 
-  // Prefer the user's saved salary amount from Profile; fall back to income total.
-  if (salary.amount != null && salary.amount > 0) {
+  // ── Salary: Profile → salary settings → income total.
+  if (profile.monthlySalary != null && profile.monthlySalary > 0) {
+    values.monthlySalary = profile.monthlySalary;
+    filled.add("monthlySalary");
+    sources.monthlySalary = "profile";
+  } else if (salary.amount != null && salary.amount > 0) {
     values.monthlySalary = salary.amount;
     filled.add("monthlySalary");
+    sources.monthlySalary = "profile";
   } else if (salaryTotal > 0) {
     values.monthlySalary = Math.round(salaryTotal);
     filled.add("monthlySalary");
+    sources.monthlySalary = "auto";
   } else {
     values.monthlySalary = 0;
   }
 
-  // Salary date from Profile only. Leave blank if unavailable.
-  if (salary.payDay != null) {
+  // ── Salary date: Profile → salary settings.
+  if (profile.salaryDate) {
+    values.salaryDate = profile.salaryDate;
+    filled.add("salaryDate");
+    sources.salaryDate = "profile";
+  } else if (salary.payDay != null) {
     const d = payDayInMonth(y, m, salary.payDay);
     values.salaryDate = d.toISOString().slice(0, 10);
     filled.add("salaryDate");
+    sources.salaryDate = "profile";
   }
 
-  // Category totals (always report, defaulting to 0 when the category is absent).
-  const expenseKeys: AutofillKey[] = [
-    "monthlyRent",
+  // ── Rent + EMI: Profile takes priority (permanent monthly commitments).
+  if (profile.monthlyRent != null) {
+    values.monthlyRent = profile.monthlyRent;
+    filled.add("monthlyRent");
+    sources.monthlyRent = "profile";
+  } else if ((bucketCount["monthlyRent"] ?? 0) >= 1) {
+    values.monthlyRent = Math.round(bucketTotals["monthlyRent"] ?? 0);
+    filled.add("monthlyRent");
+    sources.monthlyRent = "auto";
+  }
+  if (profile.monthlyEmi != null) {
+    values.monthlyEmi = profile.monthlyEmi;
+    filled.add("monthlyEmi");
+    sources.monthlyEmi = "profile";
+  } else if ((bucketCount["monthlyEmi"] ?? 0) >= 1) {
+    values.monthlyEmi = Math.round(bucketTotals["monthlyEmi"] ?? 0);
+    filled.add("monthlyEmi");
+    sources.monthlyEmi = "auto";
+  } else {
+    values.monthlyEmi = 0;
+    filled.add("monthlyEmi");
+    sources.monthlyEmi = "auto";
+  }
+
+  // ── Variable categories: require enough transaction history to trust.
+  const variableKeys: AutofillKey[] = [
     "monthlyFood",
     "monthlyTransport",
-    "monthlyEmi",
     "monthlyBills",
     "monthlyInvestments",
-    "currentSavings",
   ];
-  for (const k of expenseKeys) {
-    const total = Math.round(bucketTotals[k] ?? 0);
-    (values as Record<string, number>)[k] = total;
-    filled.add(k);
+  for (const k of variableKeys) {
+    if ((bucketCount[k] ?? 0) >= minBucketTx) {
+      (values as Record<string, number>)[k] = Math.round(bucketTotals[k] ?? 0);
+      filled.add(k);
+      sources[k] = "auto";
+    }
+    // else: leave undefined so the UI can ask only for this field.
   }
-  values.otherMonthlyExpenses = Math.round(otherExpense);
-  filled.add("otherMonthlyExpenses");
 
-  // Current Account Balance = FinTrackr net balance (all-time income − expense).
-  let netAll = 0;
-  for (const t of dedupe(transactions)) {
-    if (t.type === "income") netAll += t.amount;
-    else if (t.type === "expense") netAll -= t.amount;
+  // Other expenses: report when we saw at least a couple of uncategorised txs.
+  if (otherCount >= minBucketTx) {
+    values.otherMonthlyExpenses = Math.round(otherExpense);
+    filled.add("otherMonthlyExpenses");
+    sources.otherMonthlyExpenses = "auto";
+  } else {
+    values.otherMonthlyExpenses = Math.round(otherExpense);
+    filled.add("otherMonthlyExpenses");
+    sources.otherMonthlyExpenses = otherCount > 0 ? "auto" : "manual";
   }
-  values.currentAccountBalance = Math.max(0, Math.round(netAll));
-  filled.add("currentAccountBalance");
+
+  // ── Financial goal from Profile.
+  if (profile.financialGoal) {
+    values.financialGoal = profile.financialGoal;
+    if (profile.customGoalNote) values.customGoalNote = profile.customGoalNote;
+  }
+
+  // ── Current Account Balance: last remembered value → FinTrackr net balance.
+  const remembered = getRememberedBalance();
+  if (remembered != null && remembered > 0) {
+    values.currentAccountBalance = remembered;
+    filled.add("currentAccountBalance");
+    sources.currentAccountBalance = "profile";
+  } else {
+    let netAll = 0;
+    for (const t of dedupe(transactions)) {
+      if (t.type === "income") netAll += t.amount;
+      else if (t.type === "expense") netAll -= t.amount;
+    }
+    const derived = Math.max(0, Math.round(netAll));
+    values.currentAccountBalance = derived;
+    if (derived > 0) {
+      filled.add("currentAccountBalance");
+      sources.currentAccountBalance = "auto";
+    }
+  }
+
+  // ── Current Savings: remembered → derived → 0.
+  const rememberedSavings = getRememberedSavings();
+  if (rememberedSavings != null) {
+    values.currentSavings = rememberedSavings;
+    filled.add("currentSavings");
+    sources.currentSavings = "profile";
+  } else if ((bucketCount["currentSavings"] ?? 0) >= 1) {
+    values.currentSavings = Math.round(bucketTotals["currentSavings"] ?? 0);
+    filled.add("currentSavings");
+    sources.currentSavings = "auto";
+  } else {
+    values.currentSavings = 0;
+    filled.add("currentSavings");
+    sources.currentSavings = "manual";
+  }
 
   const missing = REQUIRED_FOR_SKIP.filter((k) => {
     const v = (values as Record<string, unknown>)[k];
     if (k === "salaryDate") return !v;
-    // Salary + balance still require a positive value to consider "enough".
     if (k === "monthlySalary" || k === "currentAccountBalance") {
       return typeof v !== "number" || v <= 0;
     }
-    // Other categories: ₹0 is a KNOWN value, so it counts as filled.
     return typeof v !== "number" || v < 0;
   });
   const hasEnough = missing.length === 0;
-
-  // Every field that we populated came from the transaction/profile pipeline.
-  const sources: Partial<Record<AutofillKey, CoachDataSource>> = {};
-  for (const k of filled) sources[k] = "auto";
 
   return {
     values,
@@ -217,3 +309,4 @@ export function buildCoachAutofill(args: {
     computedAt: now.toISOString(),
   };
 }
+

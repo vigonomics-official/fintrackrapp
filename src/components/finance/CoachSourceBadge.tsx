@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 import type { CoachDataSource } from "@/lib/coach-autofill";
 
 const SOURCE_META: Record<CoachDataSource, { label: string; icon: React.ReactNode }> = {
-  auto: { label: "Auto Calculated", icon: <CheckCircle2 className="h-3 w-3" /> },
+  auto: { label: "Transaction History", icon: <CheckCircle2 className="h-3 w-3" /> },
+  profile: { label: "Financial Profile", icon: <CheckCircle2 className="h-3 w-3" /> },
   sms: { label: "SMS", icon: <MessageSquareText className="h-3 w-3" /> },
   manual: { label: "Manual Entry", icon: <PencilLine className="h-3 w-3" /> },
   planner: { label: "Planner", icon: <CalendarClock className="h-3 w-3" /> },
