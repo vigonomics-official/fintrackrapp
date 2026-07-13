@@ -13,6 +13,7 @@ import { buildCoachAutofill } from "@/lib/coach-autofill";
 import { analyzeMock, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
 import { CoachAdviceTab } from "@/components/finance/CoachAdviceTab";
 import { CoachPlanTab } from "@/components/finance/CoachPlanTab";
+import { CoachChatSheet } from "@/components/finance/CoachChatSheet";
 
 const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
