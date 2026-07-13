@@ -146,6 +146,7 @@ function AiCoachPage() {
           </TabsContent>
         </Tabs>
       </PageContainer>
+      <CoachChatSheet analysisInput={latestInput} />
     </PageShell>
   );
 }
