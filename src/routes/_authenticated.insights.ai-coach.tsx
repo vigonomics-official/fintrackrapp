@@ -45,15 +45,30 @@ function AiCoachPage() {
   const [savedInput, setSavedInput] = useState<Partial<CoachAnalysisInput> | null>(null);
   // Shared latest analysis input across Analyze / Advice / Plan tabs.
   const [latestInput, setLatestInput] = useState<CoachAnalysisInput | null>(null);
+  const [profileVersion, setProfileVersion] = useState(0);
 
-  const readLatestInput = (): CoachAnalysisInput | null => {
+  // Live autofill (recomputes when transactions/categories/profile change).
+  const { data: transactions } = useTransactions();
+  const { data: categories } = useCategories();
+  const { settings } = useSalarySettings();
+  const queryClient = useQueryClient();
+
+  const autofill = useMemo(
+    () => buildCoachAutofill({ transactions, categories, salary: settings }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transactions, categories, settings, profileVersion],
+  );
+
+  const readLatestInput = useCallback((): CoachAnalysisInput | null => {
     try {
+      const cached = getCachedAnalysis();
+      if (cached?.input) return cached.input;
       const raw = sessionStorage.getItem(COACH_INPUT_STORAGE_KEY);
       return raw ? (JSON.parse(raw) as CoachAnalysisInput) : null;
     } catch {
       return null;
     }
-  };
+  }, []);
 
   // If the user came from "Improve My Data" on the results page, open the
   // form directly and pre-seed it with their last analysed input.
@@ -71,7 +86,78 @@ function AiCoachPage() {
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [readLatestInput]);
+
+  // React to profile / balance / savings updates from other components.
+  useEffect(() => onProfileUpdated(() => setProfileVersion((v) => v + 1)), []);
+
+  // Build a signature for the current autofill so we know when to refresh
+  // the cached analysis.
+  const buildAutoInput = useCallback((): CoachAnalysisInput | null => {
+    const v = autofill.values;
+    if (!v.monthlySalary || !v.salaryDate) return null;
+    return {
+      monthlySalary: v.monthlySalary ?? 0,
+      salaryDate: v.salaryDate ?? new Date().toISOString().slice(0, 10),
+      currentAccountBalance: v.currentAccountBalance ?? 0,
+      monthlyRent: v.monthlyRent ?? 0,
+      monthlyFood: v.monthlyFood ?? 0,
+      monthlyTransport: v.monthlyTransport ?? 0,
+      monthlyEmi: v.monthlyEmi ?? 0,
+      monthlyBills: v.monthlyBills ?? 0,
+      monthlyInvestments: v.monthlyInvestments ?? 0,
+      currentSavings: v.currentSavings ?? 0,
+      otherMonthlyExpenses: v.otherMonthlyExpenses ?? 0,
+      financialGoal: v.financialGoal ?? "Emergency Fund",
+      customGoalNote: v.customGoalNote,
+    };
+  }, [autofill]);
+
+  // On mount / when inputs change: if we have enough to analyse and no cache
+  // (or an out-of-date cache), warm the cache silently so the "ready" view
+  // has something to show.
+  useEffect(() => {
+    const auto = buildAutoInput();
+    if (!auto) return;
+    const cached = getCachedAnalysis();
+    const sig = computeAnalysisSignature(auto, {
+      transactionCount: autofill.transactionCount,
+      lastTxDate: transactions?.[0]?.transaction_date ?? null,
+    });
+    if (!cached || cached.signature !== sig) {
+      const result = analyzeMock(auto);
+      setCachedAnalysis({
+        signature: sig,
+        input: auto,
+        result,
+        computedAt: new Date().toISOString(),
+      });
+      try {
+        sessionStorage.setItem(COACH_INPUT_STORAGE_KEY, JSON.stringify(auto));
+      } catch {
+        /* ignore */
+      }
+      setLatestInput(auto);
+    } else if (!latestInput) {
+      setLatestInput(cached.input);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autofill, transactions]);
+
+  const profile = useMemo(() => getFinancialProfile(), [profileVersion]);
+  const hasProfile = !!(profile.monthlySalary && profile.salaryDate);
+
+  const cached = useMemo(() => getCachedAnalysis(), [latestInput, profileVersion]);
+  const showReady = mode === "choice" && !!(cached ?? latestInput) && hasProfile;
+
+  const handleRefreshAll = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["transactions"] }),
+      queryClient.invalidateQueries({ queryKey: ["categories"] }),
+    ]);
+    // Force recompute by bumping the version — cache signature will diverge.
+    setProfileVersion((v) => v + 1);
+  }, [queryClient]);
 
   return (
     <PageShell>
@@ -101,8 +187,6 @@ function AiCoachPage() {
             setActiveTab(v);
             setMode("choice");
             setUseAutoData(false);
-            // Refresh shared analysis on every tab switch so Advice/Plan
-            // reflect the latest analyzed input without a re-run.
             setLatestInput(readLatestInput());
           }}
           className="w-full"
@@ -114,7 +198,38 @@ function AiCoachPage() {
           </TabsList>
 
           <TabsContent value="analyze" className="mt-4">
-            {mode === "choice" ? (
+            {showReady ? (
+              <CoachAnalyzeReady
+                input={(cached?.input ?? latestInput) as CoachAnalysisInput}
+                computedAt={cached?.computedAt ?? autofill.computedAt}
+                transactionCount={autofill.transactionCount}
+                onEdit={() => {
+                  setSavedInput((cached?.input ?? latestInput) as Partial<CoachAnalysisInput>);
+                  setUseAutoData(false);
+                  setMode("form");
+                }}
+                onRefresh={handleRefreshAll}
+                onBalanceUpdated={(next) => {
+                  const sig = computeAnalysisSignature(next, {
+                    transactionCount: autofill.transactionCount,
+                    lastTxDate: transactions?.[0]?.transaction_date ?? null,
+                  });
+                  setCachedAnalysis({
+                    signature: sig,
+                    input: next,
+                    result: analyzeMock(next),
+                    computedAt: new Date().toISOString(),
+                  });
+                  try {
+                    sessionStorage.setItem(COACH_INPUT_STORAGE_KEY, JSON.stringify(next));
+                  } catch {
+                    /* ignore */
+                  }
+                  setLatestInput(next);
+                  setProfileVersion((v) => v + 1);
+                }}
+              />
+            ) : mode === "choice" ? (
               <AnalyzeChoice
                 onManual={() => {
                   setSavedInput(null);
