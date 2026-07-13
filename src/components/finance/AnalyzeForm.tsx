@@ -200,8 +200,12 @@ export function AnalyzeForm({
 
   const analyzeAndGo = () => {
     if (!validate()) return;
+    const input = buildInput();
     try {
-      sessionStorage.setItem(COACH_INPUT_STORAGE_KEY, JSON.stringify(buildInput()));
+      sessionStorage.setItem(COACH_INPUT_STORAGE_KEY, JSON.stringify(input));
+      // Remember the permanent parts of the profile + latest balance/savings
+      // so the user isn't asked for them again next analysis.
+      persistProfileFromInput(input);
     } catch {
       /* ignore */
     }
