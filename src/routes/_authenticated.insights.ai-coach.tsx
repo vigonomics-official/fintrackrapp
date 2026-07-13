@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Sparkles, Database, PenLine, ChevronRight, CheckCircle2, RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,6 +14,14 @@ import { analyzeMock, type CoachAnalysisInput } from "@/lib/ai-coach-analysis";
 import { CoachAdviceTab } from "@/components/finance/CoachAdviceTab";
 import { CoachPlanTab } from "@/components/finance/CoachPlanTab";
 import { CoachChatSheet } from "@/components/finance/CoachChatSheet";
+import { CoachAnalyzeReady } from "@/components/finance/CoachAnalyzeReady";
+import {
+  getFinancialProfile,
+  getCachedAnalysis,
+  setCachedAnalysis,
+  computeAnalysisSignature,
+  onProfileUpdated,
+} from "@/lib/financial-profile";
 
 const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
