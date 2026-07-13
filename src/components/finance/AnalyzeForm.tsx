@@ -14,6 +14,7 @@ import { CoachSourceBadge } from "@/components/finance/CoachSourceBadge";
 import { CoachLastUpdatedCard } from "@/components/finance/CoachLastUpdatedCard";
 import { CoachSmartWarnings, computeCoachWarnings } from "@/components/finance/CoachSmartWarnings";
 import { CoachPrivacyNote } from "@/components/finance/CoachPrivacyNote";
+import { persistProfileFromInput } from "@/lib/financial-profile";
 import type { CoachDataSource, AutofillKey } from "@/lib/coach-autofill";
 
 type NumericKey =
