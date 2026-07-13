@@ -7,6 +7,12 @@ import type { Transaction, Category } from "@/hooks/use-finance";
 import type { SalarySettings } from "@/hooks/use-salary-settings";
 import { payDayInMonth } from "@/lib/salary-cycle";
 import type { CoachAnalysisInput } from "@/lib/ai-coach-analysis";
+import {
+  getFinancialProfile,
+  getRememberedBalance,
+  getRememberedSavings,
+  type FinancialProfile,
+} from "@/lib/financial-profile";
 
 export type AutofillKey =
   | "monthlySalary"
@@ -24,7 +30,7 @@ export type AutofillKey =
 /** Where a value ultimately came from. Kept as a small union so future
  *  providers (SMS parser, CSV importer, planner) can slot in without UI
  *  changes. */
-export type CoachDataSource = "auto" | "sms" | "manual" | "planner" | "csv";
+export type CoachDataSource = "auto" | "profile" | "sms" | "manual" | "planner" | "csv";
 
 export type CoachAutofill = {
   values: Partial<CoachAnalysisInput>;
