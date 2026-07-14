@@ -269,7 +269,7 @@ function AiCoachPage() {
           </TabsContent>
         </Tabs>
       </PageContainer>
-      <CoachChatSheet analysisInput={latestInput} />
+      <CoachChatSheet analysisInput={latestInput} onGoToAnalyze={() => setActiveTab("analyze")} />
     </PageShell>
   );
 }
