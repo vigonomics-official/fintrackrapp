@@ -14,7 +14,8 @@ export type CoachResponse = {
   monthlyImpact?: string; // formatted, e.g. "Save around ₹450/month."
   confidence: CoachConfidence;
   dataUsed: string[]; // labels
-  calculation?: string; // optional plain-text breakdown for "Show calculation"
+  calculation?: string; // step-by-step "How it was calculated" breakdown
+  followUps?: string[]; // suggested follow-up prompts (Compare / What If? / Explain)
 };
 
 const inr = (n: number) => `₹${Math.round(Math.max(0, n)).toLocaleString("en-IN")}`;
