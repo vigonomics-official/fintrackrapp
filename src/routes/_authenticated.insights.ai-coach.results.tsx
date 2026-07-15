@@ -248,6 +248,10 @@ function ResultsPage() {
             <div className="mt-3">
               <Progress value={result.goalForecast.confidence} className="h-1.5" />
               <p className="mt-2 text-xs text-muted-foreground">{result.goalForecast.note}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <ExplainBtn prompt="Explain my Goal Forecast" label="Explain this forecast" />
+                <ExplainBtn prompt="What if I save ₹1000 more?" label="What if?" />
+              </div>
             </div>
           </Section>
 
