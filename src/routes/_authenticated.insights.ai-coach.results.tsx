@@ -156,7 +156,13 @@ function ResultsPage() {
                 tone={result.emiRatio >= 40 ? "danger" : result.emiRatio >= 20 ? "warn" : "success"}
               />
             </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <ExplainBtn prompt="Explain my Savings Target" label="Explain Savings Target" />
+              <ExplainBtn prompt="Explain my Safe Daily Spend" label="Explain Safe Daily Spend" />
+              <ExplainBtn prompt="Explain my Safe Purchase Limit" label="Explain Safe Purchase" />
+            </div>
           </Card>
+
 
           {/* Overall summary */}
           <Section icon={<Sparkles className="h-4 w-4 text-primary" />} title="Overall Summary">
