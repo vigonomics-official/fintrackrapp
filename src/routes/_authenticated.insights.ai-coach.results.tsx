@@ -355,3 +355,20 @@ function RiskBadge({ level }: { level: RiskLevel }) {
     </span>
   );
 }
+
+function ExplainBtn({ prompt, label = "Explain" }: { prompt: string; label?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        window.dispatchEvent(new CustomEvent("fintrackr:coach:ask", { detail: { prompt } }))
+      }
+      className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10"
+      aria-label={label}
+      title={label}
+    >
+      <HelpCircle className="h-3 w-3" />
+      {label}
+    </button>
+  );
+}
