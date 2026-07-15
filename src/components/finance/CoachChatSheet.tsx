@@ -67,6 +67,20 @@ export function CoachChatSheet({ analysisInput, provider = MockCoachProvider, on
   useEffect(() => setMessages(loadHistory()), []);
   useEffect(() => saveHistory(messages), [messages]);
 
+  // Global open+ask hook for "Explain This Number" buttons across the app.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ prompt?: string }>).detail;
+      setOpen(true);
+      if (detail?.prompt) {
+        // Defer to let sheet mount + provider/ctx settle.
+        setTimeout(() => sendRef.current?.(detail.prompt!), 200);
+      }
+    };
+    window.addEventListener("fintrackr:coach:ask", handler as EventListener);
+    return () => window.removeEventListener("fintrackr:coach:ask", handler as EventListener);
+  }, []);
+
   const ctx = useMemo(() => buildContext(analysisInput, lang), [analysisInput, lang]);
   const snapshot = useMemo(() => computeSnapshot(ctx.input, ctx.analysis), [ctx.input, ctx.analysis]);
   const greeting = useMemo(() => personalizedGreeting(lang, snapshot), [lang, snapshot]);
