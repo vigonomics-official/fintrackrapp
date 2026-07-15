@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Trophy,
   Heart,
+  HelpCircle,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -127,7 +128,10 @@ function ResultsPage() {
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground">Financial Health Score</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs text-muted-foreground">Financial Health Score</p>
+                  <ExplainBtn prompt="Explain my Survival Score" label="Explain this number" />
+                </div>
                 <p className={`font-display text-3xl font-bold ${scoreTone}`}>
                   {result.healthScore}
                   <span className="text-base text-muted-foreground">/100</span>
@@ -152,7 +156,13 @@ function ResultsPage() {
                 tone={result.emiRatio >= 40 ? "danger" : result.emiRatio >= 20 ? "warn" : "success"}
               />
             </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <ExplainBtn prompt="Explain my Savings Target" label="Explain Savings Target" />
+              <ExplainBtn prompt="Explain my Safe Daily Spend" label="Explain Safe Daily Spend" />
+              <ExplainBtn prompt="Explain my Safe Purchase Limit" label="Explain Safe Purchase" />
+            </div>
           </Card>
+
 
           {/* Overall summary */}
           <Section icon={<Sparkles className="h-4 w-4 text-primary" />} title="Overall Summary">
@@ -238,6 +248,10 @@ function ResultsPage() {
             <div className="mt-3">
               <Progress value={result.goalForecast.confidence} className="h-1.5" />
               <p className="mt-2 text-xs text-muted-foreground">{result.goalForecast.note}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <ExplainBtn prompt="Explain my Goal Forecast" label="Explain this forecast" />
+                <ExplainBtn prompt="What if I save ₹1000 more?" label="What if?" />
+              </div>
             </div>
           </Section>
 
@@ -349,5 +363,22 @@ function RiskBadge({ level }: { level: RiskLevel }) {
     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone}`}>
       {level}
     </span>
+  );
+}
+
+function ExplainBtn({ prompt, label = "Explain" }: { prompt: string; label?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        window.dispatchEvent(new CustomEvent("fintrackr:coach:ask", { detail: { prompt } }))
+      }
+      className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10"
+      aria-label={label}
+      title={label}
+    >
+      <HelpCircle className="h-3 w-3" />
+      {label}
+    </button>
   );
 }

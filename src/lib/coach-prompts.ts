@@ -14,7 +14,8 @@ export type CoachResponse = {
   monthlyImpact?: string; // formatted, e.g. "Save around ₹450/month."
   confidence: CoachConfidence;
   dataUsed: string[]; // labels
-  calculation?: string; // optional plain-text breakdown for "Show calculation"
+  calculation?: string; // step-by-step "How it was calculated" breakdown
+  followUps?: string[]; // suggested follow-up prompts (Compare / What If? / Explain)
 };
 
 const inr = (n: number) => `₹${Math.round(Math.max(0, n)).toLocaleString("en-IN")}`;
@@ -201,3 +202,259 @@ export function replyGeneric(
     confidence: "medium",
   };
 }
+
+// ---------- Standard follow-ups shown after every recommendation ----------
+export const STANDARD_FOLLOWUPS = ["Compare purchases", "What if?", "Explain more"];
+
+function withFollowUps(r: CoachResponse, extra: string[] = []): CoachResponse {
+  return { ...r, followUps: Array.from(new Set([...(r.followUps ?? []), ...extra, ...STANDARD_FOLLOWUPS])) };
+}
+
+// Backfill: ensure a `calculation` and `followUps` exist on every response.
+export function ensureExplainable(r: CoachResponse, input: CoachAnalysisInput | null): CoachResponse {
+  const out = { ...r };
+  if (!out.calculation && input) {
+    out.calculation = `Based on Salary ${inr(input.monthlySalary)} and known monthly outflows.`;
+  }
+  if (!out.followUps || out.followUps.length === 0) {
+    out.followUps = STANDARD_FOLLOWUPS;
+  }
+  return out;
+}
+
+// ---------- Explain This Number ----------
+export type MetricKey = "survivalScore" | "safeDailySpend" | "safePurchase" | "savingsTarget" | "goalForecast";
+
+export function replyExplainMetric(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+  metric: MetricKey,
+): CoachResponse {
+  switch (metric) {
+    case "survivalScore": {
+      const buffer = Math.max(-50, Math.min(50, analysis.savingsRate));
+      const emiPart = Math.max(0, 30 - analysis.emiRatio * 0.5);
+      return withFollowUps({
+        shortAnswer: `Your Survival Score is ${analysis.healthScore}/100.`,
+        why: `It blends your savings rate (${Math.round(analysis.savingsRate)}%) with EMI pressure (${Math.round(analysis.emiRatio)}%).`,
+        action: `Push savings rate above 20% and keep EMIs under 30% of salary.`,
+        monthlyImpact: `A 5% savings-rate bump lifts the score by ~2 points.`,
+        confidence: "high",
+        dataUsed: baseDataUsed(lang, input),
+        calculation:
+          `Step 1 · Buffer = clamp(savingsRate ${Math.round(analysis.savingsRate)}%, -50, 50) = ${Math.round(buffer)}\n` +
+          `Step 2 · EMI score = clamp(30 − EMI% × 0.5, 0, 30) = ${Math.round(emiPart)}\n` +
+          `Step 3 · Score = 50 + Buffer × 0.4 + EMIscore × 0.6 = ${analysis.healthScore}`,
+      });
+    }
+    case "safeDailySpend": {
+      const salary = input.monthlySalary;
+      const fixed = input.monthlyRent + input.monthlyEmi + input.monthlyBills;
+      const daily = Math.max(0, Math.round((salary - fixed) / 30));
+      return withFollowUps({
+        shortAnswer: `Your Safe Daily Spend is about ${inr(daily)}.`,
+        why: `Salary minus fixed obligations, spread across 30 days.`,
+        action: `Track daily variable spend against this line.`,
+        confidence: "high",
+        dataUsed: baseDataUsed(lang, input),
+        calculation:
+          `Step 1 · Fixed = Rent ${inr(input.monthlyRent)} + EMI ${inr(input.monthlyEmi)} + Bills ${inr(input.monthlyBills)} = ${inr(fixed)}\n` +
+          `Step 2 · Spendable = Salary ${inr(salary)} − Fixed ${inr(fixed)} = ${inr(salary - fixed)}\n` +
+          `Step 3 · Daily = Spendable ÷ 30 = ${inr(daily)}`,
+      });
+    }
+    case "safePurchase": {
+      const safe = Math.max(0, Math.round(analysis.monthlySurplus * 0.5));
+      return withFollowUps({
+        shortAnswer: `Safe one-time purchase limit: ${inr(safe)}.`,
+        why: `Half of your monthly surplus keeps the other half working for savings.`,
+        action: `Split anything bigger across 2–3 months.`,
+        confidence: "high",
+        dataUsed: baseDataUsed(lang, input),
+        calculation:
+          `Step 1 · Surplus = Salary ${inr(input.monthlySalary)} − Expenses ${inr(analysis.totalExpenses)} = ${inr(analysis.monthlySurplus)}\n` +
+          `Step 2 · Safe = Surplus × 50% = ${inr(safe)}`,
+      });
+    }
+    case "savingsTarget": {
+      const target = Math.max(500, Math.round((input.monthlySalary * 0.2) / 100) * 100);
+      return withFollowUps({
+        shortAnswer: `Aim to save ${inr(target)}/month.`,
+        why: `A 20% savings rate is a widely-recommended floor.`,
+        action: `Auto-transfer ${inr(target)} on salary day.`,
+        monthlyImpact: `${inr(target * 12)} banked in 12 months.`,
+        confidence: "high",
+        dataUsed: baseDataUsed(lang, input),
+        calculation: `Salary ${inr(input.monthlySalary)} × 20% = ${inr(target)} per month`,
+      });
+    }
+    case "goalForecast": {
+      const g = analysis.goalForecast;
+      return withFollowUps({
+        shortAnswer: `~${g.etaMonths} months to your ${g.goal} goal.`,
+        why: `Monthly contribution ${inr(g.monthlyTarget)} vs target ${inr(g.targetAmount)}.`,
+        action: `Automate the transfer on salary day.`,
+        confidence: g.confidence >= 66 ? "high" : g.confidence >= 33 ? "medium" : "low",
+        dataUsed: baseDataUsed(lang, input),
+        calculation:
+          `Step 1 · Target = ${inr(g.targetAmount)}\n` +
+          `Step 2 · Monthly = ${inr(g.monthlyTarget)}\n` +
+          `Step 3 · ETA = Target ÷ Monthly = ${g.etaMonths} months`,
+      });
+    }
+  }
+}
+
+// ---------- Compare two purchases ----------
+type PurchaseSpec = { name: string; amount: number };
+
+function parseComparison(text: string): [PurchaseSpec, PurchaseSpec] | null {
+  // Try to find two "name @amount" pairs, or "A ₹X vs B ₹Y".
+  const m = text.match(/([A-Za-z][\w\s]{0,30})\s*[₹Rs.]*\s*(\d[\d,]{2,})\s*(?:vs|versus|or|,)\s*([A-Za-z][\w\s]{0,30})\s*[₹Rs.]*\s*(\d[\d,]{2,})/i);
+  if (m) {
+    return [
+      { name: m[1].trim(), amount: Number(m[2].replace(/,/g, "")) },
+      { name: m[3].trim(), amount: Number(m[4].replace(/,/g, "")) },
+    ];
+  }
+  return null;
+}
+
+export function replyCompare(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+  userText: string,
+): CoachResponse {
+  const parsed = parseComparison(userText);
+  if (!parsed) {
+    return withFollowUps({
+      shortAnswer: `Tell me both options with prices, e.g. "Phone A 25000 vs Phone B 32000".`,
+      why: `I compare purchases on budget fit, goal delay, and month-end balance.`,
+      action: `Reply with the two options and their prices.`,
+      confidence: "low",
+      dataUsed: baseDataUsed(lang, input),
+    });
+  }
+  const [a, b] = parsed;
+  const surplus = Math.max(1, analysis.monthlySurplus);
+  const monthlyGoal = analysis.goalForecast.monthlyTarget;
+  const delayA = Math.ceil(a.amount / Math.max(1, monthlyGoal));
+  const delayB = Math.ceil(b.amount / Math.max(1, monthlyGoal));
+  const scoreDropA = Math.round((a.amount / surplus) * 5);
+  const scoreDropB = Math.round((b.amount / surplus) * 5);
+  const winner = a.amount <= b.amount ? a : b;
+  const loser = winner === a ? b : a;
+  return withFollowUps({
+    shortAnswer: `Pick ${winner.name} — cheaper by ${inr(loser.amount - winner.amount)}.`,
+    why: `${a.name} costs ${inr(a.amount)}, ${b.name} costs ${inr(b.amount)}. Your monthly surplus is ${inr(analysis.monthlySurplus)}.`,
+    action: `Choose ${winner.name}; put the difference toward your ${analysis.goalForecast.goal} goal.`,
+    monthlyImpact: `Saves ${inr(loser.amount - winner.amount)} vs the other option.`,
+    confidence: "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation:
+      `${a.name}: cost ${inr(a.amount)} · goal delay ~${delayA} month(s) · score impact ~-${scoreDropA}\n` +
+      `${b.name}: cost ${inr(b.amount)} · goal delay ~${delayB} month(s) · score impact ~-${scoreDropB}\n` +
+      `Winner = lower cost + smaller goal delay = ${winner.name}`,
+  });
+}
+
+// ---------- Goal-aware purchase impact ----------
+export function replyGoalDelay(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+  amount: number,
+): CoachResponse {
+  const monthly = Math.max(1, analysis.goalForecast.monthlyTarget);
+  const delayMonths = amount / monthly;
+  const delayDays = Math.round(delayMonths * 30);
+  const better = new Date();
+  better.setMonth(better.getMonth() + Math.max(1, Math.ceil(delayMonths)));
+  const betterLabel = better.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+  return withFollowUps({
+    shortAnswer: `That purchase delays your ${analysis.goalForecast.goal} goal by ~${delayMonths.toFixed(1)} months (${delayDays} days).`,
+    why: `You're saving ${inr(monthly)}/month toward the goal; spending ${inr(amount)} pushes the finish line out.`,
+    action: `Wait until ${betterLabel} or split the purchase across ${Math.ceil(delayMonths)} months.`,
+    monthlyImpact: `Preserves ${inr(monthly)}/month goal contribution.`,
+    confidence: "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation:
+      `Step 1 · Monthly goal contribution = ${inr(monthly)}\n` +
+      `Step 2 · Delay = Purchase ${inr(amount)} ÷ Monthly ${inr(monthly)} = ${delayMonths.toFixed(2)} months\n` +
+      `Step 3 · Better date = today + ${Math.ceil(delayMonths)} month(s) → ${betterLabel}`,
+  });
+}
+
+// ---------- What if? ----------
+export type WhatIfScenario = "saveMore" | "skipShopping" | "increaseSip" | "buyAfterSalary";
+
+export function replyWhatIf(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+  scenario: WhatIfScenario,
+  amount = 1000,
+): CoachResponse {
+  const monthly = Math.max(1, analysis.goalForecast.monthlyTarget);
+  switch (scenario) {
+    case "saveMore": {
+      const newSurplus = analysis.monthlySurplus + amount;
+      const newRate = input.monthlySalary > 0 ? (newSurplus / input.monthlySalary) * 100 : 0;
+      const scoreDelta = Math.round((newRate - analysis.savingsRate) * 0.4);
+      const etaCut = amount / monthly;
+      return withFollowUps({
+        shortAnswer: `Saving ${inr(amount)} more lifts your score by ~${scoreDelta} points.`,
+        why: `Savings rate moves from ${Math.round(analysis.savingsRate)}% to ${Math.round(newRate)}%.`,
+        action: `Automate an extra ${inr(amount)} transfer on salary day.`,
+        monthlyImpact: `Goal reached ~${etaCut.toFixed(1)} months sooner.`,
+        confidence: "high",
+        dataUsed: baseDataUsed(lang, input),
+        calculation:
+          `Step 1 · New surplus = ${inr(analysis.monthlySurplus)} + ${inr(amount)} = ${inr(newSurplus)}\n` +
+          `Step 2 · New savings rate = ${Math.round(newRate)}%\n` +
+          `Step 3 · Score change ≈ ΔRate × 0.4 = +${scoreDelta}`,
+      });
+    }
+    case "skipShopping": {
+      const top = analysis.breakdown[0];
+      const saved = top ? Math.round(top.amount * 0.25) : Math.round(input.monthlySalary * 0.05);
+      return withFollowUps({
+        shortAnswer: `Skipping shopping frees ~${inr(saved)}/month.`,
+        why: top ? `${top.label} is your biggest outflow at ${inr(top.amount)}.` : `Rough estimate at 5% of salary.`,
+        action: `Redirect ${inr(saved)} to your ${analysis.goalForecast.goal} goal.`,
+        monthlyImpact: `Goal reached ~${(saved / monthly).toFixed(1)} months sooner.`,
+        confidence: "medium",
+        dataUsed: baseDataUsed(lang, input),
+        calculation: top
+          ? `${top.label} ${inr(top.amount)} × 25% cut = ${inr(saved)}/month`
+          : `Salary ${inr(input.monthlySalary)} × 5% = ${inr(saved)}/month`,
+      });
+    }
+    case "increaseSip": {
+      const bump = Math.max(500, Math.round((input.monthlySalary * 0.05) / 100) * 100);
+      const year = bump * 12;
+      return withFollowUps({
+        shortAnswer: `Add ${inr(bump)}/month to your SIP.`,
+        why: `Even 5% of salary compounds strongly.`,
+        action: `Increase SIP mandate to +${inr(bump)}.`,
+        monthlyImpact: `${inr(year)} extra invested in 12 months (before returns).`,
+        confidence: "medium",
+        dataUsed: baseDataUsed(lang, input),
+        calculation: `Salary ${inr(input.monthlySalary)} × 5% = ${inr(bump)} · × 12 = ${inr(year)}`,
+      });
+    }
+    case "buyAfterSalary": {
+      return withFollowUps({
+        shortAnswer: `Buying right after salary keeps your buffer intact.`,
+        why: `Balance is highest post-credit; late-month spends erode the emergency cushion.`,
+        action: `Schedule the purchase within 3 days of salary date (${input.salaryDate}).`,
+        confidence: "high",
+        dataUsed: baseDataUsed(lang, input),
+        calculation: `Timing shift: end-of-month spend → salary-day spend, keeping surplus ${inr(analysis.monthlySurplus)} untouched later in the cycle.`,
+      });
+    }
+  }
+}
+
