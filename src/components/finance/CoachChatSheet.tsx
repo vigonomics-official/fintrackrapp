@@ -587,8 +587,11 @@ function MessageRow({
               </div>
             )}
             {showCalc && r.calculation && (
-              <div className="rounded-lg bg-background/60 p-2 font-mono text-[11px]">
-                {r.calculation}
+              <div className="rounded-lg bg-background/60 p-2">
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t(lang, "showCalc")}
+                </p>
+                <pre className="whitespace-pre-wrap font-mono text-[11px] leading-snug">{r.calculation}</pre>
               </div>
             )}
             <div className="flex flex-wrap gap-1">
@@ -599,13 +602,31 @@ function MessageRow({
               {r.calculation && (
                 <FollowBtn onClick={() => setShowCalc((v) => !v)}>{t(lang, "showCalc")}</FollowBtn>
               )}
-              <FollowBtn onClick={onNavPlanner}>{t(lang, "applyPlanner")}</FollowBtn>
+              <FollowBtn onClick={() => onFollowUp("Compare purchases")}>{t(lang, "compare")}</FollowBtn>
+              <FollowBtn onClick={() => onFollowUp("What if I save ₹1000 more?")}>
+                {t(lang, "whatIf")}
+              </FollowBtn>
+              <FollowBtn onClick={onNavPlanner}>{t(lang, "applyAction")}</FollowBtn>
               <FollowBtn onClick={onNavBudget}>{t(lang, "createBudget")}</FollowBtn>
               <FollowBtn onClick={() => onSave(message)}>
                 <BookmarkPlus className="h-3 w-3" />
                 {t(lang, "saveAdvice")}
               </FollowBtn>
             </div>
+            {r.followUps && r.followUps.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {r.followUps.slice(0, 4).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => onFollowUp(f)}
+                    className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10"
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            )}
             {r.confidence === "low" && (
               <button
                 type="button"
