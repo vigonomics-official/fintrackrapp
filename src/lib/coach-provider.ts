@@ -6,16 +6,23 @@ import type { CoachAnalysisInput, CoachAnalysisResult } from "@/lib/ai-coach-ana
 import { analyzeMock } from "@/lib/ai-coach-analysis";
 import type { CoachLanguage } from "@/lib/coach-language";
 import {
+  ensureExplainable,
   replyAffordability,
   replyBudget,
+  replyCompare,
   replyEmergency,
+  replyExplainMetric,
   replyGeneric,
   replyGoal,
+  replyGoalDelay,
   replyImproveScore,
   replyNoContext,
   replyReduceFirst,
   replyReduceFood,
+  replyWhatIf,
   type CoachResponse,
+  type MetricKey,
+  type WhatIfScenario,
 } from "@/lib/coach-prompts";
 
 export type ChatContext = {
