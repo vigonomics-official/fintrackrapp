@@ -61,6 +61,7 @@ export function CoachChatSheet({ analysisInput, provider = MockCoachProvider, on
   const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sendRef = useRef<((text: string) => void) | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => setLangState(getLanguage()), []);
