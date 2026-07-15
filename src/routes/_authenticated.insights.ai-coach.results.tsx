@@ -128,7 +128,10 @@ function ResultsPage() {
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground">Financial Health Score</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs text-muted-foreground">Financial Health Score</p>
+                  <ExplainBtn prompt="Explain my Survival Score" label="Explain this number" />
+                </div>
                 <p className={`font-display text-3xl font-bold ${scoreTone}`}>
                   {result.healthScore}
                   <span className="text-base text-muted-foreground">/100</span>
