@@ -147,6 +147,9 @@ export function CoachChatSheet({ analysisInput, provider = MockCoachProvider, on
     },
     [provider, ctx, sending, lang],
   );
+  useEffect(() => {
+    sendRef.current = send;
+  }, [send]);
 
   const handleClear = () => {
     clearHistory();
