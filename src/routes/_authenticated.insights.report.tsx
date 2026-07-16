@@ -9,6 +9,12 @@ import {
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
+import {
+  buildComparison, buildBiggestWin, buildHealthBreakdown, buildAiMonthlyReview,
+  buildBadges, buildPrediction, buildChallenge,
+  type HealthLevel, type Trend,
+} from "@/lib/report-insights";
+import { Info, Sparkles, Printer, Download, Share2, Image as ImageIcon, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/insights/report")({
   component: ReportPage,
@@ -48,13 +54,18 @@ function ReportPage() {
     [txs, loans, settings, now],
   );
 
-  // Previous cycle survival — approximate by prior month window
-  const prevScore = useMemo(() => {
-    const prevNow = new Date(survival.lastSalaryDate);
-    prevNow.setDate(prevNow.getDate() - 1);
-    const s = computeSurvival({ transactions: txs, loans, salarySettings: settings, now: prevNow });
-    return s.score;
-  }, [txs, loans, settings, survival.lastSalaryDate]);
+  // Insights (all Gemini-ready pure derivations)
+  const insights = useMemo(() => {
+    const ctx = { transactions: txs, categories, budgets, loans, salarySettings: settings, now };
+    const { current, previous, cmp } = buildComparison(ctx);
+    const win = buildBiggestWin(ctx, current, previous, cmp);
+    const health = buildHealthBreakdown(ctx, current);
+    const review = buildAiMonthlyReview(ctx, current, previous, cmp, health, win);
+    const badges = buildBadges(ctx, current, previous, health);
+    const prediction = buildPrediction(current, previous, health);
+    const challenge = buildChallenge(current, previous, health);
+    return { current, previous, cmp, win, health, review, badges, prediction, challenge };
+  }, [txs, categories, budgets, loans, settings, now]);
 
   const cycleStart = survival.lastSalaryDate;
   const cycleTxs = useMemo(() => {
@@ -70,7 +81,6 @@ function ReportPage() {
   const totalSpent = expenses.reduce((s, t) => s + t.amount, 0);
   const totalSaved = Math.max(0, survival.salary - totalSpent);
 
-  // Days under budget
   const cycleDays = useMemo(() => {
     const days: string[] = [];
     const d = new Date(cycleStart);
@@ -91,7 +101,6 @@ function ReportPage() {
     return cycleDays.filter(k => (perDay.get(k) ?? 0) < safeDaily).length;
   }, [expenses, cycleDays, safeDaily]);
 
-  // Category rollup
   const catRows = useMemo(() => {
     const map = new Map<string, number>();
     expenses.forEach(t => {
@@ -111,23 +120,6 @@ function ReportPage() {
     }).sort((a, b) => b.spent - a.spent);
   }, [expenses, categories, budgets]);
 
-  // Biggest win: category most under budget (by absolute saving)
-  const biggestWin = useMemo(() => {
-    const wins = catRows
-      .filter(r => r.budget > 0 && r.spent < r.budget)
-      .map(r => ({ name: r.name, saved: r.budget - r.spent, pct: Math.round((1 - r.spent / r.budget) * 100) }))
-      .sort((a, b) => b.saved - a.saved);
-    return wins[0] ?? null;
-  }, [catRows]);
-
-  // Biggest overspend for tip
-  const biggestOver = useMemo(() => {
-    const overs = catRows.filter(r => r.budget > 0 && r.spent > r.budget)
-      .sort((a, b) => (b.spent - b.budget) - (a.spent - a.budget));
-    return overs[0] ?? null;
-  }, [catRows]);
-
-  // Weekly breakdown (up to 4 weeks from cycle start)
   const weeks = useMemo(() => {
     const weeklyBudget = survival.salary > 0 ? survival.salary / 4 : 0;
     return Array.from({ length: 4 }).map((_, i) => {
@@ -141,36 +133,20 @@ function ReportPage() {
     });
   }, [expenses, cycleStart, now, survival.salary]);
 
-  // Highest spending week for story line 1
-  const heaviestWeek = useMemo(() => {
-    const past = weeks.filter(w => !w.upcoming);
-    if (!past.length) return null;
-    return past.reduce((m, w) => (w.spent > m.spent ? w : m), past[0]);
-  }, [weeks]);
-
   const monthName = now.toLocaleString(undefined, { month: "long" });
   const monthYearShort = now.toLocaleString(undefined, { month: "long", year: "numeric" });
   const status = statusForScore(survival.score);
 
   const momentum =
-    survival.score > prevScore ? "↑ Better than last month 💪"
-    : survival.score === prevScore ? "Consistent performance 👍"
+    insights.cmp.score.trend === "up" ? "↑ Better than last month 💪"
+    : insights.cmp.score.trend === "flat" ? "Consistent performance 👍"
     : "Room to improve next month 📈";
-
-  // Story line 3
-  const tip = useMemo(() => {
-    if (!biggestOver) return "Keep it up! Try saving ₹500 more next month.";
-    const n = biggestOver.name.toLowerCase();
-    if (n.includes("food") || n.includes("dining")) return "Next month, cook 3 meals/week to save ₹800 more.";
-    if (n.includes("transport") || n.includes("travel")) return "Consider carpooling to reduce travel costs.";
-    if (n.includes("shopping")) return "Try a no-shopping week to reset your spending habit.";
-    return `Trim ${biggestOver.name} next month to boost your score.`;
-  }, [biggestOver]);
 
   const shareRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
+  const [savingPdf, setSavingPdf] = useState(false);
 
-  const shareText = `I survived ${monthYearShort} with a Survival Score of ${survival.score}/100 on FinTrackr! 💪 #FinTrackr #SalarySurvival`;
+  const shareText = `I survived ${monthYearShort} with a Survival Score of ${survival.score}/100 (Grade ${insights.health.grade}) on FinTrackr! 💪 #FinTrackr #SalarySurvival`;
 
   const onShare = async () => {
     try {
@@ -196,6 +172,28 @@ function ReportPage() {
     }
   };
 
+  const onDownloadPdf = async () => {
+    if (!shareRef.current) return;
+    setSavingPdf(true);
+    try {
+      const mod = await import("html-to-image");
+      const dataUrl = await mod.toJpeg(shareRef.current, { pixelRatio: 2, backgroundColor: "#0d3d2a", quality: 0.92 });
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.write(`<html><head><title>FinTrackr ${monthYearShort}</title>
+          <style>@page{margin:16mm}body{margin:0;display:flex;justify-content:center;padding:20px;background:#fff}img{max-width:100%;height:auto}</style>
+          </head><body onload="window.print();"><img src="${dataUrl}" /></body></html>`);
+        win.document.close();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSavingPdf(false);
+    }
+  };
+
+  const onPrint = () => window.print();
+
   if (!txs.length) {
     return (
       <div className="w-full overflow-x-hidden" style={{ backgroundColor: "#FAFAF7" }}>
@@ -210,7 +208,7 @@ function ReportPage() {
     );
   }
 
-  const spendingTarget = biggestOver ? Math.round(totalSpent * 0.95) : totalSpent;
+  const spendingTarget = Math.round(totalSpent * 0.95);
   const savingsTarget = Math.round(survival.salary * 0.1);
 
   return (
@@ -218,7 +216,7 @@ function ReportPage() {
       <PageHeader title={`${monthYearShort} · Report Card`} subtitle="Your salary survival story" />
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5">
 
-        {/* SECTION 1 — Hero */}
+        {/* HERO */}
         <div
           className="rounded-2xl p-6 text-center text-white shadow-soft"
           style={{ background: "linear-gradient(180deg, #1a6b4a 0%, #0d3d2a 100%)", borderRadius: 16 }}
@@ -234,13 +232,21 @@ function ReportPage() {
               <span className="ml-1 font-semibold text-white/70" style={{ fontSize: 28 }}>/100</span>
             )}
           </div>
-          <div className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
-            {status.label}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
+              {status.label}
+            </span>
+            <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
+              Grade {insights.health.grade}
+            </span>
           </div>
           <p className="mt-2 text-sm text-white/85">{momentum}</p>
         </div>
 
-        {/* SECTION 2 — Key Stats Grid */}
+        {/* CELEBRATION */}
+        <CelebrationCard score={survival.score} biggestWin={insights.win.headline} />
+
+        {/* KEY STATS */}
         <div className="grid grid-cols-2 gap-3">
           <StatCard
             icon="📅"
@@ -257,14 +263,23 @@ function ReportPage() {
           />
           <StatCard icon="📊" label="Total Spent" value={fmt(totalSpent, currency)} sub="This cycle" />
           <StatCard
-            icon="🏆"
+            icon={insights.win.icon}
             label="Biggest Win"
-            value={biggestWin ? `${biggestWin.name} -${biggestWin.pct}%` : "—"}
-            sub={biggestWin ? "vs budget" : "Set budgets to unlock"}
+            value={insights.win.headline}
+            sub={insights.win.detail}
           />
         </div>
 
-        {/* SECTION 3 — Category Report */}
+        {/* AI MONTHLY REVIEW */}
+        <AiReviewCard review={insights.review} />
+
+        {/* MONTH-TO-MONTH COMPARISON */}
+        <ComparisonCard cmp={insights.cmp} currency={currency} />
+
+        {/* FINANCIAL HEALTH BREAKDOWN */}
+        <HealthCard health={insights.health} />
+
+        {/* CATEGORY BREAKDOWN */}
         <div>
           <h2 className="mb-2 text-base font-bold">Where Your Money Went</h2>
           <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
@@ -317,30 +332,16 @@ function ReportPage() {
           </Card>
         </div>
 
-        {/* SECTION 4 — Month Story */}
-        <div>
-          <h2 className="mb-2 text-base font-bold">Your Month in 3 Lines</h2>
-          <Card
-            className="p-4 shadow-soft"
-            style={{ borderRadius: 12, borderLeft: "4px solid #16a34a" }}
-          >
-            <ul className="space-y-2 text-sm">
-              <li>
-                {heaviestWeek
-                  ? <>Your heaviest spending was in <b>Week {heaviestWeek.i}</b> ({heaviestWeek.label}).</>
-                  : "Not enough weekly data yet."}
-              </li>
-              <li>
-                {biggestWin
-                  ? <>You saved the most on <b>{biggestWin.name}</b>, spending {fmt(biggestWin.saved, currency)} less than budget.</>
-                  : "Set category budgets to spot your biggest wins."}
-              </li>
-              <li>{tip}</li>
-            </ul>
-          </Card>
-        </div>
+        {/* ACHIEVEMENT BADGES */}
+        <BadgesCard badges={insights.badges} />
 
-        {/* SECTION 5 — Weekly Breakdown */}
+        {/* NEXT MONTH PREDICTION */}
+        <PredictionCard prediction={insights.prediction} currency={currency} />
+
+        {/* MONTHLY CHALLENGE */}
+        <ChallengeCard challenge={insights.challenge} />
+
+        {/* WEEKLY BREAKDOWN */}
         <div>
           <h2 className="mb-2 text-base font-bold">Week by Week</h2>
           <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
@@ -367,7 +368,7 @@ function ReportPage() {
           </Card>
         </div>
 
-        {/* SECTION 6 — Shareable */}
+        {/* SHAREABLE */}
         <div>
           <h2 className="text-base font-bold">Share Your Report</h2>
           <p className="mb-2 text-xs text-muted-foreground">Show how well you managed this month 💪</p>
@@ -386,27 +387,28 @@ function ReportPage() {
               <p className="font-display text-5xl font-extrabold">
                 {survival.hasIncome ? survival.score : "—"}<span className="text-2xl text-white/70">/100</span>
               </p>
-              <p className="mt-1 text-sm text-white/85">Survival Score</p>
+              <p className="mt-1 text-sm text-white/85">Survival Score · Grade {insights.health.grade}</p>
               <p className="mt-1 text-sm font-semibold">{status.label}</p>
             </div>
             <div className="my-3 h-px bg-white/20" />
             <ul className="space-y-1 text-sm">
               <li>💰 Saved {fmt(totalSaved, currency)}</li>
-              <li>📅 Under budget {daysUnderBudget} days</li>
-              <li>🏆 Best: {biggestWin?.name ?? "—"}</li>
+              <li>📅 Under budget {daysUnderBudget}/{cycleDays.length} days</li>
+              <li>{insights.win.icon} {insights.win.headline}</li>
+              <li>🎯 Goal chance next month: {insights.prediction.goalCompletionChance}%</li>
             </ul>
             <div className="my-3 h-px bg-white/20" />
             <p className="text-center text-[11px] text-white/70">
               Made with FinTrackr · Track your salary survival
             </p>
           </div>
-          <div className="mt-3 space-y-2">
+          <div className="mt-3 grid grid-cols-2 gap-2 print:hidden">
             <Button
               onClick={onShare}
               className="w-full text-white"
               style={{ backgroundColor: "#16a34a", borderRadius: 12 }}
             >
-              📤 Share My Report
+              <Share2 className="mr-1.5 h-4 w-4" /> Share
             </Button>
             <Button
               onClick={onSaveImage}
@@ -415,12 +417,29 @@ function ReportPage() {
               className="w-full"
               style={{ borderColor: "#16a34a", color: "#16a34a", borderRadius: 12 }}
             >
-              {saving ? "Saving…" : "💾 Save as Image"}
+              <ImageIcon className="mr-1.5 h-4 w-4" /> {saving ? "Saving…" : "Save Image"}
+            </Button>
+            <Button
+              onClick={onDownloadPdf}
+              disabled={savingPdf}
+              variant="outline"
+              className="w-full"
+              style={{ borderColor: "#16a34a", color: "#16a34a", borderRadius: 12 }}
+            >
+              <Download className="mr-1.5 h-4 w-4" /> {savingPdf ? "Preparing…" : "Download PDF"}
+            </Button>
+            <Button
+              onClick={onPrint}
+              variant="outline"
+              className="w-full"
+              style={{ borderColor: "#16a34a", color: "#16a34a", borderRadius: 12 }}
+            >
+              <Printer className="mr-1.5 h-4 w-4" /> Print
             </Button>
           </div>
         </div>
 
-        {/* SECTION 7 — Next Month Targets */}
+        {/* NEXT MONTH TARGETS */}
         <div>
           <h2 className="mb-2 text-base font-bold">Next Month Targets</h2>
           <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
@@ -460,8 +479,290 @@ function StatCard({
     <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
       <div className="text-lg leading-none">{icon}</div>
       <p className="mt-1.5 text-[11px] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 truncate font-display text-base font-bold">{value}</p>
-      {sub && <p className={`mt-0.5 text-[10px] ${subClass ?? "text-muted-foreground"}`}>{sub}</p>}
+      <p className="mt-0.5 line-clamp-2 font-display text-sm font-bold leading-tight">{value}</p>
+      {sub && <p className={`mt-0.5 line-clamp-2 text-[10px] ${subClass ?? "text-muted-foreground"}`}>{sub}</p>}
     </Card>
+  );
+}
+
+/* ---------------- Sub-cards ---------------- */
+
+function CelebrationCard({ score, biggestWin }: { score: number; biggestWin: string }) {
+  const tone =
+    score >= 90
+      ? { emoji: "🎉", title: "Excellent Month!", body: `Outstanding financial discipline. ${biggestWin}.`, bg: "#dcfce7", fg: "#065f46", border: "#16a34a" }
+      : score >= 75
+        ? { emoji: "👍", title: "Good Progress", body: `You're on the right track. ${biggestWin}.`, bg: "#fef3c7", fg: "#78350f", border: "#f59e0b" }
+        : { emoji: "💪", title: "Let's Improve Next Month", body: "Small consistent changes will move the needle. You've got this.", bg: "#dbeafe", fg: "#1e3a8a", border: "#3b82f6" };
+  return (
+    <Card
+      className="p-4 shadow-soft"
+      style={{ borderRadius: 12, backgroundColor: tone.bg, borderLeft: `4px solid ${tone.border}` }}
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-2xl leading-none">{tone.emoji}</span>
+        <div className="min-w-0">
+          <p className="font-display text-sm font-bold" style={{ color: tone.fg }}>{tone.title}</p>
+          <p className="mt-0.5 text-xs" style={{ color: tone.fg }}>{tone.body}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function AiReviewCard({ review }: { review: ReturnType<typeof buildAiMonthlyReview> }) {
+  const [showWhy, setShowWhy] = useState(false);
+  const ratingColor =
+    review.rating === "Excellent" ? "text-success"
+    : review.rating === "Good" ? "text-success"
+    : review.rating === "Average" ? "text-gold-foreground"
+    : "text-destructive";
+  return (
+    <div>
+      <h2 className="mb-2 flex items-center gap-1.5 text-base font-bold">
+        <Sparkles className="h-4 w-4 text-primary" /> AI Monthly Review
+      </h2>
+      <Card className="p-4 shadow-soft" style={{ borderRadius: 12, borderLeft: "4px solid #16a34a" }}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <p className="text-xs font-semibold text-muted-foreground">Overall Rating</p>
+          <p className={`font-display text-lg font-bold ${ratingColor}`}>{review.rating}</p>
+        </div>
+
+        <div className="mt-3 space-y-3 text-sm">
+          <div>
+            <p className="text-xs font-semibold text-success">✓ What went well</p>
+            <ul className="mt-1 space-y-1">
+              {review.wentWell.map((w, i) => <li key={i} className="text-xs">• {w}</li>)}
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-destructive">⚠ Needs Improvement</p>
+            <ul className="mt-1 space-y-1">
+              {review.needsImprovement.map((w, i) => <li key={i} className="text-xs">• {w}</li>)}
+            </ul>
+          </div>
+          <div className="rounded-lg bg-muted/50 p-3">
+            <p className="text-xs font-semibold">🎯 Best Action for Next Month</p>
+            <p className="mt-1 text-xs">{review.bestAction}</p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+            Confidence {review.confidence}%
+          </span>
+          <span>Updated {new Date(review.lastUpdated).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
+          <button
+            type="button"
+            onClick={() => setShowWhy(v => !v)}
+            className="inline-flex items-center gap-0.5 font-semibold text-primary"
+          >
+            <Info className="h-3 w-3" /> Why? <ChevronDown className={`h-3 w-3 transition-transform ${showWhy ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+
+        {showWhy && (
+          <div className="mt-2 rounded-lg border border-border/60 bg-background/60 p-3 text-[11px] text-muted-foreground">
+            <p className="font-semibold text-foreground">Explain calculation</p>
+            <p className="mt-1">{review.why}</p>
+            <p className="mt-2 font-semibold text-foreground">Data used</p>
+            <ul className="mt-1 space-y-0.5">
+              {review.dataUsed.map((d, i) => <li key={i}>• {d}</li>)}
+            </ul>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function TrendIcon({ trend, invert = false }: { trend: Trend; invert?: boolean }) {
+  if (trend === "flat") return <span className="text-muted-foreground">▬</span>;
+  // For expenses, "up" is bad, "down" is good. Use invert.
+  const isGood = invert ? trend === "down" : trend === "up";
+  return (
+    <span className={isGood ? "text-success" : "text-destructive"}>
+      {trend === "up" ? "▲" : "▼"}
+    </span>
+  );
+}
+
+function ComparisonCard({
+  cmp, currency,
+}: { cmp: ReturnType<typeof buildComparison>["cmp"]; currency: string }) {
+  const rows: Array<{ label: string; d: (typeof cmp)[keyof typeof cmp]; invert?: boolean; money?: boolean }> = [
+    { label: "Survival Score", d: cmp.score },
+    { label: "Income", d: cmp.income, money: true },
+    { label: "Expenses", d: cmp.expenses, money: true, invert: true },
+    { label: "Savings", d: cmp.savings, money: true },
+    { label: "Investments", d: cmp.investments, money: true },
+    { label: "Budget Days", d: cmp.budgetDays },
+  ];
+  return (
+    <div>
+      <h2 className="mb-2 text-base font-bold">Month-to-Month Comparison</h2>
+      <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
+        <ul className="space-y-2.5">
+          {rows.map(r => (
+            <li key={r.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <span className="truncate text-xs font-semibold">{r.label}</span>
+              <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap">
+                <TrendIcon trend={r.d.trend} invert={r.invert} />
+                <span>{r.d.trend === "flat" ? "0%" : `${r.d.pct > 0 ? "+" : ""}${r.d.pct.toFixed(0)}%`}</span>
+                <span className="text-muted-foreground">
+                  ({r.d.abs > 0 ? "+" : ""}{r.money ? fmt(r.d.abs, currency) : Math.round(r.d.abs)})
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+function HealthPill({ level }: { level: HealthLevel }) {
+  const map: Record<HealthLevel, { bg: string; fg: string }> = {
+    Excellent: { bg: "#dcfce7", fg: "#065f46" },
+    Good: { bg: "#dbeafe", fg: "#1e3a8a" },
+    Average: { bg: "#fef3c7", fg: "#78350f" },
+    "Needs Attention": { bg: "#fee2e2", fg: "#991b1b" },
+  };
+  const s = map[level];
+  return (
+    <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap"
+      style={{ backgroundColor: s.bg, color: s.fg }}>
+      {level}
+    </span>
+  );
+}
+
+function HealthCard({ health }: { health: ReturnType<typeof buildHealthBreakdown> }) {
+  const rows: Array<{ label: string; level: HealthLevel }> = [
+    { label: "Cash Flow", level: health.cashFlow },
+    { label: "Savings", level: health.savings },
+    { label: "Budget Discipline", level: health.budgetDiscipline },
+    { label: "Emergency Fund", level: health.emergencyFund },
+    { label: "Investments", level: health.investments },
+    { label: "Bills", level: health.bills },
+  ];
+  return (
+    <div>
+      <h2 className="mb-2 text-base font-bold">Financial Health Breakdown</h2>
+      <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
+        <div className="mb-3 flex items-center justify-between rounded-lg bg-primary/5 px-3 py-2">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Financial Grade</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Overall score {health.overallPct}%</p>
+          </div>
+          <p className="font-display text-3xl font-extrabold text-primary">{health.grade}</p>
+        </div>
+        <ul className="space-y-2">
+          {rows.map(r => (
+            <li key={r.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <span className="truncate text-xs font-semibold">{r.label}</span>
+              <HealthPill level={r.level} />
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+function BadgesCard({ badges }: { badges: ReturnType<typeof buildBadges> }) {
+  if (!badges.length) return null;
+  return (
+    <div>
+      <h2 className="mb-2 text-base font-bold">Achievements Unlocked</h2>
+      <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {badges.map(b => (
+            <li key={b.id} className="rounded-lg border border-border/60 bg-background p-2.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg leading-none">{b.icon}</span>
+                <span className="truncate text-xs font-bold">{b.title}</span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground">{b.reason}</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Earned {new Date(b.earnedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+function PredictionCard({
+  prediction, currency,
+}: { prediction: ReturnType<typeof buildPrediction>; currency: string }) {
+  const [showWhy, setShowWhy] = useState(false);
+  const riskColor =
+    prediction.riskLevel === "Low" ? "text-success"
+    : prediction.riskLevel === "Medium" ? "text-gold-foreground"
+    : "text-destructive";
+  return (
+    <div>
+      <h2 className="mb-2 flex items-center gap-1.5 text-base font-bold">
+        <Sparkles className="h-4 w-4 text-primary" /> Next Month Prediction
+      </h2>
+      <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
+        <div className="grid grid-cols-2 gap-3">
+          <PredStat label="Survival Score" value={`${prediction.score}/100`} />
+          <PredStat label="Expected Savings" value={fmt(prediction.expectedSavings, currency)} />
+          <PredStat label="Risk Level" value={prediction.riskLevel} valueClass={riskColor} />
+          <PredStat label="Goal Completion" value={`${prediction.goalCompletionChance}%`} />
+          <PredStat label="Safe Daily Spend" value={fmt(prediction.safeDailySpend, currency)} />
+          <PredStat label="Confidence" value={`${prediction.confidence}%`} />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">AI Prediction</span>
+          <button
+            type="button"
+            onClick={() => setShowWhy(v => !v)}
+            className="inline-flex items-center gap-0.5 font-semibold text-primary"
+          >
+            <Info className="h-3 w-3" /> Why? <ChevronDown className={`h-3 w-3 transition-transform ${showWhy ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {showWhy && (
+          <p className="mt-2 rounded-lg border border-border/60 bg-background/60 p-3 text-[11px] text-muted-foreground">
+            {prediction.reason}
+          </p>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function PredStat({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+  return (
+    <div className="rounded-lg border border-border/50 bg-background p-2.5">
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className={`mt-0.5 font-display text-sm font-bold ${valueClass ?? ""}`}>{value}</p>
+    </div>
+  );
+}
+
+function ChallengeCard({ challenge }: { challenge: ReturnType<typeof buildChallenge> }) {
+  return (
+    <div>
+      <h2 className="mb-2 text-base font-bold">Monthly Challenge</h2>
+      <Card className="p-4 shadow-soft" style={{ borderRadius: 12, borderLeft: "4px solid #f59e0b" }}>
+        <div className="flex items-start gap-3">
+          <span className="text-2xl leading-none">🚀</span>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-sm font-bold">{challenge.title}</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{challenge.reason}</p>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full" style={{ width: `${challenge.progress}%`, backgroundColor: "#f59e0b" }} />
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">Progress {challenge.progress}%</p>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }
