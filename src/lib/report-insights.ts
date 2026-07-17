@@ -569,28 +569,60 @@ export function buildPrediction(
 
 // ---------- monthly challenge ----------
 
-export function buildChallenge(cur: CycleStats, prev: CycleStats, health: HealthBreakdown): MonthlyChallenge {
-  if (health.savings !== "Excellent") {
-    const target = Math.max(1000, Math.round((cur.savings || 1000) * 1.1 / 500) * 500);
+export function buildChallenge(
+  cur: CycleStats,
+  prev: CycleStats,
+  health: HealthBreakdown,
+  ctx?: ReportContext,
+): MonthlyChallenge {
+  // 1. Savings needs work → challenge is a realistic 10% bump.
+  if (health.savings !== "Excellent" && cur.savings >= 0) {
+    const base = cur.savings > 0 ? cur.savings : Math.max(500, Math.round((cur.salary || cur.income) * 0.05));
+    const target = Math.max(500, Math.round((base * 1.1) / 100) * 100);
     return {
       id: "save-more",
-      title: `Save ₹${target.toLocaleString("en-IN")} next cycle`,
+      title: `Increase savings by 10% (₹${target.toLocaleString("en-IN")})`,
       target,
       unit: "₹",
       progress: Math.min(100, Math.round((cur.savings / target) * 100)),
-      reason: "Boosting savings improves your emergency buffer",
+      reason: "A 10% lift compounds into a stronger emergency buffer",
     };
   }
+  // 2. Budget discipline → target ~66% of the cycle length under budget.
   if (health.budgetDiscipline !== "Excellent") {
+    const target = Math.max(15, Math.min(25, Math.round(cur.totalDays * 0.66)));
     return {
       id: "budget-days",
-      title: "Complete 20 budget days",
-      target: 20,
+      title: `Complete ${target} budget days`,
+      target,
       unit: "days",
-      progress: Math.min(100, Math.round((cur.daysUnderBudget / 20) * 100)),
+      progress: Math.min(100, Math.round((cur.daysUnderBudget / target) * 100)),
       reason: "Consistency builds long-term discipline",
     };
   }
+  // 3. Trim the biggest expense category by ~8%.
+  if (ctx) {
+    const map = new Map<string, number>();
+    cycleFilter(ctx.transactions, cur.startKey, cur.endKey)
+      .filter((t) => t.type === "expense" && t.category_id)
+      .forEach((t) => {
+        map.set(t.category_id!, (map.get(t.category_id!) ?? 0) + Number(t.amount));
+      });
+    const top = [...map.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (top && top[1] > 500) {
+      const catName = ctx.categories.find((c) => c.id === top[0])?.name ?? "top category";
+      const saveAmt = Math.max(100, Math.round((top[1] * 0.08) / 50) * 50);
+      return {
+        id: "reduce-top-cat",
+        title: `Reduce ${catName} spending by 8% (₹${saveAmt.toLocaleString("en-IN")})`,
+        target: saveAmt,
+        unit: "₹",
+        progress: 0,
+        reason: `${catName} is your largest category this cycle`,
+      };
+    }
+  }
+  // 4. Investments room → nudge SIP by ₹500.
   if (health.investments !== "Excellent") {
     return {
       id: "sip-boost",
@@ -603,7 +635,7 @@ export function buildChallenge(cur: CycleStats, prev: CycleStats, health: Health
   }
   return {
     id: "no-impulse",
-    title: "No impulse shopping for 7 days",
+    title: "Avoid impulse purchases for one week",
     target: 7,
     unit: "days",
     progress: 0,
