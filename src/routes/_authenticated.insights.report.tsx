@@ -107,18 +107,25 @@ function ReportPage() {
       const k = t.category_id ?? "uncategorized";
       map.set(k, (map.get(k) ?? 0) + t.amount);
     });
-    return [...map.entries()].map(([cid, spent]) => {
+    const HIDDEN_NAMES = /^(uncategorized|other|unknown)$/i;
+    const rows = [...map.entries()].map(([cid, spent]) => {
       const cat = categories.find(c => c.id === cid);
       const budget = budgets.find(b => b.category_id === cid)?.monthly_limit ?? 0;
       const pct = budget > 0 ? (spent / budget) * 100 : 0;
+      const name = cat?.name ?? "Uncategorized";
+      const hidden = HIDDEN_NAMES.test(name) && budget === 0 && spent < 100;
       return {
         id: cid,
-        name: cat?.name ?? "Uncategorized",
+        name,
         color: cat?.color ?? "#9ca3af",
-        spent, budget, pct,
+        spent, budget, pct, hidden,
       };
     }).sort((a, b) => b.spent - a.spent);
+    return rows;
   }, [expenses, categories, budgets]);
+  const visibleCatRows = useMemo(() => catRows.filter(r => !r.hidden), [catRows]);
+  const hiddenCatRows = useMemo(() => catRows.filter(r => r.hidden), [catRows]);
+  const [showHiddenCats, setShowHiddenCats] = useState(false);
 
   const weeks = useMemo(() => {
     const weeklyBudget = survival.salary > 0 ? survival.salary / 4 : 0;
