@@ -191,6 +191,8 @@ export function buildComparison(ctx: ReportContext): {
   current: CycleStats;
   previous: CycleStats;
   cmp: MonthComparison;
+  salaryCredited: boolean;
+  cycleMature: boolean;
 } {
   const now = ctx.now ?? new Date();
   const current = computeCycleStats(ctx, now);
@@ -199,9 +201,18 @@ export function buildComparison(ctx: ReportContext): {
   prevWhen.setDate(prevWhen.getDate() - 1);
   const previous = computeCycleStats(ctx, prevWhen);
 
+  // Salary is considered credited only when an income transaction has landed
+  // in the current cycle. Salary Settings alone do not count.
+  const salaryCredited = current.income > 0;
+  // Cycle is "mature" only after 15 completed days; otherwise comparisons like
+  // Budget Days are misleading.
+  const cycleMature = current.totalDays >= 15;
+
   const cmp: MonthComparison = {
     score: delta(current.score, previous.score),
-    income: delta(current.income, previous.income),
+    // If salary hasn't been credited yet, force income delta to neutral so the
+    // UI never renders a misleading "-100%".
+    income: salaryCredited ? delta(current.income, previous.income) : { pct: 0, abs: 0, trend: "flat" },
     // For expenses, "down" is good, but sign follows math.
     expenses: delta(current.expenses, previous.expenses),
     savings: delta(current.savings, previous.savings),
@@ -209,7 +220,7 @@ export function buildComparison(ctx: ReportContext): {
     budgetDays: delta(current.daysUnderBudget, previous.daysUnderBudget),
   };
 
-  return { current, previous, cmp };
+  return { current, previous, cmp, salaryCredited, cycleMature };
 }
 
 export function buildBiggestWin(
@@ -377,7 +388,16 @@ export function buildHealthBreakdown(
   const activeLoans = ctx.loans.filter((l) => Number(l.remaining_balance) > 0).length;
   const billsLevel: HealthLevel = activeLoans === 0 ? "Excellent" : "Good";
 
-  const cashFlow = rank(cur.income - cur.expenses > 0 ? Math.min(100, ((cur.income - cur.expenses) / Math.max(1, cur.income)) * 200) : 0, [40, 20, 5]);
+  // Cash Flow uses explicit rules against salary/income so healthy positive
+  // savings are never labelled "Needs Attention".
+  const baseIncome = cur.salary > 0 ? cur.salary : cur.income;
+  const cashFlowRate = baseIncome > 0 ? (cur.savings / baseIncome) * 100 : 0;
+  const cashFlow: HealthLevel =
+    cur.expenses > baseIncome && baseIncome > 0 ? "Needs Attention"
+    : cashFlowRate > 20 ? "Excellent"
+    : cashFlowRate > 10 ? "Good"
+    : cashFlowRate > 0 ? "Average"
+    : "Needs Attention";
   const savings = rank(savingsRate, [20, 10, 5]);
   const budgetDiscipline = rank(budgetPct, [70, 50, 30]);
   const emergencyFund = rank(emergencyPct, [80, 50, 25]);
@@ -426,8 +446,20 @@ export function buildAiMonthlyReview(
   const rating: AiMonthlyReview["rating"] =
     cur.score >= 90 ? "Excellent" : cur.score >= 75 ? "Good" : cur.score >= 60 ? "Average" : "Needs Improvement";
 
-  // Best action derived from the largest overspending category.
-  let bestAction = `Maintain current pace to lift your score above ${Math.min(100, cur.score + 5)}.`;
+  // Best action is a positive, score-tiered coaching message. If a specific
+  // over-budget category exists, we append a concrete suggestion.
+  const topExpenseCat = (() => {
+    const map = new Map<string, number>();
+    cycleFilter(ctx.transactions, cur.startKey, cur.endKey)
+      .filter((t) => t.type === "expense" && t.category_id)
+      .forEach((t) => {
+        map.set(t.category_id!, (map.get(t.category_id!) ?? 0) + Number(t.amount));
+      });
+    const top = [...map.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (!top) return null;
+    const name = ctx.categories.find((c) => c.id === top[0])?.name ?? "top category";
+    return { name, amount: top[1] };
+  })();
   const overCat = ctx.budgets
     .map((b) => {
       const spent = cycleFilter(ctx.transactions, cur.startKey, cur.endKey)
@@ -438,9 +470,26 @@ export function buildAiMonthlyReview(
     })
     .filter((x) => x.over > 0)
     .sort((a, b) => b.over - a.over)[0];
-  if (overCat) {
-    const reduceBy = Math.round(overCat.over * 0.5);
-    bestAction = `Reduce ${overCat.name} spending by ₹${reduceBy.toLocaleString("en-IN")} next month to reach a Survival Score above ${Math.min(100, cur.score + 5)}.`;
+
+  let bestAction: string;
+  if (cur.score >= 90) {
+    bestAction =
+      "🎉 Excellent work! You're managing your salary extremely well. Maintain your current habits to keep your Financial Grade high.";
+  } else if (cur.score >= 75) {
+    const weak = overCat?.name ?? topExpenseCat?.name;
+    bestAction = weak
+      ? `Good progress. Focus on your weakest spending category — ${weak} — to improve next month.`
+      : "Good progress. Focus on your weakest spending category to improve next month.";
+  } else {
+    if (overCat) {
+      const reduceBy = Math.max(200, Math.round(overCat.over * 0.5));
+      bestAction = `Let's improve together. Start by reducing ${overCat.name} by ₹${reduceBy.toLocaleString("en-IN")} next month.`;
+    } else if (topExpenseCat) {
+      const reduceBy = Math.max(200, Math.round(topExpenseCat.amount * 0.1));
+      bestAction = `Let's improve together. Start by reducing ${topExpenseCat.name} by ₹${reduceBy.toLocaleString("en-IN")} — a realistic 10% trim.`;
+    } else {
+      bestAction = "Let's improve together. Start by reducing your highest expense category by a realistic amount.";
+    }
   }
 
   // Confidence: scales with data volume.
@@ -520,28 +569,60 @@ export function buildPrediction(
 
 // ---------- monthly challenge ----------
 
-export function buildChallenge(cur: CycleStats, prev: CycleStats, health: HealthBreakdown): MonthlyChallenge {
-  if (health.savings !== "Excellent") {
-    const target = Math.max(1000, Math.round((cur.savings || 1000) * 1.1 / 500) * 500);
+export function buildChallenge(
+  cur: CycleStats,
+  prev: CycleStats,
+  health: HealthBreakdown,
+  ctx?: ReportContext,
+): MonthlyChallenge {
+  // 1. Savings needs work → challenge is a realistic 10% bump.
+  if (health.savings !== "Excellent" && cur.savings >= 0) {
+    const base = cur.savings > 0 ? cur.savings : Math.max(500, Math.round((cur.salary || cur.income) * 0.05));
+    const target = Math.max(500, Math.round((base * 1.1) / 100) * 100);
     return {
       id: "save-more",
-      title: `Save ₹${target.toLocaleString("en-IN")} next cycle`,
+      title: `Increase savings by 10% (₹${target.toLocaleString("en-IN")})`,
       target,
       unit: "₹",
       progress: Math.min(100, Math.round((cur.savings / target) * 100)),
-      reason: "Boosting savings improves your emergency buffer",
+      reason: "A 10% lift compounds into a stronger emergency buffer",
     };
   }
+  // 2. Budget discipline → target ~66% of the cycle length under budget.
   if (health.budgetDiscipline !== "Excellent") {
+    const target = Math.max(15, Math.min(25, Math.round(cur.totalDays * 0.66)));
     return {
       id: "budget-days",
-      title: "Complete 20 budget days",
-      target: 20,
+      title: `Complete ${target} budget days`,
+      target,
       unit: "days",
-      progress: Math.min(100, Math.round((cur.daysUnderBudget / 20) * 100)),
+      progress: Math.min(100, Math.round((cur.daysUnderBudget / target) * 100)),
       reason: "Consistency builds long-term discipline",
     };
   }
+  // 3. Trim the biggest expense category by ~8%.
+  if (ctx) {
+    const map = new Map<string, number>();
+    cycleFilter(ctx.transactions, cur.startKey, cur.endKey)
+      .filter((t) => t.type === "expense" && t.category_id)
+      .forEach((t) => {
+        map.set(t.category_id!, (map.get(t.category_id!) ?? 0) + Number(t.amount));
+      });
+    const top = [...map.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (top && top[1] > 500) {
+      const catName = ctx.categories.find((c) => c.id === top[0])?.name ?? "top category";
+      const saveAmt = Math.max(100, Math.round((top[1] * 0.08) / 50) * 50);
+      return {
+        id: "reduce-top-cat",
+        title: `Reduce ${catName} spending by 8% (₹${saveAmt.toLocaleString("en-IN")})`,
+        target: saveAmt,
+        unit: "₹",
+        progress: 0,
+        reason: `${catName} is your largest category this cycle`,
+      };
+    }
+  }
+  // 4. Investments room → nudge SIP by ₹500.
   if (health.investments !== "Excellent") {
     return {
       id: "sip-boost",
@@ -554,7 +635,7 @@ export function buildChallenge(cur: CycleStats, prev: CycleStats, health: Health
   }
   return {
     id: "no-impulse",
-    title: "No impulse shopping for 7 days",
+    title: "Avoid impulse purchases for one week",
     target: 7,
     unit: "days",
     progress: 0,

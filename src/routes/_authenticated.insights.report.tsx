@@ -57,14 +57,14 @@ function ReportPage() {
   // Insights (all Gemini-ready pure derivations)
   const insights = useMemo(() => {
     const ctx = { transactions: txs, categories, budgets, loans, salarySettings: settings, now };
-    const { current, previous, cmp } = buildComparison(ctx);
+    const { current, previous, cmp, salaryCredited, cycleMature } = buildComparison(ctx);
     const win = buildBiggestWin(ctx, current, previous, cmp);
     const health = buildHealthBreakdown(ctx, current);
     const review = buildAiMonthlyReview(ctx, current, previous, cmp, health, win);
     const badges = buildBadges(ctx, current, previous, health);
     const prediction = buildPrediction(current, previous, health);
-    const challenge = buildChallenge(current, previous, health);
-    return { current, previous, cmp, win, health, review, badges, prediction, challenge };
+    const challenge = buildChallenge(current, previous, health, ctx);
+    return { current, previous, cmp, win, health, review, badges, prediction, challenge, salaryCredited, cycleMature };
   }, [txs, categories, budgets, loans, settings, now]);
 
   const cycleStart = survival.lastSalaryDate;
@@ -107,18 +107,25 @@ function ReportPage() {
       const k = t.category_id ?? "uncategorized";
       map.set(k, (map.get(k) ?? 0) + t.amount);
     });
-    return [...map.entries()].map(([cid, spent]) => {
+    const HIDDEN_NAMES = /^(uncategorized|other|unknown)$/i;
+    const rows = [...map.entries()].map(([cid, spent]) => {
       const cat = categories.find(c => c.id === cid);
       const budget = budgets.find(b => b.category_id === cid)?.monthly_limit ?? 0;
       const pct = budget > 0 ? (spent / budget) * 100 : 0;
+      const name = cat?.name ?? "Uncategorized";
+      const hidden = HIDDEN_NAMES.test(name) && budget === 0 && spent < 100;
       return {
         id: cid,
-        name: cat?.name ?? "Uncategorized",
+        name,
         color: cat?.color ?? "#9ca3af",
-        spent, budget, pct,
+        spent, budget, pct, hidden,
       };
     }).sort((a, b) => b.spent - a.spent);
+    return rows;
   }, [expenses, categories, budgets]);
+  const visibleCatRows = useMemo(() => catRows.filter(r => !r.hidden), [catRows]);
+  const hiddenCatRows = useMemo(() => catRows.filter(r => r.hidden), [catRows]);
+  const [showHiddenCats, setShowHiddenCats] = useState(false);
 
   const weeks = useMemo(() => {
     const weeklyBudget = survival.salary > 0 ? survival.salary / 4 : 0;
@@ -274,7 +281,14 @@ function ReportPage() {
         <AiReviewCard review={insights.review} />
 
         {/* MONTH-TO-MONTH COMPARISON */}
-        <ComparisonCard cmp={insights.cmp} currency={currency} />
+        <ComparisonCard
+          cmp={insights.cmp}
+          currency={currency}
+          salaryCredited={insights.salaryCredited}
+          cycleMature={insights.cycleMature}
+          currentIncome={insights.current.income}
+        />
+
 
         {/* FINANCIAL HEALTH BREAKDOWN */}
         <HealthCard health={insights.health} />
@@ -287,7 +301,7 @@ function ReportPage() {
               <p className="text-sm text-muted-foreground">No categorized expenses yet.</p>
             ) : (
               <ul className="space-y-3">
-                {catRows.slice(0, 6).map(r => {
+                {(showHiddenCats ? [...visibleCatRows, ...hiddenCatRows] : visibleCatRows).slice(0, showHiddenCats ? undefined : 6).map(r => {
                   const pct = r.budget > 0 ? Math.min(100, r.pct) : 0;
                   const barColor =
                     r.budget === 0 ? "#9ca3af"
@@ -324,7 +338,18 @@ function ReportPage() {
                 })}
               </ul>
             )}
-            {catRows.length > 6 && (
+            {hiddenCatRows.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowHiddenCats(v => !v)}
+                className="mt-3 text-xs font-semibold text-success"
+              >
+                {showHiddenCats
+                  ? "Hide small categories"
+                  : `View ${hiddenCatRows.length} more categor${hiddenCatRows.length === 1 ? "y" : "ies"}`}
+              </button>
+            )}
+            {visibleCatRows.length > 6 && (
               <Link to="/transactions" className="mt-3 block text-right text-xs font-semibold text-success">
                 View all →
               </Link>
@@ -588,16 +613,42 @@ function TrendIcon({ trend, invert = false }: { trend: Trend; invert?: boolean }
 }
 
 function ComparisonCard({
-  cmp, currency,
-}: { cmp: ReturnType<typeof buildComparison>["cmp"]; currency: string }) {
-  const rows: Array<{ label: string; d: (typeof cmp)[keyof typeof cmp]; invert?: boolean; money?: boolean }> = [
+  cmp, currency, salaryCredited, cycleMature, currentIncome,
+}: {
+  cmp: ReturnType<typeof buildComparison>["cmp"];
+  currency: string;
+  salaryCredited: boolean;
+  cycleMature: boolean;
+  currentIncome: number;
+}) {
+  type Row = {
+    label: string;
+    d: (typeof cmp)[keyof typeof cmp];
+    invert?: boolean;
+    money?: boolean;
+    overrideText?: string;
+    neutralSame?: boolean;
+  };
+  const rows: Row[] = [
     { label: "Survival Score", d: cmp.score },
-    { label: "Income", d: cmp.income, money: true },
+    {
+      label: "Income",
+      d: cmp.income,
+      money: true,
+      overrideText: !salaryCredited ? "— Salary not credited yet" : undefined,
+      neutralSame: salaryCredited && cmp.income.trend === "flat" && currentIncome > 0,
+    },
     { label: "Expenses", d: cmp.expenses, money: true, invert: true },
     { label: "Savings", d: cmp.savings, money: true },
     { label: "Investments", d: cmp.investments, money: true },
-    { label: "Budget Days", d: cmp.budgetDays },
+    {
+      label: "Budget Days",
+      d: cmp.budgetDays,
+      overrideText: !cycleMature ? "— Cycle in progress" : undefined,
+    },
   ];
+  const formatSame = (money: boolean | undefined, abs: number, base: number) =>
+    money ? `Same (${fmt(base, currency)})` : "Same";
   return (
     <div>
       <h2 className="mb-2 text-base font-bold">Month-to-Month Comparison</h2>
@@ -606,13 +657,24 @@ function ComparisonCard({
           {rows.map(r => (
             <li key={r.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <span className="truncate text-xs font-semibold">{r.label}</span>
-              <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap">
-                <TrendIcon trend={r.d.trend} invert={r.invert} />
-                <span>{r.d.trend === "flat" ? "0%" : `${r.d.pct > 0 ? "+" : ""}${r.d.pct.toFixed(0)}%`}</span>
-                <span className="text-muted-foreground">
-                  ({r.d.abs > 0 ? "+" : ""}{r.money ? fmt(r.d.abs, currency) : Math.round(r.d.abs)})
+              {r.overrideText ? (
+                <span className="text-xs font-semibold whitespace-nowrap text-muted-foreground">
+                  {r.overrideText}
                 </span>
-              </span>
+              ) : r.neutralSame ? (
+                <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap text-muted-foreground">
+                  <span>▬</span>
+                  <span>{formatSame(r.money, r.d.abs, currentIncome)}</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap">
+                  <TrendIcon trend={r.d.trend} invert={r.invert} />
+                  <span>{r.d.trend === "flat" ? "0%" : `${r.d.pct > 0 ? "+" : ""}${r.d.pct.toFixed(0)}%`}</span>
+                  <span className="text-muted-foreground">
+                    ({r.d.abs > 0 ? "+" : ""}{r.money ? fmt(r.d.abs, currency) : Math.round(r.d.abs)})
+                  </span>
+                </span>
+              )}
             </li>
           ))}
         </ul>
