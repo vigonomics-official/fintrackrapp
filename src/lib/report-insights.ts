@@ -191,6 +191,8 @@ export function buildComparison(ctx: ReportContext): {
   current: CycleStats;
   previous: CycleStats;
   cmp: MonthComparison;
+  salaryCredited: boolean;
+  cycleMature: boolean;
 } {
   const now = ctx.now ?? new Date();
   const current = computeCycleStats(ctx, now);
@@ -199,9 +201,18 @@ export function buildComparison(ctx: ReportContext): {
   prevWhen.setDate(prevWhen.getDate() - 1);
   const previous = computeCycleStats(ctx, prevWhen);
 
+  // Salary is considered credited only when an income transaction has landed
+  // in the current cycle. Salary Settings alone do not count.
+  const salaryCredited = current.income > 0;
+  // Cycle is "mature" only after 15 completed days; otherwise comparisons like
+  // Budget Days are misleading.
+  const cycleMature = current.totalDays >= 15;
+
   const cmp: MonthComparison = {
     score: delta(current.score, previous.score),
-    income: delta(current.income, previous.income),
+    // If salary hasn't been credited yet, force income delta to neutral so the
+    // UI never renders a misleading "-100%".
+    income: salaryCredited ? delta(current.income, previous.income) : { pct: 0, abs: 0, trend: "flat" },
     // For expenses, "down" is good, but sign follows math.
     expenses: delta(current.expenses, previous.expenses),
     savings: delta(current.savings, previous.savings),
@@ -209,7 +220,7 @@ export function buildComparison(ctx: ReportContext): {
     budgetDays: delta(current.daysUnderBudget, previous.daysUnderBudget),
   };
 
-  return { current, previous, cmp };
+  return { current, previous, cmp, salaryCredited, cycleMature };
 }
 
 export function buildBiggestWin(
@@ -377,7 +388,16 @@ export function buildHealthBreakdown(
   const activeLoans = ctx.loans.filter((l) => Number(l.remaining_balance) > 0).length;
   const billsLevel: HealthLevel = activeLoans === 0 ? "Excellent" : "Good";
 
-  const cashFlow = rank(cur.income - cur.expenses > 0 ? Math.min(100, ((cur.income - cur.expenses) / Math.max(1, cur.income)) * 200) : 0, [40, 20, 5]);
+  // Cash Flow uses explicit rules against salary/income so healthy positive
+  // savings are never labelled "Needs Attention".
+  const baseIncome = cur.salary > 0 ? cur.salary : cur.income;
+  const cashFlowRate = baseIncome > 0 ? (cur.savings / baseIncome) * 100 : 0;
+  const cashFlow: HealthLevel =
+    cur.expenses > baseIncome && baseIncome > 0 ? "Needs Attention"
+    : cashFlowRate > 20 ? "Excellent"
+    : cashFlowRate > 10 ? "Good"
+    : cashFlowRate > 0 ? "Average"
+    : "Needs Attention";
   const savings = rank(savingsRate, [20, 10, 5]);
   const budgetDiscipline = rank(budgetPct, [70, 50, 30]);
   const emergencyFund = rank(emergencyPct, [80, 50, 25]);
