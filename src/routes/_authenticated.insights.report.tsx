@@ -274,7 +274,14 @@ function ReportPage() {
         <AiReviewCard review={insights.review} />
 
         {/* MONTH-TO-MONTH COMPARISON */}
-        <ComparisonCard cmp={insights.cmp} currency={currency} />
+        <ComparisonCard
+          cmp={insights.cmp}
+          currency={currency}
+          salaryCredited={insights.salaryCredited}
+          cycleMature={insights.cycleMature}
+          currentIncome={insights.current.income}
+        />
+
 
         {/* FINANCIAL HEALTH BREAKDOWN */}
         <HealthCard health={insights.health} />
