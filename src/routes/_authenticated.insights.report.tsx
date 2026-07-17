@@ -613,16 +613,42 @@ function TrendIcon({ trend, invert = false }: { trend: Trend; invert?: boolean }
 }
 
 function ComparisonCard({
-  cmp, currency,
-}: { cmp: ReturnType<typeof buildComparison>["cmp"]; currency: string }) {
-  const rows: Array<{ label: string; d: (typeof cmp)[keyof typeof cmp]; invert?: boolean; money?: boolean }> = [
+  cmp, currency, salaryCredited, cycleMature, currentIncome,
+}: {
+  cmp: ReturnType<typeof buildComparison>["cmp"];
+  currency: string;
+  salaryCredited: boolean;
+  cycleMature: boolean;
+  currentIncome: number;
+}) {
+  type Row = {
+    label: string;
+    d: (typeof cmp)[keyof typeof cmp];
+    invert?: boolean;
+    money?: boolean;
+    overrideText?: string;
+    neutralSame?: boolean;
+  };
+  const rows: Row[] = [
     { label: "Survival Score", d: cmp.score },
-    { label: "Income", d: cmp.income, money: true },
+    {
+      label: "Income",
+      d: cmp.income,
+      money: true,
+      overrideText: !salaryCredited ? "— Salary not credited yet" : undefined,
+      neutralSame: salaryCredited && cmp.income.trend === "flat" && currentIncome > 0,
+    },
     { label: "Expenses", d: cmp.expenses, money: true, invert: true },
     { label: "Savings", d: cmp.savings, money: true },
     { label: "Investments", d: cmp.investments, money: true },
-    { label: "Budget Days", d: cmp.budgetDays },
+    {
+      label: "Budget Days",
+      d: cmp.budgetDays,
+      overrideText: !cycleMature ? "— Cycle in progress" : undefined,
+    },
   ];
+  const formatSame = (money: boolean | undefined, abs: number, base: number) =>
+    money ? `Same (${fmt(base, currency)})` : "Same";
   return (
     <div>
       <h2 className="mb-2 text-base font-bold">Month-to-Month Comparison</h2>
@@ -631,13 +657,24 @@ function ComparisonCard({
           {rows.map(r => (
             <li key={r.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <span className="truncate text-xs font-semibold">{r.label}</span>
-              <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap">
-                <TrendIcon trend={r.d.trend} invert={r.invert} />
-                <span>{r.d.trend === "flat" ? "0%" : `${r.d.pct > 0 ? "+" : ""}${r.d.pct.toFixed(0)}%`}</span>
-                <span className="text-muted-foreground">
-                  ({r.d.abs > 0 ? "+" : ""}{r.money ? fmt(r.d.abs, currency) : Math.round(r.d.abs)})
+              {r.overrideText ? (
+                <span className="text-xs font-semibold whitespace-nowrap text-muted-foreground">
+                  {r.overrideText}
                 </span>
-              </span>
+              ) : r.neutralSame ? (
+                <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap text-muted-foreground">
+                  <span>▬</span>
+                  <span>{formatSame(r.money, r.d.abs, currentIncome)}</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap">
+                  <TrendIcon trend={r.d.trend} invert={r.invert} />
+                  <span>{r.d.trend === "flat" ? "0%" : `${r.d.pct > 0 ? "+" : ""}${r.d.pct.toFixed(0)}%`}</span>
+                  <span className="text-muted-foreground">
+                    ({r.d.abs > 0 ? "+" : ""}{r.money ? fmt(r.d.abs, currency) : Math.round(r.d.abs)})
+                  </span>
+                </span>
+              )}
             </li>
           ))}
         </ul>
