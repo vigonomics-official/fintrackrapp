@@ -446,8 +446,20 @@ export function buildAiMonthlyReview(
   const rating: AiMonthlyReview["rating"] =
     cur.score >= 90 ? "Excellent" : cur.score >= 75 ? "Good" : cur.score >= 60 ? "Average" : "Needs Improvement";
 
-  // Best action derived from the largest overspending category.
-  let bestAction = `Maintain current pace to lift your score above ${Math.min(100, cur.score + 5)}.`;
+  // Best action is a positive, score-tiered coaching message. If a specific
+  // over-budget category exists, we append a concrete suggestion.
+  const topExpenseCat = (() => {
+    const map = new Map<string, number>();
+    cycleFilter(ctx.transactions, cur.startKey, cur.endKey)
+      .filter((t) => t.type === "expense" && t.category_id)
+      .forEach((t) => {
+        map.set(t.category_id!, (map.get(t.category_id!) ?? 0) + Number(t.amount));
+      });
+    const top = [...map.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (!top) return null;
+    const name = ctx.categories.find((c) => c.id === top[0])?.name ?? "top category";
+    return { name, amount: top[1] };
+  })();
   const overCat = ctx.budgets
     .map((b) => {
       const spent = cycleFilter(ctx.transactions, cur.startKey, cur.endKey)
@@ -458,9 +470,26 @@ export function buildAiMonthlyReview(
     })
     .filter((x) => x.over > 0)
     .sort((a, b) => b.over - a.over)[0];
-  if (overCat) {
-    const reduceBy = Math.round(overCat.over * 0.5);
-    bestAction = `Reduce ${overCat.name} spending by ₹${reduceBy.toLocaleString("en-IN")} next month to reach a Survival Score above ${Math.min(100, cur.score + 5)}.`;
+
+  let bestAction: string;
+  if (cur.score >= 90) {
+    bestAction =
+      "🎉 Excellent work! You're managing your salary extremely well. Maintain your current habits to keep your Financial Grade high.";
+  } else if (cur.score >= 75) {
+    const weak = overCat?.name ?? topExpenseCat?.name;
+    bestAction = weak
+      ? `Good progress. Focus on your weakest spending category — ${weak} — to improve next month.`
+      : "Good progress. Focus on your weakest spending category to improve next month.";
+  } else {
+    if (overCat) {
+      const reduceBy = Math.max(200, Math.round(overCat.over * 0.5));
+      bestAction = `Let's improve together. Start by reducing ${overCat.name} by ₹${reduceBy.toLocaleString("en-IN")} next month.`;
+    } else if (topExpenseCat) {
+      const reduceBy = Math.max(200, Math.round(topExpenseCat.amount * 0.1));
+      bestAction = `Let's improve together. Start by reducing ${topExpenseCat.name} by ₹${reduceBy.toLocaleString("en-IN")} — a realistic 10% trim.`;
+    } else {
+      bestAction = "Let's improve together. Start by reducing your highest expense category by a realistic amount.";
+    }
   }
 
   // Confidence: scales with data volume.
