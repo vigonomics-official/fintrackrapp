@@ -301,7 +301,7 @@ function ReportPage() {
               <p className="text-sm text-muted-foreground">No categorized expenses yet.</p>
             ) : (
               <ul className="space-y-3">
-                {catRows.slice(0, 6).map(r => {
+                {(showHiddenCats ? [...visibleCatRows, ...hiddenCatRows] : visibleCatRows).slice(0, showHiddenCats ? undefined : 6).map(r => {
                   const pct = r.budget > 0 ? Math.min(100, r.pct) : 0;
                   const barColor =
                     r.budget === 0 ? "#9ca3af"
@@ -338,7 +338,18 @@ function ReportPage() {
                 })}
               </ul>
             )}
-            {catRows.length > 6 && (
+            {hiddenCatRows.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowHiddenCats(v => !v)}
+                className="mt-3 text-xs font-semibold text-success"
+              >
+                {showHiddenCats
+                  ? "Hide small categories"
+                  : `View ${hiddenCatRows.length} more categor${hiddenCatRows.length === 1 ? "y" : "ies"}`}
+              </button>
+            )}
+            {visibleCatRows.length > 6 && (
               <Link to="/transactions" className="mt-3 block text-right text-xs font-semibold text-success">
                 View all →
               </Link>
