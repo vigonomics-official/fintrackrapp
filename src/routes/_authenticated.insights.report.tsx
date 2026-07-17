@@ -57,14 +57,14 @@ function ReportPage() {
   // Insights (all Gemini-ready pure derivations)
   const insights = useMemo(() => {
     const ctx = { transactions: txs, categories, budgets, loans, salarySettings: settings, now };
-    const { current, previous, cmp } = buildComparison(ctx);
+    const { current, previous, cmp, salaryCredited, cycleMature } = buildComparison(ctx);
     const win = buildBiggestWin(ctx, current, previous, cmp);
     const health = buildHealthBreakdown(ctx, current);
     const review = buildAiMonthlyReview(ctx, current, previous, cmp, health, win);
     const badges = buildBadges(ctx, current, previous, health);
     const prediction = buildPrediction(current, previous, health);
-    const challenge = buildChallenge(current, previous, health);
-    return { current, previous, cmp, win, health, review, badges, prediction, challenge };
+    const challenge = buildChallenge(current, previous, health, ctx);
+    return { current, previous, cmp, win, health, review, badges, prediction, challenge, salaryCredited, cycleMature };
   }, [txs, categories, budgets, loans, settings, now]);
 
   const cycleStart = survival.lastSalaryDate;
