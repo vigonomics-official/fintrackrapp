@@ -5,20 +5,26 @@ import {
   BellOff,
   Brain,
   CheckCircle2,
+  CheckCircle,
   ChevronDown,
   ChevronUp,
   ClipboardList,
+  Clock,
   History,
   Lightbulb,
   ListChecks,
   MessageSquare,
   Sparkles,
+  Star,
+  Timer,
+  Target,
   TrendingDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/finance/PageHeader";
 import {
