@@ -5,20 +5,26 @@ import {
   BellOff,
   Brain,
   CheckCircle2,
+  CheckCircle,
   ChevronDown,
   ChevronUp,
   ClipboardList,
+  Clock,
   History,
   Lightbulb,
   ListChecks,
   MessageSquare,
   Sparkles,
+  Star,
+  Timer,
+  Target,
   TrendingDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/finance/PageHeader";
 import {
@@ -137,18 +143,96 @@ function SummaryHeader({
   );
 }
 
+// ---------- helpers ----------
+const CONFIDENCE_CHIP: Record<"High" | "Medium" | "Low", string> = {
+  High: "bg-success/15 text-success",
+  Medium: "bg-gold/15 text-gold",
+  Low: "bg-muted text-muted-foreground",
+};
+const CONFIDENCE_DOT: Record<"High" | "Medium" | "Low", string> = {
+  High: "🟢",
+  Medium: "🟡",
+  Low: "🔴",
+};
+
+function formatDelta(n: number, currency: string): string {
+  const sign = n > 0 ? "+" : n < 0 ? "−" : "";
+  return `${sign}${formatCurrency(Math.abs(n), currency)}`;
+}
+
+function ImpactChips({ alert, currency }: { alert: DangerAlert; currency: string }) {
+  const m = alert.impactMetrics;
+  const chips: React.ReactNode[] = [];
+  if (m.safeDailyDelta != null && m.safeDailyDelta !== 0) {
+    chips.push(
+      <span key="sd" className="rounded-md bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium text-foreground/80">
+        Safe daily {formatDelta(m.safeDailyDelta, currency)}/day
+      </span>,
+    );
+  }
+  if (m.scoreDelta != null && m.scoreDelta !== 0 && m.scoreCurrent != null) {
+    chips.push(
+      <span key="sc" className="rounded-md bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium text-foreground/80">
+        Score {m.scoreCurrent} → {Math.max(0, m.scoreCurrent + m.scoreDelta)}
+      </span>,
+    );
+  }
+  if (m.savingsDelta != null && m.savingsDelta !== 0) {
+    chips.push(
+      <span key="sv" className="rounded-md bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium text-foreground/80">
+        Savings {formatDelta(m.savingsDelta, currency)}
+      </span>,
+    );
+  }
+  if (m.goalDelayMonths != null && m.goalDelayMonths > 0) {
+    chips.push(
+      <span key="gd" className="rounded-md bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium text-foreground/80">
+        Goal delay +{m.goalDelayMonths}mo
+      </span>,
+    );
+  }
+  if (m.monthlyRecommend != null && m.monthlyRecommend > 0) {
+    chips.push(
+      <span key="mr" className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+        Save {formatCurrency(m.monthlyRecommend, currency)}/mo
+      </span>,
+    );
+  }
+  if (!chips.length) return null;
+  return <div className="flex flex-wrap gap-1">{chips}</div>;
+}
+
+function GoalProgressBar({ gp, currency }: { gp: NonNullable<DangerAlert["goalProgress"]>; currency: string }) {
+  return (
+    <div className="rounded-lg bg-muted/40 p-2">
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="flex items-center gap-1 text-foreground/90"><Target className="h-3 w-3" /> {gp.name}</span>
+        <span className="font-semibold">{Math.round(gp.pct)}%</span>
+      </div>
+      <Progress value={Math.min(100, gp.pct)} className="mt-1 h-1.5" />
+      <div className="mt-1 flex flex-wrap justify-between gap-2 text-[10px] text-muted-foreground">
+        <span>{formatCurrency(gp.current, currency)} / {formatCurrency(gp.target, currency)}</span>
+        {gp.etaDate && <span>ETA: {gp.etaDate}</span>}
+      </div>
+    </div>
+  );
+}
+
 // ---------- alert card ----------
 function AlertCard({
   alert,
   currency,
   onAction,
+  featured = false,
 }: {
   alert: DangerAlert;
   currency: string;
   onAction: (a: DangerAlert, action: AlertAction) => void;
+  featured?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const meta = PRIORITY_META[alert.priority];
+  const conf = alert.confidenceFactors;
 
   return (
     <Card className="relative overflow-hidden p-4 pl-5 shadow-soft">
@@ -166,31 +250,55 @@ function AlertCard({
             <Badge variant="secondary" className={cn("h-4 px-1.5 text-[10px]", meta.chip)}>
               {meta.label}
             </Badge>
+            <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+              {alert.urgency.emoji} {alert.urgency.label}
+            </Badge>
+            <Badge variant="outline" className="h-4 px-1.5 text-[10px] text-muted-foreground">
+              <Timer className="mr-0.5 h-2.5 w-2.5" /> {alert.fixTime}
+            </Badge>
             {alert.isPredictive && (
               <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
                 <Sparkles className="mr-0.5 h-2.5 w-2.5" /> Predictive
               </Badge>
             )}
-            <Badge variant="outline" className="h-4 px-1.5 text-[10px] text-muted-foreground">
-              {alert.confidence}% confident
+            <Badge variant="secondary" className={cn("h-4 px-1.5 text-[10px]", CONFIDENCE_CHIP[conf.label])}>
+              {CONFIDENCE_DOT[conf.label]} {conf.label} ({alert.confidence}%)
             </Badge>
           </div>
           <p className="text-sm text-foreground/90">{alert.problem}</p>
-          {alert.estimatedSavings > 0 && (
-            <p className="text-[11px] font-medium text-success">
-              Potential save: {formatCurrency(alert.estimatedSavings, currency)}
-            </p>
-          )}
+          <p className="text-[11px] text-muted-foreground">{alert.oneLineReason}</p>
+          {alert.goalProgress && <GoalProgressBar gp={alert.goalProgress} currency={currency} />}
+          <ImpactChips alert={alert} currency={currency} />
         </div>
         {open ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />}
       </button>
 
       {open && (
         <div className="mt-3 space-y-3 border-t pt-3">
-          <ReasonBlock icon={<Brain className="h-3.5 w-3.5" />} label="Why this is flagged" text={alert.why} />
+          <ReasonBlock icon={<Brain className="h-3.5 w-3.5" />} label="Why this happened" text={alert.why} />
           <ReasonBlock icon={<TrendingDown className="h-3.5 w-3.5" />} label="Impact" text={alert.impact} />
           <ReasonBlock icon={<Lightbulb className="h-3.5 w-3.5" />} label="Suggested action" text={alert.suggestion} />
           <ReasonBlock icon={<AlertTriangle className="h-3.5 w-3.5" />} label="Why this priority" text={alert.priorityReason} />
+
+          <div className="rounded-lg bg-muted/40 p-2.5">
+            <p className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <CheckCircle className="h-3 w-3" /> Confidence — {conf.label} ({alert.confidence}%)
+            </p>
+            {conf.present.length > 0 && (
+              <ul className="space-y-0.5">
+                {conf.present.map((p, i) => (
+                  <li key={`p-${i}`} className="text-[11px] text-foreground/80">✓ {p}</li>
+                ))}
+              </ul>
+            )}
+            {conf.missing.length > 0 && (
+              <ul className="mt-1 space-y-0.5">
+                {conf.missing.map((p, i) => (
+                  <li key={`m-${i}`} className="text-[11px] text-muted-foreground">• Missing: {p}</li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <div className="rounded-lg bg-muted/40 p-2.5">
             <p className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -203,6 +311,7 @@ function AlertCard({
             </ul>
             <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">{alert.calculation}</p>
           </div>
+
 
           <div className="flex flex-wrap gap-1.5">
             {alert.actions.includes("view-transactions") && (
@@ -255,6 +364,82 @@ function ReasonBlock({ icon, label, text }: { icon: React.ReactNode; label: stri
       </p>
       <p className="text-[12px] leading-relaxed text-foreground/90">{text}</p>
     </div>
+  );
+}
+
+// ---------- fix this first (featured priority) ----------
+function FixThisFirstCard({
+  alert,
+  currency,
+  onAction,
+}: {
+  alert: DangerAlert;
+  currency: string;
+  onAction: (a: DangerAlert, action: AlertAction) => void;
+}) {
+  const meta = PRIORITY_META[alert.priority];
+  const primary: AlertAction =
+    alert.actions.find((a) => a === "apply-planner") ??
+    alert.actions.find((a) => a === "view-transactions") ??
+    alert.actions.find((a) => a === "ask-coach") ??
+    "ask-coach";
+  const primaryLabel: Record<AlertAction, string> = {
+    "apply-planner": "Apply to Planner",
+    "view-transactions": "View transactions",
+    "ask-coach": "Ask AI Coach",
+    "create-budget": "Create budget",
+    "mark-resolved": "Mark resolved",
+    "remind-later": "Remind later",
+    "dismiss": "Dismiss",
+  };
+  const moneyLine =
+    alert.impactMetrics.savingsDelta ??
+    alert.impactMetrics.monthlyRecommend ??
+    alert.moneyAtRisk ??
+    alert.estimatedSavings;
+
+  return (
+    <Card className="relative overflow-hidden border-primary/30 bg-primary/5 p-4 pl-5 shadow-soft">
+      <span className={cn("absolute left-0 top-0 h-full w-1.5", meta.bar)} />
+      <div className="flex items-start gap-3">
+        <span className="text-xl leading-none"><Star className="h-5 w-5 fill-gold text-gold" /></span>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="font-display text-[11px] font-bold uppercase tracking-wider text-primary">⭐ Fix This First</p>
+            <Badge variant="secondary" className={cn("h-4 px-1.5 text-[10px]", meta.chip)}>{meta.label}</Badge>
+            <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+              {alert.urgency.emoji} {alert.urgency.label}
+            </Badge>
+            <Badge variant="outline" className="h-4 px-1.5 text-[10px] text-muted-foreground">
+              <Clock className="mr-0.5 h-2.5 w-2.5" /> {alert.fixTime}
+            </Badge>
+          </div>
+          <p className="font-display text-sm font-semibold">{alert.title}</p>
+          <p className="text-[12px] text-foreground/90">{alert.problem}</p>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Why it matters</p>
+            <p className="text-[12px] text-foreground/85">{alert.why}</p>
+          </div>
+          {typeof moneyLine === "number" && moneyLine !== 0 && (
+            <p className="text-[11px] font-medium text-foreground/90">
+              💰 Money impact: <span className="font-semibold">{formatCurrency(Math.abs(moneyLine), currency)}</span>
+              {alert.impactMetrics.monthlyRecommend ? "/month" : ""}
+            </p>
+          )}
+          <ImpactChips alert={alert} currency={currency} />
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <Button size="sm" className="h-7 text-xs" onClick={() => onAction(alert, primary)}>
+              {primaryLabel[primary]}
+            </Button>
+            {alert.actions.includes("ask-coach") && primary !== "ask-coach" && (
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "ask-coach")}>
+                <MessageSquare className="mr-1 h-3 w-3" /> Ask AI Coach
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -464,7 +649,20 @@ function AlertsPage() {
                 </p>
               </Card>
             ) : (
-              filtered.map((a) => <AlertCard key={a.id} alert={a} currency={currency} onAction={handleAction} />)
+              <>
+                {filter === "all" && active[0] && (
+                  <FixThisFirstCard alert={active[0]} currency={currency} onAction={handleAction} />
+                )}
+                {filtered.map((a, i) => (
+                  <AlertCard
+                    key={a.id}
+                    alert={a}
+                    currency={currency}
+                    onAction={handleAction}
+                    featured={filter === "all" && i === 0}
+                  />
+                ))}
+              </>
             )}
           </TabsContent>
 
