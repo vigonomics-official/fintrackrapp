@@ -367,6 +367,82 @@ function ReasonBlock({ icon, label, text }: { icon: React.ReactNode; label: stri
   );
 }
 
+// ---------- fix this first (featured priority) ----------
+function FixThisFirstCard({
+  alert,
+  currency,
+  onAction,
+}: {
+  alert: DangerAlert;
+  currency: string;
+  onAction: (a: DangerAlert, action: AlertAction) => void;
+}) {
+  const meta = PRIORITY_META[alert.priority];
+  const primary: AlertAction =
+    alert.actions.find((a) => a === "apply-planner") ??
+    alert.actions.find((a) => a === "view-transactions") ??
+    alert.actions.find((a) => a === "ask-coach") ??
+    "ask-coach";
+  const primaryLabel: Record<AlertAction, string> = {
+    "apply-planner": "Apply to Planner",
+    "view-transactions": "View transactions",
+    "ask-coach": "Ask AI Coach",
+    "create-budget": "Create budget",
+    "mark-resolved": "Mark resolved",
+    "remind-later": "Remind later",
+    "dismiss": "Dismiss",
+  };
+  const moneyLine =
+    alert.impactMetrics.savingsDelta ??
+    alert.impactMetrics.monthlyRecommend ??
+    alert.moneyAtRisk ??
+    alert.estimatedSavings;
+
+  return (
+    <Card className="relative overflow-hidden border-primary/30 bg-primary/5 p-4 pl-5 shadow-soft">
+      <span className={cn("absolute left-0 top-0 h-full w-1.5", meta.bar)} />
+      <div className="flex items-start gap-3">
+        <span className="text-xl leading-none"><Star className="h-5 w-5 fill-gold text-gold" /></span>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="font-display text-[11px] font-bold uppercase tracking-wider text-primary">⭐ Fix This First</p>
+            <Badge variant="secondary" className={cn("h-4 px-1.5 text-[10px]", meta.chip)}>{meta.label}</Badge>
+            <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+              {alert.urgency.emoji} {alert.urgency.label}
+            </Badge>
+            <Badge variant="outline" className="h-4 px-1.5 text-[10px] text-muted-foreground">
+              <Clock className="mr-0.5 h-2.5 w-2.5" /> {alert.fixTime}
+            </Badge>
+          </div>
+          <p className="font-display text-sm font-semibold">{alert.title}</p>
+          <p className="text-[12px] text-foreground/90">{alert.problem}</p>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Why it matters</p>
+            <p className="text-[12px] text-foreground/85">{alert.why}</p>
+          </div>
+          {typeof moneyLine === "number" && moneyLine !== 0 && (
+            <p className="text-[11px] font-medium text-foreground/90">
+              💰 Money impact: <span className="font-semibold">{formatCurrency(Math.abs(moneyLine), currency)}</span>
+              {alert.impactMetrics.monthlyRecommend ? "/month" : ""}
+            </p>
+          )}
+          <ImpactChips alert={alert} currency={currency} />
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <Button size="sm" className="h-7 text-xs" onClick={() => onAction(alert, primary)}>
+              {primaryLabel[primary]}
+            </Button>
+            {alert.actions.includes("ask-coach") && primary !== "ask-coach" && (
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "ask-coach")}>
+                <MessageSquare className="mr-1 h-3 w-3" /> Ask AI Coach
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 // ---------- main ----------
 function AlertsPage() {
   const navigate = useNavigate();
