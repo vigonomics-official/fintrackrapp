@@ -727,7 +727,7 @@ function AlertsPage() {
               </Card>
             ) : (
               dismissed.map((a) => (
-                <AlertCard key={a.id} alert={a} currency={currency} onAction={handleAction} />
+                <AlertCard key={a.id} alert={a} currency={currency} onAction={handleAction} expanded={expandedIds.has(a.id)} onToggle={() => toggleExpanded(a.id)} />
               ))
             )}
           </TabsContent>
