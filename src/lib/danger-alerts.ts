@@ -852,22 +852,35 @@ export function detectAlerts(ctx: AlertContext): DangerAlert[] {
   const unique = Array.from(dedup.values());
 
   // ---------- Smart sort ----------
-  // Composite: priorityWeight → urgency proximity → moneyAtRisk → confidence.
-  unique.sort((a, b) => {
-    const sa = compositeScore(a);
-    const sb = compositeScore(b);
-    return sb - sa;
-  });
+  // Order (per spec):
+  //   1. Highest financial loss (moneyAtRisk / |savingsDelta|)
+  //   2. Nearest deadline (urgency.sortDays ascending)
+  //   3. Highest urgency emoji tier
+  //   4. Highest confidence
+  //   5. Highest impact on Survival Score (|scoreDelta|)
+  // Priority label is only a tie-breaker, not a dominant factor.
+  unique.sort((a, b) => compositeScore(b) - compositeScore(a));
 
   return unique;
 }
 
 function compositeScore(a: DangerAlert): number {
-  const priorityScore = PRIORITY_META[a.priority].weight * 10_000;
-  const urgencyScore = (30 - Math.min(30, a.urgency.sortDays)) * 300;
-  const riskScore = Math.min(50_000, Math.round(a.moneyAtRisk));
-  const confScore = a.confidence;
-  return priorityScore + urgencyScore + riskScore + confScore;
+  const loss = Math.max(
+    Math.abs(a.moneyAtRisk || 0),
+    Math.abs(a.impactMetrics.savingsDelta || 0),
+    Math.abs(a.estimatedSavings || 0),
+  );
+  // Cap at 5L so a single huge alert can't crush the other criteria.
+  const lossScore = Math.min(500_000, loss) * 20;           // ~1e7 range
+  const deadlineScore = (30 - Math.min(30, a.urgency.sortDays)) * 20_000; // ~6e5
+  const urgencyTier: Record<UrgencyKey, number> = {
+    today: 5, "3days": 4, salary: 3, week: 2, later: 1,
+  };
+  const urgencyScore = urgencyTier[a.urgency.key] * 5_000;  // ~2.5e4
+  const confScore = a.confidence * 50;                       // ~5e3
+  const scoreImpact = Math.min(50, Math.abs(a.impactMetrics.scoreDelta || 0)) * 20; // ~1e3
+  const priorityTiebreak = PRIORITY_META[a.priority].weight; // ~4
+  return lossScore + deadlineScore + urgencyScore + confScore + scoreImpact + priorityTiebreak;
 }
 
 // ---------- summary ----------
