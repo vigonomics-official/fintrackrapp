@@ -575,7 +575,7 @@ function AlertsPage() {
         case "create-budget":
           navigate({ to: "/budgets" });
           break;
-        case "apply-planner":
+        case "apply-planner": {
           try {
             const raw = localStorage.getItem("fintrackr_planner_queue_v1");
             const list = raw ? JSON.parse(raw) : [];
@@ -587,11 +587,21 @@ function AlertsPage() {
               createdAt: Date.now(),
             });
             localStorage.setItem("fintrackr_planner_queue_v1", JSON.stringify(list));
+            // Mark as resolved so risk score, active count, Fix-This-First card,
+            // and the alert list refresh immediately without a page reload.
+            const next = { ...state, [a.id]: { status: "resolved" as const, updatedAt: Date.now() } };
+            writeState(next);
+            setState(next);
+            const h = [{ id: a.id, title: a.title, priority: a.priority, problem: a.problem, outcome: "resolved" as const, at: Date.now() }, ...history];
+            writeHistory(h); setHistory(h);
+            try { window.dispatchEvent(new CustomEvent("fintrackr:planner-updated")); } catch {}
+            try { window.dispatchEvent(new CustomEvent("fintrackr:alerts-updated")); } catch {}
             toast.success("Added to Planner", { description: a.suggestion });
           } catch {
             toast.error("Could not add to Planner");
           }
           break;
+        }
         case "ask-coach":
           try {
             window.dispatchEvent(new CustomEvent("fintrackr:ask-coach", {
