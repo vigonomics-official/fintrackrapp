@@ -223,30 +223,96 @@ function AlertCard({
   alert,
   currency,
   onAction,
-  featured = false,
+  expanded,
+  onToggle,
 }: {
   alert: DangerAlert;
   currency: string;
   onAction: (a: DangerAlert, action: AlertAction) => void;
-  featured?: boolean;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const meta = PRIORITY_META[alert.priority];
   const conf = alert.confidenceFactors;
+
+  const moneyImpact =
+    alert.impactMetrics.savingsDelta ??
+    (alert.impactMetrics.monthlyRecommend != null ? -alert.impactMetrics.monthlyRecommend : null) ??
+    (alert.moneyAtRisk ? -alert.moneyAtRisk : null) ??
+    (alert.estimatedSavings ? -alert.estimatedSavings : null);
 
   return (
     <Card className="relative overflow-hidden p-4 pl-5 shadow-soft">
       <span className={cn("absolute left-0 top-0 h-full w-1.5", meta.bar)} />
+
+      {/* Compact header — always visible */}
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={onToggle}
         className="flex w-full items-start gap-3 text-left"
-        aria-expanded={open}
+        aria-expanded={expanded}
       >
         <span className="text-xl leading-none">{meta.emoji}</span>
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="font-display text-sm font-semibold">{alert.title}</p>
+            <Badge variant="secondary" className={cn("h-4 px-1.5 text-[10px]", CONFIDENCE_CHIP[conf.label])}>
+              {CONFIDENCE_DOT[conf.label]} {conf.label} ({alert.confidence}%)
+            </Badge>
+            {moneyImpact != null && moneyImpact !== 0 && (
+              <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+                💰 {formatDelta(moneyImpact, currency)}
+              </Badge>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground">{alert.oneLineReason}</p>
+        </div>
+        {expanded ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />}
+      </button>
+
+      {/* Action buttons — always visible */}
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {alert.actions.includes("apply-planner") && (
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "apply-planner")}>
+            Apply to Planner
+          </Button>
+        )}
+        {alert.actions.includes("view-transactions") && (
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "view-transactions")}>
+            View transactions
+          </Button>
+        )}
+        {alert.actions.includes("ask-coach") && (
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "ask-coach")}>
+            <MessageSquare className="mr-1 h-3 w-3" /> Ask AI Coach
+          </Button>
+        )}
+        {alert.actions.includes("create-budget") && (
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "create-budget")}>
+            Create budget
+          </Button>
+        )}
+        {alert.actions.includes("mark-resolved") && (
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "mark-resolved")}>
+            <CheckCircle2 className="mr-1 h-3 w-3" /> Mark resolved
+          </Button>
+        )}
+        {alert.actions.includes("remind-later") && (
+          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => onAction(alert, "remind-later")}>
+            Remind later
+          </Button>
+        )}
+        {alert.actions.includes("dismiss") && (
+          <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => onAction(alert, "dismiss")}>
+            <BellOff className="mr-1 h-3 w-3" /> Dismiss
+          </Button>
+        )}
+      </div>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="mt-3 space-y-3 border-t pt-3">
+          <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary" className={cn("h-4 px-1.5 text-[10px]", meta.chip)}>
               {meta.label}
             </Badge>
@@ -261,42 +327,48 @@ function AlertCard({
                 <Sparkles className="mr-0.5 h-2.5 w-2.5" /> Predictive
               </Badge>
             )}
-            <Badge variant="secondary" className={cn("h-4 px-1.5 text-[10px]", CONFIDENCE_CHIP[conf.label])}>
-              {CONFIDENCE_DOT[conf.label]} {conf.label} ({alert.confidence}%)
-            </Badge>
           </div>
-          <p className="text-sm text-foreground/90">{alert.problem}</p>
-          <p className="text-[11px] text-muted-foreground">{alert.oneLineReason}</p>
-          {alert.goalProgress && <GoalProgressBar gp={alert.goalProgress} currency={currency} />}
-          <ImpactChips alert={alert} currency={currency} />
-        </div>
-        {open ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />}
-      </button>
 
-      {open && (
-        <div className="mt-3 space-y-3 border-t pt-3">
+          <p className="text-sm text-foreground/90">{alert.problem}</p>
+
+          {alert.goalProgress && <GoalProgressBar gp={alert.goalProgress} currency={currency} />}
+
           <ReasonBlock icon={<Brain className="h-3.5 w-3.5" />} label="Why this happened" text={alert.why} />
-          <ReasonBlock icon={<TrendingDown className="h-3.5 w-3.5" />} label="Impact" text={alert.impact} />
+          <ReasonBlock icon={<Sparkles className="h-3.5 w-3.5" />} label="AI reasoning" text={alert.priorityReason} />
+
+          <div className="rounded-lg bg-muted/40 p-2.5">
+            <p className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TrendingDown className="h-3 w-3" /> Financial impact
+            </p>
+            <p className="mb-1.5 text-[12px] leading-relaxed text-foreground/90">{alert.impact}</p>
+            <ImpactChips alert={alert} currency={currency} />
+          </div>
+
           <ReasonBlock icon={<Lightbulb className="h-3.5 w-3.5" />} label="Suggested action" text={alert.suggestion} />
-          <ReasonBlock icon={<AlertTriangle className="h-3.5 w-3.5" />} label="Why this priority" text={alert.priorityReason} />
 
           <div className="rounded-lg bg-muted/40 p-2.5">
             <p className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               <CheckCircle className="h-3 w-3" /> Confidence — {conf.label} ({alert.confidence}%)
             </p>
             {conf.present.length > 0 && (
-              <ul className="space-y-0.5">
-                {conf.present.map((p, i) => (
-                  <li key={`p-${i}`} className="text-[11px] text-foreground/80">✓ {p}</li>
-                ))}
-              </ul>
+              <>
+                <p className="text-[10px] font-medium text-muted-foreground">Based on:</p>
+                <ul className="space-y-0.5">
+                  {conf.present.map((p, i) => (
+                    <li key={`p-${i}`} className="text-[11px] text-foreground/80">✓ {p}</li>
+                  ))}
+                </ul>
+              </>
             )}
             {conf.missing.length > 0 && (
-              <ul className="mt-1 space-y-0.5">
-                {conf.missing.map((p, i) => (
-                  <li key={`m-${i}`} className="text-[11px] text-muted-foreground">• Missing: {p}</li>
-                ))}
-              </ul>
+              <>
+                <p className="mt-1 text-[10px] font-medium text-muted-foreground">Missing:</p>
+                <ul className="space-y-0.5">
+                  {conf.missing.map((p, i) => (
+                    <li key={`m-${i}`} className="text-[11px] text-muted-foreground">• {p}</li>
+                  ))}
+                </ul>
+              </>
             )}
           </div>
 
@@ -309,46 +381,7 @@ function AlertCard({
                 <li key={i} className="text-[11px] text-foreground/80">• {d}</li>
               ))}
             </ul>
-            <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">{alert.calculation}</p>
-          </div>
-
-
-          <div className="flex flex-wrap gap-1.5">
-            {alert.actions.includes("view-transactions") && (
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "view-transactions")}>
-                View transactions
-              </Button>
-            )}
-            {alert.actions.includes("ask-coach") && (
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "ask-coach")}>
-                <MessageSquare className="mr-1 h-3 w-3" /> Ask AI Coach
-              </Button>
-            )}
-            {alert.actions.includes("create-budget") && (
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "create-budget")}>
-                Create budget
-              </Button>
-            )}
-            {alert.actions.includes("apply-planner") && (
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "apply-planner")}>
-                Apply to Planner
-              </Button>
-            )}
-            {alert.actions.includes("mark-resolved") && (
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAction(alert, "mark-resolved")}>
-                <CheckCircle2 className="mr-1 h-3 w-3" /> Mark resolved
-              </Button>
-            )}
-            {alert.actions.includes("remind-later") && (
-              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => onAction(alert, "remind-later")}>
-                Remind later
-              </Button>
-            )}
-            {alert.actions.includes("dismiss") && (
-              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => onAction(alert, "dismiss")}>
-                <BellOff className="mr-1 h-3 w-3" /> Dismiss
-              </Button>
-            )}
+            <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">Calculation: {alert.calculation}</p>
           </div>
         </div>
       )}
