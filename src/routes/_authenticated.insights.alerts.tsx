@@ -632,6 +632,7 @@ function AlertsPage() {
           setState(next);
           const h = [{ id: a.id, title: a.title, priority: a.priority, problem: a.problem, outcome: "resolved" as const, at: Date.now() }, ...history];
           writeHistory(h); setHistory(h);
+          try { window.dispatchEvent(new CustomEvent("fintrackr:alerts-updated")); } catch {}
           toast.success("Marked as resolved");
           break;
         }
