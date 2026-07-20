@@ -706,13 +706,14 @@ function AlertsPage() {
                 {filter === "all" && active[0] && (
                   <FixThisFirstCard alert={active[0]} currency={currency} onAction={handleAction} />
                 )}
-                {filtered.map((a, i) => (
+                {filtered.map((a) => (
                   <AlertCard
                     key={a.id}
                     alert={a}
                     currency={currency}
                     onAction={handleAction}
-                    featured={filter === "all" && i === 0}
+                    expanded={expandedIds.has(a.id)}
+                    onToggle={() => toggleExpanded(a.id)}
                   />
                 ))}
               </>
