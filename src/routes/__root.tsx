@@ -27,15 +27,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
-      { title: "FinTrackr — Smart Finance Tracker" },
-      { name: "description", content: "Track expenses, budgets, investments and savings goals with a secure modern finance dashboard." },
-      { property: "og:title", content: "FinTrackr — Smart Finance Tracker" },
-      { property: "og:description", content: "Track expenses, budgets, investments and savings goals with a secure modern finance dashboard." },
       { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "FinTrackr — Smart Finance Tracker" },
-      { name: "twitter:description", content: "Track expenses, budgets, investments and savings goals with a secure modern finance dashboard." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/b68f2d5e-3f0e-4462-a1a1-93651e780574" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/b68f2d5e-3f0e-4462-a1a1-93651e780574" },
+      { property: "og:site_name", content: "FinTrackr" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
