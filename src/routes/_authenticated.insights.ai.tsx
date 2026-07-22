@@ -11,7 +11,14 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/insights/ai")({
   component: AIInsightsPage,
-  head: () => ({ meta: [{ title: "AI Insights — FinTrackr" }] }),
+  head: () => ({
+    meta: [
+      { title: "AI Insights — FinTrackr" },
+      { name: "description", content: "Personalized AI insights on your top spending category, month-end savings forecast, budget streaks and upcoming EMI risks." },
+      { property: "og:title", content: "AI Insights — FinTrackr" },
+      { property: "og:description", content: "Personalized AI insights on your top spending category, month-end savings forecast, budget streaks and upcoming EMI risks." },
+    ],
+  }),
 });
 
 type Tone = "primary" | "success" | "warn" | "danger";
