@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { useTransactions, useCategories, useProfile } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
@@ -8,7 +9,22 @@ import { useLoans } from "@/hooks/use-finance";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import { computeWeeklyScore, buildWeeklySummary, buildComparison } from "@/lib/weekly-insights";
+import {
+  computeWeeklyScore,
+  buildWeeklySummary,
+  buildComparison,
+  computeNextWeekOutlook,
+  buildWeeklyAchievements,
+  buildWeeklyRecommendations,
+} from "@/lib/weekly-insights";
+import {
+  getFinancialProfile,
+  onProfileUpdated,
+  type FinancialProfile,
+} from "@/lib/financial-profile";
+import { enqueuePlannerTask, getPaidBills } from "@/lib/coach-plan";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/insights/weekly")({
   component: WeeklyReportPage,
