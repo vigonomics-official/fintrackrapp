@@ -164,6 +164,130 @@ function WeeklyReportPage() {
     });
   }, [weekTxs, categories]);
 
+  // --- Financial profile (auto-refresh on updates) ---
+  const [fp, setFp] = useState<FinancialProfile>(() => getFinancialProfile());
+  useEffect(() => onProfileUpdated(() => setFp(getFinancialProfile())), []);
+
+  // Recurring monthly bills derived from profile + loans (real data only)
+  const recurringMonthly = useMemo(() => {
+    const salaryDay = settings.payDay && settings.payDay > 0 ? settings.payDay : new Date(survival.lastSalaryDate).getDate();
+    const list: { name: string; amount: number; day?: number }[] = [];
+    if (fp.monthlyRent && fp.monthlyRent > 0) list.push({ name: "Rent", amount: fp.monthlyRent, day: salaryDay });
+    const emiFromLoans = loans.reduce((s, l) => s + (Number(l.remaining_balance) > 0 ? Number(l.emi_amount) : 0), 0);
+    const emi = emiFromLoans > 0 ? emiFromLoans : (fp.monthlyEmi ?? 0);
+    if (emi > 0) list.push({ name: "EMI", amount: emi, day: Math.min(28, salaryDay + 10) });
+    return list;
+  }, [fp, loans, settings.payDay, survival.lastSalaryDate]);
+
+  // Bills observed so far this cycle (paid detection via coach-plan storage)
+  const billsDueSoFar = useMemo(() => {
+    const paid = getPaidBills();
+    const y = weekStart.getFullYear(); const m = weekStart.getMonth();
+    return recurringMonthly.map(r => {
+      const d = new Date(y, m, Math.min(28, r.day ?? 1));
+      const id = `${r.name.toLowerCase().replace(/\s+/g, "-")}-${d.toISOString().slice(0, 10)}`;
+      // Detected paid via a matching expense tx on/after due date within cycle
+      const txPaid = txs.some(t =>
+        t.type === "expense"
+        && (t.category_id ?? "").length > 0
+        && Math.abs(Number(t.amount) - r.amount) / Math.max(1, r.amount) < 0.1
+        && String(t.transaction_date).slice(0, 10) >= d.toISOString().slice(0, 10)
+      );
+      return { name: r.name, amount: r.amount, dueDate: d.toISOString(), paid: paid.has(id) || txPaid };
+    });
+  }, [recurringMonthly, txs, weekStart]);
+
+  // Investment moved this cycle (expenses categorized as investment/SIP)
+  const investmentThisCycle = useMemo(() => {
+    const investCats = new Set(
+      categories.filter(c => /invest|sip|mutual/i.test(c.name)).map(c => c.id),
+    );
+    return txs
+      .filter(t => t.type === "expense" && investCats.has(t.category_id ?? "") && new Date(t.transaction_date) >= survival.lastSalaryDate)
+      .reduce((s, t) => s + Number(t.amount), 0);
+  }, [txs, categories, survival.lastSalaryDate]);
+
+  // Under-budget streak: walk back N weeks
+  const underBudgetStreak = useMemo(() => {
+    if (weekBudget <= 0) return 0;
+    let streak = spent <= weekBudget ? 1 : 0;
+    if (streak === 0) return 0;
+    for (let i = 1; i <= 8; i++) {
+      const s = new Date(weekStart); s.setDate(s.getDate() - 7 * i);
+      const e = new Date(s); e.setDate(e.getDate() + 6);
+      const total = txs
+        .filter(t => t.type === "expense" && inRange(t, s, e))
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      if (total > 0 && total <= weekBudget) streak += 1;
+      else break;
+    }
+    return streak;
+  }, [txs, weekStart, weekBudget, spent]);
+
+  // Weeks of transaction history available
+  const weeksOfHistory = useMemo(() => {
+    if (txs.length === 0) return 0;
+    const dates = txs.map(t => new Date(t.transaction_date).getTime()).filter(n => !isNaN(n));
+    if (dates.length === 0) return 0;
+    const earliest = Math.min(...dates);
+    return Math.max(1, Math.floor((now.getTime() - earliest) / (7 * 86_400_000)));
+  }, [txs, now]);
+
+  const nextWeekStart = useMemo(() => {
+    const d = new Date(weekStart); d.setDate(d.getDate() + 7); return d;
+  }, [weekStart]);
+
+  const outlook = useMemo(
+    () => computeNextWeekOutlook({
+      weekSpent: spent,
+      prevSpent,
+      weekBudget,
+      safeDaily: survival.safeDaily,
+      salaryLeft: survival.salaryLeft,
+      daysUntilSalary: survival.daysRemaining,
+      weeksOfHistory,
+      recurringMonthly,
+      nextWeekStart,
+    }),
+    [spent, prevSpent, weekBudget, survival.safeDaily, survival.salaryLeft, survival.daysRemaining, weeksOfHistory, recurringMonthly, nextWeekStart],
+  );
+
+  const achievements = useMemo(
+    () => buildWeeklyAchievements({
+      weekSpent: spent,
+      weekBudget,
+      prevSpent,
+      prevWeekBudget: weekBudget,
+      weeklyScore: weekly.score,
+      prevWeeklyScore: prevWeekly.score,
+      billsDueSoFar,
+      investmentThisCycle,
+      underBudgetStreak,
+      fmt,
+    }),
+    [spent, weekBudget, prevSpent, weekly.score, prevWeekly.score, billsDueSoFar, investmentThisCycle, underBudgetStreak, currency],
+  );
+
+  const recommendations = useMemo(
+    () => buildWeeklyRecommendations({
+      weekSpent: spent,
+      weekBudget,
+      prevSpent,
+      weekTxs,
+      prevTxs,
+      categories,
+      weeklyScore: weekly.score,
+      salary: survival.salary,
+      salaryLeft: survival.salaryLeft,
+      safeDaily: survival.safeDaily,
+      avgDailyThisWeek,
+      daysRemaining: survival.daysRemaining,
+      billsTotal: outlook.billsTotal,
+      fmt,
+    }),
+    [spent, weekBudget, prevSpent, weekTxs, prevTxs, categories, weekly.score, survival.salary, survival.salaryLeft, survival.safeDaily, avgDailyThisWeek, survival.daysRemaining, outlook.billsTotal, currency],
+  );
+
   const fmtRange = `${weekStart.toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${weekEnd.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
 
   const toneClass = (t: "success" | "warning" | "danger" | "muted") =>
@@ -171,6 +295,7 @@ function WeeklyReportPage() {
     : t === "warning" ? "bg-warning/10 text-warning"
     : t === "danger" ? "bg-destructive/10 text-destructive"
     : "bg-muted text-muted-foreground";
+
 
   return (
     <div className="w-full overflow-x-hidden">
