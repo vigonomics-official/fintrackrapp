@@ -407,7 +407,126 @@ function WeeklyReportPage() {
           <p className="mb-1 font-display text-sm font-semibold">Vs. last week</p>
           <p className="text-sm text-foreground">{comparison}</p>
         </Card>
+
+        {/* Next Week Outlook */}
+        <Card className="p-4 shadow-soft">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="font-display text-sm font-semibold">Next week outlook</p>
+            <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", toneClass(outlook.riskTone))}>
+              {outlook.riskLevel} risk
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[11px] text-muted-foreground">Expected budget</p>
+              <p className="mt-0.5 text-sm font-semibold">{fmt(outlook.expectedWeeklyBudget)}</p>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[11px] text-muted-foreground">Projected spend</p>
+              <p className="mt-0.5 text-sm font-semibold">{fmt(outlook.expectedSpend)}
+                <span className={cn("ml-1 text-[10px]",
+                  outlook.trend === "up" ? "text-destructive" : outlook.trend === "down" ? "text-success" : "text-muted-foreground")}>
+                  {outlook.trend === "up" ? `▲${outlook.trendPct}%` : outlook.trend === "down" ? `▼${Math.abs(outlook.trendPct)}%` : "▬"}
+                </span>
+              </p>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[11px] text-muted-foreground">Safe daily</p>
+              <p className="mt-0.5 text-sm font-semibold">{fmt(outlook.safeDaily)}</p>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[11px] text-muted-foreground">Days to salary</p>
+              <p className="mt-0.5 text-sm font-semibold">{outlook.daysUntilSalary}</p>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2 col-span-2 sm:col-span-1">
+              <p className="text-[11px] text-muted-foreground">Bills due next week</p>
+              <p className="mt-0.5 text-sm font-semibold">{outlook.billsDue.length === 0 ? "None" : fmt(outlook.billsTotal)}</p>
+            </div>
+          </div>
+          {outlook.billsDue.length > 0 && (
+            <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+              {outlook.billsDue.map(b => (
+                <li key={b.name} className="flex justify-between">
+                  <span>{b.name} · {b.dueLabel}</span>
+                  <span className="font-medium text-foreground">{fmt(b.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3 rounded-md border border-border/60 p-2">
+            <p className="text-[11px] font-medium text-muted-foreground">Confidence: <span className="text-foreground">{outlook.confidence}</span></p>
+            <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+              {outlook.confidenceReasons.map((r, i) => <li key={i}>• {r}</li>)}
+            </ul>
+          </div>
+        </Card>
+
+        {/* Weekly Achievements */}
+        {achievements.length > 0 && (
+          <Card className="p-4 shadow-soft">
+            <p className="mb-3 font-display text-sm font-semibold">Weekly achievements</p>
+            <ul className="space-y-2">
+              {achievements.map(a => (
+                <li key={a.id} className="flex items-start gap-2 rounded-md bg-muted/30 p-2">
+                  <span className="text-lg leading-none">{a.emoji}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{a.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{a.detail}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+
+        {/* Smart Recommendations */}
+        {recommendations.length > 0 && (
+          <Card className="p-4 shadow-soft">
+            <p className="mb-3 font-display text-sm font-semibold">Smart recommendations</p>
+            <ul className="space-y-3">
+              {recommendations.map(r => (
+                <li key={r.id} className="rounded-md border border-border/60 p-3">
+                  <p className="text-sm font-semibold">{r.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{r.why}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+                    {r.monthlySaving > 0 && (
+                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">Save ~{fmt(r.monthlySaving)}/mo</span>
+                    )}
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">+{r.scoreDelta} score</span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">{r.timeToComplete}</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        enqueuePlannerTask({ id: `weekly-rec-${r.id}`, title: r.plannerTitle, detail: r.plannerDetail });
+                        toast.success("Added to Planner");
+                      }}
+                    >
+                      Apply to Planner
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        try {
+                          sessionStorage.setItem("fintrackr:ai-coach:pending-question", r.askAiQuestion);
+                          window.dispatchEvent(new Event("fintrackr:ai-coach:open-chat"));
+                        } catch { /* ignore */ }
+                        toast("Ask AI Coach", { description: r.askAiQuestion });
+                      }}
+                    >
+                      Ask AI Coach
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
       </div>
+
     </div>
   );
 }
