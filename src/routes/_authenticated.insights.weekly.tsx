@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { useTransactions, useCategories, useProfile } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
@@ -8,7 +9,22 @@ import { useLoans } from "@/hooks/use-finance";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
-import { computeWeeklyScore, buildWeeklySummary, buildComparison } from "@/lib/weekly-insights";
+import {
+  computeWeeklyScore,
+  buildWeeklySummary,
+  buildComparison,
+  computeNextWeekOutlook,
+  buildWeeklyAchievements,
+  buildWeeklyRecommendations,
+} from "@/lib/weekly-insights";
+import {
+  getFinancialProfile,
+  onProfileUpdated,
+  type FinancialProfile,
+} from "@/lib/financial-profile";
+import { enqueuePlannerTask, getPaidBills } from "@/lib/coach-plan";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/insights/weekly")({
   component: WeeklyReportPage,
@@ -148,6 +164,130 @@ function WeeklyReportPage() {
     });
   }, [weekTxs, categories]);
 
+  // --- Financial profile (auto-refresh on updates) ---
+  const [fp, setFp] = useState<FinancialProfile>(() => getFinancialProfile());
+  useEffect(() => onProfileUpdated(() => setFp(getFinancialProfile())), []);
+
+  // Recurring monthly bills derived from profile + loans (real data only)
+  const recurringMonthly = useMemo(() => {
+    const salaryDay = settings.payDay && settings.payDay > 0 ? settings.payDay : new Date(survival.lastSalaryDate).getDate();
+    const list: { name: string; amount: number; day?: number }[] = [];
+    if (fp.monthlyRent && fp.monthlyRent > 0) list.push({ name: "Rent", amount: fp.monthlyRent, day: salaryDay });
+    const emiFromLoans = loans.reduce((s, l) => s + (Number(l.remaining_balance) > 0 ? Number(l.emi_amount) : 0), 0);
+    const emi = emiFromLoans > 0 ? emiFromLoans : (fp.monthlyEmi ?? 0);
+    if (emi > 0) list.push({ name: "EMI", amount: emi, day: Math.min(28, salaryDay + 10) });
+    return list;
+  }, [fp, loans, settings.payDay, survival.lastSalaryDate]);
+
+  // Bills observed so far this cycle (paid detection via coach-plan storage)
+  const billsDueSoFar = useMemo(() => {
+    const paid = getPaidBills();
+    const y = weekStart.getFullYear(); const m = weekStart.getMonth();
+    return recurringMonthly.map(r => {
+      const d = new Date(y, m, Math.min(28, r.day ?? 1));
+      const id = `${r.name.toLowerCase().replace(/\s+/g, "-")}-${d.toISOString().slice(0, 10)}`;
+      // Detected paid via a matching expense tx on/after due date within cycle
+      const txPaid = txs.some(t =>
+        t.type === "expense"
+        && (t.category_id ?? "").length > 0
+        && Math.abs(Number(t.amount) - r.amount) / Math.max(1, r.amount) < 0.1
+        && String(t.transaction_date).slice(0, 10) >= d.toISOString().slice(0, 10)
+      );
+      return { name: r.name, amount: r.amount, dueDate: d.toISOString(), paid: paid.has(id) || txPaid };
+    });
+  }, [recurringMonthly, txs, weekStart]);
+
+  // Investment moved this cycle (expenses categorized as investment/SIP)
+  const investmentThisCycle = useMemo(() => {
+    const investCats = new Set(
+      categories.filter(c => /invest|sip|mutual/i.test(c.name)).map(c => c.id),
+    );
+    return txs
+      .filter(t => t.type === "expense" && investCats.has(t.category_id ?? "") && new Date(t.transaction_date) >= survival.lastSalaryDate)
+      .reduce((s, t) => s + Number(t.amount), 0);
+  }, [txs, categories, survival.lastSalaryDate]);
+
+  // Under-budget streak: walk back N weeks
+  const underBudgetStreak = useMemo(() => {
+    if (weekBudget <= 0) return 0;
+    let streak = spent <= weekBudget ? 1 : 0;
+    if (streak === 0) return 0;
+    for (let i = 1; i <= 8; i++) {
+      const s = new Date(weekStart); s.setDate(s.getDate() - 7 * i);
+      const e = new Date(s); e.setDate(e.getDate() + 6);
+      const total = txs
+        .filter(t => t.type === "expense" && inRange(t, s, e))
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      if (total > 0 && total <= weekBudget) streak += 1;
+      else break;
+    }
+    return streak;
+  }, [txs, weekStart, weekBudget, spent]);
+
+  // Weeks of transaction history available
+  const weeksOfHistory = useMemo(() => {
+    if (txs.length === 0) return 0;
+    const dates = txs.map(t => new Date(t.transaction_date).getTime()).filter(n => !isNaN(n));
+    if (dates.length === 0) return 0;
+    const earliest = Math.min(...dates);
+    return Math.max(1, Math.floor((now.getTime() - earliest) / (7 * 86_400_000)));
+  }, [txs, now]);
+
+  const nextWeekStart = useMemo(() => {
+    const d = new Date(weekStart); d.setDate(d.getDate() + 7); return d;
+  }, [weekStart]);
+
+  const outlook = useMemo(
+    () => computeNextWeekOutlook({
+      weekSpent: spent,
+      prevSpent,
+      weekBudget,
+      safeDaily: survival.safeDaily,
+      salaryLeft: survival.salaryLeft,
+      daysUntilSalary: survival.daysRemaining,
+      weeksOfHistory,
+      recurringMonthly,
+      nextWeekStart,
+    }),
+    [spent, prevSpent, weekBudget, survival.safeDaily, survival.salaryLeft, survival.daysRemaining, weeksOfHistory, recurringMonthly, nextWeekStart],
+  );
+
+  const achievements = useMemo(
+    () => buildWeeklyAchievements({
+      weekSpent: spent,
+      weekBudget,
+      prevSpent,
+      prevWeekBudget: weekBudget,
+      weeklyScore: weekly.score,
+      prevWeeklyScore: prevWeekly.score,
+      billsDueSoFar,
+      investmentThisCycle,
+      underBudgetStreak,
+      fmt,
+    }),
+    [spent, weekBudget, prevSpent, weekly.score, prevWeekly.score, billsDueSoFar, investmentThisCycle, underBudgetStreak, currency],
+  );
+
+  const recommendations = useMemo(
+    () => buildWeeklyRecommendations({
+      weekSpent: spent,
+      weekBudget,
+      prevSpent,
+      weekTxs,
+      prevTxs,
+      categories,
+      weeklyScore: weekly.score,
+      salary: survival.salary,
+      salaryLeft: survival.salaryLeft,
+      safeDaily: survival.safeDaily,
+      avgDailyThisWeek,
+      daysRemaining: survival.daysRemaining,
+      billsTotal: outlook.billsTotal,
+      fmt,
+    }),
+    [spent, weekBudget, prevSpent, weekTxs, prevTxs, categories, weekly.score, survival.salary, survival.salaryLeft, survival.safeDaily, avgDailyThisWeek, survival.daysRemaining, outlook.billsTotal, currency],
+  );
+
   const fmtRange = `${weekStart.toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${weekEnd.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
 
   const toneClass = (t: "success" | "warning" | "danger" | "muted") =>
@@ -155,6 +295,7 @@ function WeeklyReportPage() {
     : t === "warning" ? "bg-warning/10 text-warning"
     : t === "danger" ? "bg-destructive/10 text-destructive"
     : "bg-muted text-muted-foreground";
+
 
   return (
     <div className="w-full overflow-x-hidden">
@@ -266,7 +407,126 @@ function WeeklyReportPage() {
           <p className="mb-1 font-display text-sm font-semibold">Vs. last week</p>
           <p className="text-sm text-foreground">{comparison}</p>
         </Card>
+
+        {/* Next Week Outlook */}
+        <Card className="p-4 shadow-soft">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="font-display text-sm font-semibold">Next week outlook</p>
+            <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-medium", toneClass(outlook.riskTone))}>
+              {outlook.riskLevel} risk
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[11px] text-muted-foreground">Expected budget</p>
+              <p className="mt-0.5 text-sm font-semibold">{fmt(outlook.expectedWeeklyBudget)}</p>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[11px] text-muted-foreground">Projected spend</p>
+              <p className="mt-0.5 text-sm font-semibold">{fmt(outlook.expectedSpend)}
+                <span className={cn("ml-1 text-[10px]",
+                  outlook.trend === "up" ? "text-destructive" : outlook.trend === "down" ? "text-success" : "text-muted-foreground")}>
+                  {outlook.trend === "up" ? `▲${outlook.trendPct}%` : outlook.trend === "down" ? `▼${Math.abs(outlook.trendPct)}%` : "▬"}
+                </span>
+              </p>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[11px] text-muted-foreground">Safe daily</p>
+              <p className="mt-0.5 text-sm font-semibold">{fmt(outlook.safeDaily)}</p>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[11px] text-muted-foreground">Days to salary</p>
+              <p className="mt-0.5 text-sm font-semibold">{outlook.daysUntilSalary}</p>
+            </div>
+            <div className="rounded-md bg-muted/40 p-2 col-span-2 sm:col-span-1">
+              <p className="text-[11px] text-muted-foreground">Bills due next week</p>
+              <p className="mt-0.5 text-sm font-semibold">{outlook.billsDue.length === 0 ? "None" : fmt(outlook.billsTotal)}</p>
+            </div>
+          </div>
+          {outlook.billsDue.length > 0 && (
+            <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+              {outlook.billsDue.map(b => (
+                <li key={b.name} className="flex justify-between">
+                  <span>{b.name} · {b.dueLabel}</span>
+                  <span className="font-medium text-foreground">{fmt(b.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3 rounded-md border border-border/60 p-2">
+            <p className="text-[11px] font-medium text-muted-foreground">Confidence: <span className="text-foreground">{outlook.confidence}</span></p>
+            <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+              {outlook.confidenceReasons.map((r, i) => <li key={i}>• {r}</li>)}
+            </ul>
+          </div>
+        </Card>
+
+        {/* Weekly Achievements */}
+        {achievements.length > 0 && (
+          <Card className="p-4 shadow-soft">
+            <p className="mb-3 font-display text-sm font-semibold">Weekly achievements</p>
+            <ul className="space-y-2">
+              {achievements.map(a => (
+                <li key={a.id} className="flex items-start gap-2 rounded-md bg-muted/30 p-2">
+                  <span className="text-lg leading-none">{a.emoji}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{a.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{a.detail}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+
+        {/* Smart Recommendations */}
+        {recommendations.length > 0 && (
+          <Card className="p-4 shadow-soft">
+            <p className="mb-3 font-display text-sm font-semibold">Smart recommendations</p>
+            <ul className="space-y-3">
+              {recommendations.map(r => (
+                <li key={r.id} className="rounded-md border border-border/60 p-3">
+                  <p className="text-sm font-semibold">{r.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{r.why}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+                    {r.monthlySaving > 0 && (
+                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">Save ~{fmt(r.monthlySaving)}/mo</span>
+                    )}
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">+{r.scoreDelta} score</span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">{r.timeToComplete}</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        enqueuePlannerTask({ id: `weekly-rec-${r.id}`, title: r.plannerTitle, detail: r.plannerDetail });
+                        toast.success("Added to Planner");
+                      }}
+                    >
+                      Apply to Planner
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        try {
+                          sessionStorage.setItem("fintrackr:ai-coach:pending-question", r.askAiQuestion);
+                          window.dispatchEvent(new Event("fintrackr:ai-coach:open-chat"));
+                        } catch { /* ignore */ }
+                        toast("Ask AI Coach", { description: r.askAiQuestion });
+                      }}
+                    >
+                      Ask AI Coach
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
       </div>
+
     </div>
   );
 }
