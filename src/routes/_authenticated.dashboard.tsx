@@ -588,33 +588,44 @@ function Dashboard() {
           View all <ArrowRight className="h-4 w-4" />
         </Link>
 
-        {/* 7. Spending Risks */}
+        {/* FEATURE 4 — Upcoming Financial Risks */}
         <Card className="shadow-soft">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 font-display text-base">
-              <AlertTriangle className="h-4 w-4 text-gold-foreground" /> Spending risks
+              <AlertTriangle className="h-4 w-4 text-gold-foreground" /> Upcoming risks
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {risks.length === 0 ? (
+            {homeRisks.length === 0 ? (
               <p className="py-1 text-sm text-muted-foreground">No risks detected. You're spending calmly.</p>
-            ) : risks.map((r, i) => {
-              const tone = r.tone === "danger"
+            ) : homeRisks.map((r: UpcomingRisk) => {
+              const tone = r.urgency === "High"
                 ? "border-destructive/20 bg-destructive/5"
-                : r.tone === "warn"
+                : r.urgency === "Medium"
                   ? "border-gold/25 bg-gold/10"
                   : "border-border bg-muted/40";
-              const titleCls = r.tone === "danger" ? "text-destructive" : r.tone === "warn" ? "text-gold-foreground" : "text-foreground";
+              const badgeCls = r.urgency === "High"
+                ? "bg-destructive/15 text-destructive"
+                : r.urgency === "Medium"
+                  ? "bg-gold/20 text-gold-foreground"
+                  : "bg-muted text-muted-foreground";
               return (
-                <div key={i} className={`rounded-xl border px-3 py-2.5 ${tone}`}>
-                  <p className={`text-[11px] font-semibold uppercase tracking-wider ${titleCls}`}>{r.title}</p>
-                  <p className="mt-0.5 text-sm font-medium text-foreground/90 tabular-nums">{r.main}</p>
-                  {r.reason && <p className="mt-1 text-[11px] text-muted-foreground">{r.reason}</p>}
+                <div key={r.id} className={`rounded-xl border px-3 py-2.5 ${tone}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground/90">{r.title}</p>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeCls}`}>
+                      {r.urgency}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">{r.moneyLabel}</p>
+                  <p className="mt-1 text-[11px] text-foreground/80">💡 {r.suggestion}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">Confidence: {r.confidence}</p>
                 </div>
               );
             })}
           </CardContent>
         </Card>
+
 
         {/* 8. Budgets */}
         <Card className="shadow-soft">
