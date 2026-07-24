@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
-import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus, Sparkles, MessageCircle, X, PiggyBank } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -12,6 +13,26 @@ import { computeSurvival } from "@/lib/survival";
 import { daysLeftLabel } from "@/lib/salary-cycle";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { getFinancialProfile, onProfileUpdated } from "@/lib/financial-profile";
+import { enqueuePlannerTask } from "@/lib/coach-plan";
+import {
+  computeDailyStatus,
+  computeTodayMission,
+  computeSalaryHealth,
+  computeUpcomingRisks,
+  recentDailyAverage,
+  nextBillDueDays,
+  type UpcomingRisk,
+} from "@/lib/home-insights";
+
+const MISSION_DISMISS_KEY = "fintrackr:home:dismissed-missions:v1";
+function readDismissed(): string[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(sessionStorage.getItem(MISSION_DISMISS_KEY) ?? "[]"); } catch { return []; }
+}
+function writeDismissed(ids: string[]) {
+  try { sessionStorage.setItem(MISSION_DISMISS_KEY, JSON.stringify(ids)); } catch {}
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
