@@ -366,8 +366,53 @@ function Dashboard() {
           </span>
         </div>
 
+        {/* FEATURE 2 — Today's Mission */}
+        {mission && (
+          <Card className="shadow-soft">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 font-display text-base">
+                <Sparkles className="h-4 w-4 text-primary" /> Today's mission
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="font-display text-base font-semibold">{mission.title}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{mission.detail}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Save</p>
+                  <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">
+                    {mission.saving > 0 ? formatCurrency(mission.saving, currency) : "—"}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
+                  <p className="mt-0.5 font-display text-sm font-semibold text-success tabular-nums">+{mission.scoreBoost}</p>
+                </div>
+                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Time</p>
+                  <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{mission.minutes}m</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={applyMissionToPlanner}>
+                  <Plus className="mr-1 h-4 w-4" /> Apply to Planner
+                </Button>
+                <Button asChild size="sm" variant="secondary">
+                  <Link to="/insights/ai-coach"><MessageCircle className="mr-1 h-4 w-4" /> Ask AI Coach</Link>
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => dismissMission(mission.id)}>
+                  <X className="mr-1 h-4 w-4" /> Dismiss
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Today's Pulse */}
         <h2 className="sr-only">Today's Pulse</h2>
+
         <div className="grid grid-cols-2 gap-3">
           <Card className="shadow-soft" style={{ borderRadius: "12px" }}>
             <CardContent className="p-4">
