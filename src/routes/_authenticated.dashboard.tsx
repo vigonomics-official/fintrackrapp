@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
-import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus, Sparkles, MessageCircle, X, PiggyBank } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -12,6 +13,26 @@ import { computeSurvival } from "@/lib/survival";
 import { daysLeftLabel } from "@/lib/salary-cycle";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { getFinancialProfile, onProfileUpdated } from "@/lib/financial-profile";
+import { enqueuePlannerTask } from "@/lib/coach-plan";
+import {
+  computeDailyStatus,
+  computeTodayMission,
+  computeSalaryHealth,
+  computeUpcomingRisks,
+  recentDailyAverage,
+  nextBillDueDays,
+  type UpcomingRisk,
+} from "@/lib/home-insights";
+
+const MISSION_DISMISS_KEY = "fintrackr:home:dismissed-missions:v1";
+function readDismissed(): string[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(sessionStorage.getItem(MISSION_DISMISS_KEY) ?? "[]"); } catch { return []; }
+}
+function writeDismissed(ids: string[]) {
+  try { sessionStorage.setItem(MISSION_DISMISS_KEY, JSON.stringify(ids)); } catch {}
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -53,7 +74,18 @@ function Dashboard() {
   const { settings: salarySettings } = useSalarySettings();
   const currency = profile?.currency ?? "INR";
 
+  const [fp, setFp] = useState(getFinancialProfile);
+  useEffect(() => onProfileUpdated(() => setFp(getFinancialProfile())), []);
+
+  const [dismissed, setDismissed] = useState<string[]>(readDismissed);
+  const dismissMission = (id: string) => {
+    const next = Array.from(new Set([...dismissed, id]));
+    setDismissed(next);
+    writeDismissed(next);
+  };
+
   const now = new Date();
+
 
   const survival = useMemo(() => {
     const base = computeSurvival({ transactions, loans, salarySettings });
@@ -145,6 +177,43 @@ function Dashboard() {
 
   const hasExpenses = useMemo(() => transactions.some(t => t.type === "expense"), [transactions]);
 
+  // --- Home intelligence: Status, Mission, Salary Health, Upcoming Risks
+  const recentAvg = useMemo(() => recentDailyAverage(transactions, 7, now), [transactions, now.getDate()]);
+  const billsSoon = useMemo(() => nextBillDueDays(loans, now), [loans, now.getDate()]);
+
+  const dailyStatus = useMemo(
+    () => computeDailyStatus({ survival, billsDueSoonDays: billsSoon, recentDailyAvg: recentAvg, currency }),
+    [survival, billsSoon, recentAvg, currency],
+  );
+
+  const mission = useMemo(() => {
+    const m = computeTodayMission({ survival, transactions, categories, now, currency });
+    if (!m || dismissed.includes(m.id)) return null;
+    return m;
+  }, [survival, transactions, categories, currency, dismissed, now.getDate()]);
+
+  const salaryHealth = useMemo(
+    () => computeSalaryHealth({ survival, transactions, categories, now }),
+    [survival, transactions, categories, now.getMonth()],
+  );
+
+  const homeRisks = useMemo(
+    () => computeUpcomingRisks({ survival, transactions, categories, budgets, loans, profile: fp, now, currency }),
+    [survival, transactions, categories, budgets, loans, fp, currency, now.getDate()],
+  );
+
+  const applyMissionToPlanner = () => {
+    if (!mission) return;
+    enqueuePlannerTask({
+      id: `home-mission-${mission.id}-${new Date().toISOString().slice(0, 10)}`,
+      title: mission.title,
+      detail: mission.detail + (mission.saving > 0 ? ` · Potential saving ${formatCurrency(mission.saving, currency)}` : ""),
+    });
+    toast.success("Added to Planner");
+  };
+
+
+
   const greeting = (() => {
     const h = new Date().getHours();
     return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -193,8 +262,30 @@ function Dashboard() {
           </Card>
         )}
 
+        {/* FEATURE 1 — Daily Survival Status */}
+        {(() => {
+          const toneCls =
+            dailyStatus.level === "safe"
+              ? "border-success/25 bg-success/10 text-success"
+              : dailyStatus.level === "careful"
+                ? "border-gold/30 bg-gold/15 text-gold-foreground"
+                : "border-destructive/25 bg-destructive/10 text-destructive";
+          return (
+            <Card className={`shadow-soft ${toneCls}`}>
+              <CardContent className="flex items-start gap-3 p-4">
+                <span className="text-xl leading-none">{dailyStatus.dot}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-sm font-semibold">{dailyStatus.headline}</p>
+                  <p className="mt-0.5 text-[11px] opacity-80">{dailyStatus.detail}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* 1. Salary Survival Hero */}
         <h2 className="sr-only">Salary Survival</h2>
+
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
             <CardContent className="relative p-6 md:p-7">
@@ -275,8 +366,53 @@ function Dashboard() {
           </span>
         </div>
 
+        {/* FEATURE 2 — Today's Mission */}
+        {mission && (
+          <Card className="shadow-soft">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 font-display text-base">
+                <Sparkles className="h-4 w-4 text-primary" /> Today's mission
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="font-display text-base font-semibold">{mission.title}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{mission.detail}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Save</p>
+                  <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">
+                    {mission.saving > 0 ? formatCurrency(mission.saving, currency) : "—"}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
+                  <p className="mt-0.5 font-display text-sm font-semibold text-success tabular-nums">+{mission.scoreBoost}</p>
+                </div>
+                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Time</p>
+                  <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{mission.minutes}m</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={applyMissionToPlanner}>
+                  <Plus className="mr-1 h-4 w-4" /> Apply to Planner
+                </Button>
+                <Button asChild size="sm" variant="secondary">
+                  <Link to="/insights/ai-coach"><MessageCircle className="mr-1 h-4 w-4" /> Ask AI Coach</Link>
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => dismissMission(mission.id)}>
+                  <X className="mr-1 h-4 w-4" /> Dismiss
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Today's Pulse */}
         <h2 className="sr-only">Today's Pulse</h2>
+
         <div className="grid grid-cols-2 gap-3">
           <Card className="shadow-soft" style={{ borderRadius: "12px" }}>
             <CardContent className="p-4">
@@ -306,7 +442,54 @@ function Dashboard() {
           </Card>
         </div>
 
+        {/* FEATURE 3 — Salary Health Breakdown */}
+        {salaryHealth.salary > 0 && (
+          <Card className="shadow-soft">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 font-display text-base">
+                <PiggyBank className="h-4 w-4 text-primary" /> Salary health
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2.5">
+              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+                {salaryHealth.slices.map((s) => {
+                  const bg =
+                    s.bucket === "needs" ? "hsl(var(--destructive))"
+                    : s.bucket === "savings" ? "hsl(var(--success))"
+                    : s.bucket === "investments" ? "hsl(var(--primary))"
+                    : s.bucket === "lifestyle" ? "hsl(var(--gold))"
+                    : "hsl(var(--muted-foreground) / 0.35)";
+                  if (s.pct <= 0) return null;
+                  return <div key={s.bucket} style={{ width: `${Math.min(100, s.pct)}%`, background: bg }} />;
+                })}
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {salaryHealth.slices.map((s) => {
+                  const dot =
+                    s.bucket === "needs" ? "hsl(var(--destructive))"
+                    : s.bucket === "savings" ? "hsl(var(--success))"
+                    : s.bucket === "investments" ? "hsl(var(--primary))"
+                    : s.bucket === "lifestyle" ? "hsl(var(--gold))"
+                    : "hsl(var(--muted-foreground) / 0.5)";
+                  return (
+                    <div key={s.bucket} className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-2">
+                        <span className="inline-block h-2 w-2 rounded-full" style={{ background: dot }} />
+                        <span className="font-medium">{s.label}</span>
+                      </span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {formatCurrency(s.amount, currency)} · {s.pct}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Spending Streak */}
+
         {(() => {
           const safeDailyRounded = Math.max(0, Math.round(survival.safeDaily));
           const days: { key: string; spent: number; under: boolean; hasData: boolean }[] = [];
@@ -405,33 +588,44 @@ function Dashboard() {
           View all <ArrowRight className="h-4 w-4" />
         </Link>
 
-        {/* 7. Spending Risks */}
+        {/* FEATURE 4 — Upcoming Financial Risks */}
         <Card className="shadow-soft">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 font-display text-base">
-              <AlertTriangle className="h-4 w-4 text-gold-foreground" /> Spending risks
+              <AlertTriangle className="h-4 w-4 text-gold-foreground" /> Upcoming risks
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {risks.length === 0 ? (
+            {homeRisks.length === 0 ? (
               <p className="py-1 text-sm text-muted-foreground">No risks detected. You're spending calmly.</p>
-            ) : risks.map((r, i) => {
-              const tone = r.tone === "danger"
+            ) : homeRisks.map((r: UpcomingRisk) => {
+              const tone = r.urgency === "High"
                 ? "border-destructive/20 bg-destructive/5"
-                : r.tone === "warn"
+                : r.urgency === "Medium"
                   ? "border-gold/25 bg-gold/10"
                   : "border-border bg-muted/40";
-              const titleCls = r.tone === "danger" ? "text-destructive" : r.tone === "warn" ? "text-gold-foreground" : "text-foreground";
+              const badgeCls = r.urgency === "High"
+                ? "bg-destructive/15 text-destructive"
+                : r.urgency === "Medium"
+                  ? "bg-gold/20 text-gold-foreground"
+                  : "bg-muted text-muted-foreground";
               return (
-                <div key={i} className={`rounded-xl border px-3 py-2.5 ${tone}`}>
-                  <p className={`text-[11px] font-semibold uppercase tracking-wider ${titleCls}`}>{r.title}</p>
-                  <p className="mt-0.5 text-sm font-medium text-foreground/90 tabular-nums">{r.main}</p>
-                  {r.reason && <p className="mt-1 text-[11px] text-muted-foreground">{r.reason}</p>}
+                <div key={r.id} className={`rounded-xl border px-3 py-2.5 ${tone}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground/90">{r.title}</p>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeCls}`}>
+                      {r.urgency}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">{r.moneyLabel}</p>
+                  <p className="mt-1 text-[11px] text-foreground/80">💡 {r.suggestion}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">Confidence: {r.confidence}</p>
                 </div>
               );
             })}
           </CardContent>
         </Card>
+
 
         {/* 8. Budgets */}
         <Card className="shadow-soft">
