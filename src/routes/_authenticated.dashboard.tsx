@@ -442,7 +442,54 @@ function Dashboard() {
           </Card>
         </div>
 
+        {/* FEATURE 3 — Salary Health Breakdown */}
+        {salaryHealth.salary > 0 && (
+          <Card className="shadow-soft">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 font-display text-base">
+                <PiggyBank className="h-4 w-4 text-primary" /> Salary health
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2.5">
+              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+                {salaryHealth.slices.map((s) => {
+                  const bg =
+                    s.bucket === "needs" ? "hsl(var(--destructive))"
+                    : s.bucket === "savings" ? "hsl(var(--success))"
+                    : s.bucket === "investments" ? "hsl(var(--primary))"
+                    : s.bucket === "lifestyle" ? "hsl(var(--gold))"
+                    : "hsl(var(--muted-foreground) / 0.35)";
+                  if (s.pct <= 0) return null;
+                  return <div key={s.bucket} style={{ width: `${Math.min(100, s.pct)}%`, background: bg }} />;
+                })}
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {salaryHealth.slices.map((s) => {
+                  const dot =
+                    s.bucket === "needs" ? "hsl(var(--destructive))"
+                    : s.bucket === "savings" ? "hsl(var(--success))"
+                    : s.bucket === "investments" ? "hsl(var(--primary))"
+                    : s.bucket === "lifestyle" ? "hsl(var(--gold))"
+                    : "hsl(var(--muted-foreground) / 0.5)";
+                  return (
+                    <div key={s.bucket} className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-2">
+                        <span className="inline-block h-2 w-2 rounded-full" style={{ background: dot }} />
+                        <span className="font-medium">{s.label}</span>
+                      </span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {formatCurrency(s.amount, currency)} · {s.pct}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Spending Streak */}
+
         {(() => {
           const safeDailyRounded = Math.max(0, Math.round(survival.safeDaily));
           const days: { key: string; spent: number; under: boolean; hasData: boolean }[] = [];
