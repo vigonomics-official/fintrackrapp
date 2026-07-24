@@ -177,6 +177,43 @@ function Dashboard() {
 
   const hasExpenses = useMemo(() => transactions.some(t => t.type === "expense"), [transactions]);
 
+  // --- Home intelligence: Status, Mission, Salary Health, Upcoming Risks
+  const recentAvg = useMemo(() => recentDailyAverage(transactions, 7, now), [transactions, now.getDate()]);
+  const billsSoon = useMemo(() => nextBillDueDays(loans, now), [loans, now.getDate()]);
+
+  const dailyStatus = useMemo(
+    () => computeDailyStatus({ survival, billsDueSoonDays: billsSoon, recentDailyAvg: recentAvg, currency }),
+    [survival, billsSoon, recentAvg, currency],
+  );
+
+  const mission = useMemo(() => {
+    const m = computeTodayMission({ survival, transactions, categories, now, currency });
+    if (!m || dismissed.includes(m.id)) return null;
+    return m;
+  }, [survival, transactions, categories, currency, dismissed, now.getDate()]);
+
+  const salaryHealth = useMemo(
+    () => computeSalaryHealth({ survival, transactions, categories, now }),
+    [survival, transactions, categories, now.getMonth()],
+  );
+
+  const homeRisks = useMemo(
+    () => computeUpcomingRisks({ survival, transactions, categories, budgets, loans, profile: fp, now, currency }),
+    [survival, transactions, categories, budgets, loans, fp, currency, now.getDate()],
+  );
+
+  const applyMissionToPlanner = () => {
+    if (!mission) return;
+    enqueuePlannerTask({
+      id: `home-mission-${mission.id}-${new Date().toISOString().slice(0, 10)}`,
+      title: mission.title,
+      detail: mission.detail + (mission.saving > 0 ? ` · Potential saving ${formatCurrency(mission.saving, currency)}` : ""),
+    });
+    toast.success("Added to Planner");
+  };
+
+
+
   const greeting = (() => {
     const h = new Date().getHours();
     return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
