@@ -262,8 +262,30 @@ function Dashboard() {
           </Card>
         )}
 
+        {/* FEATURE 1 — Daily Survival Status */}
+        {(() => {
+          const toneCls =
+            dailyStatus.level === "safe"
+              ? "border-success/25 bg-success/10 text-success"
+              : dailyStatus.level === "careful"
+                ? "border-gold/30 bg-gold/15 text-gold-foreground"
+                : "border-destructive/25 bg-destructive/10 text-destructive";
+          return (
+            <Card className={`shadow-soft ${toneCls}`}>
+              <CardContent className="flex items-start gap-3 p-4">
+                <span className="text-xl leading-none">{dailyStatus.dot}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-sm font-semibold">{dailyStatus.headline}</p>
+                  <p className="mt-0.5 text-[11px] opacity-80">{dailyStatus.detail}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* 1. Salary Survival Hero */}
         <h2 className="sr-only">Salary Survival</h2>
+
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
             <CardContent className="relative p-6 md:p-7">
