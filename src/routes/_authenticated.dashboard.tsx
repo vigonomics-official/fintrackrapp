@@ -74,7 +74,18 @@ function Dashboard() {
   const { settings: salarySettings } = useSalarySettings();
   const currency = profile?.currency ?? "INR";
 
+  const [fp, setFp] = useState(getFinancialProfile);
+  useEffect(() => onProfileUpdated(() => setFp(getFinancialProfile())), []);
+
+  const [dismissed, setDismissed] = useState<string[]>(readDismissed);
+  const dismissMission = (id: string) => {
+    const next = Array.from(new Set([...dismissed, id]));
+    setDismissed(next);
+    writeDismissed(next);
+  };
+
   const now = new Date();
+
 
   const survival = useMemo(() => {
     const base = computeSurvival({ transactions, loans, salarySettings });
