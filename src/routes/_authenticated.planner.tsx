@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight, Sparkles, Plus, Trash2, TrendingDown, BellRing,
-  CheckCircle2, Flame, Target as TargetIcon, ShieldCheck,
+  CheckCircle2, Flame, Target as TargetIcon, ShieldCheck, Rocket, Lock, CheckCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,10 @@ import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
+import {
+  computeFutureScore, computeMilestones, loadFutureGoals, type Milestone,
+} from "@/lib/future-insights";
+import { onProfileUpdated } from "@/lib/financial-profile";
 
 export const Route = createFileRoute("/_authenticated/planner")({
   component: PlannerPage,
