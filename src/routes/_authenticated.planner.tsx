@@ -1239,3 +1239,181 @@ function Row({ label, before, after }: { label: string; before: string; after: s
     </div>
   );
 }
+
+/* ============================ Future Tab ============================ */
+
+function FutureTab() {
+  const s = useSurvival();
+  const { data: transactions = [] } = useTransactions();
+  const { data: loans = [] } = useLoans();
+  const [goals, setGoals] = useState(loadFutureGoals());
+
+  // Re-read goals/profile on focus and profile updates so the tab stays fresh.
+  useEffect(() => {
+    const refresh = () => setGoals(loadFutureGoals());
+    const off = onProfileUpdated(refresh);
+    window.addEventListener("focus", refresh);
+    return () => { off(); window.removeEventListener("focus", refresh); };
+  }, []);
+
+  const score = useMemo(
+    () => computeFutureScore({ survival: s, transactions, loans, goals }),
+    [s, transactions, loans, goals],
+  );
+  const milestones = useMemo(
+    () => computeMilestones({ survival: s, transactions, loans, goals }),
+    [s, transactions, loans, goals],
+  );
+
+  return (
+    <div className="space-y-4">
+      <FutureScoreCard score={score} />
+      <FutureMilestonesCard milestones={milestones} currency={s.currency} />
+    </div>
+  );
+}
+
+function FutureScoreCard({ score }: { score: ReturnType<typeof computeFutureScore> }) {
+  const tone =
+    score.total == null
+      ? "text-muted-foreground"
+      : score.total >= 80
+        ? "text-success"
+        : score.total >= 60
+          ? "text-primary"
+          : score.total >= 40
+            ? "text-gold-foreground"
+            : "text-destructive";
+  const gradeTone =
+    score.grade == null
+      ? "bg-muted text-muted-foreground"
+      : score.total! >= 80
+        ? "bg-success/15 text-success"
+        : score.total! >= 60
+          ? "bg-primary/15 text-primary"
+          : score.total! >= 40
+            ? "bg-gold/15 text-gold-foreground"
+            : "bg-destructive/15 text-destructive";
+
+  const pillars = [
+    score.components.emergency,
+    score.components.savings,
+    score.components.debt,
+    score.components.discipline,
+  ];
+
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-4 p-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <Rocket className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Financial Future Score</p>
+          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Based on your real financial data</p>
+        </div>
+
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className={cn("font-display text-4xl font-bold tabular-nums", tone)}>
+              {score.total ?? "—"}
+              <span className="ml-1 text-sm text-muted-foreground">/100</span>
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{score.headline}</p>
+          </div>
+          <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", gradeTone)}>
+            Grade {score.grade ?? "—"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          {pillars.map((p) => (
+            <div key={p.label} className="rounded-lg border bg-card p-2.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground">{p.label}</span>
+                <span className="font-medium tabular-nums">
+                  {p.value == null ? "—" : `${p.value}/${p.max}`}
+                </span>
+              </div>
+              <Progress value={p.value == null ? 0 : (p.value / p.max) * 100} className="mt-1.5 h-1" />
+              <p className="mt-1 text-[10px] leading-tight text-muted-foreground">{p.detail}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FutureMilestonesCard({ milestones, currency }: { milestones: Milestone[]; currency: string }) {
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-3 p-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <TargetIcon className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Your Financial Milestones</p>
+          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Estimated from your salary, savings, loans & goals</p>
+        </div>
+
+        <ul className="space-y-2.5">
+          {milestones.map((m) => (
+            <MilestoneRow key={m.key} m={m} currency={currency} />
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MilestoneRow({ m, currency }: { m: Milestone; currency: string }) {
+  const locked = m.status === "locked";
+  const achieved = m.status === "achieved";
+  const etaLabel = m.eta
+    ? m.eta.toLocaleDateString(undefined, { month: "short", year: "numeric" })
+    : null;
+
+  const statusChip = achieved ? (
+    <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">
+      <CheckCircle className="h-3 w-3" /> Achieved
+    </span>
+  ) : locked ? (
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+      <Lock className="h-3 w-3" /> Locked
+    </span>
+  ) : m.status === "on-track" ? (
+    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">On track</span>
+  ) : (
+    <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-semibold text-gold-foreground">Needs push</span>
+  );
+
+  return (
+    <li className={cn("rounded-xl border p-3", locked ? "bg-muted/30" : "bg-card")}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-semibold">{m.title}</p>
+        {statusChip}
+      </div>
+
+      {locked ? (
+        <p className="mt-1 text-[11px] text-muted-foreground">{m.lockedReason ?? m.detail}</p>
+      ) : (
+        <>
+          <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="tabular-nums">
+              {m.current != null ? formatCurrency(Math.max(0, m.current), currency) : "—"}
+              {m.target != null && m.target > 0 ? (
+                <> · of {formatCurrency(m.target, currency)}</>
+              ) : null}
+            </span>
+            <span>
+              {achieved ? "Complete" : etaLabel ? `ETA ${etaLabel}` : "—"}
+            </span>
+          </div>
+          <Progress value={m.progressPct} className="mt-1.5 h-1" />
+          <p className="mt-1 text-[11px] text-muted-foreground">{m.detail}</p>
+        </>
+      )}
+    </li>
+  );
+}
