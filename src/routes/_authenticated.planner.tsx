@@ -87,6 +87,7 @@ function PlannerPage() {
         {tab === "bills" && <BillsTab />}
         {tab === "goals" && <GoalsTab />}
         {tab === "cibt" && <CanIBuyThisTab />}
+        {tab === "future" && <FutureTab />}
       </div>
     </div>
   );
