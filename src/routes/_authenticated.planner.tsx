@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/planner")({
   }),
 });
 
-type TabKey = "monthly" | "allocation" | "loans" | "bills" | "goals" | "cibt";
+type TabKey = "monthly" | "allocation" | "loans" | "bills" | "goals" | "cibt" | "future";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "monthly", label: "Plan" },
@@ -46,6 +46,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "bills", label: "Bills" },
   { key: "goals", label: "Goals" },
   { key: "cibt", label: "Buy" },
+  { key: "future", label: "Future" },
 ];
 
 function PlannerPage() {
