@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight, Sparkles, Plus, Trash2, TrendingDown, BellRing,
   CheckCircle2, Flame, Target as TargetIcon, ShieldCheck, Rocket, Lock, CheckCircle,
+  Wallet, MessageSquare, TrendingUp,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +19,10 @@ import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import {
-  computeFutureScore, computeMilestones, loadFutureGoals, type Milestone,
+  computeFutureScore, computeMilestones, computeFutureActions, computeNetWorth,
+  loadFutureGoals, type Milestone, type FutureAction, type NetWorth,
 } from "@/lib/future-insights";
+import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
 
 export const Route = createFileRoute("/_authenticated/planner")({
@@ -1264,12 +1268,192 @@ function FutureTab() {
     () => computeMilestones({ survival: s, transactions, loans, goals }),
     [s, transactions, loans, goals],
   );
+  const actions = useMemo(
+    () => computeFutureActions({ survival: s, transactions, loans, goals }),
+    [s, transactions, loans, goals],
+  );
+  const netWorth = useMemo(
+    () => computeNetWorth({ survival: s, transactions, loans, goals }),
+    [s, transactions, loans, goals],
+  );
 
   return (
     <div className="space-y-4">
       <FutureScoreCard score={score} />
+      <FutureActionsCard actions={actions} />
+      <NetWorthCard nw={netWorth} currency={s.currency} />
       <FutureMilestonesCard milestones={milestones} currency={s.currency} />
     </div>
+  );
+}
+
+function FutureActionsCard({ actions }: { actions: FutureAction[] }) {
+  if (actions.length === 0) {
+    return (
+      <Card className="shadow-soft">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+              Actions to Build Your Future
+            </p>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            You're on track — no urgent actions right now. Keep saving consistently.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const priTone = (p: FutureAction["priority"]) =>
+    p === "High"
+      ? "bg-destructive/15 text-destructive"
+      : p === "Medium"
+        ? "bg-gold/15 text-gold-foreground"
+        : "bg-primary/15 text-primary";
+
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-3 p-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+              Actions to Build Your Future
+            </p>
+          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Top 3 moves ranked by financial impact
+          </p>
+        </div>
+
+        <ul className="space-y-2.5">
+          {actions.map((a) => (
+            <li key={a.id} className="rounded-xl border bg-card p-3">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-semibold">{a.title}</p>
+                <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", priTone(a.priority))}>
+                  {a.priority}
+                </span>
+              </div>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{a.why}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+                <span className="rounded-full bg-success/10 px-2 py-0.5 font-medium text-success">
+                  {a.impactLabel}
+                </span>
+                <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-muted-foreground">
+                  {a.timeSaved}
+                </span>
+              </div>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  className="h-7 rounded-full px-3 text-[11px]"
+                  onClick={() => {
+                    enqueuePlannerTask({
+                      id: `future-action-${a.id}`,
+                      title: a.plannerTitle,
+                      detail: a.plannerDetail,
+                    });
+                    toast.success("Added to Planner");
+                  }}
+                >
+                  <Plus className="mr-1 h-3 w-3" /> Apply to Planner
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  asChild
+                  className="h-7 rounded-full px-3 text-[11px]"
+                >
+                  <Link
+                    to="/insights/ai-coach"
+                    search={{ q: a.coachPrompt } as never}
+                  >
+                    <MessageSquare className="mr-1 h-3 w-3" /> Ask AI Coach
+                  </Link>
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function NetWorthCard({ nw, currency }: { nw: NetWorth; currency: string }) {
+  if (!nw.hasSignal) {
+    return (
+      <Card className="shadow-soft">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Net Worth</p>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Complete your Salary Profile and add savings, goals or loans to see your net worth.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const nwTone =
+    nw.netWorth > 0 ? "text-success" : nw.netWorth < 0 ? "text-destructive" : "text-foreground";
+
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <Wallet className="h-3.5 w-3.5 text-primary" />
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Net Worth</p>
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Assets − Liabilities</p>
+          </div>
+          <p className={cn("font-display text-2xl font-bold tabular-nums", nwTone)}>
+            {formatCurrency(nw.netWorth, currency)}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg border bg-card p-2.5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Assets</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-success">
+              {formatCurrency(nw.assets, currency)}
+            </p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              Savings {formatCurrency(nw.savings, currency)} · Goals {formatCurrency(nw.goalsBalance, currency)} · Inv {formatCurrency(nw.investments, currency)}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-2.5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Liabilities</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-destructive">
+              {formatCurrency(nw.liabilities, currency)}
+            </p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">Outstanding loans</p>
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-muted/30 p-2.5">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <TrendingUp className="h-3 w-3" /> Future Fund Goal
+            </span>
+            <span className="font-medium tabular-nums">
+              {formatCurrency(nw.futureFundGoal, currency)}
+            </span>
+          </div>
+          <Progress value={nw.progressPct} className="mt-1.5 h-1" />
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            {nw.progressPct.toFixed(1)}% toward Financial Future
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
