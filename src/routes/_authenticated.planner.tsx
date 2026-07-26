@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight, Sparkles, Plus, Trash2, TrendingDown, BellRing,
   CheckCircle2, Flame, Target as TargetIcon, ShieldCheck, Rocket, Lock, CheckCircle,
+  Wallet, MessageSquare, TrendingUp,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +19,10 @@ import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import {
-  computeFutureScore, computeMilestones, loadFutureGoals, type Milestone,
+  computeFutureScore, computeMilestones, computeFutureActions, computeNetWorth,
+  loadFutureGoals, type Milestone, type FutureAction, type NetWorth,
 } from "@/lib/future-insights";
+import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
 
 export const Route = createFileRoute("/_authenticated/planner")({
