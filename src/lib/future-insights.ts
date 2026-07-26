@@ -445,3 +445,207 @@ export function computeMilestones(opts: {
 
   return out;
 }
+
+/* =========================== Future Actions =========================== */
+
+export type FutureAction = {
+  id: "emergency" | "savings" | "extra-emi" | "sip" | "reduce-spend";
+  priority: "High" | "Medium" | "Low";
+  title: string;
+  why: string;
+  impactAmount: number; // monthly ₹ impact
+  impactLabel: string;
+  timeSaved: string;
+  plannerTitle: string;
+  plannerDetail: string;
+  coachPrompt: string;
+};
+
+export function computeFutureActions(opts: {
+  survival: Survival;
+  transactions: Tx[];
+  loans: Loan[];
+  goals: FutureGoal[];
+}): FutureAction[] {
+  const { survival, transactions, loans, goals } = opts;
+  const rememberedSavings = getRememberedSavings();
+  const savingsGoalCurrent = goals
+    .filter((g) => g.kind === "savings" || g.kind === "emergency" || g.kind === "investment")
+    .reduce((s, g) => s + Number(g.current || 0), 0);
+  const totalSavings = (rememberedSavings ?? 0) + savingsGoalCurrent;
+  const avgExp = avgMonthlyExpenses(transactions);
+  const outstanding = loans.reduce((s, l) => s + Number(l.remaining_balance || 0), 0);
+  const monthlyEmi = survival.monthlyEmi;
+  const salaryLeft = survival.hasIncome ? Math.max(0, survival.salaryLeft) : 0;
+  const savingsRate = survival.hasIncome ? salaryLeft / Math.max(1, survival.salary) : 0;
+  const hasInvestmentGoal = goals.some((g) => g.kind === "investment");
+
+  const candidates: (FutureAction & { rank: number })[] = [];
+
+  // 1. Emergency Fund
+  if (avgExp != null && avgExp > 0) {
+    const months = totalSavings / avgExp;
+    if (months < 6) {
+      const target = avgExp * 6;
+      const gap = Math.max(0, target - totalSavings);
+      const monthly = Math.max(500, Math.round(Math.min(gap / 12, salaryLeft > 0 ? salaryLeft * 0.4 : gap / 12)));
+      const monthsToDone = Math.ceil(gap / Math.max(1, monthly));
+      candidates.push({
+        id: "emergency",
+        priority: months < 2 ? "High" : months < 4 ? "Medium" : "Low",
+        title: "Build Emergency Fund",
+        why: `You have ~${months.toFixed(1)} months of expenses saved. Target is 6 months to stay safe from job loss or big surprises.`,
+        impactAmount: monthly,
+        impactLabel: `Save ~${inr(monthly)}/mo`,
+        timeSaved: `Fully funded in ~${monthsToDone} mo`,
+        plannerTitle: "Grow emergency fund",
+        plannerDetail: `Set aside ~${inr(monthly)}/mo toward 6-month buffer (${inr(target)})`,
+        coachPrompt: "How do I build an emergency fund faster?",
+        rank: (6 - months) * 20,
+      });
+    }
+  }
+
+  // 2. Pay Extra EMI
+  if (outstanding > 0 && monthlyEmi > 0) {
+    const extra = Math.max(500, Math.round(Math.min(monthlyEmi * 0.2, salaryLeft * 0.25 || monthlyEmi * 0.2)));
+    const baseMonths = Math.ceil(outstanding / monthlyEmi);
+    const newMonths = Math.ceil(outstanding / (monthlyEmi + extra));
+    const saved = Math.max(0, baseMonths - newMonths);
+    candidates.push({
+      id: "extra-emi",
+      priority: survival.emiRatio > 30 ? "High" : "Medium",
+      title: "Pay Extra EMI",
+      why: `EMIs are ${survival.emiRatio.toFixed(0)}% of your salary. Adding ~${inr(extra)}/mo cuts interest and closes loans sooner.`,
+      impactAmount: extra,
+      impactLabel: `+${inr(extra)}/mo prepayment`,
+      timeSaved: saved > 0 ? `~${saved} mo earlier` : "Faster debt free",
+      plannerTitle: "Pay extra EMI",
+      plannerDetail: `Prepay ~${inr(extra)}/mo on existing loans`,
+      coachPrompt: "Which loan should I prepay first?",
+      rank: survival.emiRatio,
+    });
+  }
+
+  // 3. Increase Monthly Savings
+  if (survival.hasIncome && savingsRate < 0.2) {
+    const target = Math.round(survival.salary * 0.2);
+    const gap = Math.max(500, target - salaryLeft);
+    candidates.push({
+      id: "savings",
+      priority: savingsRate < 0.05 ? "High" : "Medium",
+      title: "Increase Monthly Savings",
+      why: `You're saving ~${Math.round(savingsRate * 100)}% of salary. Reaching 20% (${inr(target)}/mo) accelerates every future milestone.`,
+      impactAmount: gap,
+      impactLabel: `+${inr(gap)}/mo saved`,
+      timeSaved: `+${inr(gap * 12)}/yr`,
+      plannerTitle: "Raise monthly savings",
+      plannerDetail: `Target ${inr(target)}/mo (20% of salary)`,
+      coachPrompt: "Where can I cut spend to save more each month?",
+      rank: (0.2 - savingsRate) * 100,
+    });
+  }
+
+  // 4. Start SIP
+  if (!hasInvestmentGoal && salaryLeft > 500) {
+    const sip = Math.max(500, Math.round(Math.min(salaryLeft * 0.15, survival.salary * 0.1)));
+    candidates.push({
+      id: "sip",
+      priority: "Medium",
+      title: "Start a SIP",
+      why: "You have no active investment goal. A small monthly SIP compounds into long-term wealth.",
+      impactAmount: sip,
+      impactLabel: `${inr(sip)}/mo SIP`,
+      timeSaved: `~${inr(sip * 12 * 10)} in 10 yrs @ 12%`,
+      plannerTitle: "Start monthly SIP",
+      plannerDetail: `Invest ${inr(sip)}/mo in a diversified fund`,
+      coachPrompt: "How do I start my first SIP?",
+      rank: 25,
+    });
+  }
+
+  // 5. Reduce Weekly Spending
+  if (survival.hasIncome && (survival.score < 60 || salaryLeft < survival.salary * 0.1)) {
+    const cut = Math.max(200, Math.round(survival.salary * 0.02));
+    candidates.push({
+      id: "reduce-spend",
+      priority: survival.score < 40 ? "High" : "Medium",
+      title: "Reduce Weekly Spending",
+      why: `Survival score is ${survival.score}/100. Trimming ~${inr(cut)}/week frees ${inr(cut * 4)}/mo for savings.`,
+      impactAmount: cut * 4,
+      impactLabel: `${inr(cut)}/wk cut`,
+      timeSaved: `+${inr(cut * 52)}/yr`,
+      plannerTitle: "Cut weekly spend",
+      plannerDetail: `Trim ~${inr(cut)}/week from lifestyle categories`,
+      coachPrompt: "Which category is bleeding my weekly budget?",
+      rank: (60 - survival.score),
+    });
+  }
+
+  return candidates
+    .sort((a, b) => b.rank - a.rank)
+    .slice(0, 3)
+    .map(({ rank: _r, ...rest }) => rest);
+}
+
+function inr(n: number): string {
+  return `₹${Math.round(n).toLocaleString("en-IN")}`;
+}
+
+/* =========================== Net Worth =========================== */
+
+export type NetWorth = {
+  savings: number;
+  goalsBalance: number;
+  investments: number;
+  assets: number;
+  liabilities: number;
+  netWorth: number;
+  futureFundGoal: number;
+  progressPct: number;
+  hasSignal: boolean;
+};
+
+/** Reuses rememberedSavings + goals + loan outstanding. No new business logic. */
+export function computeNetWorth(opts: {
+  survival: Survival;
+  transactions: Tx[];
+  loans: Loan[];
+  goals: FutureGoal[];
+}): NetWorth {
+  const { survival, transactions, loans, goals } = opts;
+  const rememberedSavings = getRememberedSavings() ?? 0;
+  const investments = goals
+    .filter((g) => g.kind === "investment")
+    .reduce((s, g) => s + Number(g.current || 0), 0);
+  const goalsBalance = goals
+    .filter((g) => g.kind !== "investment")
+    .reduce((s, g) => s + Number(g.current || 0), 0);
+  const assets = rememberedSavings + goalsBalance + investments;
+  const liabilities = loans.reduce((s, l) => s + Number(l.remaining_balance || 0), 0);
+  const netWorth = assets - liabilities;
+
+  // Future Fund Goal = 25× annual expenses (FIRE) when available, else ₹5L default.
+  const avgExp = avgMonthlyExpenses(transactions);
+  const futureFundGoal = avgExp && avgExp > 0 ? Math.round(avgExp * 12 * 25) : 500_000;
+  const progressPct = Math.max(0, Math.min(100, (netWorth / futureFundGoal) * 100));
+
+  const hasSignal =
+    rememberedSavings > 0 ||
+    goalsBalance > 0 ||
+    investments > 0 ||
+    liabilities > 0 ||
+    survival.hasIncome;
+
+  return {
+    savings: rememberedSavings,
+    goalsBalance,
+    investments,
+    assets,
+    liabilities,
+    netWorth,
+    futureFundGoal,
+    progressPct,
+    hasSignal,
+  };
+}
