@@ -438,9 +438,11 @@ function PersonalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K,
 
 /* ---------------- STEP 3: SALARY ---------------- */
 function SalaryStep({
-  s, set, dailyLimit,
+  s, set, preview,
 }: {
-  s: State; set: <K extends keyof State>(k: K, v: State[K]) => void; dailyLimit: number;
+  s: State;
+  set: <K extends keyof State>(k: K, v: State[K]) => void;
+  preview: { daysUntil: number | null; cycleLength: number; daily: number } | null;
 }) {
   return (
     <div>
@@ -465,9 +467,9 @@ function SalaryStep({
               className="h-14 rounded-xl border-gray-200 pl-10 text-2xl font-bold tabular-nums"
             />
           </div>
-          {dailyLimit > 0 && (
+          {preview && preview.daily > 0 && (
             <p className="mt-2 text-xs font-medium" style={{ color: GREEN_ACCENT }}>
-              Your daily safe limit will be approximately ₹{fmt(dailyLimit)}/day
+              Your daily safe limit will be approximately ₹{fmt(preview.daily)}/day
             </p>
           )}
         </div>
@@ -475,7 +477,30 @@ function SalaryStep({
         <div>
           <label className="text-sm font-semibold text-gray-800">When do you get paid?</label>
           <ChipGrid options={PAY_DATES} value={s.salaryDate} onChange={(v) => set("salaryDate", v)} />
+          {preview && preview.daysUntil != null && (
+            <div className="mt-3 grid grid-cols-3 gap-2 rounded-2xl bg-emerald-50 p-3">
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Days to payday</p>
+                <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
+                  {preview.daysUntil}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Safe / day</p>
+                <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
+                  ₹{fmt(preview.daily)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Cycle</p>
+                <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
+                  {preview.cycleLength}d
+                </p>
+              </div>
+            </div>
+          )}
         </div>
+
 
         <div>
           <label className="text-sm font-semibold text-gray-800">How would you describe your financial situation?</label>
