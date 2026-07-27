@@ -286,7 +286,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           </motion.div>
           <h1 className="mt-6 text-[28px] font-bold leading-tight">Welcome to FinTrackr</h1>
           <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-white/80">
-            Most salary earners don't know where their money goes. You're about to change that.
+            Most salary earners struggle to make their salary last until payday. FinTrackr helps you survive, save and grow every month.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
@@ -434,7 +434,7 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
       <p className="text-[11px] font-bold tracking-wider" style={{ color: GREEN_ACCENT }}>
         STEP 4 OF 5 · YOUR EXPENSES
       </p>
-      <h1 className="mt-2 text-[24px] font-bold leading-tight">What eats your salary?</h1>
+      <h1 className="mt-2 text-[24px] font-bold leading-tight">Where does your salary usually go?</h1>
       <p className="mt-1 text-sm text-gray-500">Select all that apply — be honest! 😄</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
