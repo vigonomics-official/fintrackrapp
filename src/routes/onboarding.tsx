@@ -178,6 +178,9 @@ function OnboardingPage() {
         }
       : null;
 
+    const salaryAmount = Number(s.salary) || 0;
+    const monthlyEmiAmount = s.hasEmi ? Number(s.emi) || 0 : 0;
+
     const { error } = await (supabase as any)
       .from("profiles")
       .update({
@@ -185,11 +188,11 @@ function OnboardingPage() {
         name: s.name.trim(),
         city: s.city,
         age_group: s.ageGroup,
-        monthly_salary: Number(s.salary) || null,
-        salary_date: s.salaryDate ? parseInt(s.salaryDate.replace(/\D/g, ""), 10) || null : null,
+        monthly_salary: salaryAmount || null,
+        salary_date: payDay,
         financial_situation: s.situation,
         expense_categories: s.expenses,
-        monthly_emi: s.hasEmi ? Number(s.emi) || 0 : 0,
+        monthly_emi: monthlyEmiAmount,
         active_loans: s.hasEmi ? parseInt(s.loans, 10) || 0 : 0,
         first_goal: firstGoal,
         currency: "INR",
@@ -214,19 +217,46 @@ function OnboardingPage() {
       } catch {}
     }
 
-    // Seed salary settings so Planner / Home work immediately
+    // ---- FIX 8: Data Synchronization ----
+    // 1. Canonical salary settings consumed by Planner / Dashboard / Insights
+    //    via the useSalarySettings hook. Uses the same key + event the hook listens to.
+    try {
+      localStorage.setItem(
+        "fintrackr_salary_settings_v1",
+        JSON.stringify({
+          amount: salaryAmount || null,
+          payDay: payDay,
+          employmentType: "salaried",
+        }),
+      );
+      window.dispatchEvent(new Event("fintrackr:salary-updated"));
+    } catch {}
+
+    // 2. Legacy key kept for back-compat with any older readers.
     try {
       localStorage.setItem(
         "fintrackr:salary",
-        JSON.stringify({
-          amount: Number(s.salary) || 0,
-          payDate: parseInt(s.salaryDate.replace(/\D/g, ""), 10) || 1,
-        }),
+        JSON.stringify({ amount: salaryAmount, payDate: payDay ?? 1 }),
       );
+    } catch {}
+
+    // 3. Financial Profile — powers the AI Coach, Future tab, Weekly / Home insights.
+    try {
+      updateFinancialProfile({
+        monthlySalary: salaryAmount || undefined,
+        salaryDate: s.salaryDate || undefined,
+        monthlyEmi: monthlyEmiAmount,
+        financialGoal: mapGoalToFinancial(s.goal),
+        customGoalNote: goalDef?.title,
+      });
+      // Seed remembered balance/savings so downstream calcs never fall back to demo data.
+      setRememberedBalance(salaryAmount);
+      setRememberedSavings(0);
     } catch {}
 
     setTimeout(() => setStep(7), 2500);
   }
+
 
   if (step === 6) return <LoadingScreen />;
   if (step === 7) return (
