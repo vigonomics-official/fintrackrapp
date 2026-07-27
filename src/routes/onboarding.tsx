@@ -314,7 +314,7 @@ function OnboardingPage() {
             className="flex-1"
           >
             {step === 2 && <PersonalStep s={s} set={set} />}
-            {step === 3 && <SalaryStep s={s} set={set} dailyLimit={dailyLimit} />}
+            {step === 3 && <SalaryStep s={s} set={set} preview={cyclePreview} />}
             {step === 4 && <ExpenseStep s={s} set={set} />}
             {step === 5 && <GoalStep s={s} set={set} />}
           </motion.div>
