@@ -186,6 +186,10 @@ function OnboardingPage() {
       payDate={s.salaryDate}
       dailyLimit={dailyLimit}
       goalTitle={GOALS.find((g) => g.id === s.goal)?.title ?? "—"}
+      goalId={s.goal}
+      situation={s.situation}
+      expenses={s.expenses}
+      hasEmi={s.hasEmi}
       onOpen={() => navigate({ to: "/dashboard" })}
     />
   );
@@ -286,7 +290,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           </motion.div>
           <h1 className="mt-6 text-[28px] font-bold leading-tight">Welcome to FinTrackr</h1>
           <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-white/80">
-            Most salary earners don't know where their money goes. You're about to change that.
+            Most salary earners struggle to make their salary last until payday. FinTrackr helps you survive, save and grow every month.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
@@ -434,7 +438,7 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
       <p className="text-[11px] font-bold tracking-wider" style={{ color: GREEN_ACCENT }}>
         STEP 4 OF 5 · YOUR EXPENSES
       </p>
-      <h1 className="mt-2 text-[24px] font-bold leading-tight">What eats your salary?</h1>
+      <h1 className="mt-2 text-[24px] font-bold leading-tight">Where does your salary usually go?</h1>
       <p className="mt-1 text-sm text-gray-500">Select all that apply — be honest! 😄</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -543,10 +547,14 @@ function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: 
               <span className="text-3xl">{g.emoji}</span>
               <span className="text-[14px] font-bold text-gray-900">{g.title}</span>
               <span className="text-[11px] text-gray-500">{g.sub}</span>
-            </button>
-          );
-        })}
+          </button>
+        );
+      })}
       </div>
+
+      <p className="mt-4 text-xs text-gray-500">
+        You can add more goals anytime after setup.
+      </p>
 
       {s.goal && (
         <div className="mt-5 space-y-4 rounded-2xl bg-gray-50 p-4">
@@ -605,11 +613,34 @@ function LoadingScreen() {
 }
 
 /* ---------------- COMPLETION: READY ---------------- */
+function computeSurvivalScore(s: {
+  salary: number; payDate: string; situation: string; expenses: string[]; hasEmi: boolean; goal: string;
+}): number {
+  let score = 45;
+  if (s.salary > 0) score += 15;
+  if (s.payDate) score += 10;
+  if (s.situation) score += 10;
+  if (s.expenses.length > 0) score += 10;
+  if (s.hasEmi !== undefined) score += 5;
+  if (s.goal) score += 15;
+  return Math.min(100, Math.max(0, score));
+}
+
+function scoreExplanation(score: number, situation: string): string {
+  if (score >= 90) return "Excellent start. You have salary clarity, a goal and a payday plan — the core building blocks of salary survival.";
+  if (score >= 75) return "Strong foundation. Knowing your salary, payday and expenses puts you ahead of most month-end strugglers.";
+  if (situation === "survive") return "Your score reflects honest awareness. Now FinTrackr can help you stretch your salary until payday.";
+  if (situation === "invest") return "You're already thinking ahead. FinTrackr will help you turn that intent into disciplined monthly growth.";
+  return "You're building awareness — the first step to surviving the month and growing your money.";
+}
+
 function ReadyScreen({
-  name, salary, payDate, dailyLimit, goalTitle, onOpen,
+  name, salary, payDate, dailyLimit, goalTitle, goalId, situation, expenses, hasEmi, onOpen,
 }: {
-  name: string; salary: number; payDate: string; dailyLimit: number; goalTitle: string; onOpen: () => void;
+  name: string; salary: number; payDate: string; dailyLimit: number; goalTitle: string; goalId: string;
+  situation: string; expenses: string[]; hasEmi: boolean; onOpen: () => void;
 }) {
+  const score = computeSurvivalScore({ salary, payDate, situation, expenses, hasEmi, goal: goalId });
   return (
     <div
       className="flex min-h-screen w-full flex-col px-6 py-10 text-white"
@@ -634,7 +665,22 @@ function ReadyScreen({
             <p>📅 Payday: <span className="font-bold">{payDate || "—"} monthly</span></p>
             <p>🎯 Daily limit: <span className="font-bold tabular-nums">₹{fmt(dailyLimit)}/day</span></p>
             <p>🛡️ Goal: <span className="font-bold">{goalTitle}</span></p>
-            <p>📊 Starting score: <span className="font-bold">70</span></p>
+            <p>📊 Survival Score: <span className="font-bold">{score}/100</span></p>
+          </div>
+
+          <div className="mt-4 rounded-xl bg-emerald-50 p-3">
+            <p className="text-[11px] font-bold" style={{ color: GREEN_ACCENT }}>BASED ON</p>
+            <ul className="mt-1 space-y-1 text-xs text-gray-700">
+              <li>• Salary</li>
+              <li>• Spending Profile</li>
+              <li>• Goals</li>
+              <li>• Payday</li>
+            </ul>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3">
+            <p className="text-[11px] font-bold" style={{ color: GREEN_ACCENT }}>AI INSIGHT</p>
+            <p className="mt-1 text-xs leading-relaxed text-gray-700">{scoreExplanation(score, situation)}</p>
           </div>
         </div>
 
