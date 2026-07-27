@@ -7,6 +7,31 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { daysUntilSalary, lastSalaryDate, nextSalaryDate } from "@/lib/salary-cycle";
+import { updateFinancialProfile, setRememberedBalance, setRememberedSavings } from "@/lib/financial-profile";
+import type { FinancialGoal } from "@/lib/ai-coach-analysis";
+
+/** Map onboarding pay-date chip → payDay (1..31, 0 = last day, null = unknown). */
+function parsePayDay(label: string): number | null {
+  if (!label) return null;
+  if (label === "Last day") return 0;
+  if (label === "Other") return null;
+  const n = parseInt(label.replace(/\D/g, ""), 10);
+  return Number.isFinite(n) && n >= 1 && n <= 31 ? n : null;
+}
+
+/** Map onboarding goal id → canonical FinancialGoal used by the AI Coach. */
+function mapGoalToFinancial(goalId: string): FinancialGoal | undefined {
+  switch (goalId) {
+    case "emergency": return "Emergency Fund";
+    case "travel":    return "Vacation";
+    case "home":      return "House";
+    case "vehicle":   return "Bike";
+    case "gadget":
+    case "debt":      return "Custom Goal";
+    default:          return undefined;
+  }
+}
 
 export const Route = createFileRoute("/onboarding")({
   beforeLoad: async () => {
