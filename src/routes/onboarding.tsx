@@ -543,10 +543,14 @@ function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: 
               <span className="text-3xl">{g.emoji}</span>
               <span className="text-[14px] font-bold text-gray-900">{g.title}</span>
               <span className="text-[11px] text-gray-500">{g.sub}</span>
-            </button>
-          );
-        })}
+          </button>
+        );
+      })}
       </div>
+
+      <p className="mt-4 text-xs text-gray-500">
+        You can add more goals anytime after setup.
+      </p>
 
       {s.goal && (
         <div className="mt-5 space-y-4 rounded-2xl bg-gray-50 p-4">
