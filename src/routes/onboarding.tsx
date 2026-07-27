@@ -635,12 +635,12 @@ function scoreExplanation(score: number, situation: string): string {
 }
 
 function ReadyScreen({
-  name, salary, payDate, dailyLimit, goalTitle, situation, expenses, onOpen,
+  name, salary, payDate, dailyLimit, goalTitle, goalId, situation, expenses, hasEmi, onOpen,
 }: {
-  name: string; salary: number; payDate: string; dailyLimit: number; goalTitle: string;
-  situation: string; expenses: string[]; onOpen: () => void;
+  name: string; salary: number; payDate: string; dailyLimit: number; goalTitle: string; goalId: string;
+  situation: string; expenses: string[]; hasEmi: boolean; onOpen: () => void;
 }) {
-  const score = computeSurvivalScore({ salary, payDate, situation, expenses, hasEmi: true, goal: goalTitle });
+  const score = computeSurvivalScore({ salary, payDate, situation, expenses, hasEmi, goal: goalId });
   return (
     <div
       className="flex min-h-screen w-full flex-col px-6 py-10 text-white"
