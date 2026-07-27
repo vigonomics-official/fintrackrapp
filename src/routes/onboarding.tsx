@@ -116,11 +116,36 @@ function OnboardingPage() {
 
   const set = <K extends keyof State>(k: K, v: State[K]) => setS((prev) => ({ ...prev, [k]: v }));
 
-  const dailyLimit = useMemo(() => {
+  const salaryNum = useMemo(() => {
     const n = Number(s.salary);
-    if (!n || n <= 0) return 0;
-    return Math.round(n / 30);
+    return Number.isFinite(n) && n > 0 ? n : 0;
   }, [s.salary]);
+
+  const payDay = useMemo(() => parsePayDay(s.salaryDate), [s.salaryDate]);
+
+  /** Live salary-cycle preview — recomputes instantly while typing. */
+  const cyclePreview = useMemo(() => {
+    if (!salaryNum) return null;
+    // Fallback to a 30-day cycle when payday is unknown ("Other" / not picked).
+    if (payDay == null) {
+      const daily = Math.round(salaryNum / 30);
+      return { daysUntil: null as number | null, cycleLength: 30, daily };
+    }
+    const now = new Date();
+    const daysUntil = daysUntilSalary(payDay, now);
+    const last = lastSalaryDate(payDay, now);
+    const next = nextSalaryDate(payDay, new Date(last.getTime() + 86_400_000));
+    const cycleLength = Math.max(
+      1,
+      Math.round((next.getTime() - last.getTime()) / 86_400_000),
+    );
+    // "Safe daily spend" until next payday — uses real remaining days, not a fixed 30.
+    const denom = Math.max(1, daysUntil);
+    const daily = Math.round(salaryNum / denom);
+    return { daysUntil, cycleLength, daily };
+  }, [salaryNum, payDay]);
+
+  const dailyLimit = cyclePreview?.daily ?? 0;
 
   const canNext = useMemo(() => {
     if (step === 2) return s.name.trim() && s.city && s.ageGroup;
