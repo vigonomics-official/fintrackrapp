@@ -186,6 +186,8 @@ function OnboardingPage() {
       payDate={s.salaryDate}
       dailyLimit={dailyLimit}
       goalTitle={GOALS.find((g) => g.id === s.goal)?.title ?? "—"}
+      situation={s.situation}
+      expenses={s.expenses}
       onOpen={() => navigate({ to: "/dashboard" })}
     />
   );
