@@ -7,6 +7,31 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { daysUntilSalary, lastSalaryDate, nextSalaryDate } from "@/lib/salary-cycle";
+import { updateFinancialProfile, setRememberedBalance, setRememberedSavings } from "@/lib/financial-profile";
+import type { FinancialGoal } from "@/lib/ai-coach-analysis";
+
+/** Map onboarding pay-date chip → payDay (1..31, 0 = last day, null = unknown). */
+function parsePayDay(label: string): number | null {
+  if (!label) return null;
+  if (label === "Last day") return 0;
+  if (label === "Other") return null;
+  const n = parseInt(label.replace(/\D/g, ""), 10);
+  return Number.isFinite(n) && n >= 1 && n <= 31 ? n : null;
+}
+
+/** Map onboarding goal id → canonical FinancialGoal used by the AI Coach. */
+function mapGoalToFinancial(goalId: string): FinancialGoal | undefined {
+  switch (goalId) {
+    case "emergency": return "Emergency Fund";
+    case "travel":    return "Vacation";
+    case "home":      return "House";
+    case "vehicle":   return "Bike";
+    case "gadget":
+    case "debt":      return "Custom Goal";
+    default:          return undefined;
+  }
+}
 
 export const Route = createFileRoute("/onboarding")({
   beforeLoad: async () => {
@@ -91,11 +116,36 @@ function OnboardingPage() {
 
   const set = <K extends keyof State>(k: K, v: State[K]) => setS((prev) => ({ ...prev, [k]: v }));
 
-  const dailyLimit = useMemo(() => {
+  const salaryNum = useMemo(() => {
     const n = Number(s.salary);
-    if (!n || n <= 0) return 0;
-    return Math.round(n / 30);
+    return Number.isFinite(n) && n > 0 ? n : 0;
   }, [s.salary]);
+
+  const payDay = useMemo(() => parsePayDay(s.salaryDate), [s.salaryDate]);
+
+  /** Live salary-cycle preview — recomputes instantly while typing. */
+  const cyclePreview = useMemo(() => {
+    if (!salaryNum) return null;
+    // Fallback to a 30-day cycle when payday is unknown ("Other" / not picked).
+    if (payDay == null) {
+      const daily = Math.round(salaryNum / 30);
+      return { daysUntil: null as number | null, cycleLength: 30, daily };
+    }
+    const now = new Date();
+    const daysUntil = daysUntilSalary(payDay, now);
+    const last = lastSalaryDate(payDay, now);
+    const next = nextSalaryDate(payDay, new Date(last.getTime() + 86_400_000));
+    const cycleLength = Math.max(
+      1,
+      Math.round((next.getTime() - last.getTime()) / 86_400_000),
+    );
+    // "Safe daily spend" until next payday — uses real remaining days, not a fixed 30.
+    const denom = Math.max(1, daysUntil);
+    const daily = Math.round(salaryNum / denom);
+    return { daysUntil, cycleLength, daily };
+  }, [salaryNum, payDay]);
+
+  const dailyLimit = cyclePreview?.daily ?? 0;
 
   const canNext = useMemo(() => {
     if (step === 2) return s.name.trim() && s.city && s.ageGroup;
@@ -128,6 +178,9 @@ function OnboardingPage() {
         }
       : null;
 
+    const salaryAmount = Number(s.salary) || 0;
+    const monthlyEmiAmount = s.hasEmi ? Number(s.emi) || 0 : 0;
+
     const { error } = await (supabase as any)
       .from("profiles")
       .update({
@@ -135,11 +188,11 @@ function OnboardingPage() {
         name: s.name.trim(),
         city: s.city,
         age_group: s.ageGroup,
-        monthly_salary: Number(s.salary) || null,
-        salary_date: s.salaryDate ? parseInt(s.salaryDate.replace(/\D/g, ""), 10) || null : null,
+        monthly_salary: salaryAmount || null,
+        salary_date: payDay,
         financial_situation: s.situation,
         expense_categories: s.expenses,
-        monthly_emi: s.hasEmi ? Number(s.emi) || 0 : 0,
+        monthly_emi: monthlyEmiAmount,
         active_loans: s.hasEmi ? parseInt(s.loans, 10) || 0 : 0,
         first_goal: firstGoal,
         currency: "INR",
@@ -164,19 +217,46 @@ function OnboardingPage() {
       } catch {}
     }
 
-    // Seed salary settings so Planner / Home work immediately
+    // ---- FIX 8: Data Synchronization ----
+    // 1. Canonical salary settings consumed by Planner / Dashboard / Insights
+    //    via the useSalarySettings hook. Uses the same key + event the hook listens to.
+    try {
+      localStorage.setItem(
+        "fintrackr_salary_settings_v1",
+        JSON.stringify({
+          amount: salaryAmount || null,
+          payDay: payDay,
+          employmentType: "salaried",
+        }),
+      );
+      window.dispatchEvent(new Event("fintrackr:salary-updated"));
+    } catch {}
+
+    // 2. Legacy key kept for back-compat with any older readers.
     try {
       localStorage.setItem(
         "fintrackr:salary",
-        JSON.stringify({
-          amount: Number(s.salary) || 0,
-          payDate: parseInt(s.salaryDate.replace(/\D/g, ""), 10) || 1,
-        }),
+        JSON.stringify({ amount: salaryAmount, payDate: payDay ?? 1 }),
       );
+    } catch {}
+
+    // 3. Financial Profile — powers the AI Coach, Future tab, Weekly / Home insights.
+    try {
+      updateFinancialProfile({
+        monthlySalary: salaryAmount || undefined,
+        salaryDate: s.salaryDate || undefined,
+        monthlyEmi: monthlyEmiAmount,
+        financialGoal: mapGoalToFinancial(s.goal),
+        customGoalNote: goalDef?.title,
+      });
+      // Seed remembered balance/savings so downstream calcs never fall back to demo data.
+      setRememberedBalance(salaryAmount);
+      setRememberedSavings(0);
     } catch {}
 
     setTimeout(() => setStep(7), 2500);
   }
+
 
   if (step === 6) return <LoadingScreen />;
   if (step === 7) return (
@@ -234,7 +314,7 @@ function OnboardingPage() {
             className="flex-1"
           >
             {step === 2 && <PersonalStep s={s} set={set} />}
-            {step === 3 && <SalaryStep s={s} set={set} dailyLimit={dailyLimit} />}
+            {step === 3 && <SalaryStep s={s} set={set} preview={cyclePreview} />}
             {step === 4 && <ExpenseStep s={s} set={set} />}
             {step === 5 && <GoalStep s={s} set={set} />}
           </motion.div>
@@ -358,9 +438,11 @@ function PersonalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K,
 
 /* ---------------- STEP 3: SALARY ---------------- */
 function SalaryStep({
-  s, set, dailyLimit,
+  s, set, preview,
 }: {
-  s: State; set: <K extends keyof State>(k: K, v: State[K]) => void; dailyLimit: number;
+  s: State;
+  set: <K extends keyof State>(k: K, v: State[K]) => void;
+  preview: { daysUntil: number | null; cycleLength: number; daily: number } | null;
 }) {
   return (
     <div>
@@ -385,9 +467,9 @@ function SalaryStep({
               className="h-14 rounded-xl border-gray-200 pl-10 text-2xl font-bold tabular-nums"
             />
           </div>
-          {dailyLimit > 0 && (
+          {preview && preview.daily > 0 && (
             <p className="mt-2 text-xs font-medium" style={{ color: GREEN_ACCENT }}>
-              Your daily safe limit will be approximately ₹{fmt(dailyLimit)}/day
+              Your daily safe limit will be approximately ₹{fmt(preview.daily)}/day
             </p>
           )}
         </div>
@@ -395,7 +477,30 @@ function SalaryStep({
         <div>
           <label className="text-sm font-semibold text-gray-800">When do you get paid?</label>
           <ChipGrid options={PAY_DATES} value={s.salaryDate} onChange={(v) => set("salaryDate", v)} />
+          {preview && preview.daysUntil != null && (
+            <div className="mt-3 grid grid-cols-3 gap-2 rounded-2xl bg-emerald-50 p-3">
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Days to payday</p>
+                <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
+                  {preview.daysUntil}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Safe / day</p>
+                <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
+                  ₹{fmt(preview.daily)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Cycle</p>
+                <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
+                  {preview.cycleLength}d
+                </p>
+              </div>
+            </div>
+          )}
         </div>
+
 
         <div>
           <label className="text-sm font-semibold text-gray-800">How would you describe your financial situation?</label>
