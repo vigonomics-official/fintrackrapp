@@ -251,7 +251,7 @@ function Dashboard() {
             hasSalary={(salarySettings.amount ?? fp.monthlySalary ?? 0) > 0}
             hasGoal={!!fp.financialGoal}
             hasExpense={hasExpenses}
-            hasEmergencyFund={(fp.monthlySalary ?? 0) > 0 && (loans.length > 0 ? false : false) || Boolean(fp.financialGoal === "Emergency Fund")}
+            hasEmergencyFund={fp.financialGoal === "Emergency Fund"}
           />
         )}
 
