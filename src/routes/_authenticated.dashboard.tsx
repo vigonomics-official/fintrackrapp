@@ -13,6 +13,7 @@ import { computeSurvival } from "@/lib/survival";
 import { daysLeftLabel } from "@/lib/salary-cycle";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { GettingStartedChecklist } from "@/components/finance/GettingStartedChecklist";
 import { getFinancialProfile, onProfileUpdated } from "@/lib/financial-profile";
 import { enqueuePlannerTask } from "@/lib/coach-plan";
 import {
