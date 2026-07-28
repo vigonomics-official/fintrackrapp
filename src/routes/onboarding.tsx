@@ -258,7 +258,15 @@ function OnboardingPage() {
   }
 
 
-  if (step === 6) return <LoadingScreen />;
+  if (step === 6) return (
+    <LoadingScreen
+      name={s.name}
+      salary={Number(s.salary) || 0}
+      payDate={s.payDate}
+      goal={s.goal}
+      expenses={s.expenses}
+    />
+  );
   if (step === 7) return (
     <ReadyScreen
       name={s.name}
