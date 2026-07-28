@@ -702,7 +702,42 @@ function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: 
 }
 
 /* ---------------- COMPLETION: LOADING ---------------- */
-function LoadingScreen() {
+function LoadingScreen({
+  name, salary, payDate, goal, expenses,
+}: {
+  name: string; salary: number; payDate: string; goal: string; expenses: string[];
+}) {
+  const firstName = (name || "").trim().split(" ")[0];
+  const messages = useMemo(() => {
+    const list: string[] = [];
+    list.push(salary > 0
+      ? `Calculating Safe Daily Spend from ₹${salary.toLocaleString("en-IN")}...`
+      : "Calculating your Safe Daily Spend...");
+    list.push(payDate
+      ? `Understanding your ${payDate} salary cycle...`
+      : "Understanding your salary cycle...");
+    if (expenses && expenses.length > 0) {
+      list.push(`Mapping ${expenses.length} spending ${expenses.length === 1 ? "category" : "categories"}...`);
+    }
+    list.push("Preparing your AI Salary Coach...");
+    list.push(goal
+      ? `Aligning plan with your ${goal.toLowerCase()} goal...`
+      : "Building your Survival Score...");
+    list.push(firstName
+      ? `Finalizing ${firstName}'s dashboard...`
+      : "Finalizing your dashboard...");
+    return list;
+  }, [salary, payDate, goal, expenses, firstName]);
+
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (messages.length <= 1) return;
+    const id = setInterval(() => {
+      setIdx((i) => (i + 1 < messages.length ? i + 1 : i));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [messages.length]);
+
   return (
     <div
       className="flex min-h-screen w-full flex-col items-center justify-center px-6 text-center text-white"
@@ -718,9 +753,20 @@ function LoadingScreen() {
           />
         ))}
       </div>
-      <p className="mt-6 max-w-xs text-[16px] leading-relaxed">
-        Building your personalized survival system...
-      </p>
+      <div className="mt-6 h-12 max-w-xs">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={idx}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25 }}
+            className="text-[15px] leading-relaxed"
+          >
+            ✓ {messages[idx]}
+          </motion.p>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
