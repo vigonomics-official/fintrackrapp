@@ -31,6 +31,9 @@ export const Route = createFileRoute("/_authenticated/insights/ai-coach")({
 });
 
 function AiCoachRoute() {
+  useEffect(() => {
+    import("@/components/finance/GettingStartedChecklist").then((m) => m.markCoachViewed());
+  }, []);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname !== "/insights/ai-coach") return <Outlet />;
   return <AiCoachPage />;
