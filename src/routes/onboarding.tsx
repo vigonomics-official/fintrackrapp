@@ -262,7 +262,7 @@ function OnboardingPage() {
     <LoadingScreen
       name={s.name}
       salary={Number(s.salary) || 0}
-      payDate={s.payDate}
+      payDate={s.salaryDate}
       goal={s.goal}
       expenses={s.expenses}
     />
