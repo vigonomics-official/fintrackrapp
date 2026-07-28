@@ -13,6 +13,7 @@ import { computeSurvival } from "@/lib/survival";
 import { daysLeftLabel } from "@/lib/salary-cycle";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { GettingStartedChecklist } from "@/components/finance/GettingStartedChecklist";
 import { getFinancialProfile, onProfileUpdated } from "@/lib/financial-profile";
 import { enqueuePlannerTask } from "@/lib/coach-plan";
 import {
@@ -246,20 +247,12 @@ function Dashboard() {
 
       <div className="space-y-5 px-5 py-5 md:space-y-6 md:px-10 md:py-7">
         {!hasExpenses && (
-          <Card className="border-dashed shadow-soft">
-            <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Wallet className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-display text-base font-semibold">No expenses recorded yet</p>
-                <p className="mt-1 text-xs text-muted-foreground">Start tracking expenses to calculate your safe daily spending.</p>
-              </div>
-              <Button asChild size="sm" className="mt-1">
-                <Link to="/transactions"><Plus className="mr-1 h-4 w-4" /> Add Expense</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <GettingStartedChecklist
+            hasSalary={(salarySettings.amount ?? fp.monthlySalary ?? 0) > 0}
+            hasGoal={!!fp.financialGoal}
+            hasExpense={hasExpenses}
+            hasEmergencyFund={fp.financialGoal === "Emergency Fund"}
+          />
         )}
 
         {/* FEATURE 1 — Daily Survival Status */}
