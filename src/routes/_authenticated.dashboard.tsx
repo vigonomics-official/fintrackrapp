@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus, Sparkles, MessageCircle, X, PiggyBank } from "lucide-react";
+import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus, Sparkles, MessageCircle, X, PiggyBank, Bell } from "lucide-react";
+import { computeNotifications, onNotificationsChanged, unreadCount } from "@/lib/notifications";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
