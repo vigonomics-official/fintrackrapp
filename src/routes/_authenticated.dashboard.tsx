@@ -66,6 +66,42 @@ function simplifyCategory(name?: string | null) {
 
 const ESSENTIAL = new Set(["EMI", "Bills", "Rent"]);
 
+function NotificationsBell({
+  transactions,
+  settings,
+}: {
+  transactions: ReturnType<typeof useTransactions>["data"];
+  settings: ReturnType<typeof useSalarySettings>["settings"];
+}) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => onNotificationsChanged(() => setTick((t) => t + 1)), []);
+  const count = useMemo(
+    () =>
+      unreadCount(
+        computeNotifications({
+          transactions: transactions ?? [],
+          salarySettings: settings,
+        }),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transactions, settings, tick],
+  );
+  return (
+    <Link
+      to="/notifications"
+      className="relative grid h-9 w-9 place-items-center rounded-full border bg-card hover:bg-muted"
+      aria-label={`Notifications${count > 0 ? ` (${count} new)` : ""}`}
+    >
+      <Bell className="h-4 w-4" />
+      {count > 0 && (
+        <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 function Dashboard() {
   const { data: profile } = useProfile();
   const { data: transactions = [] } = useTransactions();
