@@ -244,7 +244,12 @@ function Dashboard() {
 
   return (
     <div>
-      <PageHeader title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`} subtitle="Your salary survival snapshot" />
+      <PageHeader
+        title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`}
+        subtitle="Your salary survival snapshot"
+        action={<NotificationsBell transactions={transactions} settings={salarySettings} />}
+      />
+
 
       <div className="space-y-5 px-5 py-5 md:space-y-6 md:px-10 md:py-7">
         {!hasExpenses && (
