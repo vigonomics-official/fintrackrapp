@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus, Sparkles, MessageCircle, X, PiggyBank } from "lucide-react";
+import { AlertTriangle, Shield, Wallet, ShoppingBag, ArrowRight, Plus, Sparkles, MessageCircle, X, PiggyBank, Bell } from "lucide-react";
+import { computeNotifications, onNotificationsChanged, unreadCount } from "@/lib/notifications";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,6 +65,42 @@ function simplifyCategory(name?: string | null) {
 }
 
 const ESSENTIAL = new Set(["EMI", "Bills", "Rent"]);
+
+function NotificationsBell({
+  transactions,
+  settings,
+}: {
+  transactions: ReturnType<typeof useTransactions>["data"];
+  settings: ReturnType<typeof useSalarySettings>["settings"];
+}) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => onNotificationsChanged(() => setTick((t) => t + 1)), []);
+  const count = useMemo(
+    () =>
+      unreadCount(
+        computeNotifications({
+          transactions: transactions ?? [],
+          salarySettings: settings,
+        }),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transactions, settings, tick],
+  );
+  return (
+    <Link
+      to="/notifications"
+      className="relative grid h-9 w-9 place-items-center rounded-full border bg-card hover:bg-muted"
+      aria-label={`Notifications${count > 0 ? ` (${count} new)` : ""}`}
+    >
+      <Bell className="h-4 w-4" />
+      {count > 0 && (
+        <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 function Dashboard() {
   const { data: profile } = useProfile();
@@ -243,7 +280,12 @@ function Dashboard() {
 
   return (
     <div>
-      <PageHeader title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`} subtitle="Your salary survival snapshot" />
+      <PageHeader
+        title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`}
+        subtitle="Your salary survival snapshot"
+        action={<NotificationsBell transactions={transactions} settings={salarySettings} />}
+      />
+
 
       <div className="space-y-5 px-5 py-5 md:space-y-6 md:px-10 md:py-7">
         {!hasExpenses && (
