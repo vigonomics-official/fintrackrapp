@@ -17,6 +17,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GuidesUpiMicroSpendingRouteImport } from './routes/guides.upi-micro-spending'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
 import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
@@ -81,6 +82,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesUpiMicroSpendingRoute = GuidesUpiMicroSpendingRouteImport.update({
+  id: '/guides/upi-micro-spending',
+  path: '/guides/upi-micro-spending',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTransactionsRoute =
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
   '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
   '/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
@@ -324,6 +332,7 @@ export interface FileRoutesById {
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
+  '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/_authenticated/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
   '/_authenticated/insights/alerts': typeof AuthenticatedInsightsAlertsRoute
@@ -361,6 +370,7 @@ export interface FileRouteTypes {
     | '/sms-intelligence'
     | '/split-settle'
     | '/transactions'
+    | '/guides/upi-micro-spending'
     | '/insights/ai'
     | '/insights/ai-coach'
     | '/insights/alerts'
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/sms-intelligence'
     | '/split-settle'
     | '/transactions'
+    | '/guides/upi-micro-spending'
     | '/insights/ai'
     | '/insights/ai-coach'
     | '/insights/alerts'
@@ -431,6 +442,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sms-intelligence'
     | '/_authenticated/split-settle'
     | '/_authenticated/transactions'
+    | '/guides/upi-micro-spending'
     | '/_authenticated/insights/ai'
     | '/_authenticated/insights/ai-coach'
     | '/_authenticated/insights/alerts'
@@ -451,6 +463,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  GuidesUpiMicroSpendingRoute: typeof GuidesUpiMicroSpendingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -509,6 +522,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/upi-micro-spending': {
+      id: '/guides/upi-micro-spending'
+      path: '/guides/upi-micro-spending'
+      fullPath: '/guides/upi-micro-spending'
+      preLoaderRoute: typeof GuidesUpiMicroSpendingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/transactions': {
@@ -792,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  GuidesUpiMicroSpendingRoute: GuidesUpiMicroSpendingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
