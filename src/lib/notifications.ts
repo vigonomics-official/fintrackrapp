@@ -4,9 +4,14 @@
 // values are invented; if a data point is missing the related notification is
 // simply omitted.
 
-import type { Transaction } from "@/hooks/use-finance";
+import type { Loan, Transaction, Category } from "@/hooks/use-finance";
 import type { SalarySettings } from "@/hooks/use-salary-settings";
-import { getFinancialProfile, onProfileUpdated } from "@/lib/financial-profile";
+import {
+  getFinancialProfile,
+  getRememberedSavings,
+  onProfileUpdated,
+} from "@/lib/financial-profile";
+import { computeSurvival } from "@/lib/survival";
 import {
   daysUntilSalary,
   lastSalaryDate,
@@ -15,12 +20,19 @@ import {
 
 export type NotifPriority = "High" | "Medium" | "Low";
 export type NotifGroup = "Today" | "Upcoming" | "Completed";
-export type NotifKind = "salary" | "budget" | "bill" | "emi";
+export type NotifKind = "salary" | "budget" | "bill" | "emi" | "ai" | "goal" | "risk";
+
+export type NotifActionKind = "link" | "coach" | "planner" | "done";
 
 export type NotifAction = {
   label: string;
   to?: string; // internal route
+  /** Behaviour of the button. Defaults to "link" when `to` is set. */
+  kind?: NotifActionKind;
+  /** Payload used when kind === "planner". */
+  plannerTask?: { id: string; title: string; detail?: string };
 };
+
 
 export type NotificationItem = {
   id: string;
