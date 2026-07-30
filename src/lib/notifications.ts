@@ -129,8 +129,11 @@ function daysBetween(a: Date, b: Date): number {
 export type NotificationInputs = {
   salarySettings: SalarySettings;
   transactions: Transaction[];
+  loans?: Loan[];
+  categories?: Category[];
   now?: Date;
 };
+
 
 export function computeNotifications({
   salarySettings,
