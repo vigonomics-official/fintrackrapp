@@ -56,7 +56,11 @@ const KIND_ICON: Record<NotifKind, typeof Wallet> = {
   budget: AlertTriangle,
   bill: Receipt,
   emi: Landmark,
+  ai: Sparkles,
+  goal: Target,
+  risk: ShieldAlert,
 };
+
 
 const PRIORITY_STYLE: Record<NotifPriority, string> = {
   High: "bg-destructive/15 text-destructive border-destructive/30",
