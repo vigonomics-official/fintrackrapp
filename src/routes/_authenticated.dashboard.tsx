@@ -69,9 +69,13 @@ const ESSENTIAL = new Set(["EMI", "Bills", "Rent"]);
 function NotificationsBell({
   transactions,
   settings,
+  loans,
+  categories,
 }: {
   transactions: ReturnType<typeof useTransactions>["data"];
   settings: ReturnType<typeof useSalarySettings>["settings"];
+  loans?: ReturnType<typeof useLoans>["data"];
+  categories?: ReturnType<typeof useCategories>["data"];
 }) {
   const [tick, setTick] = useState(0);
   useEffect(() => onNotificationsChanged(() => setTick((t) => t + 1)), []);
@@ -80,12 +84,15 @@ function NotificationsBell({
       unreadCount(
         computeNotifications({
           transactions: transactions ?? [],
+          loans: loans ?? [],
+          categories: categories ?? [],
           salarySettings: settings,
         }),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transactions, settings, tick],
+    [transactions, loans, categories, settings, tick],
   );
+
   return (
     <Link
       to="/notifications"
