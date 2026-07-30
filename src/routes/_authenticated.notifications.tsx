@@ -144,6 +144,44 @@ function NotificationCard({
                   Done
                 </Button>
               )}
+              {(n.actions ?? []).map((a) =>
+                a.kind === "planner" ? (
+                  <Button
+                    key={a.label}
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1 text-xs"
+                    onClick={() => onPlanner(n, a)}
+                  >
+                    <ClipboardPlus className="h-3 w-3" />
+                    {a.label}
+                  </Button>
+                ) : (
+                  <Button
+                    key={a.label}
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1 text-xs"
+                    asChild
+                  >
+                    <Link to={a.to ?? "/insights/ai-coach"}>
+                      <MessageCircle className="h-3 w-3" />
+                      {a.label}
+                    </Link>
+                  </Button>
+                ),
+              )}
+              {n.action?.to && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 gap-1 text-xs text-muted-foreground"
+                  onClick={() => onComplete(n.id)}
+                >
+                  <Check className="h-3 w-3" />
+                  Mark Done
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="ghost"
@@ -163,6 +201,8 @@ function NotificationCard({
 
 function NotificationsPage() {
   const { data: transactions = [] } = useTransactions();
+  const { data: loans = [] } = useLoans();
+  const { data: categories = [] } = useCategories();
   const { settings } = useSalarySettings();
   const [tick, setTick] = useState(0);
 
@@ -172,10 +212,17 @@ function NotificationsPage() {
   }, []);
 
   const items = useMemo(
-    () => computeNotifications({ transactions, salarySettings: settings }),
+    () =>
+      computeNotifications({
+        transactions,
+        loans,
+        categories,
+        salarySettings: settings,
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transactions, settings, tick],
+    [transactions, loans, categories, settings, tick],
   );
+
 
   const grouped = useMemo(() => groupNotifications(items), [items]);
 
