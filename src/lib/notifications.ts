@@ -138,8 +138,11 @@ export type NotificationInputs = {
 export function computeNotifications({
   salarySettings,
   transactions,
+  loans = [],
+  categories = [],
   now = new Date(),
 }: NotificationInputs): NotificationItem[] {
+
   const today = startOfDay(now);
   const todayKey = toKey(today);
   const profile = getFinancialProfile();
