@@ -290,7 +290,7 @@ function Dashboard() {
       <PageHeader
         title={`${greeting}, ${(profile?.name ?? "there").split(" ")[0]}`}
         subtitle="Your salary survival snapshot"
-        action={<NotificationsBell transactions={transactions} settings={salarySettings} />}
+        action={<NotificationsBell transactions={transactions} settings={salarySettings} loans={loans} categories={categories} />}
       />
 
 
