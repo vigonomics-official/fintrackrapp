@@ -497,7 +497,7 @@ export function computeNotifications({
 
   // 5c. Emergency-fund top-up sized from the user's real surplus.
   const savings = getRememberedSavings();
-  const monthlySalary = salaryAmountOf(salarySettings, profile);
+  const monthlySalary = salaryAmount ?? survival.salary ?? null;
   if (monthlySalary && monthlySalary > 0) {
     const targetFund = monthlySalary * 3;
     const cycleSpend = cycleExpenses.reduce((s, t) => s + Number(t.amount), 0);
