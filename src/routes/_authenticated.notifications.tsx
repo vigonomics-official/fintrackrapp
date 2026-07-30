@@ -287,6 +287,8 @@ function NotificationsPage() {
                     n={n}
                     onDismiss={handleDismiss}
                     onComplete={handleComplete}
+                    onPlanner={handlePlanner}
+
                   />
                 ))}
               </div>
