@@ -1,23 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Check, X, ArrowRight, AlertTriangle, Calendar, Wallet, Receipt, Landmark } from "lucide-react";
+import { Bell, Check, X, ArrowRight, AlertTriangle, Calendar, Wallet, Receipt, Landmark, Sparkles, Target, ShieldAlert, MessageCircle, ClipboardPlus } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/finance/PageHeader";
-import { useTransactions } from "@/hooks/use-finance";
+import { useTransactions, useLoans, useCategories } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { enqueuePlannerTask } from "@/lib/coach-plan";
 import {
   completeNotification,
   computeNotifications,
   dismissNotification,
   groupNotifications,
   onNotificationsChanged,
+  type NotifAction,
   type NotifKind,
   type NotifPriority,
   type NotificationItem,
 } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
@@ -52,7 +56,11 @@ const KIND_ICON: Record<NotifKind, typeof Wallet> = {
   budget: AlertTriangle,
   bill: Receipt,
   emi: Landmark,
+  ai: Sparkles,
+  goal: Target,
+  risk: ShieldAlert,
 };
+
 
 const PRIORITY_STYLE: Record<NotifPriority, string> = {
   High: "bg-destructive/15 text-destructive border-destructive/30",
@@ -75,11 +83,14 @@ function NotificationCard({
   n,
   onDismiss,
   onComplete,
+  onPlanner,
 }: {
   n: NotificationItem;
   onDismiss: (id: string) => void;
   onComplete: (id: string) => void;
+  onPlanner: (n: NotificationItem, a: NotifAction) => void;
 }) {
+
   const Icon = KIND_ICON[n.kind];
   const isCompleted = n.group === "Completed";
   return (
@@ -136,6 +147,44 @@ function NotificationCard({
                   Done
                 </Button>
               )}
+              {(n.actions ?? []).map((a) =>
+                a.kind === "planner" ? (
+                  <Button
+                    key={a.label}
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1 text-xs"
+                    onClick={() => onPlanner(n, a)}
+                  >
+                    <ClipboardPlus className="h-3 w-3" />
+                    {a.label}
+                  </Button>
+                ) : (
+                  <Button
+                    key={a.label}
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1 text-xs"
+                    asChild
+                  >
+                    <Link to={a.to ?? "/insights/ai-coach"}>
+                      <MessageCircle className="h-3 w-3" />
+                      {a.label}
+                    </Link>
+                  </Button>
+                ),
+              )}
+              {n.action?.to && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 gap-1 text-xs text-muted-foreground"
+                  onClick={() => onComplete(n.id)}
+                >
+                  <Check className="h-3 w-3" />
+                  Mark Done
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="ghost"
@@ -155,6 +204,8 @@ function NotificationCard({
 
 function NotificationsPage() {
   const { data: transactions = [] } = useTransactions();
+  const { data: loans = [] } = useLoans();
+  const { data: categories = [] } = useCategories();
   const { settings } = useSalarySettings();
   const [tick, setTick] = useState(0);
 
@@ -164,10 +215,17 @@ function NotificationsPage() {
   }, []);
 
   const items = useMemo(
-    () => computeNotifications({ transactions, salarySettings: settings }),
+    () =>
+      computeNotifications({
+        transactions,
+        loans,
+        categories,
+        salarySettings: settings,
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transactions, settings, tick],
+    [transactions, loans, categories, settings, tick],
   );
+
 
   const grouped = useMemo(() => groupNotifications(items), [items]);
 
@@ -179,6 +237,14 @@ function NotificationsPage() {
     completeNotification(id);
     setTick((t) => t + 1);
   };
+  const handlePlanner = (n: NotificationItem, a: NotifAction) => {
+    if (!a.plannerTask) return;
+    enqueuePlannerTask(a.plannerTask);
+    toast.success("Added to Planner", { description: a.plannerTask.title });
+    completeNotification(n.id);
+    setTick((t) => t + 1);
+  };
+
 
   const total = items.length;
 
@@ -221,6 +287,8 @@ function NotificationsPage() {
                     n={n}
                     onDismiss={handleDismiss}
                     onComplete={handleComplete}
+                    onPlanner={handlePlanner}
+
                   />
                 ))}
               </div>
