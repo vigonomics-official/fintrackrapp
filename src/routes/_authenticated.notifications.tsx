@@ -1,23 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Check, X, ArrowRight, AlertTriangle, Calendar, Wallet, Receipt, Landmark } from "lucide-react";
+import { Bell, Check, X, ArrowRight, AlertTriangle, Calendar, Wallet, Receipt, Landmark, Sparkles, Target, ShieldAlert, MessageCircle, ClipboardPlus } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/finance/PageHeader";
-import { useTransactions } from "@/hooks/use-finance";
+import { useTransactions, useLoans, useCategories } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
+import { enqueuePlannerTask } from "@/lib/coach-plan";
 import {
   completeNotification,
   computeNotifications,
   dismissNotification,
   groupNotifications,
   onNotificationsChanged,
+  type NotifAction,
   type NotifKind,
   type NotifPriority,
   type NotificationItem,
 } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
