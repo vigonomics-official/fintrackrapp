@@ -412,6 +412,322 @@ export function computeNotifications({
     }
   }
 
+  // -------- SURVIVAL SNAPSHOT (real data) --------
+  const survival = computeSurvival({
+    transactions,
+    loans: loans.map((l) => ({
+      remaining_balance: l.remaining_balance,
+      emi_amount: l.emi_amount,
+    })),
+    salarySettings,
+    now,
+  });
+  const riskLevel: RiskLevel =
+    survival.score >= 70 ? "Safe" : survival.score >= 45 ? "Careful" : "Danger";
+
+  const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+
+  // -------- FEATURE 5: AI RECOMMENDATIONS --------
+  // Every item below is derived from actual spend / salary / savings data.
+  const catName = new Map(categories.map((c) => [c.id, c.name]));
+  const cycleStartKey = toKey(survival.lastSalaryDate);
+  const cycleExpenses = transactions.filter(
+    (t) =>
+      t.type === "expense" &&
+      String(t.transaction_date).slice(0, 10) >= cycleStartKey &&
+      String(t.transaction_date).slice(0, 10) <= todayKey,
+  );
+  const daysElapsed = Math.max(1, daysBetween(today, survival.lastSalaryDate) + 1);
+
+  // 5a. Category overspend today vs its own cycle daily average.
+  const byCat = new Map<string, { total: number; todayTotal: number }>();
+  for (const t of cycleExpenses) {
+    const name = (t.category_id && catName.get(t.category_id)) || t.subcategory || "Other";
+    const cur = byCat.get(name) ?? { total: 0, todayTotal: 0 };
+    cur.total += Number(t.amount);
+    if (String(t.transaction_date).slice(0, 10) === todayKey) cur.todayTotal += Number(t.amount);
+    byCat.set(name, cur);
+  }
+  const topOver = [...byCat.entries()]
+    .map(([name, v]) => ({ name, ...v, avg: v.total / daysElapsed }))
+    .filter((c) => c.avg > 0 && c.todayTotal > c.avg * 1.5)
+    .sort((a, b) => b.todayTotal - a.todayTotal)[0];
+  if (topOver) {
+    items.push({
+      id: `ai-category-${todayKey}-${topOver.name.toLowerCase()}`,
+      kind: "ai",
+      title: `Reduce ${topOver.name} spending today`,
+      message: `${inr(topOver.todayTotal)} on ${topOver.name} today vs your ${inr(topOver.avg)}/day average this cycle.`,
+      priority: "Medium",
+      group: "Today",
+      eventAt: now.toISOString(),
+      generatedAt: now.toISOString(),
+      action: { label: "View Details", to: "/insights/behavior" },
+      actions: [
+        { label: "Ask AI Coach", to: "/insights/ai-coach", kind: "coach" },
+        {
+          label: "Apply to Planner",
+          kind: "planner",
+          plannerTask: {
+            id: `notif-cat-${topOver.name.toLowerCase()}`,
+            title: `Cap ${topOver.name} at ${inr(topOver.avg)}/day`,
+            detail: `Suggested after spending ${inr(topOver.todayTotal)} today.`,
+          },
+        },
+      ],
+    });
+  }
+
+  // 5b. Skip discretionary shopping when today's spend exceeds the safe daily.
+  if (survival.safeDaily > 0 && survival.spentToday > survival.safeDaily) {
+    const over = survival.spentToday - survival.safeDaily;
+    items.push({
+      id: `ai-skip-shopping-${todayKey}`,
+      kind: "ai",
+      title: "Skip unnecessary shopping today",
+      message: `You're ${inr(over)} over your safe daily spend of ${inr(survival.safeDaily)} with ${survival.daysRemaining} day${survival.daysRemaining === 1 ? "" : "s"} to payday.`,
+      priority: over > survival.safeDaily ? "High" : "Medium",
+      group: "Today",
+      eventAt: now.toISOString(),
+      generatedAt: now.toISOString(),
+      action: { label: "View Details", to: "/planner" },
+      actions: [{ label: "Ask AI Coach", to: "/insights/ai-coach", kind: "coach" }],
+    });
+  }
+
+  // 5c. Emergency-fund top-up sized from the user's real surplus.
+  const savings = getRememberedSavings();
+  const monthlySalary = salaryAmountOf(salarySettings, profile);
+  if (monthlySalary && monthlySalary > 0) {
+    const targetFund = monthlySalary * 3;
+    const cycleSpend = cycleExpenses.reduce((s, t) => s + Number(t.amount), 0);
+    const surplus = monthlySalary - cycleSpend;
+    if (savings != null && savings < targetFund && surplus > 0) {
+      const topUp = Math.max(100, Math.round((surplus * 0.1) / 100) * 100);
+      items.push({
+        id: `ai-emergency-${todayKey}`,
+        kind: "ai",
+        title: `Increase emergency fund by ${inr(topUp)}`,
+        message: `Fund is ${inr(savings)} of a ${inr(targetFund)} (3-month) target. You have ${inr(surplus)} unspent this cycle.`,
+        priority: "Low",
+        group: "Today",
+        eventAt: now.toISOString(),
+        generatedAt: now.toISOString(),
+        action: { label: "View Details", to: "/goals" },
+        actions: [
+          {
+            label: "Apply to Planner",
+            kind: "planner",
+            plannerTask: {
+              id: "notif-emergency-topup",
+              title: `Move ${inr(topUp)} to emergency fund`,
+              detail: `Current ${inr(savings)} → target ${inr(targetFund)}.`,
+            },
+          },
+        ],
+      });
+    }
+  }
+
+  // 5d. Weekly review — only when the week actually has transactions.
+  const dow = (today.getDay() + 6) % 7; // Mon = 0
+  const weekStart = new Date(today.getTime() - dow * DAY_MS);
+  const weekTx = transactions.filter(
+    (t) =>
+      t.type === "expense" &&
+      String(t.transaction_date).slice(0, 10) >= toKey(weekStart) &&
+      String(t.transaction_date).slice(0, 10) <= todayKey,
+  );
+  if (dow >= 5 && weekTx.length > 0) {
+    const weekSpend = weekTx.reduce((s, t) => s + Number(t.amount), 0);
+    items.push({
+      id: `ai-weekly-review-${toKey(weekStart)}`,
+      kind: "ai",
+      title: "Review this week's spending",
+      message: `${weekTx.length} expense${weekTx.length === 1 ? "" : "s"} totalling ${inr(weekSpend)} this week.`,
+      priority: "Low",
+      group: "Today",
+      eventAt: now.toISOString(),
+      generatedAt: now.toISOString(),
+      action: { label: "View Details", to: "/insights/weekly" },
+    });
+  }
+
+  // 5e. Survival Score improved (compared against the stored previous score).
+  const prev = readScoreSnapshot();
+  if (prev && prev.dateKey !== todayKey) {
+    const delta = survival.score - prev.score;
+    if (delta >= 5) {
+      items.push({
+        id: `ai-score-up-${todayKey}`,
+        kind: "ai",
+        title: "Your Survival Score improved 🎉",
+        message: `Up ${delta} points to ${survival.score}/100 since ${prev.dateKey}. Keep the same pace.`,
+        priority: "Low",
+        group: "Today",
+        eventAt: now.toISOString(),
+        generatedAt: now.toISOString(),
+        action: { label: "View Details", to: "/insights/ai-coach" },
+      });
+    } else if (delta <= -5) {
+      items.push({
+        id: `risk-score-drop-${todayKey}`,
+        kind: "risk",
+        title: `Survival Score dropped ${Math.abs(delta)} points`,
+        message: `Now ${survival.score}/100 (was ${prev.score}). Spending pace or buffer weakened.`,
+        priority: "High",
+        group: "Today",
+        eventAt: now.toISOString(),
+        generatedAt: now.toISOString(),
+        action: { label: "View Details", to: "/insights/alerts" },
+        actions: [{ label: "Ask AI Coach", to: "/insights/ai-coach", kind: "coach" }],
+      });
+    }
+    if (prev.risk !== riskLevel) {
+      items.push({
+        id: `risk-level-${todayKey}-${riskLevel.toLowerCase()}`,
+        kind: "risk",
+        title: `Risk level changed to ${riskLevel}`,
+        message: `Previously ${prev.risk}. Based on ${inr(survival.salaryLeft)} left over ${survival.daysRemaining} day${survival.daysRemaining === 1 ? "" : "s"}.`,
+        priority: riskLevel === "Danger" ? "High" : "Medium",
+        group: "Today",
+        eventAt: now.toISOString(),
+        generatedAt: now.toISOString(),
+        action: { label: "View Details", to: "/insights/alerts" },
+      });
+    }
+  }
+  writeScoreSnapshot({ score: survival.score, risk: riskLevel, dateKey: todayKey });
+
+  // -------- FEATURE 6: GOAL PROGRESS ALERTS --------
+  for (const g of readGoals()) {
+    if (!g || !(g.target > 0)) continue;
+    const pct = (g.current / g.target) * 100;
+    const tier = pct >= 100 ? 100 : pct >= 75 ? 75 : pct >= 50 ? 50 : pct >= 25 ? 25 : 0;
+    if (tier === 0) continue;
+    const remaining = Math.max(0, g.target - g.current);
+    const monthly = Number(g.monthly) || 0;
+    const etaMonths = remaining > 0 && monthly > 0 ? Math.ceil(remaining / monthly) : null;
+    const eta =
+      remaining <= 0
+        ? "Completed"
+        : etaMonths != null
+          ? `~${etaMonths} month${etaMonths === 1 ? "" : "s"} at ${inr(monthly)}/mo`
+          : "Add a monthly contribution for an ETA";
+    items.push({
+      id: `goal-${g.id}-${tier}`,
+      kind: "goal",
+      title:
+        tier === 100
+          ? `Goal reached: ${g.name} 🎉`
+          : `${g.name} is ${tier}% funded`,
+      message: `${inr(g.current)} of ${inr(g.target)} · ${inr(remaining)} remaining · ETA ${eta}`,
+      priority: tier === 100 ? "High" : tier >= 75 ? "Medium" : "Low",
+      group: tier === 100 ? "Today" : "Upcoming",
+      eventAt: now.toISOString(),
+      generatedAt: now.toISOString(),
+      action: { label: "View Details", to: "/goals" },
+      actions:
+        tier === 100
+          ? []
+          : [
+              {
+                label: "Apply to Planner",
+                kind: "planner",
+                plannerTask: {
+                  id: `notif-goal-${g.id}`,
+                  title: `Fund ${g.name}${monthly > 0 ? ` — ${inr(monthly)} this month` : ""}`,
+                  detail: `${inr(remaining)} remaining of ${inr(g.target)}.`,
+                },
+              },
+            ],
+    });
+  }
+
+  // -------- FEATURE 7: FINANCIAL RISK ALERTS --------
+  // 7a. Emergency fund too low (< 1 month of salary).
+  if (monthlySalary && monthlySalary > 0 && savings != null && savings < monthlySalary) {
+    items.push({
+      id: `risk-emergency-low-${todayKey}`,
+      kind: "risk",
+      title: "Emergency fund too low",
+      message: `${inr(savings)} saved — under one month of salary (${inr(monthlySalary)}).`,
+      priority: "Medium",
+      group: "Today",
+      eventAt: now.toISOString(),
+      generatedAt: now.toISOString(),
+      action: { label: "View Details", to: "/goals" },
+      actions: [{ label: "Ask AI Coach", to: "/insights/ai-coach", kind: "coach" }],
+    });
+  }
+
+  // 7b. Weekly overspending vs the safe daily pace.
+  if (survival.safeDaily > 0 && weekTx.length > 0) {
+    const weekSpend = weekTx.reduce((s, t) => s + Number(t.amount), 0);
+    const weekPace = survival.safeDaily * (dow + 1);
+    if (weekSpend > weekPace * 1.2) {
+      items.push({
+        id: `risk-week-overspend-${toKey(weekStart)}`,
+        kind: "risk",
+        title: "Weekly overspending detected",
+        message: `${inr(weekSpend)} spent vs ${inr(weekPace)} planned for this week so far.`,
+        priority: "High",
+        group: "Today",
+        eventAt: now.toISOString(),
+        generatedAt: now.toISOString(),
+        action: { label: "View Details", to: "/insights/weekly" },
+        actions: [{ label: "Ask AI Coach", to: "/insights/ai-coach", kind: "coach" }],
+      });
+    }
+  }
+
+  // 7c. Salary may not last / upcoming cash shortage (forecast based).
+  if (survival.hasIncome && survival.daysRemaining > 0) {
+    if (survival.forecastBalance < 0) {
+      items.push({
+        id: `risk-shortage-${todayKey}`,
+        kind: "risk",
+        title: "Upcoming cash shortage",
+        message: `At your current pace you end the cycle ${inr(Math.abs(survival.forecastBalance))} short, ${survival.daysRemaining} day${survival.daysRemaining === 1 ? "" : "s"} before payday.`,
+        priority: "High",
+        group: "Today",
+        eventAt: survival.nextSalary.toISOString(),
+        generatedAt: now.toISOString(),
+        action: { label: "View Details", to: "/planner" },
+        actions: [{ label: "Ask AI Coach", to: "/insights/ai-coach", kind: "coach" }],
+      });
+    } else if (survival.salaryLeft < survival.safeDaily * survival.daysRemaining * 0.6) {
+      items.push({
+        id: `risk-salary-last-${todayKey}`,
+        kind: "risk",
+        title: "Salary may not last the cycle",
+        message: `${inr(survival.salaryLeft)} left for ${survival.daysRemaining} day${survival.daysRemaining === 1 ? "" : "s"} — about ${inr(survival.salaryLeft / Math.max(1, survival.daysRemaining))}/day.`,
+        priority: "Medium",
+        group: "Today",
+        eventAt: survival.nextSalary.toISOString(),
+        generatedAt: now.toISOString(),
+        action: { label: "View Details", to: "/planner" },
+      });
+    }
+  }
+
+  // 7d. High EMI pressure.
+  if (survival.monthlyEmi > 0 && survival.emiLevel === "High") {
+    items.push({
+      id: `risk-emi-${todayKey}`,
+      kind: "risk",
+      title: "High EMI pressure",
+      message: `EMIs of ${inr(survival.monthlyEmi)} take ${Math.round(survival.emiRatio)}% of your salary.`,
+      priority: "High",
+      group: "Today",
+      eventAt: now.toISOString(),
+      generatedAt: now.toISOString(),
+      action: { label: "View Details", to: "/loans" },
+      actions: [{ label: "Ask AI Coach", to: "/insights/ai-coach", kind: "coach" }],
+    });
+  }
+
+
   // -------- filter dismissed / mark completed --------
   const dismissed = getDismissed();
   const completed = getCompleted();
