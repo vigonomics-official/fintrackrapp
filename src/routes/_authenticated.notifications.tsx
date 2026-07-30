@@ -83,11 +83,14 @@ function NotificationCard({
   n,
   onDismiss,
   onComplete,
+  onPlanner,
 }: {
   n: NotificationItem;
   onDismiss: (id: string) => void;
   onComplete: (id: string) => void;
+  onPlanner: (n: NotificationItem, a: NotifAction) => void;
 }) {
+
   const Icon = KIND_ICON[n.kind];
   const isCompleted = n.group === "Completed";
   return (
