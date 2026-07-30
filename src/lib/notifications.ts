@@ -97,15 +97,29 @@ export function undoDismiss(id: string) {
   writeSet(DISMISSED_KEY, s);
 }
 
+/** Fire a manual refresh of every notification consumer. */
+export function notifyNotificationsChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(UPDATED_EVENT));
+}
+
 export function onNotificationsChanged(cb: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   const handler = () => cb();
   window.addEventListener(UPDATED_EVENT, handler);
   window.addEventListener("storage", handler);
+  // Goals / bills / planner data live in localStorage and are edited on other
+  // screens in the same tab (no `storage` event), so re-derive on focus too.
+  window.addEventListener("focus", handler);
+  document.addEventListener("visibilitychange", handler);
+  window.addEventListener("fintrackr:salary-updated", handler);
   const off = onProfileUpdated(cb);
   return () => {
     window.removeEventListener(UPDATED_EVENT, handler);
     window.removeEventListener("storage", handler);
+    window.removeEventListener("focus", handler);
+    document.removeEventListener("visibilitychange", handler);
+    window.removeEventListener("fintrackr:salary-updated", handler);
     off();
   };
 }
@@ -113,6 +127,53 @@ export function onNotificationsChanged(cb: () => void): () => void {
 // ----------------- helpers -----------------
 
 const DAY_MS = 86_400_000;
+
+export type RiskLevel = "Safe" | "Careful" | "Danger";
+
+const SCORE_SNAPSHOT_KEY = "fintrackr:notifications:score:v1";
+const GOALS_KEY = "fintrackr_goals_v1";
+
+type ScoreSnapshot = { score: number; risk: RiskLevel; dateKey: string };
+
+function readScoreSnapshot(): ScoreSnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SCORE_SNAPSHOT_KEY);
+    return raw ? (JSON.parse(raw) as ScoreSnapshot) : null;
+  } catch {
+    return null;
+  }
+}
+function writeScoreSnapshot(s: ScoreSnapshot) {
+  if (typeof window === "undefined") return;
+  const prev = readScoreSnapshot();
+  // Only roll the baseline forward once per day so deltas stay meaningful.
+  if (prev && prev.dateKey === s.dateKey) return;
+  try {
+    localStorage.setItem(SCORE_SNAPSHOT_KEY, JSON.stringify(s));
+  } catch {
+    /* ignore */
+  }
+}
+
+export type StoredGoal = {
+  id: string;
+  name: string;
+  target: number;
+  current: number;
+  monthly: number;
+};
+
+function readGoals(): StoredGoal[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(GOALS_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? (arr as StoredGoal[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -122,6 +183,7 @@ function toKey(d: Date): string {
 }
 function daysBetween(a: Date, b: Date): number {
   return Math.round((startOfDay(a).getTime() - startOfDay(b).getTime()) / DAY_MS);
+
 }
 
 // ----------------- generator -----------------
