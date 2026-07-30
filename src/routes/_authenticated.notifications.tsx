@@ -237,6 +237,14 @@ function NotificationsPage() {
     completeNotification(id);
     setTick((t) => t + 1);
   };
+  const handlePlanner = (n: NotificationItem, a: NotifAction) => {
+    if (!a.plannerTask) return;
+    enqueuePlannerTask(a.plannerTask);
+    toast.success("Added to Planner", { description: a.plannerTask.title });
+    completeNotification(n.id);
+    setTick((t) => t + 1);
+  };
+
 
   const total = items.length;
 
