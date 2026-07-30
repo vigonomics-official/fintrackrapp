@@ -46,6 +46,9 @@ export type NotificationItem = {
   /** ISO timestamp — when the notification was generated. */
   generatedAt: string;
   action?: NotifAction;
+  /** Extra secondary actions (Ask AI Coach / Apply to Planner / Mark Done). */
+  actions?: NotifAction[];
+
 };
 
 // ----------------- persistence -----------------
