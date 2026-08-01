@@ -4,6 +4,13 @@ import {
   daysUntilSalary as cycleDaysUntilSalary,
 } from "./salary-cycle";
 import type { SalarySettings } from "@/hooks/use-salary-settings";
+import {
+  computeSafeDaily,
+  emergencyFundTarget,
+  getSurvivalPreferences,
+  weightedScore,
+} from "./survival-preferences";
+import { getRememberedSavings } from "./financial-profile";
 
 type Tx = {
   type: "income" | "expense" | string;
