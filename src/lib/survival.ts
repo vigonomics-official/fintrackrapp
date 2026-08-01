@@ -103,7 +103,8 @@ export function computeSurvival(opts: {
       .reduce((s, t) => s + Number(t.amount), 0) + extraSpend;
   const salaryLeft = Math.max(0, salary - expensesSinceSalary);
 
-  const safeDaily = daysRemaining <= 0 ? salaryLeft : salaryLeft / Math.max(1, daysRemaining);
+  const prefs = getSurvivalPreferences();
+  const safeDaily = computeSafeDaily(salaryLeft, daysRemaining, now, prefs);
 
   const spentToday =
     cycleTxs
@@ -119,14 +120,28 @@ export function computeSurvival(opts: {
   const emiLevel: "Low" | "Medium" | "High" =
     emiRatio < 20 ? "Low" : emiRatio < 40 ? "Medium" : "High";
 
-  // --- 5. Survival score
-  const buffer = salary > 0 ? Math.min(50, (salaryLeft / salary) * 50) : 25;
-  const emiScore = Math.max(0, 30 - emiRatio * 0.5);
-  const pace =
+  // --- 5. Survival score (weighted by the user's Survival Preferences)
+  const savingsHealth = salary > 0 ? salaryLeft / salary : 0.5;
+  const debtHealth = 1 - Math.min(1, emiRatio / 60);
+  const disciplineHealth =
     spentToday <= safeDaily
-      ? 20
-      : Math.max(0, 20 - ((spentToday - safeDaily) / Math.max(1, safeDaily)) * 20);
-  const score = Math.round(buffer + emiScore + pace);
+      ? 1
+      : Math.max(0, 1 - (spentToday - safeDaily) / Math.max(1, safeDaily));
+  const savedSoFar = getRememberedSavings();
+  const efTarget = emergencyFundTarget(salary, prefs);
+  const emergencyHealth =
+    savedSoFar != null && efTarget > 0 ? savedSoFar / efTarget : undefined;
+
+  const score = weightedScore(
+    {
+      emergency: emergencyHealth,
+      savings: savingsHealth,
+      debt: debtHealth,
+      discipline: disciplineHealth,
+    },
+    prefs,
+  );
+
 
   // --- 6. Forecast: avgDaily × daysRemaining is projected remaining spend.
   // daysElapsed counts whole days since cycle start, minimum 1.
