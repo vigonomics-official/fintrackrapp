@@ -3,11 +3,11 @@
 // A Gemini provider can replace `generatePlanMock` without touching the tab.
 
 import {
-import { computeWeeklyBudget } from "@/lib/survival-preferences";
   analyzeMock,
   type CoachAnalysisInput,
   type CoachAnalysisResult,
 } from "@/lib/ai-coach-analysis";
+import { computeWeeklyBudget } from "@/lib/survival-preferences";
 
 export type BillStatus = "Upcoming" | "Due Today" | "Paid";
 export type ActionPriority = "High" | "Medium" | "Low";
