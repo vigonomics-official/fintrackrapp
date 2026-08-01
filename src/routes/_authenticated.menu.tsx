@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
-  Wallet, Landmark,
+  Wallet, Landmark, CalendarDays, Target, Bot, Bell,
   Upload, Download,
   Palette, Globe,
   Info, MessageSquare,
@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
+import { SurvivalPreferencesSection } from "@/components/finance/SurvivalPreferencesSection";
+import { FinancialSnapshotCard } from "@/components/finance/FinancialSnapshotCard";
 
 export const Route = createFileRoute("/_authenticated/menu")({
   component: MenuPage,
@@ -32,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/menu")({
   }),
 });
 
-type Item = { label: string; icon: typeof Wallet; to?: string; badge?: string; description?: string };
+type Item = { label: string; icon: typeof Wallet; to?: string; badge?: string; description?: string; keywords?: string[]; anchor?: string };
 type Group = { title: string; tone?: "smart" | "default"; items: Item[] };
 
 const GROUPS: Group[] = [
@@ -40,39 +42,52 @@ const GROUPS: Group[] = [
     title: "Smart Features",
     tone: "smart",
     items: [
-      { label: "SMS Intelligence", icon: MessageSquareText, to: "/sms-intelligence", description: "Auto-detect UPI & SMS spends" },
-      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants" },
+      { label: "SMS Intelligence", icon: MessageSquareText, to: "/sms-intelligence", description: "Auto-detect UPI & SMS spends", keywords: ["sms", "upi", "auto detect", "messages"] },
+      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants", keywords: ["rules", "merchant", "categories"] },
       
     ],
   },
   {
     title: "Financial Tools",
     items: [
-      { label: "Loans & EMI", icon: Landmark, to: "/loans" },
+      { label: "Loans & EMI", icon: Landmark, to: "/loans", keywords: ["loan", "emi", "debt", "bills"] },
+      { label: "Planner", icon: CalendarDays, to: "/planner", keywords: ["planner", "bills", "future", "net worth"] },
+      { label: "Goals", icon: Target, to: "/goals", keywords: ["goal", "savings target", "emergency fund"] },
+      { label: "AI Coach", icon: Bot, to: "/insights/ai-coach", keywords: ["ai", "coach", "advice", "survival"] },
+      { label: "Notifications", icon: Bell, to: "/notifications", keywords: ["reminder", "alerts", "notification"] },
     ],
   },
   {
     title: "Data",
     items: [
-      { label: "Import CSV", icon: Upload, to: "/import" },
-      { label: "Export Data", icon: Download, to: "/transactions" },
+      { label: "Import CSV", icon: Upload, to: "/import", keywords: ["csv", "import", "upload", "statement"] },
+      { label: "Export Data", icon: Download, to: "/transactions", keywords: ["export", "download", "backup"] },
     ],
   },
   {
     title: "Settings",
     items: [
-      { label: "Appearance", icon: Palette, to: "/settings" },
-      { label: "Currency & Localization", icon: Globe, to: "/settings" },
+      { label: "Salary Survival Settings", icon: Wallet, anchor: "section-salary-settings", keywords: ["salary", "pay day", "income", "employment"] },
+      { label: "Survival Preferences", icon: Sparkles, anchor: "section-survival-preferences", keywords: ["emergency fund", "safe daily", "weekly budget", "score weight", "privacy"] },
+      { label: "Appearance", icon: Palette, to: "/settings", keywords: ["theme", "dark mode", "appearance"] },
+      { label: "Currency & Localization", icon: Globe, to: "/settings", keywords: ["currency", "inr", "language", "locale"] },
     ],
   },
   {
     title: "Support",
     items: [
-      { label: "About App", icon: Info, to: "/settings" },
-      { label: "Feedback", icon: MessageSquare, to: "/settings" },
+      { label: "About App", icon: Info, to: "/settings", keywords: ["about", "version", "support", "privacy"] },
+      { label: "Privacy & Data", icon: Info, to: "/settings", keywords: ["privacy", "data", "security", "local"] },
+      { label: "Feedback", icon: MessageSquare, to: "/settings", keywords: ["feedback", "help", "support", "contact"] },
     ],
   },
 ];
+
+function scrollToSection(id: string) {
+  if (typeof document === "undefined") return;
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 function MenuPage() {
   const { signOut, user } = useAuth();
@@ -85,10 +100,28 @@ function MenuPage() {
     () =>
       GROUPS.map((g) => ({
         ...g,
-        items: q ? g.items.filter((i) => i.label.toLowerCase().includes(q)) : g.items,
+        items: q
+          ? g.items.filter((i) =>
+              [i.label, i.description ?? "", ...(i.keywords ?? [])]
+                .join(" ")
+                .toLowerCase()
+                .includes(q),
+            )
+          : g.items,
       })).filter((g) => g.items.length > 0),
     [q],
   );
+
+  // Smart search: jump straight to an on-page section when it is the only hit.
+  useEffect(() => {
+    if (!q) return;
+    const hits = filtered.flatMap((g) => g.items);
+    if (hits.length === 1 && hits[0].anchor) {
+      const id = hits[0].anchor;
+      const t = window.setTimeout(() => scrollToSection(id), 120);
+      return () => window.clearTimeout(t);
+    }
+  }, [q, filtered]);
 
   const toggleGroup = useCallback((title: string) => {
     setCollapsed((c) => ({ ...c, [title]: !c[title] }));
@@ -111,8 +144,14 @@ function MenuPage() {
           <Link to="/settings" className="shrink-0 text-xs font-medium text-primary">Edit</Link>
         </Card>
 
+        {/* Financial Snapshot — live, derived from real data */}
+        <FinancialSnapshotCard />
+
         {/* Salary Settings — central control for salary-based calculations */}
         <SalarySettingsSection />
+
+        {/* Survival Preferences — drive every survival calculation app-wide */}
+        <SurvivalPreferencesSection />
 
         {/* Search */}
         <div className="relative">
@@ -182,6 +221,14 @@ function MenuPage() {
                         <li key={item.label}>
                           {item.to ? (
                             <Link to={item.to} preload="intent">{inner}</Link>
+                          ) : item.anchor ? (
+                            <button
+                              type="button"
+                              className="block w-full text-left"
+                              onClick={() => scrollToSection(item.anchor!)}
+                            >
+                              {inner}
+                            </button>
                           ) : (
                             <button type="button" className="block w-full text-left opacity-80" disabled>
                               {inner}

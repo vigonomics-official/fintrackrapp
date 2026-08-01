@@ -12,6 +12,7 @@ import {
   onProfileUpdated,
 } from "@/lib/financial-profile";
 import { computeSurvival } from "@/lib/survival";
+import { computeWeeklyBudget } from "@/lib/survival-preferences";
 import {
   daysUntilSalary,
   lastSalaryDate,
@@ -332,7 +333,7 @@ export function computeNotifications({
       // discretionary calc so we don't overstate the budget.
       0;
     const discretionaryMonthly = Math.max(0, salaryAmount - fixed);
-    const weeklyBudget = discretionaryMonthly / 4.33;
+    const weeklyBudget = computeWeeklyBudget(discretionaryMonthly);
 
     if (weeklyBudget > 0) {
       const dayOfWeek = (today.getDay() + 6) % 7; // Mon=0

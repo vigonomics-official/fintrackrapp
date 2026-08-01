@@ -7,6 +7,7 @@ import {
   type CoachAnalysisInput,
   type CoachAnalysisResult,
 } from "@/lib/ai-coach-analysis";
+import { computeWeeklyBudget } from "@/lib/survival-preferences";
 
 export type BillStatus = "Upcoming" | "Due Today" | "Paid";
 export type ActionPriority = "High" | "Medium" | "Low";
@@ -219,7 +220,7 @@ export function generatePlanMock(
   const y = cycleStart.getFullYear();
   const m = cycleStart.getMonth();
   const dim = daysInMonth(y, m);
-  const weekBase = variablePool / 4;
+  const weekBase = computeWeeklyBudget(variablePool) * (4.33 / 4);
   const weights = [1.1, 1.05, 0.95, 0.9];
   const weeklyLimits: WeeklyLimit[] = [1, 2, 3, 4].map((w, i) => {
     const startDay = (w - 1) * 7 + 1;
