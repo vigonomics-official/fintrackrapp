@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Wallet, Landmark, CalendarDays, Target, Bot, Bell,
   Upload, Download,
@@ -111,6 +111,17 @@ function MenuPage() {
       })).filter((g) => g.items.length > 0),
     [q],
   );
+
+  // Smart search: jump straight to an on-page section when it is the only hit.
+  useEffect(() => {
+    if (!q) return;
+    const hits = filtered.flatMap((g) => g.items);
+    if (hits.length === 1 && hits[0].anchor) {
+      const id = hits[0].anchor;
+      const t = window.setTimeout(() => scrollToSection(id), 120);
+      return () => window.clearTimeout(t);
+    }
+  }, [q, filtered]);
 
   const toggleGroup = useCallback((title: string) => {
     setCollapsed((c) => ({ ...c, [title]: !c[title] }));
