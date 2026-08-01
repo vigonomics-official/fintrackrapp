@@ -34,9 +34,9 @@ export function SalarySettingsSection() {
     : "Not Set";
 
   return (
-    <section>
+    <section id="section-salary-settings">
       <h2 className="mb-2.5 px-1 truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">
-        Salary Settings
+        Salary Survival Settings
       </h2>
 
       {!isConfigured && (
