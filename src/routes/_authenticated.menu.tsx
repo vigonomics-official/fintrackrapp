@@ -17,6 +17,9 @@ import { cn } from "@/lib/utils";
 import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
 import { SurvivalPreferencesSection } from "@/components/finance/SurvivalPreferencesSection";
 import { FinancialSnapshotCard } from "@/components/finance/FinancialSnapshotCard";
+import { NotificationSettingsSection } from "@/components/finance/NotificationSettingsSection";
+import { SmsIntelligenceStatusCard } from "@/components/finance/SmsIntelligenceStatusCard";
+import { DataPrivacySection } from "@/components/finance/DataPrivacySection";
 
 export const Route = createFileRoute("/_authenticated/menu")({
   component: MenuPage,
@@ -42,7 +45,7 @@ const GROUPS: Group[] = [
     title: "Smart Features",
     tone: "smart",
     items: [
-      { label: "SMS Intelligence", icon: MessageSquareText, to: "/sms-intelligence", description: "Auto-detect UPI & SMS spends", keywords: ["sms", "upi", "auto detect", "messages"] },
+      { label: "SMS Intelligence Status", icon: MessageSquareText, anchor: "section-sms-intelligence", description: "Permission, last sync & accuracy", keywords: ["sms", "upi", "auto detect", "messages", "permission", "sync", "accuracy"] },
       { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants", keywords: ["rules", "merchant", "categories"] },
       
     ],
@@ -55,6 +58,7 @@ const GROUPS: Group[] = [
       { label: "Goals", icon: Target, to: "/goals", keywords: ["goal", "savings target", "emergency fund"] },
       { label: "AI Coach", icon: Bot, to: "/insights/ai-coach", keywords: ["ai", "coach", "advice", "survival"] },
       { label: "Notifications", icon: Bell, to: "/notifications", keywords: ["reminder", "alerts", "notification"] },
+      { label: "Notification Settings", icon: Bell, anchor: "section-notifications", description: "Choose which alerts you receive", keywords: ["notification settings", "salary reminder", "bill reminder", "danger alerts", "monthly summary", "permission", "unread"] },
     ],
   },
   {
@@ -62,6 +66,7 @@ const GROUPS: Group[] = [
     items: [
       { label: "Import CSV", icon: Upload, to: "/import", keywords: ["csv", "import", "upload", "statement"] },
       { label: "Export Data", icon: Download, to: "/transactions", keywords: ["export", "download", "backup"] },
+      { label: "Data & Privacy", icon: Info, anchor: "section-data-privacy", description: "Backup, storage, delete data", keywords: ["backup", "storage", "delete data", "reset", "privacy policy", "terms", "version", "sync"] },
     ],
   },
   {
@@ -152,6 +157,15 @@ function MenuPage() {
 
         {/* Survival Preferences — drive every survival calculation app-wide */}
         <SurvivalPreferencesSection />
+
+        {/* Smart Notifications — per-channel control over the alert engine */}
+        <NotificationSettingsSection />
+
+        {/* SMS Intelligence — live permission and import status */}
+        <SmsIntelligenceStatusCard />
+
+        {/* Data & Privacy — backup, storage and destructive actions */}
+        <DataPrivacySection />
 
         {/* Search */}
         <div className="relative">

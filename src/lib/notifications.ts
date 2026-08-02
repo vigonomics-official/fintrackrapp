@@ -12,6 +12,10 @@ import {
   onProfileUpdated,
 } from "@/lib/financial-profile";
 import { computeSurvival } from "@/lib/survival";
+import {
+  filterByChannelSettings,
+  NOTIFICATION_SETTINGS_EVENT,
+} from "@/lib/notification-settings";
 import { computeWeeklyBudget } from "@/lib/survival-preferences";
 import {
   daysUntilSalary,
@@ -114,6 +118,7 @@ export function onNotificationsChanged(cb: () => void): () => void {
   window.addEventListener("focus", handler);
   document.addEventListener("visibilitychange", handler);
   window.addEventListener("fintrackr:salary-updated", handler);
+  window.addEventListener(NOTIFICATION_SETTINGS_EVENT, handler);
   const off = onProfileUpdated(cb);
   return () => {
     window.removeEventListener(UPDATED_EVENT, handler);
@@ -121,6 +126,7 @@ export function onNotificationsChanged(cb: () => void): () => void {
     window.removeEventListener("focus", handler);
     document.removeEventListener("visibilitychange", handler);
     window.removeEventListener("fintrackr:salary-updated", handler);
+    window.removeEventListener(NOTIFICATION_SETTINGS_EVENT, handler);
     off();
   };
 }
@@ -794,7 +800,7 @@ export function computeNotifications({
   // -------- filter dismissed / mark completed --------
   const dismissed = getDismissed();
   const completed = getCompleted();
-  const filtered = items
+  const filtered = filterByChannelSettings(items)
     .filter((n) => !dismissed.has(n.id))
     .map((n) =>
       completed.has(n.id) ? { ...n, group: "Completed" as NotifGroup } : n,
