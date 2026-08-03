@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthShell } from "./login";
+import { validatePassword, PASSWORD_HINT, MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -26,8 +27,12 @@ function ResetPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const policyError = password ? validatePassword(password) : null;
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const invalid = validatePassword(password);
+    if (invalid) return toast.error(invalid);
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
@@ -41,12 +46,24 @@ function ResetPage() {
       <form onSubmit={submit} className="space-y-4">
         <div>
           <Label htmlFor="reset-password">New password</Label>
-          <Input id="reset-password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input
+            id="reset-password"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {policyError
+            ? <p className="mt-1 text-xs text-destructive">{policyError}</p>
+            : <p className="mt-1 text-xs text-muted-foreground">{PASSWORD_HINT}</p>}
         </div>
-        <Button disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
+        <Button disabled={loading || !!validatePassword(password)} className="w-full bg-gradient-primary shadow-elegant">
           {loading ? "Saving…" : "Update password"}
         </Button>
       </form>
     </AuthShell>
   );
 }
+
