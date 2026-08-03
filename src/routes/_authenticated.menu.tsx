@@ -1,18 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
-  Wallet, Landmark, CalendarDays, Target, Bot, Bell,
+  Landmark, CalendarDays, Target, Bot, Bell,
   Upload, Download,
   Palette, Globe,
   Info, MessageSquare,
   MessageSquareText, Sparkles,
-  ChevronRight, ChevronDown, LogOut, Search,
+  ChevronRight, ChevronDown, LogOut,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
 import { FinancialSnapshotCard } from "@/components/finance/FinancialSnapshotCard";
@@ -36,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/menu")({
   }),
 });
 
-type Item = { label: string; icon: typeof Wallet; to?: string; badge?: string; description?: string; keywords?: string[]; anchor?: string };
+type Item = { label: string; icon: typeof Landmark; to?: string; badge?: string; description?: string; anchor?: string };
 type Group = { title: string; tone?: "smart" | "default"; items: Item[] };
 
 const GROUPS: Group[] = [
@@ -44,48 +43,50 @@ const GROUPS: Group[] = [
     title: "Smart Features",
     tone: "smart",
     items: [
-      { label: "SMS Intelligence Status", icon: MessageSquareText, anchor: "section-sms-intelligence", description: "Permission, last sync & accuracy", keywords: ["sms", "upi", "auto detect", "messages", "permission", "sync", "accuracy"] },
-      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants", keywords: ["rules", "merchant", "categories"] },
-      
+      { label: "SMS Intelligence Status", icon: MessageSquareText, anchor: "section-sms-intelligence", description: "Permission, last sync & accuracy" },
+      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants" },
     ],
   },
   {
     title: "Financial Tools",
     items: [
-      { label: "Loans & EMI", icon: Landmark, to: "/loans", keywords: ["loan", "emi", "debt", "bills"] },
-      { label: "Planner", icon: CalendarDays, to: "/planner", keywords: ["planner", "bills", "future", "net worth"] },
-      { label: "Goals", icon: Target, to: "/goals", keywords: ["goal", "savings target", "emergency fund"] },
-      { label: "AI Coach", icon: Bot, to: "/insights/ai-coach", keywords: ["ai", "coach", "advice", "survival"] },
-      { label: "Notifications", icon: Bell, to: "/notifications", keywords: ["reminder", "alerts", "notification"] },
-      { label: "Notification Settings", icon: Bell, anchor: "section-notifications", description: "Choose which alerts you receive", keywords: ["notification settings", "salary reminder", "bill reminder", "danger alerts", "monthly summary", "permission", "unread"] },
+      { label: "Loans & EMI", icon: Landmark, to: "/loans" },
+      { label: "Planner", icon: CalendarDays, to: "/planner" },
+      { label: "Goals", icon: Target, to: "/goals" },
+      { label: "AI Salary Survival Coach", icon: Bot, to: "/insights/ai-coach" },
+    ],
+  },
+  {
+    title: "Notifications",
+    items: [
+      { label: "Notifications", icon: Bell, to: "/notifications" },
+      { label: "Notification Settings", icon: Bell, anchor: "section-notifications", description: "Choose which alerts you receive" },
     ],
   },
   {
     title: "Data",
     items: [
-      { label: "Import CSV", icon: Upload, to: "/import", keywords: ["csv", "import", "upload", "statement"] },
-      { label: "Export Data", icon: Download, to: "/transactions", keywords: ["export", "download", "backup"] },
-      { label: "Data & Privacy", icon: Info, anchor: "section-data-privacy", description: "Backup, storage, delete data", keywords: ["backup", "storage", "delete data", "reset", "privacy policy", "terms", "version", "sync"] },
+      { label: "Import CSV", icon: Upload, to: "/import" },
+      { label: "Export Data", icon: Download, to: "/transactions" },
+      { label: "Data & Privacy", icon: Info, anchor: "section-data-privacy", description: "Backup, storage, delete data" },
     ],
   },
   {
     title: "Settings",
     items: [
-      { label: "Salary Survival Settings", icon: Wallet, anchor: "section-salary-settings", keywords: ["salary", "pay day", "income", "employment"] },
-      { label: "Survival Preferences", icon: Sparkles, anchor: "section-survival-preferences", keywords: ["emergency fund", "safe daily", "weekly budget", "score weight", "privacy"] },
-      { label: "Appearance", icon: Palette, to: "/settings", keywords: ["theme", "dark mode", "appearance"] },
-      { label: "Currency & Localization", icon: Globe, to: "/settings", keywords: ["currency", "inr", "language", "locale"] },
+      { label: "Appearance", icon: Palette, to: "/settings" },
+      { label: "Currency & Localization", icon: Globe, to: "/settings" },
     ],
   },
   {
     title: "Support",
     items: [
-      { label: "About App", icon: Info, to: "/settings", keywords: ["about", "version", "support", "privacy"] },
-      { label: "Privacy & Data", icon: Info, to: "/settings", keywords: ["privacy", "data", "security", "local"] },
-      { label: "Feedback", icon: MessageSquare, to: "/settings", keywords: ["feedback", "help", "support", "contact"] },
+      { label: "About App", icon: Info, to: "/settings" },
+      { label: "Feedback", icon: MessageSquare, to: "/settings" },
     ],
   },
 ];
+
 
 function scrollToSection(id: string) {
   if (typeof document === "undefined") return;
