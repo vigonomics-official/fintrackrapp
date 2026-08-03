@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthShell } from "./login";
+import { passwordSchema, PASSWORD_HINT, MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/signup")({
 const schema = z.object({
   name: z.string().trim().min(2, "Tell us your name").max(80),
   email: z.string().email("Enter a valid email"),
-  password: z.string().min(6, "At least 6 characters"),
+  password: passwordSchema,
 });
 
 function SignupPage() {
@@ -77,8 +78,10 @@ function SignupPage() {
         </div>
         <div>
           <Label htmlFor="signup-password">Password</Label>
-          <Input id="signup-password" type="password" autoComplete="new-password" {...register("password")} />
-          {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+          <Input id="signup-password" type="password" autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} {...register("password")} />
+          {errors.password
+            ? <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
+            : <p className="mt-1 text-xs text-muted-foreground">{PASSWORD_HINT}</p>}
         </div>
         <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-elegant">
           {loading ? "Creating…" : "Create account"}
