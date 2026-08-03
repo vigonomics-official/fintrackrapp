@@ -111,9 +111,7 @@ export function SurvivalPreferenceRows() {
               ))}
             </div>
           </li>
-        </ul>
-      </Card>
-    </section>
+    </>
   );
 }
 
