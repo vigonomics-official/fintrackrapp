@@ -14,6 +14,7 @@ import {
   employmentLabel,
   type EmploymentType,
 } from "@/hooks/use-salary-settings";
+import { SurvivalPreferenceRows } from "@/components/finance/SurvivalPreferencesSection";
 
 type EditKey = null | "amount" | "date" | "type";
 
