@@ -30,6 +30,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "FinTrackr" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "google-site-verification", content: "4w0uMo7IyfD9ewwY8C6n3Z_utxs52Q8DL6HTmPV_W5E" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
