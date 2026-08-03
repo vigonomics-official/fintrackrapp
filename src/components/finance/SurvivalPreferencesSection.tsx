@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -13,7 +12,11 @@ import type {
   WeeklyBudgetMethod,
 } from "@/lib/survival-preferences";
 
-export function SurvivalPreferencesSection() {
+/**
+ * Survival preference rows, rendered inside the Salary Survival Settings card
+ * so there is a single place for every salary-driven setting.
+ */
+export function SurvivalPreferenceRows() {
   const { data: profile } = useProfile();
   const currency = profile?.currency ?? "INR";
   const { prefs, update } = useSurvivalPreferences();
@@ -22,13 +25,7 @@ export function SurvivalPreferencesSection() {
   );
 
   return (
-    <section id="section-survival-preferences">
-      <h2 className="mb-2.5 px-1 truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">
-        Survival Preferences
-      </h2>
-
-      <Card className="overflow-hidden shadow-soft">
-        <ul className="divide-y">
+    <>
           <li className="px-3 py-3 sm:px-4">
             <RowHead icon="🛡️" label="Emergency Fund Target" hint="Used across Coach, Planner and Insights" />
             <Chips<EmergencyFundMode>
@@ -113,9 +110,7 @@ export function SurvivalPreferencesSection() {
               ))}
             </div>
           </li>
-        </ul>
-      </Card>
-    </section>
+    </>
   );
 }
 
