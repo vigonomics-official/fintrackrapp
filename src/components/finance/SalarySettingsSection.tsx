@@ -70,6 +70,7 @@ export function SalarySettingsSection() {
             actionLabel="Edit"
             onAction={() => setEdit("type")}
           />
+          <SurvivalPreferenceRows />
         </ul>
       </Card>
 
