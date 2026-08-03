@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
-import { SurvivalPreferencesSection } from "@/components/finance/SurvivalPreferencesSection";
 import { FinancialSnapshotCard } from "@/components/finance/FinancialSnapshotCard";
 import { NotificationSettingsSection } from "@/components/finance/NotificationSettingsSection";
 import { SmsIntelligenceStatusCard } from "@/components/finance/SmsIntelligenceStatusCard";
@@ -155,9 +154,6 @@ function MenuPage() {
         {/* Salary Settings — central control for salary-based calculations */}
         <SalarySettingsSection />
 
-        {/* Survival Preferences — drive every survival calculation app-wide */}
-        <SurvivalPreferencesSection />
-
         {/* Smart Notifications — per-channel control over the alert engine */}
         <NotificationSettingsSection />
 
@@ -167,18 +163,7 @@ function MenuPage() {
         {/* Data & Privacy — backup, storage and destructive actions */}
         <DataPrivacySection />
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search settings, tools, features…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="h-11 w-full rounded-xl pl-9"
-          />
-        </div>
-
-        {filtered.map((group) => {
+        {GROUPS.map((group) => {
           const isCollapsed = collapsed[group.title];
           return (
             <section key={group.title}>
