@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTransactions, useLoans, useCategories } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
