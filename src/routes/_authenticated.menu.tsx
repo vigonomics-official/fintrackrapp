@@ -12,7 +12,6 @@ import { PageHeader } from "@/components/finance/PageHeader";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
 import { FinancialSnapshotCard } from "@/components/finance/FinancialSnapshotCard";
 import { SmsIntelligenceStatusCard } from "@/components/finance/SmsIntelligenceStatusCard";
 import { DataPrivacySection } from "@/components/finance/DataPrivacySection";
@@ -33,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/menu")({
   }),
 });
 
-type Item = { label: string; icon: typeof Landmark; to?: string; badge?: string; description?: string; anchor?: string };
+type Item = { label: string; icon: typeof Landmark; to?: string; badge?: string; description?: string };
 type Group = { title: string; tone?: "smart" | "default"; items: Item[] };
 
 const TOOL_GROUPS: Group[] = [
@@ -72,12 +71,6 @@ const SETTINGS_GROUPS: Group[] = [
 
 
 
-
-function scrollToSection(id: string) {
-  if (typeof document === "undefined") return;
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-}
 
 function MenuPage() {
   const { signOut, user } = useAuth();
