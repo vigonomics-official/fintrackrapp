@@ -122,6 +122,43 @@ export function NotificationSettingsSection() {
               <Switch checked={prefs[c.key]} onCheckedChange={(v) => toggle(c.key, v)} />
             </li>
           ))}
+
+          <li className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">Test Notification</p>
+              <p className="truncate text-xs text-muted-foreground">
+                Send a sample alert to check delivery
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 shrink-0 text-xs"
+              onClick={async () => {
+                let perm = getBrowserPermission();
+                if (perm === "default") {
+                  perm = await requestBrowserPermission();
+                  setPermission(perm);
+                }
+                const body =
+                  unread > 0
+                    ? `You have ${unread} unread alert${unread === 1 ? "" : "s"} waiting.`
+                    : "You're all caught up — no alerts pending.";
+                if (perm === "granted") {
+                  try {
+                    new Notification("FinTrackr", { body });
+                    toast.success("Test notification sent");
+                    return;
+                  } catch {
+                    /* fall through to in-app */
+                  }
+                }
+                toast("FinTrackr", { description: body });
+              }}
+            >
+              Send
+            </Button>
+          </li>
         </ul>
       </Card>
     </section>
