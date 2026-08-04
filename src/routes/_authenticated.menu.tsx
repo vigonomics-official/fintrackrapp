@@ -2,10 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useCallback } from "react";
 import {
   Landmark, CalendarDays, Target, Bot, Bell,
-  Upload, Download,
   Palette, Globe,
   Info, MessageSquare,
-  MessageSquareText, Sparkles,
+  Sparkles,
   ChevronRight, ChevronDown, LogOut,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -15,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
 import { FinancialSnapshotCard } from "@/components/finance/FinancialSnapshotCard";
-import { NotificationSettingsSection } from "@/components/finance/NotificationSettingsSection";
 import { SmsIntelligenceStatusCard } from "@/components/finance/SmsIntelligenceStatusCard";
 import { DataPrivacySection } from "@/components/finance/DataPrivacySection";
 
@@ -115,9 +113,6 @@ function MenuPage() {
 
         {/* Salary Settings — central control for salary-based calculations */}
         <SalarySettingsSection />
-
-        {/* Smart Notifications — per-channel control over the alert engine */}
-        <NotificationSettingsSection />
 
         {/* SMS Intelligence — live permission and import status */}
         <SmsIntelligenceStatusCard />
