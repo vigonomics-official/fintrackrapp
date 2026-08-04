@@ -1,30 +1,20 @@
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { useProfile, useTransactions, useLoans } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
-import { useSurvivalPreferences } from "@/hooks/use-survival-preferences";
 import { computeSurvival } from "@/lib/survival";
-import { emergencyFundTarget } from "@/lib/survival-preferences";
-import { getRememberedSavings } from "@/lib/financial-profile";
 import { formatCurrency } from "@/lib/currency";
 
 export function FinancialSnapshotCard() {
   const { data: profile } = useProfile();
   const currency = profile?.currency ?? "INR";
   const { settings } = useSalarySettings();
-  const { prefs } = useSurvivalPreferences();
   const { data: transactions = [] } = useTransactions();
   const { data: loans = [] } = useLoans();
-  const snapshot = useMemo(() => {
-    const s = computeSurvival({ transactions, loans, salarySettings: settings });
-    const target = emergencyFundTarget(s.salary, prefs);
-    const saved = getRememberedSavings() ?? 0;
-    const efPct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
-    return { s, target, saved, efPct };
-  }, [transactions, loans, settings, prefs]);
-
-  const { s, target, saved, efPct } = snapshot;
+  const s = useMemo(
+    () => computeSurvival({ transactions, loans, salarySettings: settings }),
+    [transactions, loans, settings],
+  );
 
   return (
     <Card id="section-snapshot" className="space-y-3 p-3 shadow-soft sm:p-4">
@@ -41,21 +31,10 @@ export function FinancialSnapshotCard() {
           value={settings.payDay != null ? (s.days === 0 ? "Today" : `${s.days}d`) : "Not set"}
         />
       </div>
-
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between gap-2 text-xs">
-          <span className="text-muted-foreground">Emergency Fund</span>
-          <span className="font-medium">
-            {target > 0
-              ? `${formatCurrency(Math.round(saved), currency)} / ${formatCurrency(Math.round(target), currency)}`
-              : "Set a target"}
-          </span>
-        </div>
-        <Progress value={efPct} className="h-2" />
-      </div>
     </Card>
   );
 }
+
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
