@@ -26,6 +26,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated.planner'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
+import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated.notification-settings'
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
 import { Route as AuthenticatedLoansRouteImport } from './routes/_authenticated.loans'
 import { Route as AuthenticatedInvestmentsRouteImport } from './routes/_authenticated.investments'
@@ -132,6 +133,12 @@ const AuthenticatedNotificationsRoute =
   AuthenticatedNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedNotificationSettingsRoute =
+  AuthenticatedNotificationSettingsRouteImport.update({
+    id: '/notification-settings',
+    path: '/notification-settings',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedMenuRoute = AuthenticatedMenuRouteImport.update({
@@ -251,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
   '/menu': typeof AuthenticatedMenuRoute
+  '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -286,6 +294,7 @@ export interface FileRoutesByTo {
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
   '/menu': typeof AuthenticatedMenuRoute
+  '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -324,6 +333,7 @@ export interface FileRoutesById {
   '/_authenticated/investments': typeof AuthenticatedInvestmentsRoute
   '/_authenticated/loans': typeof AuthenticatedLoansRoute
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
+  '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/investments'
     | '/loans'
     | '/menu'
+    | '/notification-settings'
     | '/notifications'
     | '/planner'
     | '/reports'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/investments'
     | '/loans'
     | '/menu'
+    | '/notification-settings'
     | '/notifications'
     | '/planner'
     | '/reports'
@@ -434,6 +446,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investments'
     | '/_authenticated/loans'
     | '/_authenticated/menu'
+    | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
     | '/_authenticated/planner'
     | '/_authenticated/reports'
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notification-settings': {
+      id: '/_authenticated/notification-settings'
+      path: '/notification-settings'
+      fullPath: '/notification-settings'
+      preLoaderRoute: typeof AuthenticatedNotificationSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/menu': {
@@ -769,6 +789,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInvestmentsRoute: typeof AuthenticatedInvestmentsRoute
   AuthenticatedLoansRoute: typeof AuthenticatedLoansRoute
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
+  AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -789,6 +810,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInvestmentsRoute: AuthenticatedInvestmentsRoute,
   AuthenticatedLoansRoute: AuthenticatedLoansRoute,
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,
+  AuthenticatedNotificationSettingsRoute:
+    AuthenticatedNotificationSettingsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
@@ -817,12 +840,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

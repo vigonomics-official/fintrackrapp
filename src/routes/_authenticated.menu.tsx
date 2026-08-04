@@ -2,10 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useCallback } from "react";
 import {
   Landmark, CalendarDays, Target, Bot, Bell,
-  Upload, Download,
   Palette, Globe,
   Info, MessageSquare,
-  MessageSquareText, Sparkles,
+  Sparkles,
   ChevronRight, ChevronDown, LogOut,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -15,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SalarySettingsSection } from "@/components/finance/SalarySettingsSection";
 import { FinancialSnapshotCard } from "@/components/finance/FinancialSnapshotCard";
-import { NotificationSettingsSection } from "@/components/finance/NotificationSettingsSection";
 import { SmsIntelligenceStatusCard } from "@/components/finance/SmsIntelligenceStatusCard";
 import { DataPrivacySection } from "@/components/finance/DataPrivacySection";
 
@@ -43,7 +41,6 @@ const GROUPS: Group[] = [
     title: "Smart Features",
     tone: "smart",
     items: [
-      { label: "SMS Intelligence Status", icon: MessageSquareText, anchor: "section-sms-intelligence", description: "Permission, last sync & accuracy" },
       { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants" },
     ],
   },
@@ -57,25 +54,12 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    title: "Notifications",
-    items: [
-      { label: "Notifications", icon: Bell, to: "/notifications" },
-      { label: "Notification Settings", icon: Bell, anchor: "section-notifications", description: "Choose which alerts you receive" },
-    ],
-  },
-  {
-    title: "Data",
-    items: [
-      { label: "Import CSV", icon: Upload, to: "/import" },
-      { label: "Export Data", icon: Download, to: "/transactions" },
-      { label: "Data & Privacy", icon: Info, anchor: "section-data-privacy", description: "Backup, storage, delete data" },
-    ],
-  },
-  {
     title: "Settings",
     items: [
       { label: "Appearance", icon: Palette, to: "/settings" },
       { label: "Currency & Localization", icon: Globe, to: "/settings" },
+      { label: "Notification Settings", icon: Bell, to: "/notification-settings", description: "Choose which alerts you receive" },
+      { label: "Salary Survival Settings", icon: Landmark, anchor: "section-salary-settings", description: "Salary, emergency fund & score weights" },
     ],
   },
   {
@@ -83,9 +67,12 @@ const GROUPS: Group[] = [
     items: [
       { label: "About App", icon: Info, to: "/settings" },
       { label: "Feedback", icon: MessageSquare, to: "/settings" },
+      { label: "Privacy Policy", icon: Info, to: "/settings" },
+      { label: "Terms & Conditions", icon: Info, to: "/settings" },
     ],
   },
 ];
+
 
 
 function scrollToSection(id: string) {
@@ -126,9 +113,6 @@ function MenuPage() {
 
         {/* Salary Settings — central control for salary-based calculations */}
         <SalarySettingsSection />
-
-        {/* Smart Notifications — per-channel control over the alert engine */}
-        <NotificationSettingsSection />
 
         {/* SMS Intelligence — live permission and import status */}
         <SmsIntelligenceStatusCard />

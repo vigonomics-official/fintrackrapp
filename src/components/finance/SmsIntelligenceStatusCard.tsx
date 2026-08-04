@@ -1,17 +1,10 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/hooks/use-finance";
-import {
-  checkSmsPermission,
-  computeSmsStats,
-  requestSmsPermission,
-  smsPlatform,
-  type SmsPermission,
-} from "@/lib/sms-status";
+import { checkSmsPermission, computeSmsStats, type SmsPermission } from "@/lib/sms-status";
 
 function formatWhen(iso: string | null): string {
   if (!iso) return "Never";
@@ -28,7 +21,6 @@ function formatWhen(iso: string | null): string {
 export function SmsIntelligenceStatusCard() {
   const { data: transactions = [] } = useTransactions();
   const [permission, setPermission] = useState<SmsPermission>("unsupported");
-  const platform = typeof window === "undefined" ? "web" : smsPlatform();
 
   useEffect(() => {
     let alive = true;
@@ -50,55 +42,37 @@ export function SmsIntelligenceStatusCard() {
       </h2>
 
       <Card className="overflow-hidden shadow-soft">
-        <div className="flex items-center justify-between gap-2 border-b px-3 py-3 sm:px-4">
-          <div className="min-w-0 flex-1">
-            <p className={cn("truncate text-sm font-semibold", active ? "text-success" : "text-destructive")}>
-              {active ? "🟢 SMS Active" : "🔴 SMS Permission Required"}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {active
-                ? "Spends are detected automatically on this device"
-                : platform === "web"
-                  ? "Auto-detect needs the FinTrackr Android app"
-                  : "Allow SMS access to auto-detect UPI spends"}
-            </p>
-          </div>
-          {!active && platform !== "web" && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 shrink-0 text-xs"
-              onClick={async () => setPermission(await requestSmsPermission())}
-            >
-              Enable SMS Detection
-            </Button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 px-3 py-3 sm:px-4">
-          <Stat label="Last Sync" value={formatWhen(stats.lastSyncAt)} />
-          <Stat label="Imported" value={stats.imported > 0 ? `${stats.imported} txns` : "None yet"} />
-          <Stat label="Accuracy" value={stats.accuracy != null ? `${stats.accuracy}%` : "—"} />
-        </div>
-
         <Link
           to="/sms-intelligence"
           preload="intent"
-          className="flex items-center justify-between gap-2 border-t px-3 py-3 transition-colors hover:bg-muted/40 sm:px-4"
+          className="block transition-colors hover:bg-muted/40 active:bg-muted/60"
         >
-          <span className="truncate text-sm font-medium">Open SMS Intelligence</span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <div className="flex items-center justify-between gap-2 border-b px-3 py-3 sm:px-4">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">Status</p>
+              <p className={cn("truncate text-xs", active ? "text-success" : "text-muted-foreground")}>
+                {active ? "Active — spends detected automatically" : "Permission required"}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 px-3 py-3 sm:px-4">
+            <Stat label="Last Sync" value={formatWhen(stats.lastSyncAt)} />
+            <Stat label="Imported" value={stats.imported > 0 ? `${stats.imported} txns` : "None yet"} />
+            <Stat label="Accuracy" value={stats.accuracy != null ? `${stats.accuracy}%` : "—"} />
+          </div>
         </Link>
       </Card>
     </section>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <div className="min-w-0 rounded-xl bg-muted/50 px-2.5 py-2">
       <p className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="truncate text-sm font-semibold">{value}</p>
+      <p className={cn("truncate text-sm font-semibold", tone)}>{value}</p>
     </div>
   );
 }
