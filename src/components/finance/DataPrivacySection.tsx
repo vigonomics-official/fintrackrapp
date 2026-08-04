@@ -12,7 +12,6 @@ import {
   clearLocalData,
   formatBytes,
   localStorageBytes,
-  resetCaches,
 } from "@/lib/local-storage-stats";
 import { notifyNotificationsChanged } from "@/lib/notifications";
 
@@ -49,7 +48,7 @@ export function DataPrivacySection() {
   return (
     <section id="section-data-privacy">
       <h2 className="mb-2.5 px-1 truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">
-        Data &amp; Privacy
+        Data
       </h2>
 
       <Card className="overflow-hidden shadow-soft">
@@ -64,31 +63,13 @@ export function DataPrivacySection() {
         </div>
 
         <ul className="divide-y">
-          <li>
-            <button
-              type="button"
-              className="flex w-full items-center justify-between gap-2 px-3 py-3 text-left transition-colors hover:bg-muted/40 sm:px-4"
-              onClick={() => {
-                const n = resetCaches();
-                setBytes(localStorageBytes());
-                notifyNotificationsChanged();
-                toast.success(n > 0 ? `Reset ${n} cached items` : "Nothing cached to reset");
-              }}
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">Reset Cached Data</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  Clears AI caches and dismissed alerts, keeps your profile
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            </button>
-          </li>
+          <RowLink to="/import" label="Import CSV" hint="Bring in statements from your bank" />
+          <RowLink to="/transactions" label="Export Data" hint="Download your transactions" />
 
           <li className="px-3 py-3 sm:px-4">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-destructive">Delete All Local Data</p>
+                <p className="truncate text-sm font-medium text-destructive">Delete All Data</p>
                 <p className="truncate text-xs text-muted-foreground">
                   Removes salary settings, preferences, goals and AI history on this device
                 </p>
@@ -125,9 +106,6 @@ export function DataPrivacySection() {
               )}
             </div>
           </li>
-
-          <RowLink to="/settings" label="Privacy Policy" hint="How your data is stored and used" />
-          <RowLink to="/settings" label="Terms & Conditions" hint="Usage terms for FinTrackr" />
 
           <li className="flex items-center justify-between gap-2 px-3 py-3 sm:px-4">
             <p className="truncate text-sm font-medium">App Version</p>
