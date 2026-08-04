@@ -23,6 +23,7 @@ import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
 import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_authenticated.smart-categorization'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
+import { Route as AuthenticatedSalarySettingsRouteImport } from './routes/_authenticated.salary-settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated.planner'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
@@ -119,6 +120,12 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSalarySettingsRoute =
+  AuthenticatedSalarySettingsRouteImport.update({
+    id: '/salary-settings',
+    path: '/salary-settings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -262,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
@@ -298,6 +306,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
@@ -337,6 +346,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/planner'
     | '/reports'
+    | '/salary-settings'
     | '/settings'
     | '/smart-categorization'
     | '/sms-intelligence'
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/planner'
     | '/reports'
+    | '/salary-settings'
     | '/settings'
     | '/smart-categorization'
     | '/sms-intelligence'
@@ -450,6 +462,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/planner'
     | '/_authenticated/reports'
+    | '/_authenticated/salary-settings'
     | '/_authenticated/settings'
     | '/_authenticated/smart-categorization'
     | '/_authenticated/sms-intelligence'
@@ -577,6 +590,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/salary-settings': {
+      id: '/_authenticated/salary-settings'
+      path: '/salary-settings'
+      fullPath: '/salary-settings'
+      preLoaderRoute: typeof AuthenticatedSalarySettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/reports': {
@@ -793,6 +813,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSalarySettingsRoute: typeof AuthenticatedSalarySettingsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSmartCategorizationRoute: typeof AuthenticatedSmartCategorizationRoute
   AuthenticatedSmsIntelligenceRoute: typeof AuthenticatedSmsIntelligenceRoute
@@ -815,6 +836,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSalarySettingsRoute: AuthenticatedSalarySettingsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSmartCategorizationRoute: AuthenticatedSmartCategorizationRoute,
   AuthenticatedSmsIntelligenceRoute: AuthenticatedSmsIntelligenceRoute,
