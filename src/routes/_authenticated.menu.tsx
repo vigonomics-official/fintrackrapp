@@ -36,30 +36,27 @@ export const Route = createFileRoute("/_authenticated/menu")({
 type Item = { label: string; icon: typeof Landmark; to?: string; badge?: string; description?: string; anchor?: string };
 type Group = { title: string; tone?: "smart" | "default"; items: Item[] };
 
-const GROUPS: Group[] = [
-  {
-    title: "Smart Features",
-    tone: "smart",
-    items: [
-      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants" },
-    ],
-  },
+const TOOL_GROUPS: Group[] = [
   {
     title: "Financial Tools",
     items: [
+      { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants" },
       { label: "Loans & EMI", icon: Landmark, to: "/loans" },
       { label: "Planner", icon: CalendarDays, to: "/planner" },
       { label: "Goals", icon: Target, to: "/goals" },
       { label: "AI Salary Survival Coach", icon: Bot, to: "/insights/ai-coach" },
     ],
   },
+];
+
+const SETTINGS_GROUPS: Group[] = [
   {
     title: "Settings",
     items: [
       { label: "Appearance", icon: Palette, to: "/settings" },
       { label: "Currency & Localization", icon: Globe, to: "/settings" },
       { label: "Notification Settings", icon: Bell, to: "/notification-settings", description: "Choose which alerts you receive" },
-      { label: "Salary Survival Settings", icon: Landmark, anchor: "section-salary-settings", description: "Salary, emergency fund & score weights" },
+      { label: "Salary Survival Settings", icon: Landmark, to: "/salary-settings", description: "Salary, emergency fund & score weights" },
     ],
   },
   {
@@ -72,6 +69,7 @@ const GROUPS: Group[] = [
     ],
   },
 ];
+
 
 
 
