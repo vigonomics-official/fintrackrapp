@@ -109,94 +109,18 @@ function MenuPage() {
         {/* Financial Snapshot — live, derived from real data */}
         <FinancialSnapshotCard />
 
-        {/* Salary Settings — central control for salary-based calculations */}
-        <SalarySettingsSection />
-
         {/* SMS Intelligence — live permission and import status */}
         <SmsIntelligenceStatusCard />
 
-        {/* Data & Privacy — backup, storage and destructive actions */}
+        {/* Financial Tools */}
+        <MenuGroups groups={TOOL_GROUPS} collapsed={collapsed} onToggle={toggleGroup} />
+
+        {/* Data — backup, storage and destructive actions */}
         <DataPrivacySection />
 
-        {GROUPS.map((group) => {
-          const isCollapsed = collapsed[group.title];
-          return (
-            <section key={group.title}>
-              <button
-                type="button"
-                onClick={() => toggleGroup(group.title)}
-                className="mb-2.5 flex w-full items-center justify-between gap-2 px-1"
-              >
-                <h2 className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs">
-                  {group.title}
-                </h2>
-                <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isCollapsed && "-rotate-90")} />
-              </button>
+        {/* Settings & Support */}
+        <MenuGroups groups={SETTINGS_GROUPS} collapsed={collapsed} onToggle={toggleGroup} />
 
-              {!isCollapsed && (
-                <Card className={cn(
-                  "overflow-hidden shadow-soft",
-                  group.tone === "smart" && "border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent"
-                )}>
-                  <ul className="divide-y">
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
-                      const isSmart = group.tone === "smart";
-                      const inner = (
-                        <div className="flex items-center justify-between gap-2 px-3 py-3 transition-colors hover:bg-muted/40 active:bg-muted/60 sm:gap-3 sm:px-4">
-                          <div className="flex min-w-0 flex-1 items-center gap-3">
-                            <span className={cn(
-                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                              isSmart ? "bg-primary/15 text-primary" : "bg-muted text-foreground/80"
-                            )}>
-                              <Icon className="h-[18px] w-[18px]" />
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium">{item.label}</p>
-                              {item.description && (
-                                <p className="truncate text-xs text-muted-foreground">{item.description}</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-1.5">
-                            {item.badge && (
-                              <span className={cn(
-                                "rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap",
-                                item.badge === "New" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                              )}>
-                                {item.badge}
-                              </span>
-                            )}
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </div>
-                      );
-                      return (
-                        <li key={item.label}>
-                          {item.to ? (
-                            <Link to={item.to} preload="intent">{inner}</Link>
-                          ) : item.anchor ? (
-                            <button
-                              type="button"
-                              className="block w-full text-left"
-                              onClick={() => scrollToSection(item.anchor!)}
-                            >
-                              {inner}
-                            </button>
-                          ) : (
-                            <button type="button" className="block w-full text-left opacity-80" disabled>
-                              {inner}
-                            </button>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </Card>
-              )}
-            </section>
-          );
-        })}
 
         <div className="pt-2">
           <Button
