@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import {
   Landmark, CalendarDays, Target, Bot, Bell,
   Palette, Globe,
-  Info, MessageSquare,
+  Info, MessageSquare, ShieldCheck, FileText,
   Sparkles,
   ChevronRight, ChevronDown, LogOut,
 } from "lucide-react";
