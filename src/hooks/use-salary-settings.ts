@@ -51,6 +51,8 @@ export function useSalarySettings() {
       try {
         localStorage.setItem(KEY, JSON.stringify(next));
         window.dispatchEvent(new Event("fintrackr:salary-updated"));
+        window.dispatchEvent(new Event("fintrackr:ai-coach:profile-updated"));
+        window.dispatchEvent(new Event("fintrackr:notifications:updated"));
       } catch {}
       return next;
     });
