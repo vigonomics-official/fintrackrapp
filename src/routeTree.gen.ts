@@ -19,6 +19,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuidesUpiMicroSpendingRouteImport } from './routes/guides.upi-micro-spending'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
+import { Route as AuthenticatedTermsRouteImport } from './routes/_authenticated.terms'
 import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
 import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_authenticated.smart-categorization'
@@ -100,6 +101,11 @@ const AuthenticatedTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedTermsRoute = AuthenticatedTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSplitSettleRoute =
   AuthenticatedSplitSettleRouteImport.update({
     id: '/split-settle',
@@ -295,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
+  '/terms': typeof AuthenticatedTermsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
+  '/terms': typeof AuthenticatedTermsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
@@ -378,6 +386,7 @@ export interface FileRoutesById {
   '/_authenticated/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
+  '/_authenticated/terms': typeof AuthenticatedTermsRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
@@ -421,6 +430,7 @@ export interface FileRouteTypes {
     | '/smart-categorization'
     | '/sms-intelligence'
     | '/split-settle'
+    | '/terms'
     | '/transactions'
     | '/guides/upi-micro-spending'
     | '/insights/ai'
@@ -461,6 +471,7 @@ export interface FileRouteTypes {
     | '/smart-categorization'
     | '/sms-intelligence'
     | '/split-settle'
+    | '/terms'
     | '/transactions'
     | '/guides/upi-micro-spending'
     | '/insights/ai'
@@ -503,6 +514,7 @@ export interface FileRouteTypes {
     | '/_authenticated/smart-categorization'
     | '/_authenticated/sms-intelligence'
     | '/_authenticated/split-settle'
+    | '/_authenticated/terms'
     | '/_authenticated/transactions'
     | '/guides/upi-micro-spending'
     | '/_authenticated/insights/ai'
@@ -598,6 +610,13 @@ declare module '@tanstack/react-router' {
       path: '/transactions'
       fullPath: '/transactions'
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/terms': {
+      id: '/_authenticated/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof AuthenticatedTermsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/split-settle': {
@@ -878,6 +897,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSmartCategorizationRoute: typeof AuthenticatedSmartCategorizationRoute
   AuthenticatedSmsIntelligenceRoute: typeof AuthenticatedSmsIntelligenceRoute
   AuthenticatedSplitSettleRoute: typeof AuthenticatedSplitSettleRoute
+  AuthenticatedTermsRoute: typeof AuthenticatedTermsRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
 }
 
@@ -904,6 +924,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSmartCategorizationRoute: AuthenticatedSmartCategorizationRoute,
   AuthenticatedSmsIntelligenceRoute: AuthenticatedSmsIntelligenceRoute,
   AuthenticatedSplitSettleRoute: AuthenticatedSplitSettleRoute,
+  AuthenticatedTermsRoute: AuthenticatedTermsRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
 }
 

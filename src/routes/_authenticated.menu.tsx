@@ -61,12 +61,13 @@ const SETTINGS_GROUPS: Group[] = [
   {
     title: "Support",
     items: [
-      { label: "About App", icon: Info, to: "/settings" },
-      { label: "Feedback", icon: MessageSquare, to: "/settings" },
-      { label: "Privacy Policy", icon: Info, to: "/settings" },
-      { label: "Terms & Conditions", icon: Info, to: "/settings" },
+      { label: "About App", icon: Info, to: "/about", description: "Version, developer & what's new" },
+      { label: "Feedback", icon: MessageSquare, to: "/feedback", description: "Report a bug or suggest a feature" },
+      { label: "Privacy Policy", icon: ShieldCheck, to: "/privacy" },
+      { label: "Terms & Conditions", icon: FileText, to: "/terms" },
     ],
   },
+
 ];
 
 
