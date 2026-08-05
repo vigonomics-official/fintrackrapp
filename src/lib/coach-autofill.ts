@@ -167,13 +167,14 @@ export function buildCoachAutofill(args: {
     }
   }
 
-  // ── Salary: Profile → salary settings → income total.
-  if (profile.monthlySalary != null && profile.monthlySalary > 0) {
-    values.monthlySalary = profile.monthlySalary;
+  // ── Salary: dedicated salary settings → profile → income total.
+  // Salary Survival Settings is the live source of truth when configured.
+  if (salary.amount != null && salary.amount > 0) {
+    values.monthlySalary = salary.amount;
     filled.add("monthlySalary");
     sources.monthlySalary = "profile";
-  } else if (salary.amount != null && salary.amount > 0) {
-    values.monthlySalary = salary.amount;
+  } else if (profile.monthlySalary != null && profile.monthlySalary > 0) {
+    values.monthlySalary = profile.monthlySalary;
     filled.add("monthlySalary");
     sources.monthlySalary = "profile";
   } else if (salaryTotal > 0) {
@@ -184,14 +185,14 @@ export function buildCoachAutofill(args: {
     values.monthlySalary = 0;
   }
 
-  // ── Salary date: Profile → salary settings.
-  if (profile.salaryDate) {
-    values.salaryDate = profile.salaryDate;
-    filled.add("salaryDate");
-    sources.salaryDate = "profile";
-  } else if (salary.payDay != null) {
+  // ── Salary date: dedicated salary settings → profile.
+  if (salary.payDay != null) {
     const d = payDayInMonth(y, m, salary.payDay);
     values.salaryDate = d.toISOString().slice(0, 10);
+    filled.add("salaryDate");
+    sources.salaryDate = "profile";
+  } else if (profile.salaryDate) {
+    values.salaryDate = profile.salaryDate;
     filled.add("salaryDate");
     sources.salaryDate = "profile";
   }
