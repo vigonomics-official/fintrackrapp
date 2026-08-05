@@ -25,6 +25,7 @@ import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedSalarySettingsRouteImport } from './routes/_authenticated.salary-settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
+import { Route as AuthenticatedPrivacyRouteImport } from './routes/_authenticated.privacy'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated.planner'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated.notification-settings'
@@ -131,6 +132,11 @@ const AuthenticatedSalarySettingsRoute =
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPrivacyRoute = AuthenticatedPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPlannerRoute = AuthenticatedPlannerRouteImport.update({
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
+  '/privacy': typeof AuthenticatedPrivacyRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
+  '/privacy': typeof AuthenticatedPrivacyRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -363,6 +371,7 @@ export interface FileRoutesById {
   '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
+  '/_authenticated/privacy': typeof AuthenticatedPrivacyRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/notification-settings'
     | '/notifications'
     | '/planner'
+    | '/privacy'
     | '/reports'
     | '/salary-settings'
     | '/settings'
@@ -444,6 +454,7 @@ export interface FileRouteTypes {
     | '/notification-settings'
     | '/notifications'
     | '/planner'
+    | '/privacy'
     | '/reports'
     | '/salary-settings'
     | '/settings'
@@ -485,6 +496,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
     | '/_authenticated/planner'
+    | '/_authenticated/privacy'
     | '/_authenticated/reports'
     | '/_authenticated/salary-settings'
     | '/_authenticated/settings'
@@ -628,6 +640,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/privacy': {
+      id: '/_authenticated/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof AuthenticatedPrivacyRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/planner': {
@@ -852,6 +871,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
+  AuthenticatedPrivacyRoute: typeof AuthenticatedPrivacyRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSalarySettingsRoute: typeof AuthenticatedSalarySettingsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -877,6 +897,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedNotificationSettingsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
+  AuthenticatedPrivacyRoute: AuthenticatedPrivacyRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSalarySettingsRoute: AuthenticatedSalarySettingsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
