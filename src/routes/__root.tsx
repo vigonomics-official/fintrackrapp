@@ -61,7 +61,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <AppearanceEffect />
         <TooltipProvider>
+
           <div className="app-container">
             <Outlet />
           </div>
