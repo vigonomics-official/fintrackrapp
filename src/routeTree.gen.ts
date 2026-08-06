@@ -40,6 +40,7 @@ import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
+import { Route as AuthenticatedAppearanceRouteImport } from './routes/_authenticated.appearance'
 import { Route as AuthenticatedAboutRouteImport } from './routes/_authenticated.about'
 import { Route as AuthenticatedInsightsIndexRouteImport } from './routes/_authenticated.insights.index'
 import { Route as AuthenticatedInsightsWeeklyRouteImport } from './routes/_authenticated.insights.weekly'
@@ -213,6 +214,11 @@ const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
   path: '/budgets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAppearanceRoute = AuthenticatedAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAboutRoute = AuthenticatedAboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -281,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/about': typeof AuthenticatedAboutRoute
+  '/appearance': typeof AuthenticatedAppearanceRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/about': typeof AuthenticatedAboutRoute
+  '/appearance': typeof AuthenticatedAppearanceRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/about': typeof AuthenticatedAboutRoute
+  '/_authenticated/appearance': typeof AuthenticatedAppearanceRoute
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/about'
+    | '/appearance'
     | '/budgets'
     | '/categories'
     | '/dashboard'
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/about'
+    | '/appearance'
     | '/budgets'
     | '/categories'
     | '/dashboard'
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/_authenticated/about'
+    | '/_authenticated/appearance'
     | '/_authenticated/budgets'
     | '/_authenticated/categories'
     | '/_authenticated/dashboard'
@@ -759,6 +771,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/appearance': {
+      id: '/_authenticated/appearance'
+      path: '/appearance'
+      fullPath: '/appearance'
+      preLoaderRoute: typeof AuthenticatedAppearanceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/about': {
       id: '/_authenticated/about'
       path: '/about'
@@ -877,6 +896,7 @@ const AuthenticatedInsightsRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAboutRoute: typeof AuthenticatedAboutRoute
+  AuthenticatedAppearanceRoute: typeof AuthenticatedAppearanceRoute
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -903,6 +923,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAboutRoute: AuthenticatedAboutRoute,
+  AuthenticatedAppearanceRoute: AuthenticatedAppearanceRoute,
   AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -946,12 +967,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
