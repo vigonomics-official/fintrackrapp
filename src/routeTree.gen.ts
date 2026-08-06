@@ -31,6 +31,7 @@ import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated.notification-settings'
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
+import { Route as AuthenticatedLocalizationRouteImport } from './routes/_authenticated.localization'
 import { Route as AuthenticatedLoansRouteImport } from './routes/_authenticated.loans'
 import { Route as AuthenticatedInvestmentsRouteImport } from './routes/_authenticated.investments'
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated.insights'
@@ -40,6 +41,7 @@ import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
+import { Route as AuthenticatedAppearanceRouteImport } from './routes/_authenticated.appearance'
 import { Route as AuthenticatedAboutRouteImport } from './routes/_authenticated.about'
 import { Route as AuthenticatedInsightsIndexRouteImport } from './routes/_authenticated.insights.index'
 import { Route as AuthenticatedInsightsWeeklyRouteImport } from './routes/_authenticated.insights.weekly'
@@ -167,6 +169,12 @@ const AuthenticatedMenuRoute = AuthenticatedMenuRouteImport.update({
   path: '/menu',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLocalizationRoute =
+  AuthenticatedLocalizationRouteImport.update({
+    id: '/localization',
+    path: '/localization',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedLoansRoute = AuthenticatedLoansRouteImport.update({
   id: '/loans',
   path: '/loans',
@@ -211,6 +219,11 @@ const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
 const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
   id: '/budgets',
   path: '/budgets',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAppearanceRoute = AuthenticatedAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAboutRoute = AuthenticatedAboutRouteImport.update({
@@ -281,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/about': typeof AuthenticatedAboutRoute
+  '/appearance': typeof AuthenticatedAppearanceRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -290,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/insights': typeof AuthenticatedInsightsRouteWithChildren
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
+  '/localization': typeof AuthenticatedLocalizationRoute
   '/menu': typeof AuthenticatedMenuRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -323,6 +338,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/about': typeof AuthenticatedAboutRoute
+  '/appearance': typeof AuthenticatedAppearanceRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -331,6 +347,7 @@ export interface FileRoutesByTo {
   '/import': typeof AuthenticatedImportRoute
   '/investments': typeof AuthenticatedInvestmentsRoute
   '/loans': typeof AuthenticatedLoansRoute
+  '/localization': typeof AuthenticatedLocalizationRoute
   '/menu': typeof AuthenticatedMenuRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -366,6 +383,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/about': typeof AuthenticatedAboutRoute
+  '/_authenticated/appearance': typeof AuthenticatedAppearanceRoute
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -375,6 +393,7 @@ export interface FileRoutesById {
   '/_authenticated/insights': typeof AuthenticatedInsightsRouteWithChildren
   '/_authenticated/investments': typeof AuthenticatedInvestmentsRoute
   '/_authenticated/loans': typeof AuthenticatedLoansRoute
+  '/_authenticated/localization': typeof AuthenticatedLocalizationRoute
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
   '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -410,6 +429,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/about'
+    | '/appearance'
     | '/budgets'
     | '/categories'
     | '/dashboard'
@@ -419,6 +439,7 @@ export interface FileRouteTypes {
     | '/insights'
     | '/investments'
     | '/loans'
+    | '/localization'
     | '/menu'
     | '/notification-settings'
     | '/notifications'
@@ -452,6 +473,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/about'
+    | '/appearance'
     | '/budgets'
     | '/categories'
     | '/dashboard'
@@ -460,6 +482,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/investments'
     | '/loans'
+    | '/localization'
     | '/menu'
     | '/notification-settings'
     | '/notifications'
@@ -494,6 +517,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/_authenticated/about'
+    | '/_authenticated/appearance'
     | '/_authenticated/budgets'
     | '/_authenticated/categories'
     | '/_authenticated/dashboard'
@@ -503,6 +527,7 @@ export interface FileRouteTypes {
     | '/_authenticated/insights'
     | '/_authenticated/investments'
     | '/_authenticated/loans'
+    | '/_authenticated/localization'
     | '/_authenticated/menu'
     | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
@@ -696,6 +721,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMenuRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/localization': {
+      id: '/_authenticated/localization'
+      path: '/localization'
+      fullPath: '/localization'
+      preLoaderRoute: typeof AuthenticatedLocalizationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/loans': {
       id: '/_authenticated/loans'
       path: '/loans'
@@ -757,6 +789,13 @@ declare module '@tanstack/react-router' {
       path: '/budgets'
       fullPath: '/budgets'
       preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/appearance': {
+      id: '/_authenticated/appearance'
+      path: '/appearance'
+      fullPath: '/appearance'
+      preLoaderRoute: typeof AuthenticatedAppearanceRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/about': {
@@ -877,6 +916,7 @@ const AuthenticatedInsightsRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAboutRoute: typeof AuthenticatedAboutRoute
+  AuthenticatedAppearanceRoute: typeof AuthenticatedAppearanceRoute
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -886,6 +926,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRouteWithChildren
   AuthenticatedInvestmentsRoute: typeof AuthenticatedInvestmentsRoute
   AuthenticatedLoansRoute: typeof AuthenticatedLoansRoute
+  AuthenticatedLocalizationRoute: typeof AuthenticatedLocalizationRoute
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
   AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -903,6 +944,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAboutRoute: AuthenticatedAboutRoute,
+  AuthenticatedAppearanceRoute: AuthenticatedAppearanceRoute,
   AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -912,6 +954,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInsightsRoute: AuthenticatedInsightsRouteWithChildren,
   AuthenticatedInvestmentsRoute: AuthenticatedInvestmentsRoute,
   AuthenticatedLoansRoute: AuthenticatedLoansRoute,
+  AuthenticatedLocalizationRoute: AuthenticatedLocalizationRoute,
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,
   AuthenticatedNotificationSettingsRoute:
     AuthenticatedNotificationSettingsRoute,

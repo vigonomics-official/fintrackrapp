@@ -52,8 +52,9 @@ const SETTINGS_GROUPS: Group[] = [
   {
     title: "Settings",
     items: [
-      { label: "Appearance", icon: Palette, to: "/settings" },
-      { label: "Currency & Localization", icon: Globe, to: "/settings" },
+      { label: "Appearance", icon: Palette, to: "/appearance", description: "Theme, accent, font size & motion" },
+      { label: "Currency & Localization", icon: Globe, to: "/localization", description: "Currency, formats, language & time zone" },
+
       { label: "Notification Settings", icon: Bell, to: "/notification-settings", description: "Choose which alerts you receive" },
       { label: "Salary Survival Settings", icon: Landmark, to: "/salary-settings", description: "Salary, emergency fund & score weights" },
     ],
