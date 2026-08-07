@@ -153,13 +153,14 @@
   --secondary-foreground: oklch(0.95 0.015 95);
 
   --muted: oklch(0.25 0.03 165);
-  --muted-foreground: oklch(0.7 0.03 130);
+  --muted-foreground: oklch(0.8 0.025 130);
 
   --accent: oklch(0.3 0.05 165);
   --accent-foreground: oklch(0.95 0.015 95);
 
   --gold: oklch(0.82 0.13 85);
-  --gold-foreground: oklch(0.16 0.025 165);
+  /* readable amber text on dark surfaces */
+  --gold-foreground: oklch(0.87 0.12 88);
 
   --success: oklch(0.78 0.15 160);
   --success-foreground: oklch(0.16 0.025 165);
@@ -174,10 +175,11 @@
   --teal-foreground: oklch(0.16 0.025 165);
 
 
-  --destructive: oklch(0.65 0.2 25);
-  --destructive-foreground: oklch(0.98 0.01 95);
+  --destructive: oklch(0.72 0.19 25);
+  --destructive-foreground: oklch(0.16 0.025 165);
 
-  --border: oklch(1 0 0 / 0.08);
+  --border: oklch(1 0 0 / 0.12);
+
   --input: oklch(1 0 0 / 0.12);
   --ring: oklch(0.7 0.14 165);
 
