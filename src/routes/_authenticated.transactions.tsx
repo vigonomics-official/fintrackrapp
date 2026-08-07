@@ -420,13 +420,13 @@ function TransactionsPage() {
           <CardContent className="space-y-4 p-4">
             <div className="flex items-center gap-3">
               <div className="relative min-w-0 flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="h-10 w-full pl-9" />
+                <Search className="absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground" />
+                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search transactions…" className="h-12 w-full rounded-xl pl-10" />
               </div>
               <Button
                 variant="outline"
                 size="icon"
-                className="md:hidden h-10 w-10 shrink-0"
+                className="md:hidden h-12 w-12 shrink-0 rounded-xl"
                 onClick={() => setShowFilters(s => !s)}
                 aria-label="Filters"
               >
@@ -482,18 +482,22 @@ function TransactionsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {grouped.map(([date, items]) => {
               const dayTotal = items.reduce((s, t) => s + (t.type === "income" ? t.amount : -t.amount), 0);
+              const isToday = formatGroupDate(date) === "Today";
               return (
                 <div key={date}>
                   <div className="mb-1.5 flex items-center justify-between px-1">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{formatGroupDate(date)}</p>
-                    <p className={`text-xs font-medium tabular-nums ${dayTotal >= 0 ? "text-success" : "text-muted-foreground"}`}>
+                    <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                      {isToday && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                      {formatGroupDate(date)}
+                    </p>
+                    <p className={`text-xs font-semibold tabular-nums ${dayTotal >= 0 ? "text-success" : "text-foreground/80"}`}>
                       {dayTotal >= 0 ? "+" : "−"}{formatCurrency(Math.abs(dayTotal), currency)}
                     </p>
                   </div>
-                    <Card className="shadow-soft rounded-2xl">
+                    <Card className={`shadow-soft rounded-2xl ${isToday ? "border-primary/40 ring-1 ring-primary/25" : ""}`}>
                     <CardContent className="p-0">
                       <ul className="divide-y">
                         {items.map((t) => {
@@ -522,7 +526,7 @@ function TransactionsPage() {
                           const iconColor = isUncategorized ? "#ea580c" : (c?.color ?? "#64748b");
                           const isChecked = selected.has(t.id);
                           return (
-                            <li key={t.id} className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40">
+                            <li key={t.id} className="group flex items-center gap-3 px-4 py-4 transition-colors hover:bg-muted/40">
                               {selectMode && (
                                 <Checkbox
                                   checked={isChecked}
@@ -547,25 +551,26 @@ function TransactionsPage() {
                                   {fullTitle.charAt(0).toUpperCase()}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-[14px] font-medium leading-tight text-foreground">{fullTitle}</p>
+                                  <p className="truncate text-[14.5px] font-semibold leading-tight text-foreground">{fullTitle}</p>
                                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5 min-w-0">
                                     {c?.name ? (
-                                      <span className="truncate rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                      <span className="truncate rounded-full border border-border bg-secondary px-2 py-0.5 text-[10.5px] font-semibold text-secondary-foreground">
                                         {c.name}
                                       </span>
                                     ) : isUncategorized ? (
-                                      <span className="truncate rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                      <span className="truncate rounded-full border border-warning/40 bg-warning/15 px-2 py-0.5 text-[10.5px] font-semibold text-gold-foreground">
                                         Uncategorized
                                       </span>
                                     ) : null}
-                                    <span className="shrink-0 rounded-full bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-foreground/75">
                                       {pmLabel}
                                     </span>
                                     {shortTime && (
-                                      <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground/80">{shortTime}</span>
+                                      <span className="ml-auto shrink-0 text-[10.5px] font-medium tabular-nums text-muted-foreground">{shortTime}</span>
                                     )}
                                   </div>
                                 </div>
+
                                 <p className={`shrink-0 whitespace-nowrap text-nowrap pl-1 font-display text-[15px] font-semibold tabular-nums ${t.type === "income" ? "text-success" : t.type === "expense" ? "text-foreground" : "text-muted-foreground"}`}>
                                   {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}{formatCurrency(t.amount, currency)}
                                 </p>

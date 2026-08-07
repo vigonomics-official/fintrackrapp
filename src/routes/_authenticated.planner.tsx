@@ -160,13 +160,13 @@ function MonthlyPlan() {
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden border-none bg-gradient-primary text-primary-foreground shadow-elegant">
-        <CardContent className="space-y-3 p-5">
+        <CardContent className="space-y-2 p-4">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.14em] opacity-80">Salary Left</p>
-            <p className="mt-1 font-display text-3xl font-bold">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-90">Salary Left</p>
+            <p className="mt-1 font-display text-[28px] font-bold leading-none">
               {s.hasIncome ? formatCurrency(s.salaryLeft, s.currency) : "—"}
             </p>
-            <p className="mt-1 text-xs opacity-85">
+            <p className="mt-1.5 text-xs font-medium opacity-95">
               {s.hasIncome
                 ? s.isSalaryToday
                   ? `Salary Today 🎉 · ${formatCurrency(s.safeDaily, s.currency)} safe today`
@@ -380,9 +380,9 @@ function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; curren
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">This Cycle's Weekly Budget</p>
-          <p className="text-[13px] font-bold text-emerald-500 tabular-nums">{formatCurrency(weeklyBudget, currency)}/week</p>
+          <p className="text-[13px] font-bold text-success tabular-nums">{formatCurrency(weeklyBudget, currency)}/week</p>
         </div>
-        <ul className="flex flex-col gap-[10px]">
+        <ul className="flex flex-col gap-3.5">
           {weeks.map((w, i) => {
             const diff = weeklyBudget - w.spent;
             const over = !w.upcoming && diff < 0;
@@ -391,29 +391,28 @@ function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; curren
             const pct = w.upcoming ? 0 : Math.min(100, (w.spent / weeklyBudget) * 100);
 
             const statusLabel = w.upcoming ? "Upcoming" : over ? "⚠️ Over" : "✅ Under";
-            const statusColor = w.upcoming ? "text-muted-foreground" : over ? "text-orange-500" : "text-emerald-500";
-            const trackStyle = { backgroundColor: "#e5e7eb" };
-            const fillColor = w.upcoming ? "#e5e7eb" : over ? "#f97316" : "#16a34a";
+            const statusColor = w.upcoming ? "text-muted-foreground" : over ? "text-gold-foreground" : "text-success";
+            const trackStyle = { backgroundColor: "var(--muted)" };
+            const fillColor = w.upcoming ? "var(--muted)" : over ? "var(--warning)" : "var(--success)";
 
             let rightDetail: React.ReactNode;
             if (w.upcoming) {
               rightDetail = <span className="text-muted-foreground">Not started</span>;
             } else if (over) {
-              rightDetail = <span className="text-orange-500">Over by {formatCurrency(absDiff, currency)}</span>;
+              rightDetail = <span className="text-gold-foreground">Over by {formatCurrency(absDiff, currency)}</span>;
             } else if (reached) {
-              rightDetail = <span className="text-emerald-500">Budget reached 🎯</span>;
+              rightDetail = <span className="text-success">Budget reached 🎯</span>;
             } else {
-              rightDetail = <span className="text-emerald-500">{formatCurrency(absDiff, currency)} left</span>;
+              rightDetail = <span className="text-success">{formatCurrency(absDiff, currency)} left</span>;
             }
 
             return (
               <li
                 key={w.idx}
-                className={cn("space-y-1.5", i > 0 && "pt-[10px] border-t")}
-                style={i > 0 ? { borderTopColor: "#f3f4f6" } : undefined}
+                className={cn("space-y-1.5", i > 0 && "border-t pt-3.5")}
               >
                 <div className="flex items-center justify-between text-[13px]">
-                  <span className="font-medium text-muted-foreground">
+                  <span className="font-medium text-foreground/80">
                     Week {w.idx} · {fmtRange(w.start, w.end)}
                   </span>
                   <span className={cn("font-medium", statusColor)}>{statusLabel}</span>
@@ -457,28 +456,33 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
     { label: "Survival", val: Math.round(survival), max: 30 },
   ];
 
+  const updatedLabel = new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
   return (
-    <Card className="shadow-soft">
+    <Card className="border-teal/30 shadow-soft">
       <CardContent className="space-y-3 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Financial Health</p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-3.5 w-3.5 text-teal" />
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-teal">Financial Health</p>
+            </div>
+            <p className="mt-1 text-[10.5px] font-medium text-muted-foreground">Last updated · Today, {updatedLabel}</p>
           </div>
-          <p className="font-display text-xl font-bold tabular-nums">{total}<span className="text-xs text-muted-foreground">/100</span></p>
+          <p className="font-display text-xl font-bold tabular-nums">{total}<span className="text-xs font-medium text-muted-foreground">/100</span></p>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {bars.map((b) => (
             <div key={b.label}>
-              <div className="flex justify-between text-[11px]">
+              <div className="flex justify-between text-[11px] font-medium">
                 <span className="text-muted-foreground">{b.label}</span>
-                <span className="tabular-nums">{b.val}/{b.max}</span>
+                <span className="tabular-nums text-foreground/85">{b.val}/{b.max}</span>
               </div>
               <Progress value={(b.val / b.max) * 100} className="h-1" />
             </div>
           ))}
         </div>
-        <p className="text-[11px] text-muted-foreground">{tip}</p>
+        <p className="text-[11.5px] font-medium text-foreground/80">{tip}</p>
       </CardContent>
     </Card>
   );
