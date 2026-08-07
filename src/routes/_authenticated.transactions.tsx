@@ -420,13 +420,13 @@ function TransactionsPage() {
           <CardContent className="space-y-4 p-4">
             <div className="flex items-center gap-3">
               <div className="relative min-w-0 flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="h-10 w-full pl-9" />
+                <Search className="absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground" />
+                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search transactions…" className="h-12 w-full rounded-xl pl-10" />
               </div>
               <Button
                 variant="outline"
                 size="icon"
-                className="md:hidden h-10 w-10 shrink-0"
+                className="md:hidden h-12 w-12 shrink-0 rounded-xl"
                 onClick={() => setShowFilters(s => !s)}
                 aria-label="Filters"
               >
