@@ -95,6 +95,16 @@
   --success: oklch(0.62 0.13 160);
   --success-foreground: oklch(0.98 0.01 95);
 
+  --info: oklch(0.55 0.15 245);             /* budgets — blue */
+  --info-foreground: oklch(0.98 0.01 95);
+
+  --warning: oklch(0.65 0.16 55);           /* warnings — orange */
+  --warning-foreground: oklch(0.2 0.04 60);
+
+  --teal: oklch(0.6 0.1 195);               /* financial health — teal */
+  --teal-foreground: oklch(0.98 0.01 95);
+
+
   --destructive: oklch(0.6 0.21 25);
   --destructive-foreground: oklch(0.98 0.01 95);
 
