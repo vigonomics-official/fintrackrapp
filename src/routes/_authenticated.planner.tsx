@@ -456,28 +456,33 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
     { label: "Survival", val: Math.round(survival), max: 30 },
   ];
 
+  const updatedLabel = new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
   return (
-    <Card className="shadow-soft">
+    <Card className="border-teal/30 shadow-soft">
       <CardContent className="space-y-3 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Financial Health</p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-3.5 w-3.5 text-teal" />
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-teal">Financial Health</p>
+            </div>
+            <p className="mt-1 text-[10.5px] font-medium text-muted-foreground">Last updated · Today, {updatedLabel}</p>
           </div>
-          <p className="font-display text-xl font-bold tabular-nums">{total}<span className="text-xs text-muted-foreground">/100</span></p>
+          <p className="font-display text-xl font-bold tabular-nums">{total}<span className="text-xs font-medium text-muted-foreground">/100</span></p>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {bars.map((b) => (
             <div key={b.label}>
-              <div className="flex justify-between text-[11px]">
+              <div className="flex justify-between text-[11px] font-medium">
                 <span className="text-muted-foreground">{b.label}</span>
-                <span className="tabular-nums">{b.val}/{b.max}</span>
+                <span className="tabular-nums text-foreground/85">{b.val}/{b.max}</span>
               </div>
               <Progress value={(b.val / b.max) * 100} className="h-1" />
             </div>
           ))}
         </div>
-        <p className="text-[11px] text-muted-foreground">{tip}</p>
+        <p className="text-[11.5px] font-medium text-foreground/80">{tip}</p>
       </CardContent>
     </Card>
   );
