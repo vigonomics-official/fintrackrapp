@@ -482,18 +482,22 @@ function TransactionsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {grouped.map(([date, items]) => {
               const dayTotal = items.reduce((s, t) => s + (t.type === "income" ? t.amount : -t.amount), 0);
+              const isToday = formatGroupDate(date) === "Today";
               return (
                 <div key={date}>
                   <div className="mb-1.5 flex items-center justify-between px-1">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{formatGroupDate(date)}</p>
-                    <p className={`text-xs font-medium tabular-nums ${dayTotal >= 0 ? "text-success" : "text-muted-foreground"}`}>
+                    <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                      {isToday && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                      {formatGroupDate(date)}
+                    </p>
+                    <p className={`text-xs font-semibold tabular-nums ${dayTotal >= 0 ? "text-success" : "text-foreground/80"}`}>
                       {dayTotal >= 0 ? "+" : "−"}{formatCurrency(Math.abs(dayTotal), currency)}
                     </p>
                   </div>
-                    <Card className="shadow-soft rounded-2xl">
+                    <Card className={`shadow-soft rounded-2xl ${isToday ? "border-primary/40 ring-1 ring-primary/25" : ""}`}>
                     <CardContent className="p-0">
                       <ul className="divide-y">
                         {items.map((t) => {
