@@ -708,7 +708,7 @@ function Dashboard() {
 function SurvivalStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-white/10 px-2 py-2 backdrop-blur">
-      <p className="text-[10px] uppercase tracking-wider opacity-75">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider opacity-90">{label}</p>
       <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{value}</p>
     </div>
   );
