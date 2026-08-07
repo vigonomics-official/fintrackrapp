@@ -526,7 +526,7 @@ function TransactionsPage() {
                           const iconColor = isUncategorized ? "#ea580c" : (c?.color ?? "#64748b");
                           const isChecked = selected.has(t.id);
                           return (
-                            <li key={t.id} className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/40">
+                            <li key={t.id} className="group flex items-center gap-3 px-4 py-4 transition-colors hover:bg-muted/40">
                               {selectMode && (
                                 <Checkbox
                                   checked={isChecked}
@@ -551,25 +551,26 @@ function TransactionsPage() {
                                   {fullTitle.charAt(0).toUpperCase()}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-[14px] font-medium leading-tight text-foreground">{fullTitle}</p>
+                                  <p className="truncate text-[14.5px] font-semibold leading-tight text-foreground">{fullTitle}</p>
                                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5 min-w-0">
                                     {c?.name ? (
-                                      <span className="truncate rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                      <span className="truncate rounded-full border border-border bg-secondary px-2 py-0.5 text-[10.5px] font-semibold text-secondary-foreground">
                                         {c.name}
                                       </span>
                                     ) : isUncategorized ? (
-                                      <span className="truncate rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                      <span className="truncate rounded-full border border-warning/40 bg-warning/15 px-2 py-0.5 text-[10.5px] font-semibold text-gold-foreground">
                                         Uncategorized
                                       </span>
                                     ) : null}
-                                    <span className="shrink-0 rounded-full bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-foreground/75">
                                       {pmLabel}
                                     </span>
                                     {shortTime && (
-                                      <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground/80">{shortTime}</span>
+                                      <span className="ml-auto shrink-0 text-[10.5px] font-medium tabular-nums text-muted-foreground">{shortTime}</span>
                                     )}
                                   </div>
                                 </div>
+
                                 <p className={`shrink-0 whitespace-nowrap text-nowrap pl-1 font-display text-[15px] font-semibold tabular-nums ${t.type === "income" ? "text-success" : t.type === "expense" ? "text-foreground" : "text-muted-foreground"}`}>
                                   {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}{formatCurrency(t.amount, currency)}
                                 </p>
