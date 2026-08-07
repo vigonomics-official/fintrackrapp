@@ -294,7 +294,7 @@ function Dashboard() {
       />
 
 
-      <div className="space-y-5 px-5 py-5 md:space-y-6 md:px-10 md:py-7">
+      <div className="space-y-3 px-4 py-4 md:space-y-4 md:px-10 md:py-6">
         {!hasExpenses && (
           <GettingStartedChecklist
             hasSalary={(salarySettings.amount ?? fp.monthlySalary ?? 0) > 0}
@@ -304,44 +304,23 @@ function Dashboard() {
           />
         )}
 
-        {/* FEATURE 1 — Daily Survival Status */}
-        {(() => {
-          const toneCls =
-            dailyStatus.level === "safe"
-              ? "border-success/25 bg-success/10 text-success"
-              : dailyStatus.level === "careful"
-                ? "border-gold/30 bg-gold/15 text-gold-foreground"
-                : "border-destructive/25 bg-destructive/10 text-destructive";
-          return (
-            <Card className={`shadow-soft ${toneCls}`}>
-              <CardContent className="flex items-start gap-3 p-4">
-                <span className="text-xl leading-none">{dailyStatus.dot}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-display text-sm font-semibold">{dailyStatus.headline}</p>
-                  <p className="mt-0.5 text-[11px] opacity-80">{dailyStatus.detail}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })()}
-
-        {/* 1. Salary Survival Hero */}
-        <h2 className="sr-only">Salary Survival</h2>
+        {/* ============ 1. SALARY SNAPSHOT (hero) ============ */}
+        <h2 className="sr-only">Salary Snapshot</h2>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
-            <CardContent className="relative p-6 md:p-7">
+            <CardContent className="relative p-5 md:p-7">
               <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gold/20 blur-3xl" />
               <div className="relative">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-70">Salary Left</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-90">Salary Left</p>
                     <p className="mt-2 font-display text-3xl font-bold leading-none md:text-4xl tabular-nums">{formatCurrency(survival.salaryLeft, currency)}</p>
-                    <p className="mt-3 text-white" style={{ fontSize: "16px", fontWeight: 600 }}>
+                    <p className="mt-2.5 text-sm font-semibold">
                       Safe to spend {formatCurrency(survival.safeDaily, currency)}/day
                     </p>
                   </div>
-                  <span className={`shrink-0 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium backdrop-blur`}>
+                  <span className="shrink-0 rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold backdrop-blur">
                     {moodMeta.dot} {moodMeta.label}
                   </span>
                 </div>
@@ -359,32 +338,32 @@ function Dashboard() {
                   const spendProgress = survival.salary > 0 ? monthExpense / survival.salary : 0;
                   const onTrack = spendProgress <= monthProgress;
                   return (
-                    <div className="mt-4">
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-white/20">
+                    <div className="mt-3.5">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-white/25">
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
                             width: `${Math.min(100, Math.max(0, monthProgress * 100))}%`,
-                            background: onTrack ? "#22c55e" : "#f97316",
+                            background: onTrack ? "var(--success)" : "var(--warning)",
                           }}
                         />
                       </div>
-                      <p className="mt-1.5 text-white" style={{ fontSize: "11px", opacity: 0.8 }}>
+                      <p className="mt-1.5 text-[11px] font-medium opacity-90">
                         Day {day} of {totalDays} • {Math.round(monthProgress * 100)}% of month gone
                       </p>
                     </div>
                   );
                 })()}
 
-                <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                   <SurvivalStat label="Days left" value={survival.isSalaryToday ? "Today 🎉" : String(survival.days)} />
                   <SurvivalStat label="EMI pressure" value={`${emiTone} ${survival.emiLevel}`} />
                   <SurvivalStat label="Survival Score" value={`${survival.score}/100`} />
                 </div>
-                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
+                <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
                   <div className="h-full bg-gold transition-all" style={{ width: `${Math.min(100, Math.max(0, survival.score))}%` }} />
                 </div>
-                <p className="mt-2.5 text-[10.5px] opacity-75">
+                <p className="mt-2 text-[11px] font-medium opacity-85">
                   Based on Salary Left · Days Until Salary · EMI Pressure · Spending Speed
                 </p>
               </div>
@@ -392,25 +371,67 @@ function Dashboard() {
           </Card>
         </motion.div>
 
+        {/* Daily survival status — safe zone accent */}
+        {(() => {
+          const toneCls =
+            dailyStatus.level === "safe"
+              ? "border-success/35 bg-success/10 text-success"
+              : dailyStatus.level === "careful"
+                ? "border-warning/40 bg-warning/10 text-gold-foreground"
+                : "border-destructive/35 bg-destructive/10 text-destructive";
+          return (
+            <Card className={`shadow-soft ${toneCls}`}>
+              <CardContent className="flex items-start gap-3 p-3.5">
+                <span className="text-xl leading-none">{dailyStatus.dot}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-sm font-semibold">{dailyStatus.headline}</p>
+                  <p className="mt-0.5 text-[11.5px] font-medium opacity-95">{dailyStatus.detail}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* Info chips */}
         <div className="flex justify-center gap-2">
-          <span
-            className="inline-flex items-center rounded-full bg-white shadow-soft"
-            style={{ color: "#374151", fontSize: "13px", padding: "6px 12px", borderRadius: "20px" }}
-          >
+          <span className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-[13px] font-medium text-foreground shadow-soft">
             📅 {survival.isSalaryToday ? "Salary Today 🎉" : `${daysLeftLabel(survival.days)} to salary`}
           </span>
-          <span
-            className="inline-flex items-center rounded-full bg-white shadow-soft"
-            style={{ color: "#374151", fontSize: "13px", padding: "6px 12px", borderRadius: "20px" }}
-          >
+          <span className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-[13px] font-medium text-foreground shadow-soft">
             🎯 Score: {survival.score}/100
           </span>
         </div>
 
-        {/* FEATURE 2 — Today's Mission */}
-        {mission && (
+        {/* Today's pulse */}
+        <div className="grid grid-cols-2 gap-2.5">
           <Card className="shadow-soft">
+            <CardContent className="p-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Spent Today</p>
+              <p className="mt-1 font-display text-lg font-bold tabular-nums text-foreground">
+                {formatCurrency(survival.spentToday, currency)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-soft">
+            <CardContent className="p-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Left Today</p>
+              {(() => {
+                const left = survival.safeDaily - survival.spentToday;
+                const positive = left > 0;
+                return (
+                  <p className={`mt-1 font-display text-lg font-bold tabular-nums ${positive ? "text-success" : "text-destructive"}`}>
+                    {!positive && "⚠️ "}
+                    {formatCurrency(Math.max(0, left), currency)}
+                  </p>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ============ 2. TODAY'S MISSION (AI Coach — emerald) ============ */}
+        {mission && (
+          <Card className="border-primary/30 bg-primary/5 shadow-soft">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 font-display text-base">
                 <Sparkles className="h-4 w-4 text-primary" /> Today's mission
@@ -419,21 +440,21 @@ function Dashboard() {
             <CardContent className="space-y-3">
               <div>
                 <p className="font-display text-base font-semibold">{mission.title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{mission.detail}</p>
+                <p className="mt-0.5 text-xs font-medium text-foreground/80">{mission.detail}</p>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Save</p>
+                <div className="rounded-xl bg-card px-2 py-2 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Save</p>
                   <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">
                     {mission.saving > 0 ? formatCurrency(mission.saving, currency) : "—"}
                   </p>
                 </div>
-                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Score</p>
+                <div className="rounded-xl bg-card px-2 py-2 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Score</p>
                   <p className="mt-0.5 font-display text-sm font-semibold text-success tabular-nums">+{mission.scoreBoost}</p>
                 </div>
-                <div className="rounded-xl bg-muted/50 px-2 py-2 text-center">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Time</p>
+                <div className="rounded-xl bg-card px-2 py-2 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Time</p>
                   <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{mission.minutes}m</p>
                 </div>
               </div>
@@ -452,186 +473,8 @@ function Dashboard() {
           </Card>
         )}
 
-        {/* Today's Pulse */}
-        <h2 className="sr-only">Today's Pulse</h2>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="shadow-soft" style={{ borderRadius: "12px" }}>
-            <CardContent className="p-4">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Spent Today</p>
-              <p className="mt-1 font-display text-lg font-bold tabular-nums" style={{ color: "#374151" }}>
-                {formatCurrency(survival.spentToday, currency)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-soft" style={{ borderRadius: "12px" }}>
-            <CardContent className="p-4">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Left Today</p>
-              {(() => {
-                const left = survival.safeDaily - survival.spentToday;
-                const positive = left > 0;
-                return (
-                  <p
-                    className="mt-1 font-display text-lg font-bold tabular-nums"
-                    style={{ color: positive ? "#16a34a" : "#dc2626" }}
-                  >
-                    {!positive && "⚠️ "}
-                    {formatCurrency(Math.max(0, left), currency)}
-                  </p>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* FEATURE 3 — Salary Health Breakdown */}
-        {salaryHealth.salary > 0 && (
-          <Card className="shadow-soft">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 font-display text-base">
-                <PiggyBank className="h-4 w-4 text-primary" /> Salary health
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5">
-              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
-                {salaryHealth.slices.map((s) => {
-                  const bg =
-                    s.bucket === "needs" ? "hsl(var(--destructive))"
-                    : s.bucket === "savings" ? "hsl(var(--success))"
-                    : s.bucket === "investments" ? "hsl(var(--primary))"
-                    : s.bucket === "lifestyle" ? "hsl(var(--gold))"
-                    : "hsl(var(--muted-foreground) / 0.35)";
-                  if (s.pct <= 0) return null;
-                  return <div key={s.bucket} style={{ width: `${Math.min(100, s.pct)}%`, background: bg }} />;
-                })}
-              </div>
-              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                {salaryHealth.slices.map((s) => {
-                  const dot =
-                    s.bucket === "needs" ? "hsl(var(--destructive))"
-                    : s.bucket === "savings" ? "hsl(var(--success))"
-                    : s.bucket === "investments" ? "hsl(var(--primary))"
-                    : s.bucket === "lifestyle" ? "hsl(var(--gold))"
-                    : "hsl(var(--muted-foreground) / 0.5)";
-                  return (
-                    <div key={s.bucket} className="flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-2">
-                        <span className="inline-block h-2 w-2 rounded-full" style={{ background: dot }} />
-                        <span className="font-medium">{s.label}</span>
-                      </span>
-                      <span className="tabular-nums text-muted-foreground">
-                        {formatCurrency(s.amount, currency)} · {s.pct}%
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Spending Streak */}
-
-        {(() => {
-          const safeDailyRounded = Math.max(0, Math.round(survival.safeDaily));
-          const days: { key: string; spent: number; under: boolean; hasData: boolean }[] = [];
-          for (let i = 6; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(now.getDate() - i);
-            const key = d.toISOString().slice(0, 10);
-            const dayTx = transactions.filter(t => t.type === "expense" && t.transaction_date.slice(0, 10) === key);
-            const spent = dayTx.reduce((s, t) => s + t.amount, 0);
-            days.push({ key, spent, under: survival.safeDaily > 0 && spent <= survival.safeDaily, hasData: dayTx.length > 0 });
-          }
-          let streak = 0;
-          for (let i = days.length - 1; i >= 0; i--) {
-            if (days[i].under) streak++;
-            else break;
-          }
-          return (
-            <div
-              style={{
-                background: "#F0FDF4",
-                border: "1px solid #BBF7D0",
-                borderRadius: "12px",
-                padding: "14px 16px",
-              }}
-              className="flex items-center gap-4"
-            >
-              <div className="flex flex-col items-center justify-center" style={{ minWidth: 56 }}>
-                <span style={{ fontSize: 28, lineHeight: 1 }}>🔥</span>
-                <span className="font-display font-bold tabular-nums" style={{ fontSize: 28, lineHeight: 1.1, color: "#166534" }}>{streak}</span>
-                <span style={{ fontSize: 11, color: "#15803d" }}>day streak</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold" style={{ color: "#166534", fontSize: 14 }}>Under Budget Streak</p>
-                <p style={{ fontSize: 11, color: "#15803d" }}>
-                  {streak === 0
-                    ? `Start today — spend under ${formatCurrency(safeDailyRounded, currency)} to begin your streak`
-                    : `Stay under ${formatCurrency(safeDailyRounded, currency)}/day to keep it going`}
-                </p>
-                <div className="mt-2 flex items-center gap-1.5">
-                  {days.map((d) => (
-                    <span
-                      key={d.key}
-                      title={d.key}
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        background: d.under && d.hasData ? "#22c55e" : "#d1d5db",
-                        display: "inline-block",
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-
-        {/* 5. Can I buy this? (compact inline) */}
-        <Card className="shadow-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 font-display text-base">
-              <ShoppingBag className="h-4 w-4 text-primary" /> Can I buy this?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-[1fr_120px] gap-2">
-              <Input placeholder="Item name" value={item} onChange={(e) => setItem(e.target.value)} className="h-9 text-sm" />
-              <Input type="number" inputMode="decimal" placeholder="Price" value={priceStr} onChange={(e) => setPriceStr(e.target.value)} className="h-9 text-sm tabular-nums" />
-            </div>
-            {price > 0 && (() => {
-              const dropPct = survival.score > 0 ? ((survival.score - afterBuy.newScore) / survival.score) * 100 : 0;
-              const ratio = survival.salaryLeft > 0 ? price / survival.salaryLeft : 1;
-              const impact = ratio > 0.4 || dropPct > 25 || afterBuy.newLeft <= 0
-                ? { dot: "🔴", text: "Not Recommended", cls: "bg-destructive/15 text-destructive" }
-                : ratio > 0.2 || dropPct > 12
-                  ? { dot: "🟡", text: "Think Twice", cls: "bg-gold/20 text-gold-foreground" }
-                  : { dot: "🟢", text: "Safe Purchase", cls: "bg-success/15 text-success" };
-              return (
-                <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">After purchase{item ? ` · ${item}` : ""}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-medium ${impact.cls}`}>{impact.dot} {impact.text}</span>
-                  </div>
-                  <BuyRow label="Salary Left" before={formatCurrency(survival.salaryLeft, currency)} after={formatCurrency(afterBuy.newLeft, currency)} />
-                  <BuyRow label="Safe Daily Spend" before={`${formatCurrency(survival.safeDaily, currency)}/day`} after={`${formatCurrency(afterBuy.newDaily, currency)}/day`} />
-                  <BuyRow label="Survival Score" before={`${survival.score}`} after={`${afterBuy.newScore}`} />
-                </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
-
-        <Link to="/transactions" className="flex items-center justify-center gap-2 rounded-xl border bg-card p-4 shadow-soft text-sm font-medium text-primary transition-colors hover:bg-accent">
-          View all <ArrowRight className="h-4 w-4" />
-        </Link>
-
-        {/* FEATURE 4 — Upcoming Financial Risks */}
-        <Card className="shadow-soft">
+        {/* ============ 3. UPCOMING RISKS (warnings — orange) ============ */}
+        <Card className="border-warning/30 shadow-soft">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 font-display text-base">
               <AlertTriangle className="h-4 w-4 text-gold-foreground" /> Upcoming risks
@@ -642,42 +485,41 @@ function Dashboard() {
               <p className="py-1 text-sm text-muted-foreground">No risks detected. You're spending calmly.</p>
             ) : homeRisks.map((r: UpcomingRisk) => {
               const tone = r.urgency === "High"
-                ? "border-destructive/20 bg-destructive/5"
+                ? "border-destructive/30 bg-destructive/10"
                 : r.urgency === "Medium"
-                  ? "border-gold/25 bg-gold/10"
+                  ? "border-warning/35 bg-warning/10"
                   : "border-border bg-muted/40";
               const badgeCls = r.urgency === "High"
-                ? "bg-destructive/15 text-destructive"
+                ? "bg-destructive/20 text-destructive"
                 : r.urgency === "Medium"
-                  ? "bg-gold/20 text-gold-foreground"
+                  ? "bg-warning/20 text-gold-foreground"
                   : "bg-muted text-muted-foreground";
               return (
                 <div key={r.id} className={`rounded-xl border px-3 py-2.5 ${tone}`}>
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-foreground/90">{r.title}</p>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeCls}`}>
+                    <p className="text-sm font-semibold text-foreground">{r.title}</p>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${badgeCls}`}>
                       {r.urgency}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">{r.moneyLabel}</p>
-                  <p className="mt-1 text-[11px] text-foreground/80">💡 {r.suggestion}</p>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">Confidence: {r.confidence}</p>
+                  <p className="mt-0.5 text-xs font-medium tabular-nums text-foreground/80">{r.moneyLabel}</p>
+                  <p className="mt-1 text-[11.5px] text-foreground/90">💡 {r.suggestion}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">Confidence: {r.confidence}</p>
                 </div>
               );
             })}
           </CardContent>
         </Card>
 
-
-        {/* 8. Budgets */}
-        <Card className="shadow-soft">
+        {/* ============ 4. BUDGETS (blue) ============ */}
+        <Card className="border-info/30 shadow-soft">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 font-display text-base">
-              <Shield className="h-4 w-4 text-primary" /> Budgets
+              <Shield className="h-4 w-4 text-info" /> Budgets
             </CardTitle>
-            <Link to="/budgets" className="text-xs font-medium text-primary hover:underline">Manage</Link>
+            <Link to="/budgets" className="text-xs font-semibold text-info hover:underline">Manage</Link>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3.5">
             {budgets.length === 0 ? (
               <p className="text-sm text-muted-foreground">No budgets set yet.</p>
             ) : (() => {
@@ -711,12 +553,12 @@ function Dashboard() {
                 <div key={b.id}>
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{name}</span>
-                    <span className={`text-xs font-medium ${status.cls}`}>{status.text}</span>
+                    <span className={`text-xs font-semibold ${status.cls}`}>{status.text}</span>
                   </div>
                   <Progress value={pct} className="mt-1.5 h-1.5" />
-                  <div className="mt-1.5 flex items-center justify-between text-[11px] tabular-nums text-muted-foreground">
+                  <div className="mt-1.5 flex items-center justify-between text-[11.5px] font-medium tabular-nums text-foreground/75">
                     <span>Budget {formatCurrency(b.monthly_limit, currency)} · Spent {formatCurrency(spent, currency)}</span>
-                    <span className={over ? "font-medium text-destructive" : "text-foreground/70"}>
+                    <span className={over ? "font-semibold text-destructive" : "text-foreground/85"}>
                       {over
                         ? `Overspent ${formatCurrency(spent - b.monthly_limit, currency)}`
                         : `${formatCurrency(remaining, currency)} left · ${Math.round(pctRaw)}% used`}
@@ -727,7 +569,138 @@ function Dashboard() {
             })}
           </CardContent>
         </Card>
+
+        {/* ============ 5. SALARY HEALTH (teal) ============ */}
+        {salaryHealth.salary > 0 && (
+          <Card className="border-teal/30 shadow-soft">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 font-display text-base">
+                <PiggyBank className="h-4 w-4 text-teal" /> Salary health
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2.5">
+              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+                {salaryHealth.slices.map((s) => {
+                  const bg =
+                    s.bucket === "needs" ? "var(--destructive)"
+                    : s.bucket === "savings" ? "var(--success)"
+                    : s.bucket === "investments" ? "var(--info)"
+                    : s.bucket === "lifestyle" ? "var(--gold)"
+                    : "var(--muted-foreground)";
+                  if (s.pct <= 0) return null;
+                  return <div key={s.bucket} style={{ width: `${Math.min(100, s.pct)}%`, background: bg }} />;
+                })}
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {salaryHealth.slices.map((s) => {
+                  const dot =
+                    s.bucket === "needs" ? "var(--destructive)"
+                    : s.bucket === "savings" ? "var(--success)"
+                    : s.bucket === "investments" ? "var(--info)"
+                    : s.bucket === "lifestyle" ? "var(--gold)"
+                    : "var(--muted-foreground)";
+                  return (
+                    <div key={s.bucket} className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-2">
+                        <span className="inline-block h-2 w-2 rounded-full" style={{ background: dot }} />
+                        <span className="font-medium">{s.label}</span>
+                      </span>
+                      <span className="font-medium tabular-nums text-foreground/80">
+                        {formatCurrency(s.amount, currency)} · {s.pct}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ============ 6. UNDER BUDGET STREAK (green) ============ */}
+        {(() => {
+          const safeDailyRounded = Math.max(0, Math.round(survival.safeDaily));
+          const days: { key: string; spent: number; under: boolean; hasData: boolean }[] = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(now.getDate() - i);
+            const key = d.toISOString().slice(0, 10);
+            const dayTx = transactions.filter(t => t.type === "expense" && t.transaction_date.slice(0, 10) === key);
+            const spent = dayTx.reduce((s, t) => s + t.amount, 0);
+            days.push({ key, spent, under: survival.safeDaily > 0 && spent <= survival.safeDaily, hasData: dayTx.length > 0 });
+          }
+          let streak = 0;
+          for (let i = days.length - 1; i >= 0; i--) {
+            if (days[i].under) streak++;
+            else break;
+          }
+          return (
+            <div className="flex items-center gap-4 rounded-xl border border-success/30 bg-success/10 px-4 py-3.5">
+              <div className="flex flex-col items-center justify-center" style={{ minWidth: 56 }}>
+                <span style={{ fontSize: 28, lineHeight: 1 }}>🔥</span>
+                <span className="font-display text-[28px] font-bold leading-tight tabular-nums text-success">{streak}</span>
+                <span className="text-[11px] font-medium text-success">day streak</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">Under Budget Streak</p>
+                <p className="text-[11.5px] font-medium text-foreground/80">
+                  {streak === 0
+                    ? `Start today — spend under ${formatCurrency(safeDailyRounded, currency)} to begin your streak`
+                    : `Stay under ${formatCurrency(safeDailyRounded, currency)}/day to keep it going`}
+                </p>
+                <div className="mt-2 flex items-center gap-1.5">
+                  {days.map((d) => (
+                    <span
+                      key={d.key}
+                      title={d.key}
+                      className={`inline-block h-2.5 w-2.5 rounded-full ${d.under && d.hasData ? "bg-success" : "bg-muted-foreground/40"}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ============ 7. CAN I BUY THIS? ============ */}
+        <Card className="shadow-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
+              <ShoppingBag className="h-4 w-4 text-primary" /> Can I buy this?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-[1fr_120px] gap-2">
+              <Input placeholder="Item name" value={item} onChange={(e) => setItem(e.target.value)} className="h-10 text-sm" />
+              <Input type="number" inputMode="decimal" placeholder="Price" value={priceStr} onChange={(e) => setPriceStr(e.target.value)} className="h-10 text-sm tabular-nums" />
+            </div>
+            {price > 0 && (() => {
+              const dropPct = survival.score > 0 ? ((survival.score - afterBuy.newScore) / survival.score) * 100 : 0;
+              const ratio = survival.salaryLeft > 0 ? price / survival.salaryLeft : 1;
+              const impact = ratio > 0.4 || dropPct > 25 || afterBuy.newLeft <= 0
+                ? { dot: "🔴", text: "Not Recommended", cls: "bg-destructive/20 text-destructive" }
+                : ratio > 0.2 || dropPct > 12
+                  ? { dot: "🟡", text: "Think Twice", cls: "bg-warning/20 text-gold-foreground" }
+                  : { dot: "🟢", text: "Safe Purchase", cls: "bg-success/20 text-success" };
+              return (
+                <div className="rounded-xl bg-muted/50 p-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">After purchase{item ? ` · ${item}` : ""}</p>
+                    <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${impact.cls}`}>{impact.dot} {impact.text}</span>
+                  </div>
+                  <BuyRow label="Salary Left" before={formatCurrency(survival.salaryLeft, currency)} after={formatCurrency(afterBuy.newLeft, currency)} />
+                  <BuyRow label="Safe Daily Spend" before={`${formatCurrency(survival.safeDaily, currency)}/day`} after={`${formatCurrency(afterBuy.newDaily, currency)}/day`} />
+                  <BuyRow label="Survival Score" before={`${survival.score}`} after={`${afterBuy.newScore}`} />
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+
+        <Link to="/transactions" className="flex items-center justify-center gap-2 rounded-xl border bg-card p-3.5 text-sm font-semibold text-primary shadow-soft transition-colors hover:bg-accent">
+          View all <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
+
     </div>
   );
 }
