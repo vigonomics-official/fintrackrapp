@@ -194,23 +194,20 @@ function InsightsPage() {
           {/* Card 2 — Monthly Report Card */}
           <Link to="/insights/report" preload="intent">
             <Card className="relative flex items-center gap-3 overflow-hidden p-3.5 pl-4 shadow-soft transition-colors hover:bg-muted/30">
-              <span className="absolute left-0 top-0 h-full w-1.5 bg-success" />
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success">
+              <span className="absolute left-0 top-0 h-full w-1.5 bg-info" />
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-info/15 text-info">
                 <FileBarChart className="h-5 w-5" strokeWidth={1.8} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">Monthly Report Card</p>
-                <p className="truncate text-xs text-muted-foreground">Your monthly financial summary</p>
+                <p className="truncate text-xs font-medium text-muted-foreground">Your monthly financial summary</p>
               </div>
               {reportReady ? (
-                <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
-                  style={{ backgroundColor: "#16a34a" }}
-                >
+                <span className="shrink-0 rounded-full bg-success px-2 py-0.5 text-[11px] font-semibold text-success-foreground">
                   Ready
                 </span>
               ) : (
-                <span className="flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-muted-foreground">
                   Available 25th
                   <ChevronRight className="h-4 w-4" />
                 </span>
@@ -223,7 +220,8 @@ function InsightsPage() {
           <InsightLink
             to="/insights/alerts"
             icon={<AlertTriangle className="h-5 w-5" strokeWidth={1.8} />}
-            tone="bg-destructive/10 text-destructive"
+            tone="bg-destructive/15 text-destructive"
+            accent="bg-destructive"
             title="Danger Alerts"
             subtitle="Low funds, EMI pressure & weekend risk."
             trailing={
@@ -242,12 +240,13 @@ function InsightsPage() {
           <InsightLink
             to="/insights/weekly"
             icon={<LineChart className="h-5 w-5" strokeWidth={1.8} />}
-            tone="bg-success/10 text-success"
+            tone="bg-teal/15 text-teal"
+            accent="bg-teal"
             title="Weekly Survival Report"
             subtitle="How your week went vs your safe limit."
             trailing={
               <div className="shrink-0 text-right">
-                <p className="text-[10px] text-muted-foreground">Week Spend</p>
+                <p className="text-[10px] font-medium text-muted-foreground">Week Spend</p>
                 <p className="text-xs font-semibold">{formatCurrency(weekSpend, currency)}</p>
               </div>
             }
@@ -257,13 +256,14 @@ function InsightsPage() {
           <InsightLink
             to="/insights/behavior"
             icon={<BarChart3 className="h-5 w-5" strokeWidth={1.8} />}
-            tone="bg-gold/15 text-gold-foreground"
+            tone="bg-warning/15 text-gold-foreground"
+            accent="bg-warning"
             title="Spending Behavior"
             subtitle="Where your money quietly slips away."
             trailing={
               topCategory ? (
                 <div className="shrink-0 text-right">
-                  <p className="text-[10px] text-muted-foreground">Top Category</p>
+                  <p className="text-[10px] font-medium text-muted-foreground">Top Category</p>
                   <p className="max-w-[100px] truncate text-xs font-semibold">{topCategory}</p>
                 </div>
               ) : undefined
@@ -276,24 +276,26 @@ function InsightsPage() {
 }
 
 function InsightLink({
-  to, icon, tone, title, subtitle, trailing,
+  to, icon, tone, accent, title, subtitle, trailing,
 }: {
   to: string;
   icon: React.ReactNode;
   tone: string;
+  accent?: string;
   title: string;
   subtitle: string;
   trailing?: React.ReactNode;
 }) {
   return (
     <Link to={to} preload="intent">
-      <Card className="flex items-center gap-3 p-3.5 shadow-soft transition-colors hover:bg-muted/30">
+      <Card className="relative flex items-center gap-3 overflow-hidden p-3.5 pl-4 shadow-soft transition-colors hover:bg-muted/30">
+        {accent && <span className={cn("absolute left-0 top-0 h-full w-1.5", accent)} />}
         <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", tone)}>
           {icon}
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{title}</p>
-          <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+          <p className="truncate text-xs font-medium text-muted-foreground">{subtitle}</p>
         </div>
         {trailing ?? <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
       </Card>
