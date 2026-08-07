@@ -570,7 +570,7 @@ function LoansPage() {
                     const tone = overdue
                       ? "bg-destructive text-destructive-foreground"
                       : dueTomorrow
-                      ? "bg-gold text-gold-foreground"
+                      ? "bg-gold text-warning-foreground"
                       : "bg-success text-success-foreground";
                     const chipText = overdue
                       ? "Overdue"
