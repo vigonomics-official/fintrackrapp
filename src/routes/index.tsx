@@ -99,7 +99,7 @@ function Logo() {
       >
         ₹
       </div>
-      <span className="font-display text-lg font-bold tracking-tight" style={{ color: BRAND.text }}>
+      <span className="font-display text-lg font-bold tracking-tight" >
         FinTrackr
       </span>
     </div>
