@@ -98,8 +98,8 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange, onApp
                 borderRadius: '20px',
                 border: 'none',
                 ...(active
-                  ? { background: "#1A6B4A", color: "#ffffff" }
-                  : { background: "transparent", color: "#9CA3AF" }),
+                  ? { background: "var(--primary)", color: "var(--primary-foreground)" }
+                  : { background: "transparent", color: "var(--muted-foreground)" }),
               }}
             >
               {o.label}
@@ -127,8 +127,8 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange, onApp
             />
           </div>
           <Button
-            className="w-full text-white hover:opacity-90 md:w-auto"
-            style={{ background: "#1A6B4A", flexShrink: 0 }}
+            className="w-full text-primary-foreground hover:opacity-90 md:w-auto"
+            style={{ background: "var(--primary)", flexShrink: 0 }}
             onClick={() => {
               onChange("custom");
               onApply?.();
