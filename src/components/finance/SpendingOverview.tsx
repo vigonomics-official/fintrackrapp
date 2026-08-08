@@ -23,7 +23,7 @@ function topCategoryTotals(txs: Transaction[], categories: Category[], limit = 4
   return [...map.entries()]
     .map(([id, amt]) => {
       const c = categories.find(x => x.id === id);
-      return { id, name: c?.name ?? "Other", color: c?.color ?? "#94a3b8", amount: amt };
+      return { id, name: c?.name ?? "Other", color: c?.color ?? "var(--muted-foreground)", amount: amt };
     })
     .sort((a, b) => b.amount - a.amount)
     .slice(0, limit);
@@ -172,7 +172,7 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
               <p
                 className="font-display font-bold tabular-nums"
                 style={{
-                  color: "#374151",
+                  color: "var(--foreground)",
                   fontSize: "clamp(18px, 4vw, 32px)",
                   lineHeight: 1.1,
                   overflow: "hidden",
@@ -220,20 +220,20 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
       {/* Stats grid */}
       {expense > 0 && (
         <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col justify-center rounded-2xl bg-white p-4 shadow-soft min-w-0">
+          <div className="flex flex-col justify-center min-w-0 rounded-2xl border bg-card p-4 shadow-soft">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Spent</p>
             <p className="truncate font-display text-base font-bold tabular-nums">{formatCurrency(expense, currency)}</p>
           </div>
-          <div className="flex flex-col justify-center rounded-2xl bg-white p-4 shadow-soft min-w-0">
+          <div className="flex flex-col justify-center min-w-0 rounded-2xl border bg-card p-4 shadow-soft">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Daily Average</p>
             <p className="truncate font-display text-base font-bold tabular-nums">{formatCurrency(dailyAvg, currency)}</p>
           </div>
-          <div className="flex flex-col justify-center rounded-2xl bg-white p-4 shadow-soft min-w-0">
+          <div className="flex flex-col justify-center min-w-0 rounded-2xl border bg-card p-4 shadow-soft">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Highest Category</p>
             <p className="truncate text-sm font-semibold">{topCats[0]?.name ?? "—"}</p>
             <p className="truncate text-[11px] tabular-nums text-muted-foreground">{topCats[0] ? formatCurrency(topCats[0].amount, currency) : ""}</p>
           </div>
-          <div className="flex flex-col justify-center rounded-2xl bg-white p-4 shadow-soft min-w-0">
+          <div className="flex flex-col justify-center min-w-0 rounded-2xl border bg-card p-4 shadow-soft">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Transactions</p>
             <p className="truncate font-display text-base font-bold tabular-nums">{expenseCount}</p>
           </div>
