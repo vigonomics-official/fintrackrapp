@@ -430,7 +430,7 @@ function ReportPage() {
           <div className="mt-3 grid grid-cols-2 gap-2 print:hidden">
             <Button
               onClick={onShare}
-              className="w-full text-white"
+              className="w-full text-success-foreground"
               style={{ backgroundColor: "var(--success)", borderRadius: 12 }}
             >
               <Share2 className="mr-1.5 h-4 w-4" /> Share
