@@ -329,7 +329,7 @@ function OnboardingPage() {
         </AnimatePresence>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
         <div className="mx-auto max-w-md">
           <Button
             onClick={() => (step < 5 ? setStep(step + 1) : finish())}
@@ -426,7 +426,7 @@ function PersonalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K,
             value={s.name}
             onChange={(e) => set("name", e.target.value)}
             placeholder="e.g. Vicky"
-            className="mt-2 h-12 rounded-xl border-gray-200 text-base"
+            className="mt-2 h-12 rounded-xl border-border text-base"
           />
         </div>
 
@@ -472,7 +472,7 @@ function SalaryStep({
               value={s.salary}
               onChange={(e) => set("salary", e.target.value)}
               placeholder="0"
-              className="h-14 rounded-xl border-gray-200 pl-10 text-2xl font-bold tabular-nums"
+              className="h-14 rounded-xl border-border pl-10 text-2xl font-bold tabular-nums"
             />
           </div>
           {preview && preview.daily > 0 && (
@@ -521,7 +521,7 @@ function SalaryStep({
                   onClick={() => set("situation", opt.id)}
                   className={cn(
                     "flex w-full items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all",
-                    active ? "bg-emerald-50" : "border-gray-200 bg-card hover:border-gray-300",
+                    active ? "bg-emerald-50" : "border-border bg-card hover:border-border",
                   )}
                   style={active ? { borderColor: GREEN_ACCENT } : undefined}
                 >
@@ -563,7 +563,7 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
               onClick={() => toggle(c.id)}
               className={cn(
                 "flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 transition-all",
-                active ? "text-white" : "border-gray-200 bg-card text-foreground hover:border-gray-300",
+                active ? "text-white" : "border-border bg-card text-foreground hover:border-border",
               )}
               style={active ? { background: GREEN_ACCENT, borderColor: GREEN_ACCENT } : undefined}
             >
@@ -613,7 +613,7 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
                   value={s.emi}
                   onChange={(e) => set("emi", e.target.value)}
                   placeholder="0"
-                  className="h-12 rounded-xl border-gray-200 bg-card pl-9 text-base font-semibold tabular-nums"
+                  className="h-12 rounded-xl border-border bg-card pl-9 text-base font-semibold tabular-nums"
                 />
               </div>
             </div>
@@ -647,7 +647,7 @@ function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: 
               onClick={() => set("goal", g.id)}
               className={cn(
                 "relative flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-all",
-                active ? "bg-emerald-50" : "border-gray-200 bg-card hover:border-gray-300",
+                active ? "bg-emerald-50" : "border-border bg-card hover:border-border",
               )}
               style={active ? { borderColor: GREEN_ACCENT } : undefined}
             >
@@ -681,7 +681,7 @@ function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: 
                 value={s.goalAmount}
                 onChange={(e) => set("goalAmount", e.target.value)}
                 placeholder="0"
-                className="h-12 rounded-xl border-gray-200 bg-card pl-9 text-base font-semibold tabular-nums"
+                className="h-12 rounded-xl border-border bg-card pl-9 text-base font-semibold tabular-nums"
               />
             </div>
           </div>
@@ -872,7 +872,7 @@ function ChipGrid({ options, value, onChange }: { options: string[]; value: stri
             onClick={() => onChange(opt)}
             className={cn(
               "rounded-full border-2 px-4 py-2 text-sm font-semibold transition-all",
-              active ? "text-white" : "border-gray-200 bg-card text-muted-foreground hover:border-gray-300",
+              active ? "text-white" : "border-border bg-card text-muted-foreground hover:border-border",
             )}
             style={active ? { background: GREEN_ACCENT, borderColor: GREEN_ACCENT } : undefined}
           >

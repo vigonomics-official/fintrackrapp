@@ -108,7 +108,7 @@ function Logo() {
 
 function Navbar() {
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-white/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Logo />
         <div className="hidden items-center gap-7 md:flex">
@@ -140,7 +140,7 @@ function HeroMockup() {
       />
 
       {/* Phone frame */}
-      <div className="relative rounded-[2.2rem] border border-gray-200 bg-card p-3 shadow-[0_30px_70px_-25px_rgba(17,24,39,0.35)]">
+      <div className="relative rounded-[2.2rem] border border-border bg-card p-3 shadow-[0_30px_70px_-25px_rgba(17,24,39,0.35)]">
         <div
           className="rounded-[1.7rem] p-5"
           style={{
@@ -241,7 +241,7 @@ function HeroMockup() {
         initial={{ opacity: 0, x: -16, y: 10 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="absolute -left-4 top-28 hidden rounded-2xl bg-card px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+        className="absolute -left-4 top-28 hidden rounded-2xl bg-card px-3 py-2 shadow-lg ring-1 ring-border sm:block"
       >
         <p className="text-[10px] text-muted-foreground">Saved this month</p>
         <p className="text-sm font-bold" style={{ color: BRAND.accent }}>+ ₹ 2,340</p>
@@ -251,7 +251,7 @@ function HeroMockup() {
         initial={{ opacity: 0, x: 16, y: 10 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ delay: 0.9 }}
-        className="absolute -right-4 bottom-20 hidden rounded-2xl bg-card px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+        className="absolute -right-4 bottom-20 hidden rounded-2xl bg-card px-3 py-2 shadow-lg ring-1 ring-border sm:block"
       >
         <p className="text-[10px] text-muted-foreground">Daily streak</p>
         <p className="text-sm font-bold text-foreground">🔥 28 days</p>
@@ -278,7 +278,7 @@ function Hero() {
         <motion.span
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm"
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm"
         >
           <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} />
           Built for Indian salary life
@@ -362,7 +362,7 @@ function TrustSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.08 }}
-            className="rounded-2xl border border-gray-100 bg-card p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+            className="rounded-2xl border border-border bg-card p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
           >
             <div
               className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
@@ -397,7 +397,7 @@ function ProblemSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.06 }}
-            className="rounded-2xl border border-gray-100 bg-card p-4 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+            className="rounded-2xl border border-border bg-card p-4 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
           >
             <div
               className="flex h-9 w-9 items-center justify-center rounded-lg"
@@ -441,7 +441,7 @@ function Features() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.04 }}
-            className="rounded-2xl border border-gray-100 bg-card p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+            className="rounded-2xl border border-border bg-card p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
           >
             <div
               className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
@@ -493,7 +493,7 @@ function SmartFeatures() {
       />
       <div className="mx-auto max-w-6xl px-5">
         <div className="mx-auto max-w-xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
             <Brain className="h-3 w-3" style={{ color: BRAND.primary }} /> Smarter over time
           </span>
           <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl">
@@ -512,7 +512,7 @@ function SmartFeatures() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-6 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+              className="rounded-2xl border border-border bg-gradient-to-br from-white to-muted p-6 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
             >
               <div
                 className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
@@ -526,7 +526,7 @@ function SmartFeatures() {
           ))}
         </div>
 
-        <div className="mt-10 rounded-3xl border border-gray-100 bg-muted/70 p-6 md:p-8">
+        <div className="mt-10 rounded-3xl border border-border bg-muted/70 p-6 md:p-8">
           <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             How it learns
           </p>
@@ -538,7 +538,7 @@ function SmartFeatures() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="flex items-center justify-between rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-gray-100"
+                className="flex items-center justify-between rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -597,7 +597,7 @@ function DashboardShowcase() {
       />
       <div className="mx-auto max-w-6xl px-5">
         <div className="mx-auto max-w-xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
             <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinTrackr
           </span>
           <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl">
@@ -614,7 +614,7 @@ function DashboardShowcase() {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-5 rounded-3xl border border-gray-100 bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-5 rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
             <p className="text-xs font-medium text-muted-foreground">November · Budget</p>
             <div className="mt-4 flex items-center gap-5">
@@ -656,7 +656,7 @@ function DashboardShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.05 }}
-            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-7 rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -694,7 +694,7 @@ function DashboardShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="lg:col-span-5 rounded-3xl border border-gray-100 bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-5 rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-muted-foreground">Spending by category</p>
@@ -731,7 +731,7 @@ function DashboardShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
-            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-7 rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-muted-foreground">Recent transactions</p>
@@ -739,7 +739,7 @@ function DashboardShowcase() {
                 <MessageSquare className="h-3 w-3" /> Auto from SMS
               </span>
             </div>
-            <div className="mt-3 divide-y divide-gray-100">
+            <div className="mt-3 divide-y divide-border">
               {txns.map((t) => (
                 <div key={t.name} className="flex items-center justify-between py-2.5">
                   <div className="flex items-center gap-3">
@@ -795,7 +795,7 @@ function DashboardShowcase() {
           transition={{ delay: 1.2, duration: 0.7 }}
           className="mt-10 flex justify-center"
         >
-          <a href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-card px-5 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition-all hover:bg-muted hover:shadow-md">
+          <a href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition-all hover:bg-muted hover:shadow-md">
             <Sparkles className="h-4 w-4" style={{ color: BRAND.primary }} />
             See Demo
             <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
@@ -827,7 +827,7 @@ function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06, duration: 0.35 }}
-              className="flex items-start gap-3 rounded-xl border border-gray-100 bg-muted/50 p-4"
+              className="flex items-start gap-3 rounded-xl border border-border bg-muted/50 p-4"
             >
               <span
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
@@ -886,7 +886,7 @@ function StatsStrip() {
   ];
   return (
     <section className="mx-auto max-w-6xl px-5 pb-2 pt-2">
-      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-gray-100 bg-white/70 p-4 shadow-sm backdrop-blur md:gap-6 md:p-6">
+      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-white/70 p-4 shadow-sm backdrop-blur md:gap-6 md:p-6">
         {stats.map((s) => (
           <div key={s.label} className="text-center">
             <p className="font-display text-xl font-bold text-foreground md:text-3xl" style={{ color: BRAND.primary }}>
@@ -1065,7 +1065,7 @@ function Footer() {
     },
   ];
   return (
-    <footer className="border-t border-gray-100 bg-card">
+    <footer className="border-t border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo />
@@ -1091,7 +1091,7 @@ function Footer() {
           </div>
         ))}
       </div>
-      <div className="border-t border-gray-100">
+      <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-5 sm:flex-row">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} FinTrackr
