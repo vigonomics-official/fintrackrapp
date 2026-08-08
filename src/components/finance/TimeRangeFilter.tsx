@@ -67,7 +67,7 @@ export function TimeRangeFilter({ value, onChange, custom, onCustomChange, onApp
           display: 'flex',
           width: '100%',
           maxWidth: '100%',
-          backgroundColor: '#f3f4f6',
+          backgroundColor: 'var(--muted)',
           borderRadius: '24px',
           padding: '4px',
           boxSizing: 'border-box',
