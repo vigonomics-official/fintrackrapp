@@ -329,7 +329,7 @@ function OnboardingPage() {
         </AnimatePresence>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
         <div className="mx-auto max-w-md">
           <Button
             onClick={() => (step < 5 ? setStep(step + 1) : finish())}
@@ -360,7 +360,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
         {/* Logo */}
         <div className="flex flex-col items-center text-center">
           <div className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white">₣</div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-card/15 text-white">₣</div>
             FinTrackr
           </div>
           <p className="mt-1 text-xs text-white/70">Your Salary Survival System</p>

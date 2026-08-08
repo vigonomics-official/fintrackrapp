@@ -108,7 +108,7 @@ function Logo() {
 
 function Navbar() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Logo />
         <div className="hidden items-center gap-7 md:flex">
@@ -214,7 +214,7 @@ function HeroMockup() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
-            className="mt-5 rounded-2xl border border-blue-100/70 bg-white/80 p-3 shadow-sm backdrop-blur"
+            className="mt-5 rounded-2xl border border-blue-100/70 bg-card/80 p-3 shadow-sm backdrop-blur"
           >
             <div className="flex items-start gap-3">
               <div
@@ -777,7 +777,7 @@ function DashboardShowcase() {
               {insights.map((it, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm ring-1 ring-white/15"
+                  className="flex items-start gap-3 rounded-2xl bg-card/10 p-4 backdrop-blur-sm ring-1 ring-white/15"
                 >
                   <it.icon className="mt-0.5 h-4 w-4 shrink-0 opacity-90" />
                   <p className="text-xs leading-snug">{it.text}</p>
@@ -886,7 +886,7 @@ function StatsStrip() {
   ];
   return (
     <section className="mx-auto max-w-6xl px-5 pb-2 pt-2">
-      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-white/70 p-4 shadow-sm backdrop-blur md:gap-6 md:p-6">
+      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-card/70 p-4 shadow-sm backdrop-blur md:gap-6 md:p-6">
         {stats.map((s) => (
           <div key={s.label} className="text-center">
             <p className="font-display text-xl font-bold text-foreground md:text-3xl" style={{ color: BRAND.primary }}>
@@ -983,7 +983,7 @@ function FinalCTA() {
       }}
     >
       {/* Soft radial glows for depth */}
-      <div className="pointer-events-none absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-white/[0.06] blur-[100px]" />
+      <div className="pointer-events-none absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-foreground/5 blur-[100px]" />
       <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-teal-300/[0.10] blur-[80px]" />
       <div className="pointer-events-none absolute bottom-0 left-0 h-80 w-80 rounded-full bg-blue-300/[0.10] blur-[80px]" />
 
@@ -1016,7 +1016,7 @@ function FinalCTA() {
           <Link to="/signup">
             <Button
               size="lg"
-              className="rounded-xl bg-card px-7 text-sm font-semibold text-[#0F766E] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white/95"
+              className="rounded-xl bg-card px-7 text-sm font-semibold text-[#0F766E] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-card/95"
               style={{ boxShadow: "0 20px 50px -15px rgba(0,0,0,0.25)" }}
             >
               Create Free Account <ArrowRight className="ml-1 h-4 w-4" />
@@ -1026,7 +1026,7 @@ function FinalCTA() {
             <Button
               size="lg"
               variant="ghost"
-              className="rounded-xl px-7 text-sm font-semibold text-white ring-1 ring-white/30 backdrop-blur-sm transition-transform hover:-translate-y-0.5 hover:bg-white/10 hover:ring-white/40"
+              className="rounded-xl px-7 text-sm font-semibold text-white ring-1 ring-white/30 backdrop-blur-sm transition-transform hover:-translate-y-0.5 hover:bg-card/10 hover:ring-white/40"
             >
               Sign In
             </Button>
