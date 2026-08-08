@@ -1107,7 +1107,7 @@ function Footer() {
 
 function Landing() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: BRAND.bg, color: BRAND.text }}>
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <main>
         <Hero />
