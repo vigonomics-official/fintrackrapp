@@ -515,10 +515,10 @@ function StatCard({
 function CelebrationCard({ score, biggestWin }: { score: number; biggestWin: string }) {
   const tone =
     score >= 90
-      ? { emoji: "🎉", title: "Excellent Month!", body: `Outstanding financial discipline. ${biggestWin}.`, bg: "#dcfce7", fg: "#065f46", border: "var(--success)" }
+      ? { emoji: "🎉", title: "Excellent Month!", body: `Outstanding financial discipline. ${biggestWin}.`, bg: "color-mix(in oklab, var(--success) 18%, transparent)", fg: "var(--success)", border: "var(--success)" }
       : score >= 75
-        ? { emoji: "👍", title: "Good Progress", body: `You're on the right track. ${biggestWin}.`, bg: "#fef3c7", fg: "#78350f", border: "var(--warning)" }
-        : { emoji: "💪", title: "Let's Improve Next Month", body: "Small consistent changes will move the needle. You've got this.", bg: "#dbeafe", fg: "#1e3a8a", border: "#3b82f6" };
+        ? { emoji: "👍", title: "Good Progress", body: `You're on the right track. ${biggestWin}.`, bg: "color-mix(in oklab, var(--warning) 18%, transparent)", fg: "var(--warning)", border: "var(--warning)" }
+        : { emoji: "💪", title: "Let's Improve Next Month", body: "Small consistent changes will move the needle. You've got this.", bg: "color-mix(in oklab, var(--info) 18%, transparent)", fg: "var(--info)", border: "var(--info)" };
   return (
     <Card
       className="p-4 shadow-soft"
@@ -685,10 +685,10 @@ function ComparisonCard({
 
 function HealthPill({ level }: { level: HealthLevel }) {
   const map: Record<HealthLevel, { bg: string; fg: string }> = {
-    Excellent: { bg: "#dcfce7", fg: "#065f46" },
-    Good: { bg: "#dbeafe", fg: "#1e3a8a" },
-    Average: { bg: "#fef3c7", fg: "#78350f" },
-    "Needs Attention": { bg: "#fee2e2", fg: "#991b1b" },
+    Excellent: { bg: "color-mix(in oklab, var(--success) 18%, transparent)", fg: "var(--success)" },
+    Good: { bg: "color-mix(in oklab, var(--info) 18%, transparent)", fg: "var(--info)" },
+    Average: { bg: "color-mix(in oklab, var(--warning) 18%, transparent)", fg: "var(--warning)" },
+    "Needs Attention": { bg: "color-mix(in oklab, var(--destructive) 18%, transparent)", fg: "var(--destructive)" },
   };
   const s = map[level];
   return (
