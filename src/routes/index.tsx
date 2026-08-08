@@ -112,9 +112,9 @@ function Navbar() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Logo />
         <div className="hidden items-center gap-7 md:flex">
-          <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900">Features</a>
-          <a href="#how" className="text-sm font-medium text-gray-600 hover:text-gray-900">How it Works</a>
-          <a href="#final" className="text-sm font-medium text-gray-600 hover:text-gray-900">Get Started</a>
+          <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
+          <a href="#how" className="text-sm font-medium text-muted-foreground hover:text-foreground">How it Works</a>
+          <a href="#final" className="text-sm font-medium text-muted-foreground hover:text-foreground">Get Started</a>
         </div>
       </nav>
     </header>
@@ -140,7 +140,7 @@ function HeroMockup() {
       />
 
       {/* Phone frame */}
-      <div className="relative rounded-[2.2rem] border border-gray-200 bg-white p-3 shadow-[0_30px_70px_-25px_rgba(17,24,39,0.35)]">
+      <div className="relative rounded-[2.2rem] border border-gray-200 bg-card p-3 shadow-[0_30px_70px_-25px_rgba(17,24,39,0.35)]">
         <div
           className="rounded-[1.7rem] p-5"
           style={{
@@ -151,8 +151,8 @@ function HeroMockup() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-medium text-gray-600">Good morning, Aarav</p>
-              <p className="text-base font-semibold text-gray-900">November Overview</p>
+              <p className="text-[11px] font-medium text-muted-foreground">Good morning, Aarav</p>
+              <p className="text-base font-semibold text-foreground">November Overview</p>
             </div>
             <div
               className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
@@ -193,13 +193,13 @@ function HeroMockup() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[10px] font-medium text-gray-600">Spent</span>
-                <span className="text-base font-bold text-gray-900">68%</span>
+                <span className="text-[10px] font-medium text-muted-foreground">Spent</span>
+                <span className="text-base font-bold text-foreground">68%</span>
               </div>
             </div>
             <div className="flex-1">
-              <p className="text-[11px] font-medium text-gray-600">Remaining balance</p>
-              <p className="font-display text-2xl font-bold text-gray-900">₹ 12,840</p>
+              <p className="text-[11px] font-medium text-muted-foreground">Remaining balance</p>
+              <p className="font-display text-2xl font-bold text-foreground">₹ 12,840</p>
               <p
                 className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold"
                 style={{ color: BRAND.accent }}
@@ -224,10 +224,10 @@ function HeroMockup() {
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Smart insight
                 </p>
-                <p className="mt-0.5 text-[12px] font-medium leading-snug text-gray-800">
+                <p className="mt-0.5 text-[12px] font-medium leading-snug text-foreground">
                   Food spends are up <span className="font-bold">₹ 1,240</span> this week. Cook 2 nights to save ~₹ 800.
                 </p>
               </div>
@@ -241,9 +241,9 @@ function HeroMockup() {
         initial={{ opacity: 0, x: -16, y: 10 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="absolute -left-4 top-28 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+        className="absolute -left-4 top-28 hidden rounded-2xl bg-card px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
       >
-        <p className="text-[10px] text-gray-600">Saved this month</p>
+        <p className="text-[10px] text-muted-foreground">Saved this month</p>
         <p className="text-sm font-bold" style={{ color: BRAND.accent }}>+ ₹ 2,340</p>
       </motion.div>
 
@@ -251,10 +251,10 @@ function HeroMockup() {
         initial={{ opacity: 0, x: 16, y: 10 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ delay: 0.9 }}
-        className="absolute -right-4 bottom-20 hidden rounded-2xl bg-white px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
+        className="absolute -right-4 bottom-20 hidden rounded-2xl bg-card px-3 py-2 shadow-lg ring-1 ring-gray-100 sm:block"
       >
-        <p className="text-[10px] text-gray-600">Daily streak</p>
-        <p className="text-sm font-bold text-gray-900">🔥 28 days</p>
+        <p className="text-[10px] text-muted-foreground">Daily streak</p>
+        <p className="text-sm font-bold text-foreground">🔥 28 days</p>
       </motion.div>
     </motion.div>
   );
@@ -278,14 +278,14 @@ function Hero() {
         <motion.span
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium text-gray-700 shadow-sm"
+          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm"
         >
           <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} />
           Built for Indian salary life
         </motion.span>
 
         <h1
-          className="mx-auto mt-5 max-w-3xl font-display text-[2.1rem] font-bold leading-[1.1] tracking-tight text-gray-900 md:text-6xl"
+          className="mx-auto mt-5 max-w-3xl font-display text-[2.1rem] font-bold leading-[1.1] tracking-tight text-foreground md:text-6xl"
         >
           Know exactly where your{" "}
           <span
@@ -303,7 +303,7 @@ function Hero() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mx-auto mt-5 max-w-xl text-base text-gray-600 md:text-lg"
+          className="mx-auto mt-5 max-w-xl text-base text-muted-foreground md:text-lg"
         >
           FinTrackr helps Indian salary earners track spending, manage budgets, and save more — without spreadsheets or confusion.
         </motion.p>
@@ -329,7 +329,7 @@ function Hero() {
         </motion.div>
 
         {/* Trust row */}
-        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium text-gray-600 md:text-xs">
+        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium text-muted-foreground md:text-xs">
           {["No bank login needed", "Built for India", "Setup in under 60 seconds"].map((t) => (
             <div key={t} className="inline-flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
@@ -362,7 +362,7 @@ function TrustSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.08 }}
-            className="rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+            className="rounded-2xl border border-gray-100 bg-card p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
           >
             <div
               className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
@@ -370,8 +370,8 @@ function TrustSection() {
             >
               <it.icon className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">{it.title}</h3>
-            <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
+            <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{it.desc}</p>
           </motion.div>
         ))}
       </div>
@@ -388,7 +388,7 @@ function ProblemSection() {
   ];
   return (
     <section className="mx-auto max-w-6xl px-5 py-10 md:py-14">
-      <h2 className="text-center font-display text-xl font-bold text-gray-900 md:text-2xl">Sound familiar?</h2>
+      <h2 className="text-center font-display text-xl font-bold text-foreground md:text-2xl">Sound familiar?</h2>
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((it, i) => (
           <motion.div
@@ -397,7 +397,7 @@ function ProblemSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.06 }}
-            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+            className="rounded-2xl border border-gray-100 bg-card p-4 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
           >
             <div
               className="flex h-9 w-9 items-center justify-center rounded-lg"
@@ -405,8 +405,8 @@ function ProblemSection() {
             >
               <it.icon className="h-4 w-4" />
             </div>
-            <h3 className="mt-3 text-sm font-semibold text-gray-900">{it.title}</h3>
-            <p className="mt-1 text-[12px] leading-snug text-gray-600">{it.desc}</p>
+            <h3 className="mt-3 text-sm font-semibold text-foreground">{it.title}</h3>
+            <p className="mt-1 text-[12px] leading-snug text-muted-foreground">{it.desc}</p>
           </motion.div>
         ))}
       </div>
@@ -428,8 +428,8 @@ function Features() {
   return (
     <section id="features" className="mx-auto max-w-6xl px-5 py-14 md:py-20">
       <div className="mx-auto max-w-xl text-center">
-        <h2 className="font-display text-3xl font-bold text-gray-900 md:text-4xl">Your money, finally clear.</h2>
-        <p className="mt-3 text-sm text-gray-600">
+        <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">Your money, finally clear.</h2>
+        <p className="mt-3 text-sm text-muted-foreground">
           Everything you need to take control of your salary, spends and savings — in one calm dashboard.
         </p>
       </div>
@@ -441,7 +441,7 @@ function Features() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.04 }}
-            className="rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+            className="rounded-2xl border border-gray-100 bg-card p-5 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
           >
             <div
               className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
@@ -449,8 +449,8 @@ function Features() {
             >
               <it.icon className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">{it.title}</h3>
-            <p className="mt-1 text-xs text-gray-600">{it.desc}</p>
+            <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{it.desc}</p>
           </motion.div>
         ))}
       </div>
@@ -483,7 +483,7 @@ function SmartFeatures() {
     { icon: PhoneIcon, from: "Recharge", to: "Utilities" },
   ];
   return (
-    <section className="relative overflow-hidden bg-white py-14 md:py-20">
+    <section className="relative overflow-hidden bg-card py-14 md:py-20">
       <div
         className="absolute inset-x-0 top-0 -z-10 h-72"
         style={{
@@ -493,13 +493,13 @@ function SmartFeatures() {
       />
       <div className="mx-auto max-w-6xl px-5">
         <div className="mx-auto max-w-xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-[11px] font-medium text-gray-700">
+          <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
             <Brain className="h-3 w-3" style={{ color: BRAND.primary }} /> Smarter over time
           </span>
-          <h2 className="mt-4 font-display text-3xl font-bold text-gray-900 md:text-4xl">
+          <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl">
             Built to learn your habits.
           </h2>
-          <p className="mt-3 text-sm text-gray-600">
+          <p className="mt-3 text-sm text-muted-foreground">
             FinTrackr reads your transaction messages and quietly organizes them — no setup, no spreadsheets.
           </p>
         </div>
@@ -520,14 +520,14 @@ function SmartFeatures() {
               >
                 <c.icon className="h-5 w-5" />
               </div>
-              <h3 className="text-base font-semibold text-gray-900">{c.title}</h3>
-              <p className="mt-2 text-sm text-gray-600">{c.desc}</p>
+              <h3 className="text-base font-semibold text-foreground">{c.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{c.desc}</p>
             </motion.div>
           ))}
         </div>
 
-        <div className="mt-10 rounded-3xl border border-gray-100 bg-gray-50/70 p-6 md:p-8">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest text-gray-600">
+        <div className="mt-10 rounded-3xl border border-gray-100 bg-muted/70 p-6 md:p-8">
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             How it learns
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -538,7 +538,7 @@ function SmartFeatures() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100"
+                className="flex items-center justify-between rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-gray-100"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -547,10 +547,10 @@ function SmartFeatures() {
                   >
                     <ex.icon className="h-4 w-4" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-900">{ex.from}</span>
+                  <span className="text-sm font-semibold text-foreground">{ex.from}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="h-3.5 w-3.5 text-gray-600" />
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                   <span
                     className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
                     style={{ background: "rgba(20,184,166,0.12)", color: BRAND.accent }}
@@ -597,13 +597,13 @@ function DashboardShowcase() {
       />
       <div className="mx-auto max-w-6xl px-5">
         <div className="mx-auto max-w-xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium text-gray-700 shadow-sm">
+          <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
             <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinTrackr
           </span>
-          <h2 className="mt-4 font-display text-3xl font-bold text-gray-900 md:text-4xl">
+          <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl">
             One calm dashboard for your whole salary.
           </h2>
-          <p className="mt-3 text-sm text-gray-600">
+          <p className="mt-3 text-sm text-muted-foreground">
             A quiet control center — budgets, categories, transactions and gentle nudges. No noise, no spreadsheets.
           </p>
         </div>
@@ -614,9 +614,9 @@ function DashboardShowcase() {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-5 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-5 rounded-3xl border border-gray-100 bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
-            <p className="text-xs font-medium text-gray-600">November · Budget</p>
+            <p className="text-xs font-medium text-muted-foreground">November · Budget</p>
             <div className="mt-4 flex items-center gap-5">
               <div className="relative h-28 w-28 shrink-0">
                 <svg viewBox="0 0 36 36" className="h-28 w-28 -rotate-90">
@@ -636,13 +636,13 @@ function DashboardShowcase() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-medium text-gray-600">Spent</span>
-                  <span className="font-display text-lg font-bold text-gray-900">72%</span>
+                  <span className="text-[10px] font-medium text-muted-foreground">Spent</span>
+                  <span className="font-display text-lg font-bold text-foreground">72%</span>
                 </div>
               </div>
               <div>
-                <p className="text-xs text-gray-600">Remaining</p>
-                <p className="font-display text-3xl font-bold text-gray-900">₹ 9,441</p>
+                <p className="text-xs text-muted-foreground">Remaining</p>
+                <p className="font-display text-3xl font-bold text-foreground">₹ 9,441</p>
                 <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                   <CalendarClock className="h-3 w-3" /> Salary in 5 days
                 </p>
@@ -656,13 +656,13 @@ function DashboardShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.05 }}
-            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Savings goal · Goa trip</p>
-                <p className="font-display text-2xl font-bold text-gray-900">
-                  ₹ 38,200 <span className="text-sm font-medium text-gray-600">/ 50,000</span>
+                <p className="text-xs font-medium text-muted-foreground">Savings goal · Goa trip</p>
+                <p className="font-display text-2xl font-bold text-foreground">
+                  ₹ 38,200 <span className="text-sm font-medium text-muted-foreground">/ 50,000</span>
                 </p>
               </div>
               <div
@@ -672,7 +672,7 @@ function DashboardShowcase() {
                 <PiggyBank className="h-5 w-5" />
               </div>
             </div>
-            <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+            <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-muted">
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: "76%" }}
@@ -682,7 +682,7 @@ function DashboardShowcase() {
                 style={{ background: `linear-gradient(90deg, ${BRAND.primary}, ${BRAND.accent})` }}
               />
             </div>
-            <div className="mt-3 flex items-center justify-between text-[11px] text-gray-600">
+            <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
               <span>76% complete</span>
               <span>On track for Dec 18</span>
             </div>
@@ -694,23 +694,23 @@ function DashboardShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="lg:col-span-5 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-5 rounded-3xl border border-gray-100 bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-gray-700">Spending by category</p>
-              <span className="text-[10px] text-gray-600">This month</span>
+              <p className="text-xs font-semibold text-muted-foreground">Spending by category</p>
+              <span className="text-[10px] text-muted-foreground">This month</span>
             </div>
             <div className="mt-4 space-y-3.5">
               {categories.map((c, i) => (
                 <div key={c.label}>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-2 font-medium text-gray-700">
+                    <span className="flex items-center gap-2 font-medium text-muted-foreground">
                       <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
                       {c.label}
                     </span>
-                    <span className="font-semibold text-gray-900">₹ {c.amt.toLocaleString("en-IN")}</span>
+                    <span className="font-semibold text-foreground">₹ {c.amt.toLocaleString("en-IN")}</span>
                   </div>
-                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <motion.div
                       initial={{ width: 0 }}
                       whileInView={{ width: `${c.pct}%` }}
@@ -731,10 +731,10 @@ function DashboardShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
-            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
+            className="lg:col-span-7 rounded-3xl border border-gray-100 bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
           >
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-gray-700">Recent transactions</p>
+              <p className="text-xs font-semibold text-muted-foreground">Recent transactions</p>
               <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
                 <MessageSquare className="h-3 w-3" /> Auto from SMS
               </span>
@@ -750,11 +750,11 @@ function DashboardShowcase() {
                       <t.icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-900">{t.name}</p>
-                      <p className="text-[10px] text-gray-600">{t.tag}</p>
+                      <p className="text-xs font-semibold text-foreground">{t.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{t.tag}</p>
                     </div>
                   </div>
-                  <p className="text-xs font-bold text-gray-900">− ₹ {t.amt.toLocaleString("en-IN")}</p>
+                  <p className="text-xs font-bold text-foreground">− ₹ {t.amt.toLocaleString("en-IN")}</p>
                 </div>
               ))}
             </div>
@@ -795,10 +795,10 @@ function DashboardShowcase() {
           transition={{ delay: 1.2, duration: 0.7 }}
           className="mt-10 flex justify-center"
         >
-          <a href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md">
+          <a href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-card px-5 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition-all hover:bg-muted hover:shadow-md">
             <Sparkles className="h-4 w-4" style={{ color: BRAND.primary }} />
             See Demo
-            <ArrowRight className="h-3.5 w-3.5 text-gray-600" />
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
           </a>
         </motion.div>
       </div>
@@ -813,11 +813,11 @@ function HowItWorks() {
     { n: "3", title: "Save more, stress less", desc: "Stay on budget and breathe easy at month-end." },
   ];
   return (
-    <section id="how" className="bg-white py-10 md:py-14">
+    <section id="how" className="bg-card py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-5">
         <div className="text-center">
-          <h2 className="font-display text-xl font-bold text-gray-900 md:text-2xl">How it works</h2>
-          <p className="mt-1 text-xs text-gray-600">Three steps. No spreadsheets.</p>
+          <h2 className="font-display text-xl font-bold text-foreground md:text-2xl">How it works</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Three steps. No spreadsheets.</p>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {steps.map((s, i) => (
@@ -827,7 +827,7 @@ function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06, duration: 0.35 }}
-              className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-4"
+              className="flex items-start gap-3 rounded-xl border border-gray-100 bg-muted/50 p-4"
             >
               <span
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
@@ -836,8 +836,8 @@ function HowItWorks() {
                 {s.n}
               </span>
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">{s.title}</h3>
-                <p className="mt-0.5 text-[12px] leading-snug text-gray-600">{s.desc}</p>
+                <h3 className="text-sm font-semibold text-foreground">{s.title}</h3>
+                <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{s.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -889,10 +889,10 @@ function StatsStrip() {
       <div className="grid grid-cols-3 gap-3 rounded-2xl border border-gray-100 bg-white/70 p-4 shadow-sm backdrop-blur md:gap-6 md:p-6">
         {stats.map((s) => (
           <div key={s.label} className="text-center">
-            <p className="font-display text-xl font-bold text-gray-900 md:text-3xl" style={{ color: BRAND.primary }}>
+            <p className="font-display text-xl font-bold text-foreground md:text-3xl" style={{ color: BRAND.primary }}>
               <Counter to={s.to} prefix={s.prefix} suffix={s.suffix} />
             </p>
-            <p className="mt-1 text-[10px] font-medium text-gray-600 md:text-xs">{s.label}</p>
+            <p className="mt-1 text-[10px] font-medium text-muted-foreground md:text-xs">{s.label}</p>
           </div>
         ))}
       </div>
@@ -928,8 +928,8 @@ function Testimonials() {
   return (
     <section className="relative mx-auto max-w-6xl px-5 py-16 md:py-24">
       <div className="mx-auto max-w-xl text-center">
-        <h2 className="font-display text-3xl font-bold text-gray-900 md:text-4xl">What our users say</h2>
-        <p className="mt-3 text-sm text-gray-600">
+        <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">What our users say</h2>
+        <p className="mt-3 text-sm text-muted-foreground">
           Real stories from real salary earners across India.
         </p>
       </div>
@@ -951,7 +951,7 @@ function Testimonials() {
               className={`group relative rounded-3xl bg-gradient-to-br ${c.grad} p-6 ring-1 ${c.ring} shadow-[0_10px_40px_-20px_rgba(17,24,39,0.18)] transition-shadow hover:shadow-[0_24px_60px_-20px_rgba(17,24,39,0.25)]`}
             >
               <Quote className="absolute right-5 top-5 h-7 w-7 text-white/95" />
-              <p className="text-sm leading-relaxed text-gray-800">"{c.quote}"</p>
+              <p className="text-sm leading-relaxed text-foreground">"{c.quote}"</p>
               <div className="mt-6 flex items-center gap-3">
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm"
@@ -960,8 +960,8 @@ function Testimonials() {
                   {initials}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{c.name}</p>
-                  <p className="text-[11px] text-gray-600">{c.role}</p>
+                  <p className="text-sm font-semibold text-foreground">{c.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{c.role}</p>
                 </div>
               </div>
             </motion.div>
@@ -1016,7 +1016,7 @@ function FinalCTA() {
           <Link to="/signup">
             <Button
               size="lg"
-              className="rounded-xl bg-white px-7 text-sm font-semibold text-[#0F766E] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white/95"
+              className="rounded-xl bg-card px-7 text-sm font-semibold text-[#0F766E] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white/95"
               style={{ boxShadow: "0 20px 50px -15px rgba(0,0,0,0.25)" }}
             >
               Create Free Account <ArrowRight className="ml-1 h-4 w-4" />
@@ -1065,23 +1065,23 @@ function Footer() {
     },
   ];
   return (
-    <footer className="border-t border-gray-100 bg-white">
+    <footer className="border-t border-gray-100 bg-card">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo />
-          <p className="mt-3 max-w-xs text-xs text-gray-600">
+          <p className="mt-3 max-w-xs text-xs text-muted-foreground">
             An intelligent money control center built for Indian salary life.
           </p>
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-600">{c.title}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{c.title}</p>
             <ul className="mt-3 space-y-2">
               {c.links.map((l) => (
                 <li key={l.label}>
                   <a
                     href={l.href}
-                    className="text-sm text-gray-700 transition-colors hover:text-gray-900"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {l.label}
                   </a>
@@ -1093,10 +1093,10 @@ function Footer() {
       </div>
       <div className="border-t border-gray-100">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-5 sm:flex-row">
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} FinTrackr
           </p>
-          <p className="inline-flex items-center gap-1 text-xs text-gray-600">
+          <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             Made with <Heart className="h-3 w-3 fill-red-500 text-red-500" /> in India
           </p>
         </div>
