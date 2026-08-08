@@ -81,9 +81,9 @@ function LoginPage() {
 
   return (
     <div
-      className="fixed inset-0 flex h-[100vh] max-h-[100vh] w-full items-center justify-center overflow-hidden"
-      style={{ background: "#FAFAF7" }}
+      className="fixed inset-0 flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden bg-background"
     >
+
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}

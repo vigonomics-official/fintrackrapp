@@ -201,18 +201,20 @@ function AuthenticatedLayout() {
       <CreateGoalDialog open={goalOpen} onOpenChange={setGoalOpen} />
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/60 bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
         <div className="grid grid-cols-5">
           {NAV.slice(0, 5).map((item) => {
             const Icon = item.icon;
             const active = matchRoute(path, item.to);
             return (
-              <Link key={item.to} to={item.to} preload="intent"
+              <Link key={item.to} to={item.to} preload="intent" aria-current={active ? "page" : undefined}
                 className={cn("relative flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
                   active ? "text-success" : "text-muted-foreground hover:text-foreground")}>
-                {active && <span className="absolute top-0 h-0.5 w-6 rounded-full bg-success" />}
-                <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.7} />
-                {item.label}
+                {active && <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-success" />}
+                <span className={cn("flex h-7 w-7 items-center justify-center rounded-lg transition-colors", active && "bg-success/15")}>
+                  <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.8} />
+                </span>
+                <span className={cn(active && "font-semibold")}>{item.label}</span>
               </Link>
 
             );

@@ -178,10 +178,17 @@
   --destructive: oklch(0.72 0.19 25);
   --destructive-foreground: oklch(0.16 0.025 165);
 
-  --border: oklch(1 0 0 / 0.12);
+  --border: oklch(1 0 0 / 0.16);
 
-  --input: oklch(1 0 0 / 0.12);
+  --input: oklch(1 0 0 / 0.18);
   --ring: oklch(0.7 0.14 165);
+
+  /* brighter chart palette so data viz stays legible on dark surfaces */
+  --chart-1: oklch(0.74 0.14 165);
+  --chart-2: oklch(0.84 0.13 85);
+  --chart-3: oklch(0.76 0.12 200);
+  --chart-4: oklch(0.75 0.15 30);
+  --chart-5: oklch(0.72 0.15 295);
 
   --sidebar: oklch(0.13 0.022 165);
   --sidebar-foreground: oklch(0.92 0.02 95);

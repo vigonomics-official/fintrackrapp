@@ -287,19 +287,19 @@ function OnboardingPage() {
 
   const totalSteps = 5;
   return (
-    <div className="min-h-screen w-full bg-white text-gray-900">
+    <div className="min-h-screen w-full bg-card text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pt-6 pb-32">
         {/* Top bar */}
         <div className="mb-4 flex items-center gap-3">
           <button
             onClick={() => setStep((x) => Math.max(2, x - 1))}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
             aria-label="Back"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <motion.div
                 className="h-full rounded-full"
                 style={{ background: GREEN }}
@@ -308,7 +308,7 @@ function OnboardingPage() {
                 transition={{ type: "spring", stiffness: 120, damping: 20 }}
               />
             </div>
-            <p className="mt-1 text-[11px] font-semibold tracking-wide text-gray-500">Step {step} of {totalSteps}</p>
+            <p className="mt-1 text-[11px] font-semibold tracking-wide text-muted-foreground">Step {step} of {totalSteps}</p>
           </div>
         </div>
 
@@ -329,7 +329,7 @@ function OnboardingPage() {
         </AnimatePresence>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 backdrop-blur">
         <div className="mx-auto max-w-md">
           <Button
             onClick={() => (step < 5 ? setStep(step + 1) : finish())}
@@ -341,7 +341,7 @@ function OnboardingPage() {
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
           {step === 3 && (
-            <p className="mt-3 text-center text-[11px] text-gray-500">🔒 We never connect to your bank</p>
+            <p className="mt-3 text-center text-[11px] text-muted-foreground">🔒 We never connect to your bank</p>
           )}
         </div>
       </div>
@@ -360,7 +360,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
         {/* Logo */}
         <div className="flex flex-col items-center text-center">
           <div className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white">₣</div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-card/15 text-white">₣</div>
             FinTrackr
           </div>
           <p className="mt-1 text-xs text-white/70">Your Salary Survival System</p>
@@ -383,7 +383,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
             {["✅ No bank login needed", "🔒 100% private", "⚡ Setup in 2 minutes"].map((p) => (
-              <span key={p} className="rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold" style={{ color: GREEN_ACCENT }}>
+              <span key={p} className="rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold" style={{ color: GREEN_ACCENT }}>
                 {p}
               </span>
             ))}
@@ -394,7 +394,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
         <div className="mt-6">
           <button
             onClick={onStart}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-[15px] font-bold shadow-lg active:scale-[0.98]"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-card text-[15px] font-bold shadow-lg active:scale-[0.98]"
             style={{ color: GREEN_DARK }}
           >
             Let's Set Up My Survival System
@@ -421,22 +421,22 @@ function PersonalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K,
 
       <div className="mt-7 space-y-6">
         <div>
-          <label className="text-sm font-semibold text-gray-800">What's your name?</label>
+          <label className="text-sm font-semibold text-foreground">What's your name?</label>
           <Input
             value={s.name}
             onChange={(e) => set("name", e.target.value)}
             placeholder="e.g. Vicky"
-            className="mt-2 h-12 rounded-xl border-gray-200 text-base"
+            className="mt-2 h-12 rounded-xl border-border text-base"
           />
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-gray-800">Your city</label>
+          <label className="text-sm font-semibold text-foreground">Your city</label>
           <ChipGrid options={CITIES} value={s.city} onChange={(v) => set("city", v)} />
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-gray-800">Your age group</label>
+          <label className="text-sm font-semibold text-foreground">Your age group</label>
           <ChipGrid options={AGE_GROUPS} value={s.ageGroup} onChange={(v) => set("ageGroup", v)} />
         </div>
       </div>
@@ -458,21 +458,21 @@ function SalaryStep({
         STEP 3 OF 5 · SALARY SETUP
       </p>
       <h1 className="mt-2 text-[24px] font-bold leading-tight">Tell me about your salary</h1>
-      <p className="mt-1 text-sm text-gray-500">This is the foundation of your survival system</p>
+      <p className="mt-1 text-sm text-muted-foreground">This is the foundation of your survival system</p>
 
       <div className="mt-7 space-y-6">
         <div>
-          <label className="text-sm font-semibold text-gray-800">Monthly take-home salary</label>
-          <p className="text-xs text-gray-500">After all deductions</p>
+          <label className="text-sm font-semibold text-foreground">Monthly take-home salary</label>
+          <p className="text-xs text-muted-foreground">After all deductions</p>
           <div className="relative mt-2">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-700">₹</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground">₹</span>
             <Input
               type="number"
               inputMode="numeric"
               value={s.salary}
               onChange={(e) => set("salary", e.target.value)}
               placeholder="0"
-              className="h-14 rounded-xl border-gray-200 pl-10 text-2xl font-bold tabular-nums"
+              className="h-14 rounded-xl border-border pl-10 text-2xl font-bold tabular-nums"
             />
           </div>
           {preview && preview.daily > 0 && (
@@ -483,24 +483,24 @@ function SalaryStep({
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-gray-800">When do you get paid?</label>
+          <label className="text-sm font-semibold text-foreground">When do you get paid?</label>
           <ChipGrid options={PAY_DATES} value={s.salaryDate} onChange={(v) => set("salaryDate", v)} />
           {preview && preview.daysUntil != null && (
             <div className="mt-3 grid grid-cols-3 gap-2 rounded-2xl bg-emerald-50 p-3">
               <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Days to payday</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Days to payday</p>
                 <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
                   {preview.daysUntil}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Safe / day</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Safe / day</p>
                 <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
                   ₹{fmt(preview.daily)}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Cycle</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Cycle</p>
                 <p className="mt-1 text-base font-bold tabular-nums" style={{ color: GREEN_ACCENT }}>
                   {preview.cycleLength}d
                 </p>
@@ -511,7 +511,7 @@ function SalaryStep({
 
 
         <div>
-          <label className="text-sm font-semibold text-gray-800">How would you describe your financial situation?</label>
+          <label className="text-sm font-semibold text-foreground">How would you describe your financial situation?</label>
           <div className="mt-3 space-y-2">
             {SITUATIONS.map((opt) => {
               const active = s.situation === opt.id;
@@ -521,14 +521,14 @@ function SalaryStep({
                   onClick={() => set("situation", opt.id)}
                   className={cn(
                     "flex w-full items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all",
-                    active ? "bg-emerald-50" : "border-gray-200 bg-white hover:border-gray-300",
+                    active ? "bg-emerald-50" : "border-border bg-card hover:border-border",
                   )}
                   style={active ? { borderColor: GREEN_ACCENT } : undefined}
                 >
                   <span className="text-2xl">{opt.emoji}</span>
                   <span className="flex-1">
-                    <span className="block text-sm font-semibold text-gray-900">{opt.title}</span>
-                    <span className="block text-xs text-gray-500">{opt.sub}</span>
+                    <span className="block text-sm font-semibold text-foreground">{opt.title}</span>
+                    <span className="block text-xs text-muted-foreground">{opt.sub}</span>
                   </span>
                   {active && <Check className="mt-1 h-5 w-5" style={{ color: GREEN_ACCENT }} />}
                 </button>
@@ -552,7 +552,7 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
         STEP 4 OF 5 · YOUR EXPENSES
       </p>
       <h1 className="mt-2 text-[24px] font-bold leading-tight">Where does your salary usually go?</h1>
-      <p className="mt-1 text-sm text-gray-500">Select all that apply — be honest! 😄</p>
+      <p className="mt-1 text-sm text-muted-foreground">Select all that apply — be honest! 😄</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         {EXPENSE_CATS.map((c) => {
@@ -563,7 +563,7 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
               onClick={() => toggle(c.id)}
               className={cn(
                 "flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 transition-all",
-                active ? "text-white" : "border-gray-200 bg-white text-gray-900 hover:border-gray-300",
+                active ? "text-white" : "border-border bg-card text-foreground hover:border-border",
               )}
               style={active ? { background: GREEN_ACCENT, borderColor: GREEN_ACCENT } : undefined}
             >
@@ -581,8 +581,8 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
       )}
 
       <div className="mt-7">
-        <label className="text-sm font-semibold text-gray-800">Do you have any EMIs or loans?</label>
-        <div className="mt-3 inline-flex rounded-xl bg-gray-100 p-1">
+        <label className="text-sm font-semibold text-foreground">Do you have any EMIs or loans?</label>
+        <div className="mt-3 inline-flex rounded-xl bg-muted p-1">
           {[{ k: false, l: "No" }, { k: true, l: "Yes" }].map((o) => {
             const active = s.hasEmi === o.k;
             return (
@@ -591,7 +591,7 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
                 onClick={() => set("hasEmi", o.k)}
                 className={cn(
                   "rounded-lg px-6 py-2 text-sm font-semibold transition",
-                  active ? "text-white shadow" : "text-gray-600",
+                  active ? "text-white shadow" : "text-muted-foreground",
                 )}
                 style={active ? { background: GREEN_ACCENT } : undefined}
               >
@@ -602,23 +602,23 @@ function ExpenseStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, 
         </div>
 
         {s.hasEmi && (
-          <div className="mt-4 space-y-4 rounded-2xl bg-gray-50 p-4">
+          <div className="mt-4 space-y-4 rounded-2xl bg-muted p-4">
             <div>
-              <label className="text-sm font-semibold text-gray-800">Total monthly EMI amount</label>
+              <label className="text-sm font-semibold text-foreground">Total monthly EMI amount</label>
               <div className="relative mt-2">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-700">₹</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">₹</span>
                 <Input
                   type="number"
                   inputMode="numeric"
                   value={s.emi}
                   onChange={(e) => set("emi", e.target.value)}
                   placeholder="0"
-                  className="h-12 rounded-xl border-gray-200 bg-white pl-9 text-base font-semibold tabular-nums"
+                  className="h-12 rounded-xl border-border bg-card pl-9 text-base font-semibold tabular-nums"
                 />
               </div>
             </div>
             <div>
-              <label className="text-sm font-semibold text-gray-800">How many active loans?</label>
+              <label className="text-sm font-semibold text-foreground">How many active loans?</label>
               <ChipGrid options={["1", "2", "3", "4+"]} value={s.loans} onChange={(v) => set("loans", v)} />
             </div>
           </div>
@@ -636,7 +636,7 @@ function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: 
         STEP 5 OF 5 · YOUR FIRST GOAL
       </p>
       <h1 className="mt-2 text-[24px] font-bold leading-tight">What's your #1 financial goal right now?</h1>
-      <p className="mt-1 text-sm text-gray-500">Pick one — you can add more later</p>
+      <p className="mt-1 text-sm text-muted-foreground">Pick one — you can add more later</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         {GOALS.map((g) => {
@@ -647,7 +647,7 @@ function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: 
               onClick={() => set("goal", g.id)}
               className={cn(
                 "relative flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-all",
-                active ? "bg-emerald-50" : "border-gray-200 bg-white hover:border-gray-300",
+                active ? "bg-emerald-50" : "border-border bg-card hover:border-border",
               )}
               style={active ? { borderColor: GREEN_ACCENT } : undefined}
             >
@@ -658,40 +658,40 @@ function GoalStep({ s, set }: { s: State; set: <K extends keyof State>(k: K, v: 
                 </span>
               )}
               <span className="text-3xl">{g.emoji}</span>
-              <span className="text-[14px] font-bold text-gray-900">{g.title}</span>
-              <span className="text-[11px] text-gray-500">{g.sub}</span>
+              <span className="text-[14px] font-bold text-foreground">{g.title}</span>
+              <span className="text-[11px] text-muted-foreground">{g.sub}</span>
           </button>
         );
       })}
       </div>
 
-      <p className="mt-4 text-xs text-gray-500">
+      <p className="mt-4 text-xs text-muted-foreground">
         You can add more goals anytime after setup.
       </p>
 
       {s.goal && (
-        <div className="mt-5 space-y-4 rounded-2xl bg-gray-50 p-4">
+        <div className="mt-5 space-y-4 rounded-2xl bg-muted p-4">
           <div>
-            <label className="text-sm font-semibold text-gray-800">Target amount</label>
+            <label className="text-sm font-semibold text-foreground">Target amount</label>
             <div className="relative mt-2">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-700">₹</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">₹</span>
               <Input
                 type="number"
                 inputMode="numeric"
                 value={s.goalAmount}
                 onChange={(e) => set("goalAmount", e.target.value)}
                 placeholder="0"
-                className="h-12 rounded-xl border-gray-200 bg-white pl-9 text-base font-semibold tabular-nums"
+                className="h-12 rounded-xl border-border bg-card pl-9 text-base font-semibold tabular-nums"
               />
             </div>
           </div>
           <div>
-            <label className="text-sm font-semibold text-gray-800">By when?</label>
+            <label className="text-sm font-semibold text-foreground">By when?</label>
             <ChipGrid options={HORIZONS} value={s.goalHorizon} onChange={(v) => set("goalHorizon", v)} />
           </div>
           <button
             onClick={() => { set("goalAmount", ""); set("goalHorizon", ""); }}
-            className="text-xs font-semibold text-gray-500 underline"
+            className="text-xs font-semibold text-muted-foreground underline"
           >
             Skip for now
           </button>
@@ -747,7 +747,7 @@ function LoadingScreen({
         {[0, 1, 2].map((i) => (
           <motion.span
             key={i}
-            className="h-3 w-3 rounded-full bg-white"
+            className="h-3 w-3 rounded-full bg-card"
             animate={{ y: [0, -8, 0], opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
           />
@@ -810,14 +810,14 @@ function ReadyScreen({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 220, damping: 14 }}
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-white"
+          className="flex h-20 w-20 items-center justify-center rounded-full bg-card"
         >
           <Check className="h-10 w-10" style={{ color: GREEN_ACCENT }} strokeWidth={3} />
         </motion.div>
 
         <h1 className="mt-6 text-[26px] font-bold">You're all set, {name || "friend"}! 🎉</h1>
 
-        <div className="mt-6 w-full max-w-sm rounded-2xl border-2 bg-white p-5 text-left text-gray-900" style={{ borderColor: GREEN_ACCENT }}>
+        <div className="mt-6 w-full max-w-sm rounded-2xl border-2 bg-card p-5 text-left text-foreground" style={{ borderColor: GREEN_ACCENT }}>
           <p className="text-[11px] font-bold tracking-wider" style={{ color: GREEN_ACCENT }}>YOUR SURVIVAL SYSTEM</p>
           <div className="mt-3 space-y-2 text-sm">
             <p>💰 Salary: <span className="font-bold tabular-nums">₹{fmt(salary)}</span></p>
@@ -829,7 +829,7 @@ function ReadyScreen({
 
           <div className="mt-4 rounded-xl bg-emerald-50 p-3">
             <p className="text-[11px] font-bold" style={{ color: GREEN_ACCENT }}>BASED ON</p>
-            <ul className="mt-1 space-y-1 text-xs text-gray-700">
+            <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
               <li>• Salary</li>
               <li>• Spending Profile</li>
               <li>• Goals</li>
@@ -839,7 +839,7 @@ function ReadyScreen({
 
           <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3">
             <p className="text-[11px] font-bold" style={{ color: GREEN_ACCENT }}>AI INSIGHT</p>
-            <p className="mt-1 text-xs leading-relaxed text-gray-700">{scoreExplanation(score, situation)}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{scoreExplanation(score, situation)}</p>
           </div>
         </div>
 
@@ -872,7 +872,7 @@ function ChipGrid({ options, value, onChange }: { options: string[]; value: stri
             onClick={() => onChange(opt)}
             className={cn(
               "rounded-full border-2 px-4 py-2 text-sm font-semibold transition-all",
-              active ? "text-white" : "border-gray-200 bg-white text-gray-700 hover:border-gray-300",
+              active ? "text-white" : "border-border bg-card text-muted-foreground hover:border-border",
             )}
             style={active ? { background: GREEN_ACCENT, borderColor: GREEN_ACCENT } : undefined}
           >

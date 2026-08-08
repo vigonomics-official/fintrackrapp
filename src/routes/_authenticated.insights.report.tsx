@@ -117,7 +117,7 @@ function ReportPage() {
       return {
         id: cid,
         name,
-        color: cat?.color ?? "#9ca3af",
+        color: cat?.color ?? "var(--muted-foreground)",
         spent, budget, pct, hidden,
       };
     }).sort((a, b) => b.spent - a.spent);
@@ -203,7 +203,7 @@ function ReportPage() {
 
   if (!txs.length) {
     return (
-      <div className="w-full overflow-x-hidden" style={{ backgroundColor: "#FAFAF7" }}>
+      <div className="w-full overflow-x-hidden bg-background">
         <PageHeader title={`${monthYearShort} · Report Card`} subtitle="Your salary survival story" />
         <div className="mx-auto w-full max-w-3xl px-4 py-5">
           <Card className="p-5 text-center shadow-soft">
@@ -219,7 +219,7 @@ function ReportPage() {
   const savingsTarget = Math.round(survival.salary * 0.1);
 
   return (
-    <div className="w-full overflow-x-hidden" style={{ backgroundColor: "#FAFAF7" }}>
+    <div className="w-full overflow-x-hidden bg-background">
       <PageHeader title={`${monthYearShort} · Report Card`} subtitle="Your salary survival story" />
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5">
 
@@ -304,10 +304,10 @@ function ReportPage() {
                 {(showHiddenCats ? [...visibleCatRows, ...hiddenCatRows] : visibleCatRows).slice(0, showHiddenCats ? undefined : 6).map(r => {
                   const pct = r.budget > 0 ? Math.min(100, r.pct) : 0;
                   const barColor =
-                    r.budget === 0 ? "#9ca3af"
-                    : r.pct > 100 ? "#dc2626"
-                    : r.pct >= 80 ? "#f97316"
-                    : "#16a34a";
+                    r.budget === 0 ? "var(--muted-foreground)"
+                    : r.pct > 100 ? "var(--destructive)"
+                    : r.pct >= 80 ? "var(--warning)"
+                    : "var(--success)";
                   const statusText =
                     r.budget === 0 ? { t: "— Set budget", c: "text-muted-foreground" }
                     : r.pct > 100 ? { t: "🔴 Over budget", c: "text-destructive" }
@@ -380,7 +380,7 @@ function ReportPage() {
                     <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full rounded-full"
-                        style={{ width: `${pct}%`, backgroundColor: over ? "#dc2626" : "#16a34a" }}
+                        style={{ width: `${pct}%`, backgroundColor: over ? "var(--destructive)" : "var(--success)" }}
                       />
                     </div>
                     <span className="text-right text-xs font-semibold whitespace-nowrap">
@@ -430,8 +430,8 @@ function ReportPage() {
           <div className="mt-3 grid grid-cols-2 gap-2 print:hidden">
             <Button
               onClick={onShare}
-              className="w-full text-white"
-              style={{ backgroundColor: "#16a34a", borderRadius: 12 }}
+              className="w-full text-success-foreground"
+              style={{ backgroundColor: "var(--success)", borderRadius: 12 }}
             >
               <Share2 className="mr-1.5 h-4 w-4" /> Share
             </Button>
@@ -440,7 +440,7 @@ function ReportPage() {
               disabled={saving}
               variant="outline"
               className="w-full"
-              style={{ borderColor: "#16a34a", color: "#16a34a", borderRadius: 12 }}
+              style={{ borderColor: "var(--success)", color: "var(--success)", borderRadius: 12 }}
             >
               <ImageIcon className="mr-1.5 h-4 w-4" /> {saving ? "Saving…" : "Save Image"}
             </Button>
@@ -449,7 +449,7 @@ function ReportPage() {
               disabled={savingPdf}
               variant="outline"
               className="w-full"
-              style={{ borderColor: "#16a34a", color: "#16a34a", borderRadius: 12 }}
+              style={{ borderColor: "var(--success)", color: "var(--success)", borderRadius: 12 }}
             >
               <Download className="mr-1.5 h-4 w-4" /> {savingPdf ? "Preparing…" : "Download PDF"}
             </Button>
@@ -457,7 +457,7 @@ function ReportPage() {
               onClick={onPrint}
               variant="outline"
               className="w-full"
-              style={{ borderColor: "#16a34a", color: "#16a34a", borderRadius: 12 }}
+              style={{ borderColor: "var(--success)", color: "var(--success)", borderRadius: 12 }}
             >
               <Printer className="mr-1.5 h-4 w-4" /> Print
             </Button>
@@ -485,7 +485,7 @@ function ReportPage() {
             <Link
               to="/planner"
               className="mt-3 inline-block text-xs font-semibold"
-              style={{ color: "#16a34a" }}
+              style={{ color: "var(--success)" }}
             >
               Set as My Goals →
             </Link>
@@ -515,10 +515,10 @@ function StatCard({
 function CelebrationCard({ score, biggestWin }: { score: number; biggestWin: string }) {
   const tone =
     score >= 90
-      ? { emoji: "🎉", title: "Excellent Month!", body: `Outstanding financial discipline. ${biggestWin}.`, bg: "#dcfce7", fg: "#065f46", border: "#16a34a" }
+      ? { emoji: "🎉", title: "Excellent Month!", body: `Outstanding financial discipline. ${biggestWin}.`, bg: "color-mix(in oklab, var(--success) 18%, transparent)", fg: "var(--success)", border: "var(--success)" }
       : score >= 75
-        ? { emoji: "👍", title: "Good Progress", body: `You're on the right track. ${biggestWin}.`, bg: "#fef3c7", fg: "#78350f", border: "#f59e0b" }
-        : { emoji: "💪", title: "Let's Improve Next Month", body: "Small consistent changes will move the needle. You've got this.", bg: "#dbeafe", fg: "#1e3a8a", border: "#3b82f6" };
+        ? { emoji: "👍", title: "Good Progress", body: `You're on the right track. ${biggestWin}.`, bg: "color-mix(in oklab, var(--warning) 18%, transparent)", fg: "var(--warning)", border: "var(--warning)" }
+        : { emoji: "💪", title: "Let's Improve Next Month", body: "Small consistent changes will move the needle. You've got this.", bg: "color-mix(in oklab, var(--info) 18%, transparent)", fg: "var(--info)", border: "var(--info)" };
   return (
     <Card
       className="p-4 shadow-soft"
@@ -547,7 +547,7 @@ function AiReviewCard({ review }: { review: ReturnType<typeof buildAiMonthlyRevi
       <h2 className="mb-2 flex items-center gap-1.5 text-base font-bold">
         <Sparkles className="h-4 w-4 text-primary" /> AI Monthly Review
       </h2>
-      <Card className="p-4 shadow-soft" style={{ borderRadius: 12, borderLeft: "4px solid #16a34a" }}>
+      <Card className="p-4 shadow-soft" style={{ borderRadius: 12, borderLeft: "4px solid var(--success)" }}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <p className="text-xs font-semibold text-muted-foreground">Overall Rating</p>
           <p className={`font-display text-lg font-bold ${ratingColor}`}>{review.rating}</p>
@@ -685,10 +685,10 @@ function ComparisonCard({
 
 function HealthPill({ level }: { level: HealthLevel }) {
   const map: Record<HealthLevel, { bg: string; fg: string }> = {
-    Excellent: { bg: "#dcfce7", fg: "#065f46" },
-    Good: { bg: "#dbeafe", fg: "#1e3a8a" },
-    Average: { bg: "#fef3c7", fg: "#78350f" },
-    "Needs Attention": { bg: "#fee2e2", fg: "#991b1b" },
+    Excellent: { bg: "color-mix(in oklab, var(--success) 18%, transparent)", fg: "var(--success)" },
+    Good: { bg: "color-mix(in oklab, var(--info) 18%, transparent)", fg: "var(--info)" },
+    Average: { bg: "color-mix(in oklab, var(--warning) 18%, transparent)", fg: "var(--warning)" },
+    "Needs Attention": { bg: "color-mix(in oklab, var(--destructive) 18%, transparent)", fg: "var(--destructive)" },
   };
   const s = map[level];
   return (
@@ -812,14 +812,14 @@ function ChallengeCard({ challenge }: { challenge: ReturnType<typeof buildChalle
   return (
     <div>
       <h2 className="mb-2 text-base font-bold">Monthly Challenge</h2>
-      <Card className="p-4 shadow-soft" style={{ borderRadius: 12, borderLeft: "4px solid #f59e0b" }}>
+      <Card className="p-4 shadow-soft" style={{ borderRadius: 12, borderLeft: "4px solid var(--warning)" }}>
         <div className="flex items-start gap-3">
           <span className="text-2xl leading-none">🚀</span>
           <div className="min-w-0 flex-1">
             <p className="font-display text-sm font-bold">{challenge.title}</p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">{challenge.reason}</p>
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full" style={{ width: `${challenge.progress}%`, backgroundColor: "#f59e0b" }} />
+              <div className="h-full rounded-full" style={{ width: `${challenge.progress}%`, backgroundColor: "var(--warning)" }} />
             </div>
             <p className="mt-1 text-[10px] text-muted-foreground">Progress {challenge.progress}%</p>
           </div>
