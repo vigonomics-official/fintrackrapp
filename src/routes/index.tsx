@@ -145,9 +145,10 @@ function HeroMockup() {
           className="rounded-[1.7rem] p-5"
           style={{
             background:
-              "linear-gradient(160deg, #F1F5F9 0%, #FFFFFF 45%, #ECFDF5 100%)",
+              "linear-gradient(160deg, color-mix(in oklab, var(--muted) 70%, var(--card)) 0%, var(--card) 45%, color-mix(in oklab, var(--primary) 12%, var(--card)) 100%)",
           }}
         >
+
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
