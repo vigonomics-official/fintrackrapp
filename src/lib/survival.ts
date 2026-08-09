@@ -41,6 +41,12 @@ export type Survival = {
   lastSalaryDate: Date;
   hasIncome: boolean;
   isSalaryToday: boolean;
+  /** Whole days elapsed in the current pay cycle (min 1). */
+  daysElapsed: number;
+  /** Total expenses recorded in the current pay cycle. */
+  totalSpent: number;
+  /** Elapsed cycle days whose spend stayed at/below the even daily budget. */
+  daysUnderBudget: number;
 };
 
 export function computeSurvival(opts: {
@@ -150,6 +156,23 @@ export function computeSurvival(opts: {
   );
 
 
+  // --- 5b. Days under budget (real per-day spend vs even daily budget)
+  const cycleDaysTotal = Math.max(1, daysElapsedForBudget(last, now) + Math.max(0, daysRemaining));
+  const baselineDaily = salary > 0 ? salary / cycleDaysTotal : 0;
+  const perDay = new Map<string, number>();
+  for (const t of cycleTxs) {
+    if (t.type !== "expense") continue;
+    const k = String(t.transaction_date).slice(0, 10);
+    perDay.set(k, (perDay.get(k) ?? 0) + Number(t.amount));
+  }
+  const elapsedDayCount = daysElapsedForBudget(last, now);
+  let daysUnderBudget = 0;
+  for (let i = 0; i < elapsedDayCount; i++) {
+    const d = new Date(last.getFullYear(), last.getMonth(), last.getDate() + i);
+    const spend = perDay.get(toKey(d)) ?? 0;
+    if (baselineDaily > 0 && spend <= baselineDaily) daysUnderBudget += 1;
+  }
+
   // --- 6. Forecast: avgDaily × daysRemaining is projected remaining spend.
   // daysElapsed counts whole days since cycle start, minimum 1.
   const msPerDay = 86_400_000;
@@ -193,5 +216,16 @@ export function computeSurvival(opts: {
     lastSalaryDate: last,
     hasIncome: salary > 0,
     isSalaryToday: daysRemaining === 0,
+    daysElapsed,
+    totalSpent: expensesSinceSalary,
+    daysUnderBudget,
   };
+}
+
+/** Whole days elapsed in the cycle, counting today, minimum 1. */
+function daysElapsedForBudget(cycleStart: Date, now: Date): number {
+  const ms = 86_400_000;
+  const a = new Date(cycleStart.getFullYear(), cycleStart.getMonth(), cycleStart.getDate()).getTime();
+  const b = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return Math.max(1, Math.floor((b - a) / ms) + 1);
 }
