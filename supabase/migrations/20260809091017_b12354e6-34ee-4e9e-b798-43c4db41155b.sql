@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS financial_journey_completed boolean NOT NULL DEFAULT false;

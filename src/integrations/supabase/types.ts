@@ -281,6 +281,7 @@ export type Database = {
           currency: string
           email: string | null
           expense_categories: string[] | null
+          financial_journey_completed: boolean
           financial_situation: string | null
           first_goal: Json | null
           full_name: string | null
@@ -301,6 +302,7 @@ export type Database = {
           currency?: string
           email?: string | null
           expense_categories?: string[] | null
+          financial_journey_completed?: boolean
           financial_situation?: string | null
           first_goal?: Json | null
           full_name?: string | null
@@ -321,6 +323,7 @@ export type Database = {
           currency?: string
           email?: string | null
           expense_categories?: string[] | null
+          financial_journey_completed?: boolean
           financial_situation?: string | null
           first_goal?: Json | null
           full_name?: string | null

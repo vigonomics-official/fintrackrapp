@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, Target, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, Target, ArrowRight, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
+import { supabase } from "@/integrations/supabase/client";
 
 const KEY = "fintrackr_journey_v1";
+
 
 export type JourneyAnswers = {
   challenge: "loans" | "paycheck" | "save" | "invest" | "goal";
@@ -163,12 +165,45 @@ export function FinancialJourney({
   const [setupOpen, setSetupOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Partial<JourneyAnswers>>({});
+  const [completed, setCompleted] = useState<boolean | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const a = load();
     setAnswers(a);
-    if (!a) setSetupOpen(true);
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        if (!cancelled) {
+          setCompleted(false);
+          if (!a) setSetupOpen(true);
+        }
+        return;
+      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("financial_journey_completed")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const done = Boolean(data?.financial_journey_completed);
+      setCompleted(done);
+      if (!done && !a) setSetupOpen(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  async function markCompleted() {
+    setCompleted(true);
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return;
+    await supabase
+      .from("profiles")
+      .update({ financial_journey_completed: true })
+      .eq("id", auth.user.id);
+  }
 
   function persist(a: JourneyAnswers) {
     localStorage.setItem(KEY, JSON.stringify(a));
@@ -182,6 +217,7 @@ export function FinancialJourney({
     const q = QUESTIONS[step];
     const next = { ...draft, [q.key]: value } as Partial<JourneyAnswers>;
     setDraft(next);
+    void markCompleted();
     if (step < QUESTIONS.length - 1) setStep(step + 1);
     else persist(next as JourneyAnswers);
   }
@@ -191,17 +227,34 @@ export function FinancialJourney({
     [answers, monthlyEmi, salary, outstanding]
   );
 
+  // Still resolving persisted state, or the user has completed/dismissed the
+  // setup without stored answers — render nothing.
+  if (completed === null) return null;
+  if (completed && (!answers || !info) && !setupOpen) return null;
+
   if (setupOpen || !answers || !info) {
+
     const q = QUESTIONS[step];
     return (
       <Card className="border-primary/30 bg-primary/5 shadow-soft">
         <CardContent className="space-y-3 p-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
-              Financial Journey · Step {step + 1} of {QUESTIONS.length}
-            </p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                Financial Journey · Step {step + 1} of {QUESTIONS.length}
+              </p>
+            </div>
+            <button
+              type="button"
+              aria-label="Dismiss Financial Journey setup"
+              onClick={() => { setSetupOpen(false); void markCompleted(); }}
+              className="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
+
           <p className="text-sm font-semibold text-foreground">{q.title}</p>
           <div className="space-y-1.5">
             {q.options.map((o) => (
