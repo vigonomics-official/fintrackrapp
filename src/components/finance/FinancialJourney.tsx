@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, Target, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, Target, ArrowRight, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currency";
+import { supabase } from "@/integrations/supabase/client";
 
 const KEY = "fintrackr_journey_v1";
+
 
 export type JourneyAnswers = {
   challenge: "loans" | "paycheck" | "save" | "invest" | "goal";
