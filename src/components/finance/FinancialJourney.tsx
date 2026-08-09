@@ -238,12 +238,23 @@ export function FinancialJourney({
     return (
       <Card className="border-primary/30 bg-primary/5 shadow-soft">
         <CardContent className="space-y-3 p-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
-              Financial Journey · Step {step + 1} of {QUESTIONS.length}
-            </p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                Financial Journey · Step {step + 1} of {QUESTIONS.length}
+              </p>
+            </div>
+            <button
+              type="button"
+              aria-label="Dismiss Financial Journey setup"
+              onClick={() => { setSetupOpen(false); void markCompleted(); }}
+              className="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
+
           <p className="text-sm font-semibold text-foreground">{q.title}</p>
           <div className="space-y-1.5">
             {q.options.map((o) => (
