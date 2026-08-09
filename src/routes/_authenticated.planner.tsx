@@ -173,6 +173,9 @@ function MonthlyPlan() {
                   : `${s.days} day${s.days === 1 ? "" : "s"} left · ${formatCurrency(s.safeDaily, s.currency)}/day safe`
                 : "Add this month's salary to unlock your plan."}
             </p>
+            {s.hasIncome && s.days <= 5 && s.safeDaily > 3000 && (
+              <p className="mt-1 text-[11px] font-medium opacity-90">Most expenses already covered ✓</p>
+            )}
           </div>
           {s.hasIncome && (
             <span className={cn("inline-flex w-fit items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold backdrop-blur")}>
@@ -436,11 +439,33 @@ function WeeklyBudget({ salary, currency, cycleStart }: { salary: number; curren
 }
 
 
+/**
+ * Survival sub-score (max 30) built from real cycle data:
+ * days under budget (12) + month-end forecast health (10) + spending rate (8).
+ */
+function survivalSubScore(s: ReturnType<typeof useSurvival>): number {
+  // Step 1 — days under budget (max 12)
+  const elapsed = Math.max(1, s.daysElapsed);
+  const ratio = s.daysUnderBudget / elapsed;
+  const stepDays = ratio >= 0.9 ? 12 : ratio >= 0.7 ? 9 : ratio >= 0.5 ? 6 : 3;
+
+  // Step 2 — forecast health (max 10), reusing the existing forecast + salary
+  const forecastPct = s.salary > 0 ? s.forecastBalance / s.salary : 0;
+  const stepForecast =
+    s.forecastBalance <= 0 ? 0 : forecastPct > 0.2 ? 10 : forecastPct > 0.1 ? 8 : 5;
+
+  // Step 3 — spending rate (max 8)
+  const rate = s.salary > 0 ? s.totalSpent / s.salary : 1;
+  const stepRate = rate < 0.2 ? 8 : rate < 0.4 ? 6 : rate < 0.6 ? 4 : 2;
+
+  return Math.min(30, stepDays + stepForecast + stepRate);
+}
+
 function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
   const savings = s.salary > 0 ? Math.min(25, Math.max(0, (s.salaryLeft / s.salary) * 25)) : 0;
   const debt = s.salary > 0 ? Math.max(0, 25 - (s.monthlyEmi / s.salary) * 50) : 25;
   const bills = 20; // assume on-track until billing data integrated
-  const survival = Math.min(30, s.score * 0.3);
+  const survival = survivalSubScore(s);
   const total = Math.round(savings + debt + bills + survival);
   const tip =
     total >= 80
