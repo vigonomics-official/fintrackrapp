@@ -1,0 +1,51 @@
+// Gemini-backed CoachProvider.
+//
+// It never replaces FinTrackr's math: the deterministic MockCoachProvider
+// produces the answer (with all numbers, calculation trace, data-used labels
+// and follow-ups), and Gemini only rewrites the narrative fields.
+// Any failure -> the deterministic reply is returned unchanged.
+
+import { askCoachAi } from "@/lib/coach-ai.functions";
+import { buildCoachSnapshot, buildCoachUserPrompt, COACH_SYSTEM_PROMPT } from "@/lib/coach-prompt-builder";
+import type { CoachResponse } from "@/lib/coach-prompts";
+import type { ChatContext, CoachProvider } from "@/lib/coach-provider";
+import { MockCoachProvider } from "@/lib/coach-provider";
+
+function isNonEmpty(v: unknown): v is string {
+  return typeof v === "string" && v.trim().length > 0;
+}
+
+export const GeminiCoachProvider: CoachProvider = {
+  name: "gemini",
+  async send(userText, ctx: ChatContext): Promise<CoachResponse> {
+    // Deterministic answer first — this is the source of truth and the fallback.
+    const draft = await MockCoachProvider.send(userText, ctx);
+    if (!ctx.input || !ctx.analysis) return draft;
+
+    try {
+      const snapshot = buildCoachSnapshot(ctx.input, ctx.analysis, ctx.lang);
+      const result = await askCoachAi({
+        data: {
+          question: userText.slice(0, 500),
+          systemPrompt: COACH_SYSTEM_PROMPT,
+          userPrompt: buildCoachUserPrompt(userText, snapshot, draft),
+          snapshot,
+        },
+      });
+
+      if (!result.ok) return draft;
+      if (!isNonEmpty(result.shortAnswer) || !isNonEmpty(result.why) || !isNonEmpty(result.action)) return draft;
+
+      // Merge: narrative from Gemini, every computed field from the engine.
+      return {
+        ...draft,
+        shortAnswer: result.shortAnswer.trim(),
+        why: result.why.trim(),
+        action: result.action.trim(),
+      };
+    } catch (err) {
+      if (typeof console !== "undefined") console.error("[gemini-provider] falling back", err);
+      return draft;
+    }
+  },
+};
