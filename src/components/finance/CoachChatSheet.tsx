@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { CoachAnalysisInput } from "@/lib/ai-coach-analysis";
-import { MockCoachProvider, buildContext, type CoachProvider } from "@/lib/coach-provider";
+import { defaultCoachProvider, buildContext, type CoachProvider } from "@/lib/coach-provider";
 import type { CoachResponse } from "@/lib/coach-prompts";
 import {
   clearHistory,
@@ -51,7 +51,7 @@ function uid() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-export function CoachChatSheet({ analysisInput, provider = MockCoachProvider, onGoToAnalyze }: Props) {
+export function CoachChatSheet({ analysisInput, provider = defaultCoachProvider, onGoToAnalyze }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
