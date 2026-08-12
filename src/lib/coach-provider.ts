@@ -151,3 +151,21 @@ export function buildContext(input: CoachAnalysisInput | null, lang: CoachLangua
     return { input, analysis: null, lang };
   }
 }
+
+/**
+ * Provider used by the UI: Gemini narration on top of the deterministic engine,
+ * with an automatic fallback to MockCoachProvider on any failure.
+ * Lazy import keeps the server-function module out of the initial chunk.
+ */
+export const defaultCoachProvider: CoachProvider = {
+  name: "gemini+mock",
+  async send(userText, ctx) {
+    try {
+      const { GeminiCoachProvider } = await import("@/lib/gemini-provider");
+      return await GeminiCoachProvider.send(userText, ctx);
+    } catch (err) {
+      if (typeof console !== "undefined") console.error("[coach-provider] fallback to mock", err);
+      return MockCoachProvider.send(userText, ctx);
+    }
+  },
+};
