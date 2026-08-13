@@ -30,12 +30,31 @@ export type CoachSnapshot = {
   healthScore: number;
   totalExpenses: number;
   monthlySurplus: number;
-  savingsRate: number;
+  /**
+   * Deterministic: (salary - totalExpenses) / salary * 100.
+   * null when salary or total spend is unavailable — in that case NO savings
+   * percentage may be shown or stated.
+   */
+  savingsRate: number | null;
   emiRatio: number;
   topCategories: { label: string; amount: number; pct: number }[];
   risks: { label: string; level: string }[];
   goalForecast: { goal: string; monthlyTarget: number; targetAmount: number; etaMonths: number; confidence: number };
+  /** What FinTrackr actually knows about this user. Anything false = unknown. */
+  facts: {
+    hasSalary: boolean;
+    hasSpendData: boolean;
+    hasSavings: boolean;
+    hasBalance: boolean;
+    hasLoanOrEmi: boolean;
+    hasInvestments: boolean;
+    hasGoal: boolean;
+    hasEmergencyFund: boolean;
+  };
+  /** Things FinTrackr has NO data about — never assert these exist. */
+  unavailable: string[];
 };
+
 
 const r = (n: number) => Math.round(Number.isFinite(n) ? n : 0);
 
