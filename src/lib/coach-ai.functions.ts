@@ -24,7 +24,7 @@ const snapshotSchema = z.object({
   healthScore: numberish,
   totalExpenses: numberish,
   monthlySurplus: numberish,
-  savingsRate: numberish,
+  savingsRate: numberish.nullable(),
   emiRatio: numberish,
   topCategories: z.array(z.object({ label: z.string().max(40), amount: numberish, pct: numberish })).max(8),
   risks: z.array(z.object({ label: z.string().max(60), level: z.string().max(20) })).max(8),
@@ -35,7 +35,19 @@ const snapshotSchema = z.object({
     etaMonths: numberish,
     confidence: numberish,
   }),
+  facts: z.object({
+    hasSalary: z.boolean(),
+    hasSpendData: z.boolean(),
+    hasSavings: z.boolean(),
+    hasBalance: z.boolean(),
+    hasLoanOrEmi: z.boolean(),
+    hasInvestments: z.boolean(),
+    hasGoal: z.boolean(),
+    hasEmergencyFund: z.boolean(),
+  }),
+  unavailable: z.array(z.string().max(60)).max(20),
 });
+
 
 const inputSchema = z.object({
   question: z.string().min(1).max(500),

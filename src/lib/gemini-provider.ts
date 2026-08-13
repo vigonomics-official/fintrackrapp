@@ -6,6 +6,7 @@
 // Any failure -> the deterministic reply is returned unchanged.
 
 import { askCoachAi } from "@/lib/coach-ai.functions";
+import { checkCoachReply } from "@/lib/coach-guardrails";
 import { buildCoachSnapshot, buildCoachUserPrompt, COACH_SYSTEM_PROMPT } from "@/lib/coach-prompt-builder";
 import type { CoachResponse } from "@/lib/coach-prompts";
 import type { ChatContext, CoachProvider } from "@/lib/coach-provider";
@@ -36,16 +37,25 @@ export const GeminiCoachProvider: CoachProvider = {
       if (!result.ok) return draft;
       if (!isNonEmpty(result.shortAnswer) || !isNonEmpty(result.why) || !isNonEmpty(result.action)) return draft;
 
-      // Merge: narrative from Gemini, every computed field from the engine.
-      return {
-        ...draft,
+      const candidate = {
         shortAnswer: result.shortAnswer.trim(),
         why: result.why.trim(),
         action: result.action.trim(),
       };
+
+      // Reject invented facts / numbers: fall back to the deterministic reply.
+      const check = checkCoachReply(candidate, snapshot, draft);
+      if (!check.ok) {
+        if (typeof console !== "undefined") console.warn("[gemini-provider] guardrail", check.reason);
+        return draft;
+      }
+
+      // Merge: narrative from Gemini, every computed field from the engine.
+      return { ...draft, ...candidate };
     } catch (err) {
       if (typeof console !== "undefined") console.error("[gemini-provider] falling back", err);
       return draft;
     }
   },
 };
+
