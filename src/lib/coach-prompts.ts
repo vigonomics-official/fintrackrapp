@@ -519,7 +519,7 @@ export function replyOverspend(
     shortAnswer: `${top.label} is your heaviest category at ${inr(top.amount)} (${Math.round(top.pct)}% of spend).`,
     why: `${top.label} ${inr(top.amount)}${second ? `, then ${second.label} ${inr(second.amount)}` : ""}. ${
       overweight.length > 0
-        ? `${overweight.map((b) => b.label).join(", ")} exceed 30% of your outflows.`
+        ? `${overweight.map((b) => b.label).join(", ")} ${overweight.length > 1 ? "exceed" : "exceeds"} 30% of your outflows.`
         : `No single category dominates beyond 30%.`
     }`,
     action: `Set a cap on ${top.label} at ${inr(Math.round(top.amount * 0.9))} next month and review it weekly.`,

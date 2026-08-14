@@ -74,7 +74,7 @@ export function classifyIntent(text: string): CoachIntent {
   if (/(survival score|improve score|health score|why.*low)/.test(q)) return "improveScore";
   if (/food|grocer|eating|delivery/.test(q)) return "reduceFood";
   if (/emergency|rainy day|safety net|bills due/.test(q)) return "emergency";
-  if (/goal|gold|bike|house|vacation|target|sip|investment/.test(q)) return "goal";
+  if (/goal|gold|bike|house|vacation|target|sip|investment|mutual fund|invest\b/.test(q)) return "goal";
   if (/budget|breakdown|where.*money|expense.*split/.test(q)) return "budget";
   if (/reduce|cut|which expense|save|first/.test(q)) return "reduceFirst";
   return "generic";
