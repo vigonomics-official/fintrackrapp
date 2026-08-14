@@ -173,17 +173,34 @@ export const COACH_SYSTEM_PROMPT = [
 ].join(" ");
 
 
+const INTENT_FOCUS: Record<string, string> = {
+  monthStatus: "salary, total spend, surplus, savings rate, survival score, days left in the cycle",
+  overspend: "top spending categories and their share of total spend",
+  affordAmount: "monthly surplus, safe one-time limit, current balance",
+  saveHowMuch: "monthly surplus and savings rate",
+  safeToday: "salary, fixed obligations (rent + EMI + bills), safe daily spend",
+  beforeSalary: "current balance, days until salary, fixed outflows",
+  emergencyGoal: "current savings, monthly expenses, emergency fund target",
+  biggestProblem: "risks flagged by FinTrackr and the largest spending category",
+  explainMetric: "the exact metric asked about and its calculation steps",
+};
+
 export function buildCoachUserPrompt(
   question: string,
   snapshot: CoachSnapshot,
   draft: CoachResponse,
+  intent?: string,
 ): string {
   const langLine = snapshot.lang === "ta" ? "Answer in Tamil." : "Answer in English.";
+  const focus = intent ? INTENT_FOCUS[intent] : undefined;
   return [
     langLine,
     "",
     "USER QUESTION:",
     question.slice(0, 500),
+    "",
+    intent ? `DETECTED INTENT: ${intent}` : "",
+    focus ? `FOCUS ON THESE SNAPSHOT FIELDS: ${focus}` : "",
     "",
     "FINANCIAL SNAPSHOT (authoritative, already calculated — the ONLY facts you may use):",
     JSON.stringify(snapshot),
@@ -198,7 +215,12 @@ export function buildCoachUserPrompt(
     "DETERMINISTIC DRAFT ANSWER (numbers here are correct — rephrase, do not change them):",
     JSON.stringify({ shortAnswer: draft.shortAnswer, why: draft.why, action: draft.action }),
     "",
+    "Keep the structure: shortAnswer = summary, why = verified facts only, action = advice.",
+    "Do not put a rupee impact figure of your own anywhere.",
     "Return the JSON object now.",
-  ].join("\n");
+  ]
+    .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
+    .join("\n");
 }
+
 
