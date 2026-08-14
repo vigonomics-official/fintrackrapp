@@ -64,7 +64,7 @@ export function deriveConfidence(
   let confidence: CoachConfidence;
   if (used.length >= 2 && missing.length === 0) confidence = "high";
   else if (used.length >= 2) confidence = "medium";
-  else if (used.length === 1) confidence = "medium";
+  else if (used.length === 1) confidence = missing.length <= 1 ? "medium" : "low";
   else confidence = "low";
   return { confidence, used, missing };
 }
