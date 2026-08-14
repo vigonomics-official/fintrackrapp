@@ -460,3 +460,219 @@ export function replyWhatIf(
   }
 }
 
+
+// ---------- Question-specific replies (FIX 7: never a generic lecture) ----------
+
+import { daysUntilNextSalary } from "@/lib/coach-suggestions";
+
+/** "How am I doing this month?" */
+export function replyMonthStatus(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+): CoachResponse {
+  const rate = Math.round(analysis.savingsRate);
+  const verdict =
+    analysis.monthlySurplus <= 0 ? "tight" : rate >= 20 ? "strong" : rate >= 10 ? "steady" : "thin";
+  const days = daysUntilNextSalary(input.salaryDate);
+  return withFollowUps({
+    shortAnswer: `This month looks ${verdict}: ${inr(analysis.monthlySurplus)} surplus on ${inr(input.monthlySalary)} salary.`,
+    why: `Total outflow is ${inr(analysis.totalExpenses)} against a salary of ${inr(input.monthlySalary)}, a ${rate}% savings rate, and your Survival Score is ${analysis.healthScore}/100.${
+      days !== null ? ` ${days} day(s) remain before your next salary.` : ""
+    }`,
+    action:
+      analysis.monthlySurplus <= 0
+        ? `Pause discretionary spending and trim ${analysis.breakdown[0]?.label ?? "your top category"} this week.`
+        : `Move ${inr(Math.round(analysis.monthlySurplus * 0.5))} to savings now, before the month drifts.`,
+    monthlyImpact:
+      analysis.monthlySurplus > 0
+        ? `Locks in ${inr(Math.round(analysis.monthlySurplus * 0.5))} this month.`
+        : undefined,
+    confidence: "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation:
+      `Salary ${inr(input.monthlySalary)} − Expenses ${inr(analysis.totalExpenses)} = Surplus ${inr(analysis.monthlySurplus)}\n` +
+      `Savings rate = Surplus ÷ Salary = ${rate}%\n` +
+      `Survival Score (FinTrackr) = ${analysis.healthScore}/100`,
+  });
+}
+
+/** "Where am I spending too much?" */
+export function replyOverspend(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+): CoachResponse {
+  const top = analysis.breakdown[0];
+  if (!top) {
+    return withFollowUps({
+      shortAnswer: `I don't have enough data to confirm that.`,
+      why: `No category spending is recorded yet in FinTrackr.`,
+      action: `Add or import your expenses so I can point at a real category.`,
+      confidence: "low",
+      dataUsed: baseDataUsed(lang, input),
+    });
+  }
+  const second = analysis.breakdown[1];
+  const overweight = analysis.breakdown.filter((b) => b.pct >= 30);
+  return withFollowUps({
+    shortAnswer: `${top.label} is your heaviest category at ${inr(top.amount)} (${Math.round(top.pct)}% of spend).`,
+    why: `${top.label} ${inr(top.amount)}${second ? `, then ${second.label} ${inr(second.amount)}` : ""}. ${
+      overweight.length > 0
+        ? `${overweight.map((b) => b.label).join(", ")} exceed 30% of your outflows.`
+        : `No single category dominates beyond 30%.`
+    }`,
+    action: `Set a cap on ${top.label} at ${inr(Math.round(top.amount * 0.9))} next month and review it weekly.`,
+    monthlyImpact: `Frees around ${inr(Math.round(top.amount * 0.1))}/month.`,
+    confidence: "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation:
+      `Top category ${top.label} = ${inr(top.amount)} (${Math.round(top.pct)}% of ${inr(analysis.totalExpenses)})\n` +
+      `10% trim = ${inr(Math.round(top.amount * 0.1))}/month`,
+  });
+}
+
+/** "Can I buy something for ₹2,000?" */
+export function replyAffordAmount(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+  amount: number,
+): CoachResponse {
+  const surplus = analysis.monthlySurplus;
+  const safe = Math.max(0, Math.round(surplus * 0.5));
+  const balanceAfter = input.currentAccountBalance - amount;
+  const affordable = amount <= safe;
+  return withFollowUps({
+    shortAnswer: affordable
+      ? `Yes — ${inr(amount)} fits inside your safe limit of ${inr(safe)}.`
+      : `${inr(amount)} is above your safe one-time limit of ${inr(safe)}.`,
+    why: `Your monthly surplus is ${inr(surplus)} and your recorded balance is ${inr(input.currentAccountBalance)}; after this purchase it would be ${inr(balanceAfter)}.`,
+    action: affordable
+      ? `Go ahead, and keep the remaining ${inr(Math.max(0, safe - amount))} of the safe limit for the rest of the month.`
+      : `Split it across ${Math.max(2, Math.ceil(amount / Math.max(1, safe)))} months, or wait until after your next salary.`,
+    monthlyImpact: `Leaves ${inr(Math.max(0, surplus - amount))} of surplus this month.`,
+    confidence: "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation:
+      `Surplus ${inr(surplus)} × 50% = Safe limit ${inr(safe)}\n` +
+      `Purchase ${inr(amount)} vs Safe limit ${inr(safe)} → ${affordable ? "within" : "above"} limit\n` +
+      `Balance ${inr(input.currentAccountBalance)} − ${inr(amount)} = ${inr(balanceAfter)}`,
+  });
+}
+
+/** "How much can I save?" */
+export function replySaveHowMuch(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+): CoachResponse {
+  const surplus = analysis.monthlySurplus;
+  if (surplus <= 0) {
+    return withFollowUps({
+      shortAnswer: `Right now there is no surplus left to save.`,
+      why: `Expenses ${inr(analysis.totalExpenses)} meet or exceed salary ${inr(input.monthlySalary)}.`,
+      action: `Cut ${analysis.breakdown[0]?.label ?? "your biggest category"} first to create room.`,
+      confidence: "high",
+      dataUsed: baseDataUsed(lang, input),
+      calculation: `Salary ${inr(input.monthlySalary)} − Expenses ${inr(analysis.totalExpenses)} = ${inr(surplus)}`,
+    });
+  }
+  const realistic = Math.round((surplus * 0.7) / 100) * 100;
+  return withFollowUps({
+    shortAnswer: `You can realistically save about ${inr(realistic)}/month.`,
+    why: `Your surplus is ${inr(surplus)} (salary ${inr(input.monthlySalary)} − expenses ${inr(analysis.totalExpenses)}), at a ${Math.round(analysis.savingsRate)}% savings rate.`,
+    action: `Automate ${inr(realistic)} on salary day and keep the rest as a buffer.`,
+    monthlyImpact: `${inr(realistic * 12)} saved over 12 months.`,
+    confidence: "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation: `Surplus ${inr(surplus)} × 70% (buffer kept) = ${inr(realistic)}/month`,
+  });
+}
+
+/** "How much can I safely spend today?" */
+export function replySafeToday(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+): CoachResponse {
+  const fixed = input.monthlyRent + input.monthlyEmi + input.monthlyBills;
+  const days = daysUntilNextSalary(input.salaryDate) ?? 30;
+  const spendable = Math.max(0, input.monthlySalary - fixed);
+  const daily = Math.max(0, Math.round(spendable / 30));
+  return withFollowUps({
+    shortAnswer: `About ${inr(daily)} today.`,
+    why: `Salary ${inr(input.monthlySalary)} minus fixed obligations ${inr(fixed)} leaves ${inr(spendable)} of variable money for the cycle${
+      days ? `, with ${days} day(s) to your next salary` : ""
+    }.`,
+    action: `Keep today's variable spend under ${inr(daily)}; log anything larger straight away.`,
+    monthlyImpact: `Staying on this line protects ${inr(analysis.monthlySurplus)} of surplus.`,
+    confidence: "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation:
+      `Fixed = Rent ${inr(input.monthlyRent)} + EMI ${inr(input.monthlyEmi)} + Bills ${inr(input.monthlyBills)} = ${inr(fixed)}\n` +
+      `Spendable = Salary ${inr(input.monthlySalary)} − Fixed ${inr(fixed)} = ${inr(spendable)}\n` +
+      `Daily = Spendable ÷ 30 = ${inr(daily)}`,
+  });
+}
+
+/** "What should I do before salary day?" */
+export function replyBeforeSalary(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+): CoachResponse {
+  const days = daysUntilNextSalary(input.salaryDate);
+  const balance = input.currentAccountBalance;
+  const perDay = days && days > 0 ? Math.max(0, Math.round(balance / days)) : null;
+  return withFollowUps({
+    shortAnswer:
+      days !== null
+        ? `${days} day(s) to salary — hold spending to about ${perDay !== null ? inr(perDay) : "your safe daily line"} per day.`
+        : `Hold spending steady until your salary lands.`,
+    why: `Your recorded balance is ${inr(balance)}${
+      days !== null ? ` and ${days} day(s) remain in the cycle` : ""
+    }. Fixed outflows this month total ${inr(input.monthlyRent + input.monthlyEmi + input.monthlyBills)}.`,
+    action: `Clear any pending bill first, then pause discretionary ${analysis.breakdown[0]?.label ?? "spending"} until salary day.`,
+    monthlyImpact: perDay !== null ? `Keeps the ${inr(balance)} balance stretched to salary day.` : undefined,
+    confidence: days !== null ? "high" : "medium",
+    dataUsed: baseDataUsed(lang, input),
+    calculation:
+      days !== null
+        ? `Balance ${inr(balance)} ÷ ${days} day(s) = ${inr(perDay ?? 0)}/day until salary`
+        : `Salary date unavailable — using balance ${inr(balance)} only.`,
+  });
+}
+
+/** "What is my biggest financial problem?" */
+export function replyBiggestProblem(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+): CoachResponse {
+  const high = analysis.risks.find((r) => r.level === "High") ?? analysis.risks.find((r) => r.level === "Medium");
+  const top = analysis.breakdown[0];
+  if (!high && !top) {
+    return withFollowUps({
+      shortAnswer: `I don't have enough data to confirm that.`,
+      why: `No risks or category spending are recorded yet.`,
+      action: `Run an analysis with your salary and expenses so I can rank the real problems.`,
+      confidence: "low",
+      dataUsed: baseDataUsed(lang, input),
+    });
+  }
+  const headline = high ? high.label : `${top!.label} spending`;
+  return withFollowUps({
+    shortAnswer: `Your biggest issue is ${headline}.`,
+    why: high
+      ? `${high.label} is flagged ${high.level} risk. ${high.explanation}`
+      : `${top!.label} takes ${Math.round(top!.pct)}% of your outflows at ${inr(top!.amount)}.`,
+    action: analysis.priorities[0]?.detail ?? `Trim ${top?.label ?? "your top category"} by 10% next month.`,
+    monthlyImpact: top ? `Frees around ${inr(Math.round(top.amount * 0.1))}/month.` : undefined,
+    confidence: "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation:
+      `Risks (FinTrackr): ${analysis.risks.map((r) => `${r.label}=${r.level}`).join(", ") || "none"}\n` +
+      (top ? `Top category ${top.label} ${inr(top.amount)} (${Math.round(top.pct)}%)` : ""),
+  });
+}
