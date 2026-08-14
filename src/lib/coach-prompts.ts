@@ -16,7 +16,9 @@ export type CoachResponse = {
   dataUsed: string[]; // labels
   calculation?: string; // step-by-step "How it was calculated" breakdown
   followUps?: string[]; // suggested follow-up prompts (Compare / What If? / Explain)
+  note?: string; // small contextual note (investment questions only)
 };
+
 
 const inr = (n: number) => `₹${Math.round(Math.max(0, n)).toLocaleString("en-IN")}`;
 
