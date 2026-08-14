@@ -5,9 +5,14 @@
 import type { CoachAnalysisInput, CoachAnalysisResult } from "@/lib/ai-coach-analysis";
 import { analyzeMock } from "@/lib/ai-coach-analysis";
 import type { CoachLanguage } from "@/lib/coach-language";
+import { classifyIntent, extractAmount, type CoachIntent } from "@/lib/coach-intent";
+import { finalizeResponse, INTENT_DATA } from "@/lib/coach-structure";
 import {
   ensureExplainable,
+  replyAffordAmount,
   replyAffordability,
+  replyBeforeSalary,
+  replyBiggestProblem,
   replyBudget,
   replyCompare,
   replyEmergency,
@@ -16,9 +21,13 @@ import {
   replyGoal,
   replyGoalDelay,
   replyImproveScore,
+  replyMonthStatus,
   replyNoContext,
+  replyOverspend,
   replyReduceFirst,
   replyReduceFood,
+  replySafeToday,
+  replySaveHowMuch,
   replyWhatIf,
   type CoachResponse,
   type MetricKey,
@@ -36,35 +45,11 @@ export interface CoachProvider {
   send(userText: string, ctx: ChatContext): Promise<CoachResponse>;
 }
 
-type Intent =
-  | "afford"
-  | "improveScore"
-  | "reduceFood"
-  | "emergency"
-  | "goal"
-  | "budget"
-  | "reduceFirst"
-  | "compare"
-  | "whatIf"
-  | "explainMetric"
-  | "goalDelay"
-  | "generic";
+export type { CoachIntent };
 
-function classify(text: string): Intent {
-  const q = text.toLowerCase();
-  if (/\bvs\b|versus|compare/.test(q)) return "compare";
-  if (/what if|what-if|whatif/.test(q)) return "whatIf";
-  if (/explain (my |this )?(score|number|safe daily|safe purchase|savings target|goal forecast)/.test(q))
-    return "explainMetric";
-  if (/(delay|push (out|back)|when should i buy|better date)/.test(q)) return "goalDelay";
-  if (/(afford|buy|purchase|phone|laptop|weekend budget|weekend)/.test(q)) return "afford";
-  if (/(survival score|improve score|health score|why.*low)/.test(q)) return "improveScore";
-  if (/food|grocer|eating|delivery/.test(q)) return "reduceFood";
-  if (/emergency|rainy day|safety net|bills due/.test(q)) return "emergency";
-  if (/goal|gold|bike|house|vacation|target|sip|investment/.test(q)) return "goal";
-  if (/budget|breakdown|where.*money|expense.*split/.test(q)) return "budget";
-  if (/reduce|cut|which expense|save|first/.test(q)) return "reduceFirst";
-  return "generic";
+/** Exposed so the Gemini provider can reuse the exact same intent routing. */
+export function classify(text: string): CoachIntent {
+  return classifyIntent(text);
 }
 
 function classifyMetric(text: string): MetricKey {
@@ -86,10 +71,6 @@ function classifyWhatIf(text: string): { scenario: WhatIfScenario; amount: numbe
   return { scenario: "saveMore", amount };
 }
 
-function extractAmount(text: string): number | null {
-  const m = text.match(/(?:₹|rs\.?\s*)?(\d[\d,]{3,})/i);
-  return m ? Number(m[1].replace(/,/g, "")) : null;
-}
 
 export const MockCoachProvider: CoachProvider = {
   name: "mock",
