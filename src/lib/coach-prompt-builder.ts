@@ -152,25 +152,55 @@ export const COACH_SYSTEM_PROMPT = [
   "Never fill missing financial information with assumptions.",
   "EVERY recommendation must cite at least one real snapshot data point (a category amount, a risk,",
   "the emergency fund, a budget figure). Do not give generic advice that the data does not support.",
+  "ANSWER THE ACTUAL QUESTION: address exactly what was asked using the relevant snapshot fields.",
+  "Never reply with a generic financial lecture when a specific question was asked.",
+  "Priority of sources: (1) the user's question, (2) FinTrackr financial data, (3) recent spending categories,",
+  "(4) current budget, (5) salary cycle, (6) goals, (7) emergency fund, (8) loans/EMIs.",
+  "Only give general guidance when the snapshot has no relevant data.",
+  "SEPARATE FACTS FROM ADVICE:",
+  "- shortAnswer (Summary): briefly answers the question.",
+  "- why (Why): ONLY verified FinTrackr facts from the snapshot. No advice, no speculation.",
+  "- action (Recommended Action): your practical advice, derived from those facts.",
+  "EXPECTED IMPACT: FinTrackr computes it; never state an exact rupee impact of your own.",
+  "If an impact cannot be derived from the snapshot, omit it rather than guessing.",
+  "Do not add legal or investment disclaimers — the app attaches a contextual note when required.",
   "Be warm, concrete and practical. Amounts use the ₹ symbol.",
   "Reply with STRICT JSON only, no markdown fences, shaped as:",
   '{"shortAnswer": string, "why": string, "action": string}',
   "shortAnswer: 1-2 sentences directly answering the question.",
-  "why: 1-2 sentences of reasoning grounded in the snapshot, naming the data point used.",
+  "why: 1-2 sentences of verified facts grounded in the snapshot, naming the data point used.",
   "action: one specific next step the user can do this week, supported by the snapshot.",
 ].join(" ");
+
+
+const INTENT_FOCUS: Record<string, string> = {
+  monthStatus: "salary, total spend, surplus, savings rate, survival score, days left in the cycle",
+  overspend: "top spending categories and their share of total spend",
+  affordAmount: "monthly surplus, safe one-time limit, current balance",
+  saveHowMuch: "monthly surplus and savings rate",
+  safeToday: "salary, fixed obligations (rent + EMI + bills), safe daily spend",
+  beforeSalary: "current balance, days until salary, fixed outflows",
+  emergencyGoal: "current savings, monthly expenses, emergency fund target",
+  biggestProblem: "risks flagged by FinTrackr and the largest spending category",
+  explainMetric: "the exact metric asked about and its calculation steps",
+};
 
 export function buildCoachUserPrompt(
   question: string,
   snapshot: CoachSnapshot,
   draft: CoachResponse,
+  intent?: string,
 ): string {
   const langLine = snapshot.lang === "ta" ? "Answer in Tamil." : "Answer in English.";
+  const focus = intent ? INTENT_FOCUS[intent] : undefined;
   return [
     langLine,
     "",
     "USER QUESTION:",
     question.slice(0, 500),
+    "",
+    intent ? `DETECTED INTENT: ${intent}` : "",
+    focus ? `FOCUS ON THESE SNAPSHOT FIELDS: ${focus}` : "",
     "",
     "FINANCIAL SNAPSHOT (authoritative, already calculated — the ONLY facts you may use):",
     JSON.stringify(snapshot),
@@ -185,7 +215,12 @@ export function buildCoachUserPrompt(
     "DETERMINISTIC DRAFT ANSWER (numbers here are correct — rephrase, do not change them):",
     JSON.stringify({ shortAnswer: draft.shortAnswer, why: draft.why, action: draft.action }),
     "",
+    "Keep the structure: shortAnswer = summary, why = verified facts only, action = advice.",
+    "Do not put a rupee impact figure of your own anywhere.",
     "Return the JSON object now.",
-  ].join("\n");
+  ]
+    .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
+    .join("\n");
 }
+
 

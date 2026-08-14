@@ -555,6 +555,11 @@ function MessageRow({
       >
         {renderInline(message.content)}
 
+        {!isUser && r?.note && (
+          <p className="mt-1.5 text-[10px] leading-snug text-muted-foreground">{r.note}</p>
+        )}
+
+
         {!isUser && r && (
           <div className="mt-2 space-y-2">
             {expanded && (
