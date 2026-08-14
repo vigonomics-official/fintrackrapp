@@ -7,10 +7,12 @@
 
 import { askCoachAi } from "@/lib/coach-ai.functions";
 import { checkCoachReply } from "@/lib/coach-guardrails";
+import { classifyIntent } from "@/lib/coach-intent";
 import { buildCoachSnapshot, buildCoachUserPrompt, COACH_SYSTEM_PROMPT } from "@/lib/coach-prompt-builder";
 import type { CoachResponse } from "@/lib/coach-prompts";
 import type { ChatContext, CoachProvider } from "@/lib/coach-provider";
 import { MockCoachProvider } from "@/lib/coach-provider";
+import { finalizeResponse, INTENT_DATA } from "@/lib/coach-structure";
 
 function isNonEmpty(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
@@ -23,13 +25,15 @@ export const GeminiCoachProvider: CoachProvider = {
     const draft = await MockCoachProvider.send(userText, ctx);
     if (!ctx.input || !ctx.analysis) return draft;
 
+    const intent = classifyIntent(userText);
+
     try {
       const snapshot = buildCoachSnapshot(ctx.input, ctx.analysis, ctx.lang);
       const result = await askCoachAi({
         data: {
           question: userText.slice(0, 500),
           systemPrompt: COACH_SYSTEM_PROMPT,
-          userPrompt: buildCoachUserPrompt(userText, snapshot, draft),
+          userPrompt: buildCoachUserPrompt(userText, snapshot, draft, intent),
           snapshot,
         },
       });
@@ -50,8 +54,16 @@ export const GeminiCoachProvider: CoachProvider = {
         return draft;
       }
 
-      // Merge: narrative from Gemini, every computed field from the engine.
-      return { ...draft, ...candidate };
+      // Merge: narrative from Gemini, every computed field from the engine,
+      // then re-apply the structure/confidence/impact/disclaimer rules.
+      return finalizeResponse(
+        { ...draft, ...candidate },
+        userText,
+        INTENT_DATA[intent] ?? INTENT_DATA.generic,
+        ctx.input,
+        ctx.analysis,
+      );
+
     } catch (err) {
       if (typeof console !== "undefined") console.error("[gemini-provider] falling back", err);
       return draft;
