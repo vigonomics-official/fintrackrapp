@@ -80,6 +80,35 @@ export const MockCoachProvider: CoachProvider = {
     const intent = classify(userText);
     let reply: CoachResponse;
     switch (intent) {
+      case "monthStatus":
+        reply = replyMonthStatus(ctx.lang, ctx.input, ctx.analysis);
+        break;
+      case "overspend":
+        reply = replyOverspend(ctx.lang, ctx.input, ctx.analysis);
+        break;
+      case "affordAmount":
+        reply = replyAffordAmount(
+          ctx.lang,
+          ctx.input,
+          ctx.analysis,
+          extractAmount(userText) ?? Math.max(0, Math.round(ctx.analysis.monthlySurplus * 0.5)),
+        );
+        break;
+      case "saveHowMuch":
+        reply = replySaveHowMuch(ctx.lang, ctx.input, ctx.analysis);
+        break;
+      case "safeToday":
+        reply = replySafeToday(ctx.lang, ctx.input, ctx.analysis);
+        break;
+      case "beforeSalary":
+        reply = replyBeforeSalary(ctx.lang, ctx.input, ctx.analysis);
+        break;
+      case "emergencyGoal":
+        reply = replyEmergency(ctx.lang, ctx.input, ctx.analysis);
+        break;
+      case "biggestProblem":
+        reply = replyBiggestProblem(ctx.lang, ctx.input, ctx.analysis);
+        break;
       case "compare":
         reply = replyCompare(ctx.lang, ctx.input, ctx.analysis, userText);
         break;
@@ -120,9 +149,16 @@ export const MockCoachProvider: CoachProvider = {
       default:
         reply = replyGeneric(ctx.lang, ctx.input, ctx.analysis, userText);
     }
-    return ensureExplainable(reply, ctx.input);
+    return finalizeResponse(
+      ensureExplainable(reply, ctx.input),
+      userText,
+      INTENT_DATA[intent] ?? INTENT_DATA.generic,
+      ctx.input,
+      ctx.analysis,
+    );
   },
 };
+
 
 export function buildContext(input: CoachAnalysisInput | null, lang: CoachLanguage): ChatContext {
   if (!input) return { input: null, analysis: null, lang };
