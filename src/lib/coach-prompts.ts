@@ -27,7 +27,43 @@ function baseDataUsed(lang: CoachLanguage, input: CoachAnalysisInput | null): st
   return [t(lang, "july"), t(lang, "monthlyBudget"), t(lang, "salaryProfile"), t(lang, "spendingHistory")];
 }
 
+/**
+ * Zero-data guard (FIX 1).
+ * When FinTrackr has no value for something, the coach must say so instead of
+ * producing a calculated-looking estimate ("~60 months", "₹0 safe limit"…).
+ */
+export const NOT_ENOUGH_DATA = "I don't have enough data to confirm that.";
+
+export function replyInsufficient(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput | null,
+  missing: string,
+  action: string,
+): CoachResponse {
+  return {
+    shortAnswer: NOT_ENOUGH_DATA,
+    why: `FinTrackr has no ${missing} on record, so I can't calculate this reliably.`,
+    action,
+    confidence: "low",
+    dataUsed: input ? baseDataUsed(lang, input) : [],
+    followUps: STANDARD_FOLLOWUPS,
+  };
+}
+
+/** True when FinTrackr knows enough to do salary-based math. */
+function hasSalary(input: CoachAnalysisInput): boolean {
+  return Number.isFinite(input.monthlySalary) && input.monthlySalary > 0;
+}
+function hasSpend(analysis: CoachAnalysisResult): boolean {
+  return Number.isFinite(analysis.totalExpenses) && analysis.totalExpenses > 0;
+}
+function hasGoalData(analysis: CoachAnalysisResult): boolean {
+  const g = analysis.goalForecast;
+  return g.targetAmount > 0 && g.monthlyTarget > 0 && Number.isFinite(g.etaMonths) && g.etaMonths > 0;
+}
+
 // ---------- Intent handlers ----------
+
 
 export function replyNoContext(lang: CoachLanguage): CoachResponse {
   return {
