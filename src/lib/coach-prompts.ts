@@ -80,6 +80,8 @@ export function replyAffordability(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
+  if (!hasSpend(analysis)) return replyInsufficient(lang, input, "spending recorded", "Add or import your expenses so I can work from real numbers.");
   const surplus = analysis.monthlySurplus;
   if (surplus <= 0) {
     return {
@@ -109,6 +111,7 @@ export function replyImproveScore(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
   const top = analysis.priorities.slice(0, 3).map((p, i) => `${i + 1}. ${p.title}`).join(" • ");
   return {
     shortAnswer: `Your Survival Score is ${analysis.healthScore}/100. Focus on 2–3 levers.`,
@@ -151,6 +154,7 @@ export function replyEmergency(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSpend(analysis)) return replyInsufficient(lang, input, "spending recorded", "Add or import your expenses so I can work from real numbers.");
   const months = analysis.totalExpenses > 0 ? input.currentSavings / analysis.totalExpenses : 0;
   const target = analysis.totalExpenses * 6;
   const gap = Math.max(0, target - input.currentSavings);
@@ -171,6 +175,7 @@ export function replyGoal(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasGoalData(analysis)) return replyInsufficient(lang, input, "goal target or monthly contribution", "Set a goal amount in Goals and I'll forecast the timeline.");
   const g = analysis.goalForecast;
   return {
     shortAnswer: `~${g.etaMonths} months to your ${g.goal} goal.`,
@@ -188,6 +193,8 @@ export function replyBudget(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
+  if (!hasSpend(analysis)) return replyInsufficient(lang, input, "spending recorded", "Add or import your expenses so I can work from real numbers.");
   const top = analysis.breakdown.slice(0, 3).map((b) => `${b.label} ${inr(b.amount)}`).join(", ");
   return {
     shortAnswer: `Surplus ${inr(analysis.monthlySurplus)} at ${Math.round(analysis.savingsRate)}% savings rate.`,
@@ -205,6 +212,7 @@ export function replyReduceFirst(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSpend(analysis)) return replyInsufficient(lang, input, "spending recorded", "Add or import your expenses so I can work from real numbers.");
   const top = analysis.breakdown[0];
   if (!top) {
     return {
@@ -232,6 +240,8 @@ export function replyGeneric(
   analysis: CoachAnalysisResult,
   userText: string,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
+  if (!hasSpend(analysis)) return replyInsufficient(lang, input, "spending recorded", "Add or import your expenses so I can work from real numbers.");
   const base = replyBudget(lang, input, analysis);
   return {
     ...base,
@@ -269,6 +279,15 @@ export function replyExplainMetric(
   analysis: CoachAnalysisResult,
   metric: MetricKey,
 ): CoachResponse {
+  if (metric === "goalForecast" && !hasGoalData(analysis)) {
+    return replyInsufficient(lang, input, "goal target or monthly contribution", "Set a goal amount in Goals and I'll explain the forecast.");
+  }
+  if (metric !== "goalForecast" && !hasSalary(input)) {
+    return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and I'll break this number down.");
+  }
+  if ((metric === "survivalScore" || metric === "safePurchase") && !hasSpend(analysis)) {
+    return replyInsufficient(lang, input, "spending recorded", "Add or import your expenses so this number is based on real activity.");
+  }
   switch (metric) {
     case "survivalScore": {
       const buffer = Math.max(-50, Math.min(50, analysis.savingsRate));
@@ -365,6 +384,7 @@ export function replyCompare(
   analysis: CoachAnalysisResult,
   userText: string,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
   const parsed = parseComparison(userText);
   if (!parsed) {
     return withFollowUps({
@@ -405,6 +425,7 @@ export function replyGoalDelay(
   analysis: CoachAnalysisResult,
   amount: number,
 ): CoachResponse {
+  if (!hasGoalData(analysis)) return replyInsufficient(lang, input, "goal target or monthly contribution", "Set a goal amount in Goals and I'll forecast the timeline.");
   const monthly = Math.max(1, analysis.goalForecast.monthlyTarget);
   const delayMonths = amount / monthly;
   const delayDays = Math.round(delayMonths * 30);
@@ -435,6 +456,7 @@ export function replyWhatIf(
   scenario: WhatIfScenario,
   amount = 1000,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
   const monthly = Math.max(1, analysis.goalForecast.monthlyTarget);
   switch (scenario) {
     case "saveMore": {
@@ -507,6 +529,8 @@ export function replyMonthStatus(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
+  if (!hasSpend(analysis)) return replyInsufficient(lang, input, "spending recorded", "Add or import your expenses so I can work from real numbers.");
   const rate = Math.round(analysis.savingsRate);
   const verdict =
     analysis.monthlySurplus <= 0 ? "tight" : rate >= 20 ? "strong" : rate >= 10 ? "steady" : "thin";
@@ -575,6 +599,13 @@ export function replyAffordAmount(
   analysis: CoachAnalysisResult,
   amount: number,
 ): CoachResponse {
+  const balanceKnown = Number.isFinite(input.currentAccountBalance) && input.currentAccountBalance !== 0;
+  if (!hasSalary(input) && !balanceKnown) {
+    return replyInsufficient(lang, input, "salary or account balance on record", "Add your salary or current balance in Analyze and ask me again.");
+  }
+  if (!hasSpend(analysis) && !balanceKnown) {
+    return replyInsufficient(lang, input, "spending or balance recorded", "Add or import your expenses so I can check this against real cash flow.");
+  }
   const surplus = analysis.monthlySurplus;
   const safe = Math.max(0, Math.round(surplus * 0.5));
   const balanceAfter = input.currentAccountBalance - amount;
@@ -603,6 +634,8 @@ export function replySaveHowMuch(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
+  if (!hasSpend(analysis)) return replyInsufficient(lang, input, "spending recorded", "Add or import your expenses so I can work from real numbers.");
   const surplus = analysis.monthlySurplus;
   if (surplus <= 0) {
     return withFollowUps({
@@ -632,6 +665,7 @@ export function replySafeToday(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
   const fixed = input.monthlyRent + input.monthlyEmi + input.monthlyBills;
   const days = daysUntilNextSalary(input.salaryDate) ?? 30;
   const spendable = Math.max(0, input.monthlySalary - fixed);
@@ -658,6 +692,11 @@ export function replyBeforeSalary(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!Number.isFinite(input.currentAccountBalance) || input.currentAccountBalance === 0) {
+    if (!input.salaryDate) {
+      return replyInsufficient(lang, input, "current balance or salary date", "Update your balance and salary date so I can pace the days to payday.");
+    }
+  }
   const days = daysUntilNextSalary(input.salaryDate);
   const balance = input.currentAccountBalance;
   const perDay = days && days > 0 ? Math.max(0, Math.round(balance / days)) : null;
@@ -686,6 +725,7 @@ export function replyBiggestProblem(
   input: CoachAnalysisInput,
   analysis: CoachAnalysisResult,
 ): CoachResponse {
+  if (!hasSalary(input)) return replyInsufficient(lang, input, "salary on record", "Add your monthly salary in Analyze and ask me again.");
   const high = analysis.risks.find((r) => r.level === "High") ?? analysis.risks.find((r) => r.level === "Medium");
   const top = analysis.breakdown[0];
   if (!high && !top) {
