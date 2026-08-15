@@ -137,10 +137,22 @@ export function CoachChatSheet({ analysisInput, provider = defaultCoachProvider,
         };
         setMessages((m) => [...m, aiMsg]);
       } catch {
-        setMessages((m) => [
-          ...m,
-          { id: uid(), role: "assistant", content: t(lang, "errorReply"), createdAt: Date.now() },
-        ]);
+        // Last-resort: never surface a technical error. Try the deterministic
+        // engine directly, and only then show a plain, friendly message.
+        try {
+          const { MockCoachProvider } = await import("@/lib/coach-provider");
+          const reply = await MockCoachProvider.send(clean, ctx);
+          setMessages((m) => [
+            ...m,
+            { id: uid(), role: "assistant", content: reply.shortAnswer, response: reply, createdAt: Date.now() },
+          ]);
+        } catch {
+          setMessages((m) => [
+            ...m,
+            { id: uid(), role: "assistant", content: t(lang, "errorReply"), createdAt: Date.now() },
+          ]);
+        }
+
       } finally {
         setSending(false);
       }
