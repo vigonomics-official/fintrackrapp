@@ -9,7 +9,7 @@ import { askCoachAi } from "@/lib/coach-ai.functions";
 import { checkCoachReply } from "@/lib/coach-guardrails";
 import { classifyIntent } from "@/lib/coach-intent";
 import { buildCoachSnapshot, buildCoachUserPrompt, COACH_SYSTEM_PROMPT } from "@/lib/coach-prompt-builder";
-import type { CoachResponse } from "@/lib/coach-prompts";
+import { NOT_ENOUGH_DATA, type CoachResponse } from "@/lib/coach-prompts";
 import type { ChatContext, CoachProvider } from "@/lib/coach-provider";
 import { MockCoachProvider } from "@/lib/coach-provider";
 import { finalizeResponse, INTENT_DATA } from "@/lib/coach-structure";
@@ -24,8 +24,12 @@ export const GeminiCoachProvider: CoachProvider = {
     // Deterministic answer first — this is the source of truth and the fallback.
     const draft = await MockCoachProvider.send(userText, ctx);
     if (!ctx.input || !ctx.analysis) return draft;
+    // Zero-data answers stay deterministic: nothing for the model to narrate,
+    // and narration is exactly where invented facts creep in.
+    if (draft.shortAnswer.startsWith(NOT_ENOUGH_DATA)) return draft;
 
     const intent = classifyIntent(userText);
+
 
     try {
       const snapshot = buildCoachSnapshot(ctx.input, ctx.analysis, ctx.lang);
