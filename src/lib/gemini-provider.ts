@@ -9,7 +9,7 @@ import { askCoachAi } from "@/lib/coach-ai.functions";
 import { checkCoachReply } from "@/lib/coach-guardrails";
 import { classifyIntent } from "@/lib/coach-intent";
 import { buildCoachSnapshot, buildCoachUserPrompt, COACH_SYSTEM_PROMPT } from "@/lib/coach-prompt-builder";
-import type { CoachResponse } from "@/lib/coach-prompts";
+import { NOT_ENOUGH_DATA, type CoachResponse } from "@/lib/coach-prompts";
 import type { ChatContext, CoachProvider } from "@/lib/coach-provider";
 import { MockCoachProvider } from "@/lib/coach-provider";
 import { finalizeResponse, INTENT_DATA } from "@/lib/coach-structure";
