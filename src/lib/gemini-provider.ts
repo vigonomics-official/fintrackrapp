@@ -24,8 +24,12 @@ export const GeminiCoachProvider: CoachProvider = {
     // Deterministic answer first — this is the source of truth and the fallback.
     const draft = await MockCoachProvider.send(userText, ctx);
     if (!ctx.input || !ctx.analysis) return draft;
+    // Zero-data answers stay deterministic: nothing for the model to narrate,
+    // and narration is exactly where invented facts creep in.
+    if (draft.shortAnswer.startsWith(NOT_ENOUGH_DATA)) return draft;
 
     const intent = classifyIntent(userText);
+
 
     try {
       const snapshot = buildCoachSnapshot(ctx.input, ctx.analysis, ctx.lang);
