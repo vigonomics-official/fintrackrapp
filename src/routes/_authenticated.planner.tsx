@@ -24,6 +24,7 @@ import {
 } from "@/lib/future-insights";
 import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
+import { PurchaseCheckPanel } from "@/components/finance/PurchaseCheckPanel";
 
 export const Route = createFileRoute("/_authenticated/planner")({
   component: PlannerPage,
@@ -1184,93 +1185,7 @@ function GoalsTab() {
 /* ============================ Can I Buy This ============================ */
 
 function CanIBuyThisTab() {
-  const [item, setItem] = useState("");
-  const [amountStr, setAmountStr] = useState("");
-  const amount = Number(amountStr) || 0;
-
-  const before = useSurvival(0);
-  const after = useSurvival(amount);
-
-  const dropPct = before.score > 0 ? ((before.score - after.score) / before.score) * 100 : 0;
-  const ratio = before.salaryLeft > 0 ? amount / before.salaryLeft : amount > 0 ? 1 : 0;
-
-  const verdict =
-    amount === 0
-      ? { tone: "neutral" as const, dot: "⚪", title: "Enter an amount", msg: "Tell us how much this costs." }
-      : amount > before.salaryLeft
-        ? { tone: "danger" as const, dot: "🔴", title: "Not Recommended", msg: "More than what's left till salary." }
-        : ratio > 0.4 || dropPct > 25
-          ? { tone: "danger" as const, dot: "🔴", title: "Not Recommended", msg: "Likely affects your month-end survival." }
-          : ratio > 0.2 || dropPct > 12
-            ? { tone: "careful" as const, dot: "🟡", title: "Think Twice", msg: "You can afford it, but you'll feel the squeeze." }
-            : { tone: "safe" as const, dot: "🟢", title: "Safe Purchase", msg: "Comfortably within your safe spend." };
-
-  const toneCls =
-    verdict.tone === "danger"
-      ? "border-destructive/30 bg-destructive/5 text-destructive"
-      : verdict.tone === "careful"
-        ? "border-gold/30 bg-gold/10 text-gold-foreground"
-        : verdict.tone === "safe"
-          ? "border-success/30 bg-success/10 text-success"
-          : "border-border bg-muted/40 text-foreground";
-
-  return (
-    <div className="space-y-4">
-      <Card className="shadow-soft">
-        <CardContent className="space-y-2.5 p-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Item name</Label>
-            <Input placeholder="e.g. Running shoes" value={item} onChange={(e) => setItem(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Price ({before.currency})</Label>
-            <Input type="number" inputMode="decimal" placeholder="2499" value={amountStr} onChange={(e) => setAmountStr(e.target.value)} />
-          </div>
-        </CardContent>
-      </Card>
-
-      {amount > 0 && (
-        <Card className="shadow-soft">
-          <CardContent className="space-y-2.5 p-4">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              If you buy {item.trim() || "this"}
-            </p>
-            <Row label="Salary left" before={formatCurrency(before.salaryLeft, before.currency)} after={formatCurrency(after.salaryLeft, before.currency)} />
-            <Row label="Safe daily spend" before={formatCurrency(before.safeDaily, before.currency)} after={formatCurrency(after.safeDaily, before.currency)} />
-            <Row label="Survival score" before={`${before.score}/100`} after={`${after.score}/100`} />
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className={cn("border shadow-soft", toneCls)}>
-        <CardContent className="flex items-start gap-2 p-4">
-          <span className="text-lg leading-none">{verdict.dot}</span>
-          <div className="text-sm">
-            <p className="font-semibold">{verdict.title}</p>
-            <p className="opacity-90">{verdict.msg}</p>
-            {amount > 0 && (
-              <p className="mt-1 text-xs opacity-80">
-                This purchase may affect your month-end survival budget.
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function Row({ label, before, after }: { label: string; before: string; after: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="flex items-center gap-1.5 font-medium tabular-nums">
-        <span className="text-muted-foreground line-through opacity-70">{before}</span>
-        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-        <span>{after}</span>
-      </span>
-    </div>
-  );
+  return <PurchaseCheckPanel />;
 }
 
 /* ============================ Future Tab ============================ */
