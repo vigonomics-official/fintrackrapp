@@ -102,6 +102,9 @@ export function finalizeResponse(
   const avail = availability(input, analysis);
   const { confidence, used } = deriveConfidence(keys, avail);
 
+  // An "I don't have enough data" answer used nothing — never list data for it.
+  const isNoData = reply.shortAnswer.trim().startsWith("I don't have enough data");
+
   // Never upgrade a builder's own cautious confidence, never let an
   // assumption-based reply claim HIGH.
   const rank: Record<CoachConfidence, number> = { low: 0, medium: 1, high: 2 };
@@ -109,9 +112,10 @@ export function finalizeResponse(
 
   const out: CoachResponse = {
     ...reply,
-    confidence: finalConfidence,
-    dataUsed: used.length > 0 ? used.map((k) => DATA_LABELS[k]) : reply.dataUsed,
+    confidence: isNoData ? "low" : finalConfidence,
+    dataUsed: isNoData ? [] : used.length > 0 ? used.map((k) => DATA_LABELS[k]) : reply.dataUsed,
   };
+
 
   if (!impactIsReliable(out.monthlyImpact, finalConfidence, avail)) delete out.monthlyImpact;
   if (isInvestmentQuestion(question)) out.note = INVESTMENT_NOTE;
