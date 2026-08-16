@@ -60,13 +60,23 @@ export function checkCoachReply(
     return { ok: false, reason: "savings_rate_unavailable" };
   }
   if (snapshot.savingsRate != null) {
-    const rates = [...text.matchAll(/\b(\d{1,3})\s?%\s*(?:savings? rate)?/gi)];
-    const claimsWrongRate = rates.some(
-      (m) => /saving/i.test(text.slice(Math.max(0, m.index! - 30), m.index! + 30)) &&
-        Number(m[1]) !== snapshot.savingsRate,
+    // Percentages already used by the deterministic draft (EMI share, "+5%
+    // bump", …) are FinTrackr's own numbers — only a rate the model attaches
+    // to the savings rate itself, and that differs from ours, is a violation.
+    const draftText = [draft.shortAnswer, draft.why, draft.action].join("\n");
+    const draftPcts = new Set(
+      [...draftText.matchAll(/\b(\d{1,3})\s?%/g)].map((m) => Number(m[1])),
     );
+    const rates = [...text.matchAll(/\b(\d{1,3})\s?%/gi)];
+    const claimsWrongRate = rates.some((m) => {
+      const n = Number(m[1]);
+      if (n === snapshot.savingsRate || draftPcts.has(n)) return false;
+      const ctx = text.slice(Math.max(0, m.index! - 30), m.index! + 30);
+      return /savings?[\s-]rate|saving[\s-]?rate/i.test(ctx);
+    });
     if (claimsWrongRate) return { ok: false, reason: "savings_rate_mismatch" };
   }
+
 
   // Numbers must come from FinTrackr, never from the model.
   const allowed = allowedNumbers(snapshot, [draft.shortAnswer, draft.why, draft.action].join("\n"));
