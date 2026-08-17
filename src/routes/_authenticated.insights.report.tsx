@@ -223,6 +223,9 @@ function ReportPage() {
       <PageHeader title={`${monthYearShort} · Report Card`} subtitle="Your salary survival story" />
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5">
 
+        <AiFinancialReportCard />
+
+
         {/* HERO */}
         <div
           className="rounded-2xl p-6 text-center text-white shadow-soft"
