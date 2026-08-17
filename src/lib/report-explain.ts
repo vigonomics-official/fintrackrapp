@@ -53,8 +53,12 @@ export function checkReportNarration(text: string, payload: ReportExplainPayload
   const allowed = allowedNumbers(payload);
   for (const m of text.matchAll(/\d[\d,]*(?:\.\d+)?/g)) {
     const n = Math.round(Number(m[0].replace(/,/g, "")));
-    if (Number.isFinite(n) && !allowed.has(n)) return false;
+    if (!Number.isFinite(n)) continue;
+    // ±1 tolerance absorbs rounding of a value we supplied (68.57% -> "68%"),
+    // while still rejecting invented amounts.
+    if (!allowed.has(n) && !allowed.has(n + 1) && !allowed.has(n - 1)) return false;
   }
+
   return true;
 }
 
