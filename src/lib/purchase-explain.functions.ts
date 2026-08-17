@@ -24,6 +24,7 @@ const payloadSchema = z.object({
     hasEmi: z.boolean(),
     hasSavings: z.boolean(),
     hasBudget: z.boolean(),
+    hasCategory: z.boolean(),
     hasSpendData: z.boolean(),
   }),
 });
@@ -41,6 +42,8 @@ const SYSTEM_PROMPT = `You explain a purchase decision that has ALREADY been mad
 ABSOLUTE RULES
 - Never change, recompute, or question the decision (SAFE / BE CAREFUL / NOT SAFE RIGHT NOW).
 - Never invent or alter any number. Only reuse numbers present in the payload.
+- Never state or guess an item category; only mention a category if payload.values.category exists, and use it verbatim.
+- Never compute affordability or budget remaining yourself.
 - Never claim the user has a loan, EMI, subscription, auto-debit, investment, credit card, emergency fund or savings unless the payload's facts say so.
 - No financial jargon. Short, warm, everyday language. Indian rupee context.
 - 2 short sentences maximum per field.
