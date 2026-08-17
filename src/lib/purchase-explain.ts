@@ -12,7 +12,8 @@ const FORBIDDEN: { re: RegExp; allowed: (r: PurchaseCheckResult) => boolean }[] 
   { re: /\byour (investment|investments|sip|mutual fund|stocks|portfolio)\b/i, allowed: () => false },
   { re: /\byour (loan|loans|emi|emis)\b/i, allowed: (r) => r.values.emiPressure != null && r.values.emiPressure !== "Low" },
   { re: /\byour (savings|emergency fund)\b/i, allowed: (r) => r.dataUsed.includes("Savings") },
-  { re: /\byour budget\b/i, allowed: (r) => r.values.budgetRemaining != null },
+  { re: /\byour budget\b/i, allowed: (r) => r.values.budgetRemaining != null || r.values.categoryBudgetRemaining != null },
+  { re: /\b(category|categories)\b/i, allowed: (r) => r.categoryName != null },
 ];
 
 function allowedNumbers(result: PurchaseCheckResult): Set<number> {
@@ -52,6 +53,7 @@ export function checkNarration(text: string, result: PurchaseCheckResult): boole
 
 export function buildExplainPayload(result: PurchaseCheckResult): PurchaseExplainPayload {
   const values: Record<string, number | string> = {};
+  if (result.categoryName) values["category"] = result.categoryName;
   for (const [k, v] of Object.entries(result.values)) if (v != null) values[k] = v as number | string;
   return {
     itemName: result.itemName,
@@ -59,14 +61,15 @@ export function buildExplainPayload(result: PurchaseCheckResult): PurchaseExplai
     currency: result.currency,
     decision: result.decision as "SAFE" | "CAREFUL" | "NOT_SAFE",
     confidence: result.confidence,
-    reasonCodes: result.reasonCodes,
+    reasonCodes: result.signalCodes,
     deterministicWhy: result.why,
     deterministicSuggestion: result.suggestion,
     values,
     facts: {
       hasEmi: (result.values.emiPressure ?? "Low") !== "Low",
       hasSavings: result.dataUsed.includes("Savings"),
-      hasBudget: result.values.budgetRemaining != null,
+      hasBudget: result.values.budgetRemaining != null || result.values.categoryBudgetRemaining != null,
+      hasCategory: result.categoryName != null,
       hasSpendData: result.values.forecastBefore != null,
     },
   };

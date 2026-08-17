@@ -4,15 +4,17 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingBag, Sparkles, Loader2, ShieldCheck, AlertTriangle, XCircle, HelpCircle } from "lucide-react";
-import { useTransactions, useLoans, useProfile, useBudgets, monthKey } from "@/hooks/use-finance";
+import { useTransactions, useLoans, useProfile, useBudgets, useCategories, monthKey } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { getRememberedSavings } from "@/lib/financial-profile";
 import { emergencyFundTarget, getSurvivalPreferences } from "@/lib/survival-preferences";
+import { detectPurchaseCategory } from "@/lib/purchase-category";
 import {
-  checkPurchaseAffordability, validatePurchaseInput, decisionLabel,
+  checkPurchaseAffordability,
+  type PurchaseCategoryBudget, validatePurchaseInput, decisionLabel,
   type PurchaseCheckResult,
 } from "@/lib/purchase-affordability";
 import { explainPurchase, type PurchaseNarration } from "@/lib/purchase-explain";
@@ -37,6 +39,7 @@ export function PurchaseCheckPanel({ compact = false }: { compact?: boolean }) {
   const { data: transactions = [] } = useTransactions();
   const { data: loans = [] } = useLoans();
   const { data: budgets = [] } = useBudgets(monthKey());
+  const { data: categories = [] } = useCategories();
   const { settings: salarySettings } = useSalarySettings();
   const currency = profile?.currency ?? "INR";
 
@@ -70,6 +73,31 @@ export function PurchaseCheckPanel({ compact = false }: { compact?: boolean }) {
 
     const before = computeSurvival({ transactions, loans, salarySettings, extraSpend: 0 });
     const after = computeSurvival({ transactions, loans, salarySettings, extraSpend: valid.price });
+    // FIX 1/2 — resolve the item's own category budget when (and only when)
+    // FinTrackr can determine the category reliably.
+    const resolved = detectPurchaseCategory(valid.itemName, categories);
+    let category: PurchaseCategoryBudget | null = null;
+    if (resolved) {
+      const budget = budgets.find((b) => b.category_id === resolved.categoryId);
+      if (budget && budget.monthly_limit > 0) {
+        const month = monthKey().slice(0, 7);
+        const spent = transactions
+          .filter(
+            (t) =>
+              t.type === "expense" &&
+              t.category_id === resolved.categoryId &&
+              String(t.transaction_date).slice(0, 7) === month,
+          )
+          .reduce((s, t) => s + t.amount, 0);
+        category = {
+          categoryName: resolved.categoryName,
+          monthlyLimit: budget.monthly_limit,
+          spent,
+          remaining: Math.max(0, budget.monthly_limit - spent),
+        };
+      }
+    }
+
     const prefs = getSurvivalPreferences();
     const res = checkPurchaseAffordability({
       itemName: valid.itemName,
@@ -80,6 +108,7 @@ export function PurchaseCheckPanel({ compact = false }: { compact?: boolean }) {
       savings: getRememberedSavings(),
       emergencyTarget: emergencyFundTarget(before.salary, prefs),
       budgetRemaining,
+      category,
     });
 
     setResult(res);
@@ -152,7 +181,21 @@ export function PurchaseCheckPanel({ compact = false }: { compact?: boolean }) {
                   <Line label="Survival Score" value={`${v.survivalScore}/100`}
                     after={v.survivalScoreAfter != null ? `${v.survivalScoreAfter}/100` : undefined} />
                 )}
-                {v.budgetRemaining != null && <Line label="Budget remaining" value={formatCurrency(v.budgetRemaining, currency)} />}
+                {v.categoryBudgetRemaining != null ? (
+                  <Line
+                    label={`${result.categoryName} budget left`}
+                    value={formatCurrency(v.categoryBudgetRemaining, currency)}
+                    after={
+                      v.categoryBudgetRemainingAfter != null
+                        ? formatCurrency(v.categoryBudgetRemainingAfter, currency)
+                        : undefined
+                    }
+                  />
+                ) : (
+                  v.budgetRemaining != null && (
+                    <Line label="Budget remaining" value={formatCurrency(v.budgetRemaining, currency)} />
+                  )
+                )}
                 {v.emiPressure != null && <Line label="EMI pressure" value={v.emiPressure} />}
               </CardContent>
             </Card>
