@@ -3,6 +3,8 @@ import { useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { AiFinancialReportCard } from "@/components/finance/AiFinancialReportCard";
+
 import {
   useTransactions, useCategories, useBudgets, useLoans, useProfile, monthKey,
 } from "@/hooks/use-finance";
