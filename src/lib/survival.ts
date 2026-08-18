@@ -184,21 +184,6 @@ export function computeSurvival(opts: {
   const projectedRemaining = avgDaily * Math.max(0, daysRemaining);
   const forecastBalance = Math.round(salary - expensesSinceSalary - projectedRemaining);
 
-  if (typeof console !== "undefined") {
-    // Temporary debug — verify cycle math
-    // eslint-disable-next-line no-console
-    console.log("[Planner] cycle debug", {
-      cycleStart: cycleStartKey,
-      today: todayKey,
-      daysElapsed,
-      daysRemaining,
-      cycleExpenses: expensesSinceSalary,
-      avgDaily: Math.round(avgDaily),
-      projectedRemaining: Math.round(projectedRemaining),
-      salary,
-      forecastBalance,
-    });
-  }
 
   return {
     salary,
