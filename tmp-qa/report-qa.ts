@@ -79,3 +79,8 @@ if (rep.available) {
   ];
   tests.forEach(([n, r]) => console.log(`guardrail ${n}: ${r ? "ACCEPTED" : "REJECTED"}`));
 }
+
+// budget utilization defect check
+const bq = run("16 budget utilization scope", { salarySettings: salarySettings(50000), budgets:[{id:"b1",category_id:"c-food",monthly_limit:5000,month:"2026-08"} as any], transactions:[tx(2000,"c-food",2),tx(9000,"c-sh",3),tx(300,"c-tr",4)] });
+console.log("budgetTotal", bq.snap.budgetTotal, "budgetSpent", bq.snap.budgetSpent, "budgetRemaining", bq.snap.budgetRemaining);
+console.log("plural guardrail:", checkReportNarration("Cancel your subscriptions and review taxes.", buildReportPayload(bq.rep as any, bq.snap)) ? "ACCEPTED(BAD)" : "REJECTED(OK)");
