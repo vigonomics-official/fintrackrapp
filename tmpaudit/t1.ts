@@ -19,7 +19,7 @@ const repEmpty = buildDeterministicReport(snapEmpty);
 console.log("ZERO report:", repEmpty.available, repEmpty.message, repEmpty.missing);
 
 // PARTIAL: salary but no spending
-const sal = { payDay: 1, monthlySalary: 50000 } as any;
+const sal = { payDay: 1, amount: 50000, employmentType: "salaried" } as any;
 const s2 = computeSurvival({ transactions: [], loans: [], salarySettings: sal } as any);
 console.log("salary-only survival:", s2.score, s2.salary, s2.salaryLeft, s2.days);
 const snap2 = buildReportSnapshot({ transactions: [], categories: [], budgets: [], loans: [], salarySettings: sal, goals: [], currency: "INR", period: "monthly" } as any);
