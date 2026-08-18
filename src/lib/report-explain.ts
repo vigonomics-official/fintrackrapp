@@ -17,8 +17,8 @@ type Facts = ReportExplainPayload["facts"];
 
 /** Claims FinTrackr cannot back up from this report. */
 const FORBIDDEN: { re: RegExp; allowed: (f: Facts) => boolean }[] = [
-  { re: /\b(auto[-\s]?debit|standing instruction|e[-\s]?mandate|nach|subscription|credit score|net banking|tax|insurance)\b/i, allowed: () => false },
-  { re: /\byour (investment|investments|sip|mutual fund|stocks|portfolio)\b/i, allowed: () => false },
+  { re: /\b(auto[-\s]?debits?|standing instructions?|e[-\s]?mandates?|nach|subscriptions?|credit scores?|net banking|taxe?s?|insurances?)\b/i, allowed: () => false },
+  { re: /\byour (investments?|sips?|mutual funds?|stocks?|portfolios?)\b/i, allowed: () => false },
   { re: /\byour (loan|loans|emi|emis)\b/i, allowed: (f) => f.hasEmi },
   { re: /\byour (goal|goals)\b/i, allowed: (f) => f.hasGoals },
   { re: /\byour (savings|emergency fund)\b/i, allowed: (f) => f.hasSavingsData },
