@@ -242,7 +242,7 @@ export function buildReportSnapshot(input: ReportSnapshotInput): ReportSnapshot 
   // Only spending inside budgeted categories counts against the budget totals —
   // unbudgeted categories must not inflate utilization.
   const budgetSpent = budgetTotal != null
-    ? round(budgetRows.reduce((s, b) => s + (spendByCat.get(b.category_id) ?? 0), 0))
+    ? round(budgetRows.reduce((s, b) => s + (spendByCat.get(b.category_id ?? "uncategorized") ?? 0), 0))
     : undefined;
   const budgetRemaining =
     budgetTotal != null && budgetSpent != null ? round(budgetTotal - budgetSpent) : undefined;
