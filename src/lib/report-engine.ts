@@ -158,7 +158,9 @@ export function buildReportInsights(s: ReportSnapshot, m: ReportMetrics): Report
   // --- budgets
   for (const c of s.categories) {
     if (c.utilization == null || c.budget == null) continue;
-    if (c.utilization >= THRESHOLDS.budgetExceeded) {
+    // Exactly at the limit is "fully used", not "over" — reporting it as over
+    // produced facts like "You are ₹0 over the Rent budget."
+    if (c.utilization > THRESHOLDS.budgetExceeded) {
       out.push({
         code: "BUDGET_EXCEEDED",
         severity: "critical",
