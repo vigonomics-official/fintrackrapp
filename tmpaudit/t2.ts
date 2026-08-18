@@ -9,7 +9,7 @@ const today = new Date();
 const d = (o:number)=> new Date(today.getTime()-o*86400000).toISOString().slice(0,10);
 const txs = Array.from({length: 20}, (_,i)=>({id:String(i),type:"expense",amount:400,transaction_date:d(i%16),category_id:"c1"}));
 const sal = { amount: 30000, payDay: 1, employmentType: "salaried" } as any;
-const loans = [{ id:"l1", monthly_emi: 6000, outstanding_amount: 100000, name:"Bike" }] as any;
+const loans = [{ id:"l1", emi_amount: 6000, remaining_balance: 100000, name:"Bike" }] as any;
 const before = computeSurvival({ transactions: txs, loans, salarySettings: sal } as any);
 console.log("survival:", JSON.stringify({score:before.score,salary:before.salary,left:Math.round(before.salaryLeft),safe:Math.round(before.safeDaily),fc:before.forecastBalance,emi:before.emiRatio}));
 for (const p of [500,2000,10000,20000]) {
