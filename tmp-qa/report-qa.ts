@@ -14,7 +14,7 @@ const cats = [
   { id: "c-sh", name: "Shopping", color: "#00f" },
 ] as any[];
 
-const salarySettings = (salary: number) => ({ monthlySalary: salary, salaryDay: 1, enabled: true }) as any;
+const salarySettings = (salary: number) => ({ amount: salary > 0 ? salary : null, payDay: 1, employmentType: "salaried" }) as any;
 
 function run(name: string, input: any) {
   const snap = buildReportSnapshot({ now, savedSoFar: null, goals: [], budgets: [], loans: [], categories: cats, salarySettings: salarySettings(0), transactions: [], period: "monthly", ...input });
@@ -40,7 +40,7 @@ run("5 negative forecast", { salarySettings: salarySettings(20000), transactions
 // 6 low emergency fund
 run("6 low emergency fund", { salarySettings: salarySettings(50000), savedSoFar: 5000, transactions:[tx(3000,"c-food",2),tx(1000,"c-tr",3),tx(800,"c-sh",4)] });
 // 7 high EMI
-run("7 high EMI", { salarySettings: salarySettings(40000), loans:[{id:"l1",name:"Car",monthly_emi:20000,remaining_balance:300000} as any], transactions:[tx(3000,"c-food",2),tx(1000,"c-tr",3),tx(800,"c-sh",4)] });
+run("7 high EMI", { salarySettings: salarySettings(40000), loans:[{id:"l1",name:"Car",emi_amount:20000,remaining_balance:300000} as any], transactions:[tx(3000,"c-food",2),tx(1000,"c-tr",3),tx(800,"c-sh",4)] });
 // 8 strong savings
 run("8 strong savings", { salarySettings: salarySettings(80000), transactions:[tx(1000,"c-food",2),tx(500,"c-tr",3),tx(700,"c-sh",4)] });
 // 9/10 trend
