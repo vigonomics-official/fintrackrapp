@@ -77,23 +77,32 @@ function LoginPage() {
     };
   }, []);
 
+  const goNext = () => {
+    if (next) {
+      window.location.href = next;
+      return;
+    }
+    navigate({ to: "/dashboard" });
+  };
+
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return toast.error("Invalid email or password.");
     toast.success("Welcome back!");
-    navigate({ to: "/dashboard" });
+    goNext();
   });
 
   const google = async () => {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/dashboard",
+      redirect_uri: window.location.origin + (next ?? "/dashboard"),
     });
     if (result.error) return toast.error("Google sign-in failed");
     if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    goNext();
   };
+
 
   return (
     <div
