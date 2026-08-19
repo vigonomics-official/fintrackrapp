@@ -55,6 +55,7 @@ import { Route as AuthenticatedInsightsAlertsRouteImport } from './routes/_authe
 import { Route as AuthenticatedInsightsAiCoachRouteImport } from './routes/_authenticated.insights.ai-coach'
 import { Route as AuthenticatedInsightsAiRouteImport } from './routes/_authenticated.insights.ai'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedInsightsAiCoachResultsRouteImport } from './routes/_authenticated.insights.ai-coach.results'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -305,6 +306,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedInsightsAiCoachResultsRoute =
   AuthenticatedInsightsAiCoachResultsRouteImport.update({
     id: '/results',
@@ -349,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof AuthenticatedTermsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
@@ -396,6 +403,7 @@ export interface FileRoutesByTo {
   '/terms': typeof AuthenticatedTermsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
@@ -446,6 +454,7 @@ export interface FileRoutesById {
   '/_authenticated/terms': typeof AuthenticatedTermsRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/_authenticated/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
@@ -496,6 +505,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/transactions'
     | '/guides/upi-micro-spending'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/insights/ai'
     | '/insights/ai-coach'
@@ -543,6 +553,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/transactions'
     | '/guides/upi-micro-spending'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/insights/ai'
     | '/insights/ai-coach'
@@ -592,6 +603,7 @@ export interface FileRouteTypes {
     | '/_authenticated/terms'
     | '/_authenticated/transactions'
     | '/guides/upi-micro-spending'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/insights/ai'
     | '/_authenticated/insights/ai-coach'
@@ -617,6 +629,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   GuidesUpiMicroSpendingRoute: typeof GuidesUpiMicroSpendingRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
@@ -944,6 +957,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/insights/ai-coach/results': {
       id: '/_authenticated/insights/ai-coach/results'
       path: '/results'
@@ -1072,6 +1092,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   GuidesUpiMicroSpendingRoute: GuidesUpiMicroSpendingRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
