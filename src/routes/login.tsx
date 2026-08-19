@@ -51,7 +51,9 @@ const schema = z.object({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [loading, setLoading] = useState(false);
+
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
   });
