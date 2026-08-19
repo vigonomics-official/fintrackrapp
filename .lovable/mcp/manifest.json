@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://rqdnnaonowmpdukumnzo.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "fintrackr-dashboard-final-options",
+      "version": "0.1.0",
+      "title": "FinTrackr Dashboard final options"
+    },
+    "tools": [
+      {
+        "name": "list_transactions",
+        "title": "List transactions",
+        "description": "List the signed-in user's recent FinTrackr transactions, optionally filtered by type and date range.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "income",
+                "expense",
+                "transfer"
+              ],
+              "description": "Filter by transaction type."
+            },
+            "from": {
+              "type": "string",
+              "description": "Earliest transaction date, YYYY-MM-DD."
+            },
+            "to": {
+              "type": "string",
+              "description": "Latest transaction date, YYYY-MM-DD."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Maximum rows to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_transaction",
+        "title": "Add transaction",
+        "description": "Record a new income, expense or transfer in FinTrackr for the signed-in user.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Amount in INR."
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "income",
+                "expense",
+                "transfer"
+              ],
+              "description": "Transaction type."
+            },
+            "transaction_date": {
+              "type": "string",
+              "description": "Date of the transaction, YYYY-MM-DD. Defaults to today."
+            },
+            "category_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Category id from list_categories."
+            },
+            "payment_method": {
+              "type": "string",
+              "enum": [
+                "cash",
+                "upi",
+                "bank",
+                "credit_card",
+                "debit_card",
+                "wallet"
+              ],
+              "description": "How it was paid."
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 300,
+              "description": "Short note for the transaction."
+            }
+          },
+          "required": [
+            "amount",
+            "type"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_categories",
+        "title": "List categories",
+        "description": "List the spending categories available to the signed-in FinTrackr user.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "spending_summary",
+        "title": "Spending summary",
+        "description": "Summarise the signed-in user's income, expenses and net balance for a month, broken down by category.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "month": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$",
+              "description": "Month in YYYY-MM format. Defaults to the current month."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_budgets",
+        "title": "List budgets",
+        "description": "List the signed-in user's monthly category budgets in FinTrackr.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "month": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$",
+              "description": "Month in YYYY-MM format. Defaults to all months."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

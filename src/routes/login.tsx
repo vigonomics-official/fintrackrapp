@@ -11,11 +11,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+function safeNext(value: unknown): string | undefined {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : undefined;
+}
+
 export const Route = createFileRoute("/login")({
-  beforeLoad: async () => {
+  validateSearch: (s: Record<string, unknown>): { next?: string } => {
+    const next = safeNext(s.next);
+    return next ? { next } : {};
+  },
+
+  beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/dashboard" });
+    if (data.session) {
+      const next = safeNext(search.next);
+      if (next) throw redirect({ href: next });
+      throw redirect({ to: "/dashboard" });
+    }
   },
   head: () => ({
     meta: [
@@ -30,6 +43,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
   password: z.string().min(6, "At least 6 characters"),
@@ -37,7 +51,9 @@ const schema = z.object({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [loading, setLoading] = useState(false);
+
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
   });
@@ -61,23 +77,32 @@ function LoginPage() {
     };
   }, []);
 
+  const goNext = () => {
+    if (next) {
+      window.location.href = next;
+      return;
+    }
+    navigate({ to: "/dashboard" });
+  };
+
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return toast.error("Invalid email or password.");
     toast.success("Welcome back!");
-    navigate({ to: "/dashboard" });
+    goNext();
   });
 
   const google = async () => {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/dashboard",
+      redirect_uri: window.location.origin + (next ?? "/dashboard"),
     });
     if (result.error) return toast.error("Google sign-in failed");
     if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    goNext();
   };
+
 
   return (
     <div
