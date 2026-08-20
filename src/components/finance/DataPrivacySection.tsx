@@ -71,7 +71,7 @@ export function DataPrivacySection() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-destructive">Delete All Data</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  Removes salary settings, preferences, goals and AI history on this device
+                  Clears local preferences, caches and AI history on this device — your account records stay
                 </p>
               </div>
               {!confirming ? (

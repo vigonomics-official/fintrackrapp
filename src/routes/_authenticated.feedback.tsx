@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/feedback")({
 type Kind = "bug" | "feature" | "general";
 
 const KINDS: { value: Kind; label: string; icon: typeof Bug; hint: string }[] = [
-  { value: "bug", label: "Report Bug", icon: Bug, hint: "What went wrong, and what did you expect?" },
+  { value: "bug", label: "Report Bug", icon: Bug, hint: "What went wrong, what you expected, and the steps to reproduce it (screen name and time help a lot)." },
   { value: "feature", label: "Suggest Feature", icon: Lightbulb, hint: "Describe the feature and why it helps you." },
   { value: "general", label: "Send Feedback", icon: Send, hint: "Tell us what you love or what feels off." },
 ];
@@ -130,7 +130,7 @@ function FeedbackPage() {
         <Card className="shadow-soft">
           <CardContent className="p-4 sm:p-6">
             <a
-              href={mailto(`Support request — ${APP_NAME}`, `Version ${APP_VERSION} (build ${BUILD_NUMBER})\n\n`)}
+              href={`mailto:${DEVELOPER.supportEmail}?subject=${encodeURIComponent(`Support request — ${APP_NAME}`)}&body=${encodeURIComponent(`Version ${APP_VERSION} (build ${BUILD_NUMBER})\n\nWhat happened:\nWhat you expected:\nSteps to reproduce:\n`)}`}
               className="flex items-center gap-3"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/80">

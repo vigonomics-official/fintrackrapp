@@ -6,9 +6,9 @@ export function CoachPrivacyNote() {
       <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
       <div className="min-w-0 flex-1 space-y-0.5 text-[11px] leading-relaxed text-muted-foreground">
         <p className="font-medium text-foreground/80">Your data stays private</p>
-        <p>Your financial information stays on your device.</p>
+        <p>Your records are stored in your own private account.</p>
         <p>No banking credentials are shared.</p>
-        <p>AI only analyzes your financial summary.</p>
+        <p>AI only sees a summary — never your personal details.</p>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Database, MessageSquareLock, HardDrive, ShieldCheck, Trash2 } from "lucide-react";
+import { Database, MessageSquareLock, HardDrive, ShieldCheck, Trash2, Sparkles, Clock, UserCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { APP_NAME, DEVELOPER, LAST_UPDATED, SITE_URL } from "@/lib/app-info";
@@ -26,45 +26,70 @@ export const Route = createFileRoute("/_authenticated/privacy")({
 const SECTIONS = [
   {
     icon: Database,
-    title: "Data Collection",
+    title: "What We Collect",
     body: [
-      `${APP_NAME} collects only what is needed to run your salary survival tracking: your email address, profile name, currency, salary settings, transactions, budgets, goals and loans you enter or import.`,
-      "We never sell your data, never share it with advertisers, and never build advertising profiles from your spending.",
+      `${APP_NAME} collects only what you enter or import: your email address and profile details (name, city, age group, currency), salary and pay-cycle settings, transactions, categories, budgets, goals, loans and EMI records, and imported CSV rows.`,
+      "We do not connect to your bank, we do not ask for banking credentials, and there is no automatic bank synchronisation. Your financial data is not sold and is not shared with advertisers.",
     ],
   },
   {
     icon: MessageSquareLock,
-    title: "SMS Permissions",
+    title: "SMS Intelligence (Optional)",
     body: [
-      "SMS Intelligence is optional and off until you grant permission. When enabled, bank and UPI transaction messages are parsed on your device to detect amount, merchant and category.",
-      "Raw message text is never uploaded. Only the resulting transaction fields are saved to your account.",
+      "SMS Intelligence is optional and only works on supported Android builds where you explicitly grant SMS permission. On the web it is unavailable, and nothing is read unless permission is granted.",
+      "Messages are parsed on your device to detect amount, merchant, bank and payment method. When a transaction is created from a message, the detected fields and a copy of the original message text are saved in that transaction's note so you can verify it. You can edit or delete that note, or the transaction, at any time.",
     ],
   },
   {
     icon: HardDrive,
-    title: "Local Storage",
+    title: "Where Your Data Lives",
     body: [
-      "Preferences, cached calculations, coach history and draft settings are stored locally in your browser so the app stays fast and works offline.",
-      "You can clear this at any time from Menu → Data → Delete All Data. Clearing local data does not delete your synced account records.",
+      "Account data — profile, transactions, categories, budgets, goals, loans and import history — is stored in our managed cloud database and is protected by row-level security so only your authenticated session can read it.",
+      "Preferences, cached calculations, coach history, dismissed tips and draft settings are stored locally in your browser or device so the app stays fast. Local data is separate from your synced account data.",
+    ],
+  },
+  {
+    icon: Sparkles,
+    title: "AI Processing",
+    body: [
+      `AI features (Salary Survival Coach, Can I Buy This?, and the AI Financial Report) send a limited, summarised financial snapshot to Google Gemini through our server so it can write an explanation. Your email, name, raw transaction notes and account identifiers are not included in that snapshot.`,
+      `All financial numbers — survival score, safe daily spend, affordability, budgets and forecasts — are calculated by ${APP_NAME}'s own logic. AI only explains those numbers; it does not compute or change them.`,
     ],
   },
   {
     icon: ShieldCheck,
-    title: "Security",
+    title: "Security & Authentication",
     body: [
-      "All traffic is encrypted in transit. Account records are protected by row-level security so your data is only readable by your authenticated session.",
-      "Passwords are hashed and never visible to us. We recommend a strong, unique password and signing out on shared devices.",
+      "Sign-in is handled by our managed authentication provider using email and password or Google sign-in. Passwords are hashed and never visible to us.",
+      "All traffic is encrypted in transit, and AI API keys stay on the server and are never shipped to the browser. Use a strong, unique password and sign out on shared devices.",
+    ],
+  },
+  {
+    icon: Clock,
+    title: "Data Retention",
+    body: [
+      "Your account data stays stored for as long as your account exists, because the app needs your history to calculate trends and forecasts. We do not set an automatic expiry on your records.",
+      "Local device data stays until you clear it from Menu → Data → Delete All Data, or clear your browser storage. Deleting a transaction, budget, goal or loan in the app removes that record from your account.",
     ],
   },
   {
     icon: Trash2,
-    title: "Delete Account",
+    title: "Delete Data vs Delete Account",
     body: [
-      "To remove your data, open Menu → Data → Delete All Data to wipe local storage, then email us to permanently delete your synced account.",
-      `Send the request from your registered email to ${DEVELOPER.supportEmail}. Deletion is permanent and completed within 30 days.`,
+      "Delete All Data (Menu → Data) clears locally stored preferences, caches, coach history and drafts on this device only. It does not delete your synced account or the records stored in your account.",
+      `Permanent account deletion is handled manually by our team. Email ${DEVELOPER.supportEmail} from your registered address and we will delete your account and its stored records. There is no automatic in-app account-deletion button today.`,
+    ],
+  },
+  {
+    icon: UserCheck,
+    title: "Your Rights",
+    body: [
+      "You can view and export your data in the app, correct anything inaccurate by editing the record, and delete individual transactions, budgets, goals or loans yourself.",
+      `For access, correction, account closure or any privacy question, email ${DEVELOPER.supportEmail} from your registered address.`,
     ],
   },
 ];
+
 
 function PrivacyPage() {
   return (

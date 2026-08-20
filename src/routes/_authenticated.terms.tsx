@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileText, ShieldAlert, AlertTriangle, UserCheck, RefreshCw } from "lucide-react";
+import { FileText, ShieldAlert, AlertTriangle, UserCheck, RefreshCw, Wallet, Sparkles, Server, Copyright, Scale, LogOut, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { APP_NAME, DEVELOPER, LAST_UPDATED, SITE_URL } from "@/lib/app-info";
@@ -57,6 +57,54 @@ const SECTIONS = [
     ],
   },
   {
+    icon: Wallet,
+    title: "Financial Data Responsibility",
+    body: [
+      `You own the financial data you enter. ${APP_NAME} does not connect to your bank, move money, or act as a bank, lender, broker or licensed financial adviser.`,
+      "Keep your own records for tax and legal purposes; the app is a tracking and planning tool, not an official statement of account.",
+    ],
+  },
+  {
+    icon: Sparkles,
+    title: "AI-Generated Information",
+    body: [
+      "AI features explain and summarise the numbers the app calculates. Explanations can be incomplete or wrong, and are not professional financial, tax, legal or investment advice.",
+      "No savings, returns or financial outcomes are guaranteed. Always verify before acting on a suggestion.",
+    ],
+  },
+  {
+    icon: Server,
+    title: "Service Availability",
+    body: [
+      "We aim to keep the app available, but access may be interrupted for maintenance, updates, or issues with the services we depend on. We do not guarantee uninterrupted or error-free service.",
+      "Features may change or be removed as the product evolves.",
+    ],
+  },
+  {
+    icon: Copyright,
+    title: "Intellectual Property",
+    body: [
+      `The ${APP_NAME} name, design, code and content belong to ${DEVELOPER.name}. You may not copy, resell or redistribute them without permission.`,
+      "Your own financial data remains yours; using the app grants us no ownership over it.",
+    ],
+  },
+  {
+    icon: Scale,
+    title: "Limitation of Liability",
+    body: [
+      "To the extent permitted by law, we are not liable for financial losses, missed payments, or decisions made based on information shown in the app.",
+      "You are responsible for your own financial decisions.",
+    ],
+  },
+  {
+    icon: LogOut,
+    title: "Account Termination",
+    body: [
+      `You can stop using the app at any time and request permanent account deletion by emailing ${DEVELOPER.supportEmail} from your registered address.`,
+      "We may suspend or close accounts that abuse the service, break these terms, or put other users at risk.",
+    ],
+  },
+  {
     icon: RefreshCw,
     title: "Updates to Terms",
     body: [
@@ -64,7 +112,15 @@ const SECTIONS = [
       "Continuing to use the app after an update means you accept the revised terms.",
     ],
   },
+  {
+    icon: Mail,
+    title: "Contact",
+    body: [
+      `Questions about these terms? Email ${DEVELOPER.supportEmail}. We read every message, though we do not offer a guaranteed response time.`,
+    ],
+  },
 ];
+
 
 function TermsPage() {
   return (
