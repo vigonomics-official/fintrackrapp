@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Database, MessageSquareLock, HardDrive, ShieldCheck, Trash2 } from "lucide-react";
+import { Database, MessageSquareLock, HardDrive, ShieldCheck, Trash2, Sparkles, Clock, UserCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { APP_NAME, DEVELOPER, LAST_UPDATED, SITE_URL } from "@/lib/app-info";
