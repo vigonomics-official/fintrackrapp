@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/feedback")({
 type Kind = "bug" | "feature" | "general";
 
 const KINDS: { value: Kind; label: string; icon: typeof Bug; hint: string }[] = [
-  { value: "bug", label: "Report Bug", icon: Bug, hint: "What went wrong, and what did you expect?" },
+  { value: "bug", label: "Report Bug", icon: Bug, hint: "What went wrong, what you expected, and the steps to reproduce it (screen name and time help a lot)." },
   { value: "feature", label: "Suggest Feature", icon: Lightbulb, hint: "Describe the feature and why it helps you." },
   { value: "general", label: "Send Feedback", icon: Send, hint: "Tell us what you love or what feels off." },
 ];
