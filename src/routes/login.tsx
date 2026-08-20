@@ -11,24 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function safeNext(value: unknown): string | undefined {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : undefined;
-}
-
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>): { next?: string } => {
-    const next = safeNext(s.next);
-    return next ? { next } : {};
-  },
-
-  beforeLoad: async ({ search }) => {
+  beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      const next = safeNext(search.next);
-      if (next) throw redirect({ href: next });
-      throw redirect({ to: "/dashboard" });
-    }
+    if (data.session) throw redirect({ to: "/dashboard" });
   },
   head: () => ({
     meta: [
@@ -51,7 +38,6 @@ const schema = z.object({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { next } = Route.useSearch();
   const [loading, setLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof schema>>({
@@ -78,10 +64,6 @@ function LoginPage() {
   }, []);
 
   const goNext = () => {
-    if (next) {
-      window.location.href = next;
-      return;
-    }
     navigate({ to: "/dashboard" });
   };
 
@@ -96,7 +78,7 @@ function LoginPage() {
 
   const google = async () => {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + (next ?? "/dashboard"),
+      redirect_uri: window.location.origin + "/dashboard",
     });
     if (result.error) return toast.error("Google sign-in failed");
     if (result.redirected) return;
