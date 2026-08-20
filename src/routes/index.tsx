@@ -1060,8 +1060,9 @@ function Footer() {
     {
       title: "Company",
       links: [
-        { label: "Privacy Policy", href: "#" },
-        { label: "Contact", href: "mailto:hello@fintrackr.app" },
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms & Conditions", href: "/terms" },
+        { label: "Contact", href: "mailto:support@fintrackrapp.com" },
       ],
     },
   ];
