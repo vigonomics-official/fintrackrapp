@@ -64,10 +64,6 @@ function LoginPage() {
   }, []);
 
   const goNext = () => {
-    if (next) {
-      window.location.href = next;
-      return;
-    }
     navigate({ to: "/dashboard" });
   };
 
