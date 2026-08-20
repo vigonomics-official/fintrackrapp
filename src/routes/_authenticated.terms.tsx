@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileText, ShieldAlert, AlertTriangle, UserCheck, RefreshCw } from "lucide-react";
+import { FileText, ShieldAlert, AlertTriangle, UserCheck, RefreshCw, Wallet, Sparkles, Server, Copyright, Scale, LogOut, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { APP_NAME, DEVELOPER, LAST_UPDATED, SITE_URL } from "@/lib/app-info";
