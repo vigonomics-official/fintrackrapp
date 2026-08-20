@@ -458,7 +458,7 @@ function SmsIntelligencePage() {
 
         <p className="flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground">
           <MessageSquareText className="h-3.5 w-3.5" />
-          SMS parsing happens locally. We never store your messages.
+          Messages are parsed on your device. Only the detected transaction — with the message text kept in its note for verification — is saved to your account.
         </p>
       </div>
     </div>
