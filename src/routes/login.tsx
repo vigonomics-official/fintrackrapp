@@ -11,24 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function safeNext(value: unknown): string | undefined {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : undefined;
-}
-
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>): { next?: string } => {
-    const next = safeNext(s.next);
-    return next ? { next } : {};
-  },
-
-  beforeLoad: async ({ search }) => {
+  beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      const next = safeNext(search.next);
-      if (next) throw redirect({ href: next });
-      throw redirect({ to: "/dashboard" });
-    }
+    if (data.session) throw redirect({ to: "/dashboard" });
   },
   head: () => ({
     meta: [
