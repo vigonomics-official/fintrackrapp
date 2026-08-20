@@ -130,7 +130,7 @@ function FeedbackPage() {
         <Card className="shadow-soft">
           <CardContent className="p-4 sm:p-6">
             <a
-              href={mailto(`Support request — ${APP_NAME}`, `Version ${APP_VERSION} (build ${BUILD_NUMBER})\n\n`)}
+              href={`mailto:${DEVELOPER.supportEmail}?subject=${encodeURIComponent(`Support request — ${APP_NAME}`)}&body=${encodeURIComponent(`Version ${APP_VERSION} (build ${BUILD_NUMBER})\n\nWhat happened:\nWhat you expected:\nSteps to reproduce:\n`)}`}
               className="flex items-center gap-3"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/80">
