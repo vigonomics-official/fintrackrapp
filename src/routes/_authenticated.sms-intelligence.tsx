@@ -47,16 +47,16 @@ type Detected = {
   tint: string;
   channel: "UPI" | "Card" | "Bank";
   confidence: number;
-  raw: string;
+  detail: string;
   time: string;
 };
 
 const SAMPLE: Detected[] = [
-  { id: "1", merchant: "Swiggy", amount: 486, category: "Food", icon: UtensilsCrossed, tint: "text-orange-500 bg-orange-500/10", channel: "UPI", confidence: 96, raw: "Sent Rs.486 to SWIGGY@ybl via UPI", time: "Today, 8:42 PM" },
-  { id: "2", merchant: "Zomato", amount: 312, category: "Dining", icon: Pizza, tint: "text-red-500 bg-red-500/10", channel: "UPI", confidence: 94, raw: "Paid Rs.312.00 to ZOMATO-ORDERS", time: "Today, 1:10 PM" },
-  { id: "3", merchant: "Uber", amount: 184, category: "Transport", icon: Car, tint: "text-blue-500 bg-blue-500/10", channel: "UPI", confidence: 92, raw: "Debited Rs.184 UBER INDIA", time: "Yesterday" },
-  { id: "4", merchant: "Amazon", amount: 1499, category: "Shopping", icon: ShoppingBag, tint: "text-amber-500 bg-amber-500/10", channel: "Card", confidence: 88, raw: "Card spend Rs.1499 AMAZON.IN", time: "Yesterday" },
-  { id: "5", merchant: "PhonePe", amount: 2500, category: "Transfers", icon: ArrowLeftRight, tint: "text-violet-500 bg-violet-500/10", channel: "UPI", confidence: 99, raw: "UPI/PhonePe to Rahul S Rs.2500", time: "2 days ago" },
+  { id: "1", merchant: "Swiggy", amount: 486, category: "Food", icon: UtensilsCrossed, tint: "text-orange-500 bg-orange-500/10", channel: "UPI", confidence: 96, detail: "SMS · auto-detected", time: "Today, 8:42 PM" },
+  { id: "2", merchant: "Zomato", amount: 312, category: "Dining", icon: Pizza, tint: "text-red-500 bg-red-500/10", channel: "UPI", confidence: 94, detail: "SMS · auto-detected", time: "Today, 1:10 PM" },
+  { id: "3", merchant: "Uber", amount: 184, category: "Transport", icon: Car, tint: "text-blue-500 bg-blue-500/10", channel: "UPI", confidence: 92, detail: "SMS · auto-detected", time: "Yesterday" },
+  { id: "4", merchant: "Amazon", amount: 1499, category: "Shopping", icon: ShoppingBag, tint: "text-amber-500 bg-amber-500/10", channel: "Card", confidence: 88, detail: "SMS · auto-detected", time: "Yesterday" },
+  { id: "5", merchant: "PhonePe", amount: 2500, category: "Transfers", icon: ArrowLeftRight, tint: "text-violet-500 bg-violet-500/10", channel: "UPI", confidence: 99, detail: "SMS · auto-detected", time: "2 days ago" },
 ];
 
 const RULES_SEED = [
@@ -202,7 +202,7 @@ function SmsIntelligencePage() {
   const handleIncomingSms = async (raw: string) => {
     const parsed = parseSms(raw, new Date());
     if (!parsed) {
-      smsDebug("parse", "warn", "SMS skipped — not financial", { sample: raw.slice(0, 60) });
+      smsDebug("parse", "warn", "SMS skipped — not financial", { length: raw.length });
       return;
     }
     if (parsed.type !== "income" && parsed.type !== "expense") {
@@ -231,7 +231,7 @@ function SmsIntelligencePage() {
         tint: "text-primary bg-primary/10",
         channel: parsed.paymentMethod === "upi" ? "UPI" : parsed.paymentMethod.includes("card") ? "Card" : "Bank",
         confidence: parsed.confidence,
-        raw: parsed.raw,
+        detail: [parsed.bank, parsed.paymentMethod.toUpperCase()].filter(Boolean).join(" · "),
         time: formatCompactDateTime(parsed.occurredAt),
       },
       ...prev,
@@ -245,8 +245,8 @@ function SmsIntelligencePage() {
         amount: parsed.amount,
         payment_method: parsed.paymentMethod,
         transaction_date: parsed.occurredAt.toISOString().slice(0, 10),
-        notes: [parsed.bank, parsed.upiRef ? `Ref ${parsed.upiRef}` : null, parsed.raw]
-          .filter(Boolean).join(" · ").slice(0, 500),
+        notes: [parsed.merchant, parsed.bank, parsed.upiRef ? `Ref ${parsed.upiRef}` : null]
+          .filter(Boolean).join(" · ").slice(0, 200),
         tags: ["sms", parsed.paymentMethod, category].filter(Boolean) as string[],
       });
       if (error) throw error;
@@ -363,7 +363,7 @@ function SmsIntelligencePage() {
                         <p className="truncate text-sm font-medium">{it.merchant}</p>
                         <Badge variant="outline" className="h-5 px-1.5 text-[10px]">{it.channel}</Badge>
                       </div>
-                      <p className="truncate text-xs text-muted-foreground">{it.time} · {it.raw}</p>
+                      <p className="truncate text-xs text-muted-foreground">{it.time} · {it.detail}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold tabular-nums">−{formatCurrency(it.amount)}</p>
@@ -458,7 +458,7 @@ function SmsIntelligencePage() {
 
         <p className="flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground">
           <MessageSquareText className="h-3.5 w-3.5" />
-          Messages are parsed on your device. Only the detected transaction — with the message text kept in its note for verification — is saved to your account.
+          Messages are parsed on your device and discarded straight after. Only the detected transaction details — amount, merchant, bank, reference and category — are saved to your account.
         </p>
       </div>
     </div>
