@@ -36,8 +36,9 @@ const SECTIONS = [
     icon: MessageSquareLock,
     title: "SMS Intelligence (Optional)",
     body: [
-      "SMS Intelligence is optional and only works on supported Android builds where you explicitly grant SMS permission. On the web it is unavailable, and nothing is read unless permission is granted.",
-      "Messages are parsed on your device to detect amount, merchant, bank and payment method. When a transaction is created from a message, the detected fields and a copy of the original message text are saved in that transaction's note so you can verify it. You can edit or delete that note, or the transaction, at any time.",
+      "SMS Intelligence is optional and only works on supported Android builds where you explicitly grant SMS permission. Permission is never requested automatically, on the web it is unavailable, and nothing is read unless you turn it on.",
+      "Messages are parsed on your device to detect the amount, merchant, bank and payment method, then discarded — the raw message text is not saved to your account, not stored in our database and not sent to any AI service. Only the resulting transaction details FinTrackr needs (amount, merchant, bank, reference, payment method, date and category) are stored. Messages detected before this release may still appear in older transaction notes; you can edit or delete those entries at any time.",
+
     ],
   },
   {
