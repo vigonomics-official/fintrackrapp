@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -19,14 +21,12 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuidesUpiMicroSpendingRouteImport } from './routes/guides.upi-micro-spending'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
-import { Route as AuthenticatedTermsRouteImport } from './routes/_authenticated.terms'
 import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
 import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_authenticated.smart-categorization'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
 import { Route as AuthenticatedSalarySettingsRouteImport } from './routes/_authenticated.salary-settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
-import { Route as AuthenticatedPrivacyRouteImport } from './routes/_authenticated.privacy'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated.planner'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated.notification-settings'
@@ -53,6 +53,11 @@ import { Route as AuthenticatedInsightsAiCoachRouteImport } from './routes/_auth
 import { Route as AuthenticatedInsightsAiRouteImport } from './routes/_authenticated.insights.ai'
 import { Route as AuthenticatedInsightsAiCoachResultsRouteImport } from './routes/_authenticated.insights.ai-coach.results'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -66,6 +71,11 @@ const SignupRoute = SignupRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -103,11 +113,6 @@ const AuthenticatedTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedTermsRoute = AuthenticatedTermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedSplitSettleRoute =
   AuthenticatedSplitSettleRouteImport.update({
     id: '/split-settle',
@@ -140,11 +145,6 @@ const AuthenticatedSalarySettingsRoute =
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedPrivacyRoute = AuthenticatedPrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPlannerRoute = AuthenticatedPlannerRouteImport.update({
@@ -290,9 +290,11 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/about': typeof AuthenticatedAboutRoute
   '/appearance': typeof AuthenticatedAppearanceRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
@@ -309,14 +311,12 @@ export interface FileRoutesByFullPath {
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
-  '/privacy': typeof AuthenticatedPrivacyRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
-  '/terms': typeof AuthenticatedTermsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
@@ -334,9 +334,11 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/about': typeof AuthenticatedAboutRoute
   '/appearance': typeof AuthenticatedAppearanceRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
@@ -352,14 +354,12 @@ export interface FileRoutesByTo {
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
-  '/privacy': typeof AuthenticatedPrivacyRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
-  '/terms': typeof AuthenticatedTermsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
@@ -379,9 +379,11 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/about': typeof AuthenticatedAboutRoute
   '/_authenticated/appearance': typeof AuthenticatedAppearanceRoute
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
@@ -398,14 +400,12 @@ export interface FileRoutesById {
   '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
-  '/_authenticated/privacy': typeof AuthenticatedPrivacyRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/salary-settings': typeof AuthenticatedSalarySettingsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/smart-categorization': typeof AuthenticatedSmartCategorizationRoute
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
-  '/_authenticated/terms': typeof AuthenticatedTermsRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
@@ -425,9 +425,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/onboarding'
+    | '/privacy'
     | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
+    | '/terms'
     | '/about'
     | '/appearance'
     | '/budgets'
@@ -444,14 +446,12 @@ export interface FileRouteTypes {
     | '/notification-settings'
     | '/notifications'
     | '/planner'
-    | '/privacy'
     | '/reports'
     | '/salary-settings'
     | '/settings'
     | '/smart-categorization'
     | '/sms-intelligence'
     | '/split-settle'
-    | '/terms'
     | '/transactions'
     | '/guides/upi-micro-spending'
     | '/insights/ai'
@@ -469,9 +469,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/onboarding'
+    | '/privacy'
     | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
+    | '/terms'
     | '/about'
     | '/appearance'
     | '/budgets'
@@ -487,14 +489,12 @@ export interface FileRouteTypes {
     | '/notification-settings'
     | '/notifications'
     | '/planner'
-    | '/privacy'
     | '/reports'
     | '/salary-settings'
     | '/settings'
     | '/smart-categorization'
     | '/sms-intelligence'
     | '/split-settle'
-    | '/terms'
     | '/transactions'
     | '/guides/upi-micro-spending'
     | '/insights/ai'
@@ -513,9 +513,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/onboarding'
+    | '/privacy'
     | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
+    | '/terms'
     | '/_authenticated/about'
     | '/_authenticated/appearance'
     | '/_authenticated/budgets'
@@ -532,14 +534,12 @@ export interface FileRouteTypes {
     | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
     | '/_authenticated/planner'
-    | '/_authenticated/privacy'
     | '/_authenticated/reports'
     | '/_authenticated/salary-settings'
     | '/_authenticated/settings'
     | '/_authenticated/smart-categorization'
     | '/_authenticated/sms-intelligence'
     | '/_authenticated/split-settle'
-    | '/_authenticated/terms'
     | '/_authenticated/transactions'
     | '/guides/upi-micro-spending'
     | '/_authenticated/insights/ai'
@@ -559,14 +559,23 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
   GuidesUpiMicroSpendingRoute: typeof GuidesUpiMicroSpendingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -586,6 +595,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -637,13 +653,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/terms': {
-      id: '/_authenticated/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof AuthenticatedTermsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/split-settle': {
       id: '/_authenticated/split-settle'
       path: '/split-settle'
@@ -684,13 +693,6 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/privacy': {
-      id: '/_authenticated/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof AuthenticatedPrivacyRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/planner': {
@@ -931,14 +933,12 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
-  AuthenticatedPrivacyRoute: typeof AuthenticatedPrivacyRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSalarySettingsRoute: typeof AuthenticatedSalarySettingsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSmartCategorizationRoute: typeof AuthenticatedSmartCategorizationRoute
   AuthenticatedSmsIntelligenceRoute: typeof AuthenticatedSmsIntelligenceRoute
   AuthenticatedSplitSettleRoute: typeof AuthenticatedSplitSettleRoute
-  AuthenticatedTermsRoute: typeof AuthenticatedTermsRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
 }
 
@@ -960,14 +960,12 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedNotificationSettingsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
-  AuthenticatedPrivacyRoute: AuthenticatedPrivacyRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSalarySettingsRoute: AuthenticatedSalarySettingsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSmartCategorizationRoute: AuthenticatedSmartCategorizationRoute,
   AuthenticatedSmsIntelligenceRoute: AuthenticatedSmsIntelligenceRoute,
   AuthenticatedSplitSettleRoute: AuthenticatedSplitSettleRoute,
-  AuthenticatedTermsRoute: AuthenticatedTermsRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
 }
 
@@ -981,9 +979,11 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
   GuidesUpiMicroSpendingRoute: GuidesUpiMicroSpendingRoute,
 }
 export const routeTree = rootRouteImport
