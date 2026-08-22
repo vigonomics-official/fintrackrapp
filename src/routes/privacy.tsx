@@ -7,7 +7,7 @@ import { APP_NAME, DEVELOPER, LAST_UPDATED, SITE_URL } from "@/lib/app-info";
 const TITLE = `Privacy Policy — ${APP_NAME}`;
 const DESC = `How ${APP_NAME} collects, stores and protects your financial data, including SMS permissions, local storage and account deletion.`;
 
-export const Route = createFileRoute("/_authenticated/privacy")({
+export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
   head: () => ({
     meta: [

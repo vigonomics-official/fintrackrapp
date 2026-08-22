@@ -7,7 +7,7 @@ import { APP_NAME, DEVELOPER, LAST_UPDATED, SITE_URL } from "@/lib/app-info";
 const TITLE = `Terms & Conditions — ${APP_NAME}`;
 const DESC = `The user agreement for ${APP_NAME}: acceptable use, financial disclaimer, account responsibilities and how terms change.`;
 
-export const Route = createFileRoute("/_authenticated/terms")({
+export const Route = createFileRoute("/terms")({
   component: TermsPage,
   head: () => ({
     meta: [
