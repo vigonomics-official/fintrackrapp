@@ -666,9 +666,21 @@ function LoansTab() {
   const { data: txs = [] } = useTransactions();
   const currency = profile?.currency ?? "INR";
 
+  const [addOpen, setAddOpen] = useState(false);
+  const [selected, setSelected] = useState<Loan | null>(null);
   const [extra, setExtra] = useState("");
-  const extraAmt = Number(extra) || 0;
+  const extraAmt = Math.max(0, Number(extra) || 0);
 
+  const active = useMemo(
+    () => loans.filter((l) => Number(l.remaining_balance) > 0),
+    [loans],
+  );
+  const closed = useMemo(
+    () => loans.filter((l) => Number(l.remaining_balance) <= 0),
+    [loans],
+  );
+
+  // Keep the existing summary calculation logic untouched in behaviour.
   const totals = useMemo(() => {
     const outstanding = loans.reduce((s, l) => s + l.remaining_balance, 0);
     const monthlyEmi = loans.reduce(
@@ -686,31 +698,17 @@ function LoansTab() {
     const debtFree = monthsToFree > 0
       ? new Date(now.getFullYear(), now.getMonth() + monthsToFree)
       : null;
+    return { outstanding, monthlyEmi, pressure, debtFree, monthsToFree };
+  }, [loans, txs]);
 
-    // Simulator with extra
-    const monthsToFreeFast = (monthlyEmi + extraAmt) > 0
-      ? Math.ceil(outstanding / (monthlyEmi + extraAmt))
-      : 0;
-    const monthsSaved = Math.max(0, monthsToFree - monthsToFreeFast);
-    const avgRate = loans.length
-      ? loans.reduce((s, l) => s + (l.interest_rate || 0), 0) / loans.length
-      : 0;
-    const interestSaved = Math.round((monthsSaved * monthlyEmi * avgRate) / 1200);
-
-    return { outstanding, monthlyEmi, pressure, debtFree, monthsToFree, monthsToFreeFast, monthsSaved, interestSaved };
-  }, [loans, txs, extraAmt]);
-
-  function nextDue(due_day: number) {
-    const t = new Date();
-    const d = new Date(t.getFullYear(), t.getMonth(), Math.min(due_day, 28));
-    if (d < t) d.setMonth(d.getMonth() + 1);
-    return d;
-  }
+  // Read-only snowball projection — never writes to any loan or transaction.
+  const plan = useMemo(() => buildSnowballPlan(active, extraAmt), [active, extraAmt]);
 
   return (
     <div className="space-y-4">
+      {/* 1 — Current debt situation */}
       <div className="grid grid-cols-2 gap-2.5">
-        <Stat label="Total Loans" value={`${loans.length}`} />
+        <Stat label="Total Loans" value={`${active.length}`} />
         <Stat label="Outstanding" value={formatCurrency(totals.outstanding, currency)} />
         <Stat label="Monthly EMI" value={formatCurrency(totals.monthlyEmi, currency)} />
         <Stat
@@ -726,191 +724,213 @@ function LoansTab() {
         </div>
       </div>
 
-      {loans.length === 0 ? (
+      {active.length === 0 ? (
         <Card className="border-success/30 bg-success/5 shadow-soft">
           <CardContent className="space-y-3 p-5 text-center">
             <p className="text-sm font-semibold">🎉 No active loans</p>
-            <p className="text-xs text-muted-foreground">Great — now build an emergency fund of 3–6 months of expenses.</p>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/loans">Add a loan</Link>
+            <p className="text-xs text-muted-foreground">
+              Great — now build an emergency fund of 3–6 months of expenses.
+            </p>
+            <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />Add a loan
             </Button>
           </CardContent>
         </Card>
       ) : (
         <>
-        {/* Loan Priority Engine */}
-        {(() => {
-          const ranked = [...loans]
-            .filter((l) => l.remaining_balance > 0)
-            .map((l) => ({
-              l,
-              // Avalanche score: prioritise high rate + small balance for quick wins
-              score: (Number(l.interest_rate) || 0) * 10 - Math.log10(Math.max(1, l.remaining_balance)),
-            }))
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 3);
-          if (ranked.length === 0) return null;
-          const top = ranked[0].l;
-          const monthsCut = totals.monthlyEmi > 0 ? Math.max(1, Math.ceil(top.remaining_balance / (top.emi_amount * 2))) : 0;
-          const intSaved = Math.round((monthsCut * top.emi_amount * (top.interest_rate || 0)) / 1200);
-          return (
-            <Card className="border-primary/20 bg-primary/5 shadow-soft">
-              <CardContent className="space-y-2.5 p-4">
-                <div className="flex items-center gap-2">
-                  <TargetIcon className="h-3.5 w-3.5 text-primary" />
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Close This First</p>
+          {/* 2 — Active loans */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                My Loans
+              </p>
+              <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setAddOpen(true)}>
+                <Plus className="mr-1 h-3.5 w-3.5" />Add loan
+              </Button>
+            </div>
+
+            {active.map((l) => {
+              const paid = Math.max(0, l.total_amount - l.remaining_balance);
+              const pct = l.total_amount > 0 ? Math.min(100, (paid / l.total_amount) * 100) : 0;
+              const emisLeft = l.emi_amount > 0
+                ? Math.max(0, Math.ceil(l.remaining_balance / l.emi_amount))
+                : 0;
+              const due = nextLoanDueDate(l.due_day);
+              const Icon = loanTypeMeta(l.loan_type).icon;
+              return (
+                <Card key={l.id} className="shadow-soft">
+                  <CardContent className="space-y-2 p-3.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-start gap-2.5">
+                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{l.loan_name}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {loanTypeMeta(l.loan_type).label}
+                            {l.interest_rate > 0 ? ` · ${l.interest_rate}% p.a.` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="shrink-0 font-display text-sm font-bold tabular-nums">
+                        {formatCurrency(l.remaining_balance, currency)}
+                      </p>
+                    </div>
+                    <Progress value={pct} className="h-1.5" />
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span>{pct.toFixed(0)}% repaid</span>
+                      <span>·</span>
+                      <span>EMI {formatCurrency(l.emi_amount, currency)}</span>
+                      <span>·</span>
+                      <span>{emisLeft} left</span>
+                      <span>·</span>
+                      <span>Next {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span>
+                    </div>
+                    <Button
+                      size="sm" variant="outline" className="w-full"
+                      onClick={() => setSelected(l)}
+                    >
+                      View / Manage
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* 4 — Payoff strategy (read-only estimate) */}
+          <Card className="border-primary/20 bg-primary/5 shadow-soft">
+            <CardContent className="space-y-3 p-4">
+              <div className="flex items-center gap-2">
+                <TrendingDown className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold">Debt Payoff Plan</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Snowball method: keep paying every minimum EMI, then put any extra money on the
+                smallest balance first. When it closes, roll that payment into the next loan.
+              </p>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Extra monthly payment ({currency}) — optional</Label>
+                <Input
+                  type="number" inputMode="decimal" placeholder="1000"
+                  value={extra} onChange={(e) => setExtra(e.target.value)}
+                />
+              </div>
+
+              {plan.target && (
+                <div className="rounded-lg bg-background p-2.5">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Current target loan</p>
+                  <p className="mt-0.5 text-sm font-semibold">{plan.target.name}</p>
+                  <p className="text-[11px] text-muted-foreground tabular-nums">
+                    {formatCurrency(plan.target.balance, currency)} outstanding · EMI{" "}
+                    {formatCurrency(plan.target.emi, currency)}
+                    {extraAmt > 0 ? ` + ${formatCurrency(extraAmt, currency)} extra` : ""}
+                  </p>
                 </div>
-                <ol className="space-y-1 text-sm">
-                  {ranked.map((r, i) => (
-                    <li key={r.l.id} className="flex items-center justify-between">
-                      <span><span className="font-semibold">#{i + 1}</span> {r.l.loan_name}</span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">{formatCurrency(r.l.remaining_balance, currency)} @ {r.l.interest_rate}%</span>
+              )}
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-background p-2.5">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Est. debt-free by</p>
+                  <p className="mt-0.5 font-display text-sm font-bold">
+                    {plan.debtFreeDate
+                      ? plan.debtFreeDate.toLocaleDateString(undefined, { month: "short", year: "numeric" })
+                      : "—"}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-background p-2.5">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {extraAmt > 0 ? "Est. months saved" : "Est. months left"}
+                  </p>
+                  <p className="mt-0.5 font-display text-sm font-bold tabular-nums">
+                    {extraAmt > 0
+                      ? `${plan.monthsSaved} mo`
+                      : plan.monthsToDebtFree > 0 ? `${plan.monthsToDebtFree} mo` : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Estimated payoff progress</span>
+                  <span className="tabular-nums">{plan.progressPct.toFixed(0)}%</span>
+                </div>
+                <Progress value={plan.progressPct} className="h-1.5" />
+              </div>
+
+              <div className="space-y-1.5">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Recommended payoff order
+                </p>
+                <ol className="space-y-1.5">
+                  {plan.order.map((s, i) => (
+                    <li key={s.id} className="rounded-lg bg-background p-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="min-w-0 truncate text-sm font-semibold">
+                          #{i + 1} {s.name}
+                        </p>
+                        <p className="shrink-0 text-sm font-bold tabular-nums">
+                          {formatCurrency(s.balance, currency)}
+                        </p>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        {s.monthsToClose > 0
+                          ? `Est. closes ${s.payoffDate?.toLocaleDateString(undefined, { month: "short", year: "numeric" })} (~${s.monthsToClose} mo)`
+                          : "Add an EMI amount to estimate a closing date"}
+                      </p>
                     </li>
                   ))}
                 </ol>
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="rounded-lg bg-background p-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Interest Saved</p>
-                    <p className="font-display text-sm font-bold tabular-nums">{formatCurrency(intSaved, currency)}</p>
-                  </div>
-                  <div className="rounded-lg bg-background p-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Months Reduced</p>
-                    <p className="font-display text-sm font-bold tabular-nums">~{monthsCut} mo</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })()}
+              </div>
 
-        {/* 🎯 Loan Payoff Strategy — Snowball (smallest balance first) */}
-        {(() => {
-          const snowball = [...loans]
-            .filter((l) => l.remaining_balance > 0)
-            .sort((a, b) => a.remaining_balance - b.remaining_balance);
-          if (snowball.length === 0) return null;
-          return (
-            <Card className="border-primary/20 shadow-soft">
-              <CardContent className="space-y-3 p-4">
-                <div>
-                  <p className="text-sm font-semibold">🎯 Loan Payoff Strategy</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Pay minimum on all loans. Put extra money on the smallest loan first.
-                  </p>
-                </div>
-                <div className="space-y-2.5">
-                  {snowball.map((l, i) => {
-                    const monthsNow = Math.max(
-                      1,
-                      Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount)),
-                    );
-                    const monthsFast = Math.max(
-                      1,
-                      Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount + 500)),
-                    );
-                    const saved = Math.max(0, monthsNow - monthsFast);
-                    const intSaved = Math.round((saved * l.emi_amount * (Number(l.interest_rate) || 0)) / 1200);
-                    const badge = i === 0 ? "🎯 CLOSE THIS FIRST" : i === 1 ? "THEN CLOSE THIS" : `THEN #${i + 1}`;
-                    return (
-                      <div key={l.id} className="rounded-lg border bg-muted/20 p-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">{badge}</p>
-                        <div className="mt-1 flex items-start justify-between gap-2">
-                          <p className="text-sm font-semibold">{l.loan_name}</p>
-                          <p className="text-sm font-bold tabular-nums">{formatCurrency(l.remaining_balance, currency)}</p>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">
-                          EMI {formatCurrency(l.emi_amount, currency)}/mo · Closes in {monthsNow} mo
-                        </p>
-                        <p className="mt-1 text-[11px] text-foreground">
-                          💡 Pay {formatCurrency(500, currency)} extra → closes in {monthsFast} mo
-                          {saved > 0 ? ` (${saved} mo faster, save ${formatCurrency(intSaved, currency)} interest)` : ""}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })()}
-
-        <div className="space-y-2.5">
-          {loans.map((l) => {
-            const paid = l.total_amount - l.remaining_balance;
-            const pct = Math.min(100, (paid / l.total_amount) * 100);
-            const emisLeft = Math.max(0, Math.ceil(l.remaining_balance / Math.max(1, l.emi_amount)));
-            const due = nextDue(l.due_day);
-            return (
-              <Card key={l.id} className="shadow-soft">
-                <CardContent className="space-y-2 p-3.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{l.loan_name}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        EMI {formatCurrency(l.emi_amount, currency)} · {emisLeft} left · Due {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                      </p>
-                    </div>
-                    <p className="shrink-0 font-display text-sm font-bold tabular-nums">
-                      {formatCurrency(l.remaining_balance, currency)}
-                    </p>
-                  </div>
-                  <Progress value={pct} className="h-1.5" />
-                  <p className="text-[11px] text-muted-foreground">{pct.toFixed(0)}% paid</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-          <Button asChild variant="outline" size="sm" className="w-full">
-            <Link to="/loans">Manage loans</Link>
-          </Button>
-        </div>
+              <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
+                These are estimates only. Nothing here changes your real balances, transactions or
+                budgets — record a payment from a loan to update it for real.
+              </p>
+            </CardContent>
+          </Card>
         </>
       )}
 
-      {/* Fast Payoff Simulator */}
-      {loans.length > 0 && totals.monthlyEmi > 0 && (
-        <Card className="border-primary/20 bg-primary/5 shadow-soft">
-          <CardContent className="space-y-3 p-4">
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-primary" />
-              <p className="text-sm font-semibold">Fast Payoff Simulator</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Extra monthly payment ({currency})</Label>
-              <Input
-                type="number" inputMode="decimal" placeholder="1000"
-                value={extra} onChange={(e) => setExtra(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-lg bg-background p-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Debt-Free Earlier</p>
-                <p className="mt-0.5 font-display text-base font-bold">
-                  {extraAmt > 0 ? `${totals.monthsSaved} mo` : "—"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-background p-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Interest Saved</p>
-                <p className="mt-0.5 font-display text-base font-bold">
-                  {extraAmt > 0 ? formatCurrency(totals.interestSaved, currency) : "—"}
-                </p>
-              </div>
-            </div>
-            {extraAmt > 0 && totals.monthsToFreeFast > 0 && (
-              <div className="rounded-lg bg-background p-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Debt-Free By</p>
-                <p className="mt-0.5 font-display text-base font-bold">
-                  {new Date(new Date().getFullYear(), new Date().getMonth() + totals.monthsToFreeFast)
-                    .toLocaleDateString(undefined, { month: "long", year: "numeric" })}
-                </p>
-              </div>
-            )}
-            <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
-              <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
-              Tip: Paying ₹1,000 extra/month can close small EMIs months earlier and save real interest.
-            </p>
-          </CardContent>
-        </Card>
+      {/* 5 — Closed loans (kept as history) */}
+      {closed.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Closed Loans
+          </p>
+          {closed.map((l) => (
+            <Card key={l.id} className="border-dashed shadow-none">
+              <CardContent className="flex items-center justify-between gap-2 p-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{l.loan_name}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Paid off · Borrowed {formatCurrency(l.total_amount, currency)}
+                  </p>
+                </div>
+                <Button
+                  size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-xs"
+                  onClick={() => setSelected(l)}
+                >
+                  View
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <LoanFormSheet open={addOpen} onOpenChange={setAddOpen} />
+      {selected && (
+        <LoanDetailSheet
+          key={selected.id}
+          loan={loans.find((l) => l.id === selected.id) ?? selected}
+          currency={currency}
+          open
+          onOpenChange={(v) => { if (!v) setSelected(null); }}
+        />
       )}
     </div>
   );
