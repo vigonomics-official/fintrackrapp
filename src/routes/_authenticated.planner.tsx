@@ -13,7 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { FinancialJourney } from "@/components/finance/FinancialJourney";
-import { useTransactions, useLoans, useProfile, useCategories } from "@/hooks/use-finance";
+import { useTransactions, useLoans, useProfile, useCategories, type Loan } from "@/hooks/use-finance";
+import {
+  LoanFormSheet, LoanDetailSheet, loanTypeMeta, nextLoanDueDate,
+} from "@/components/finance/LoanSheets";
+import { buildSnowballPlan } from "@/lib/loan-snowball";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
