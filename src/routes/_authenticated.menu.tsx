@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useCallback } from "react";
 import {
-  Landmark, CalendarDays, Target, Bot, Bell,
+  Landmark, Bot, Bell,
   Palette, Globe,
   Info, MessageSquare, ShieldCheck, FileText,
   Sparkles,
@@ -37,12 +37,9 @@ type Group = { title: string; tone?: "smart" | "default"; items: Item[] };
 
 const TOOL_GROUPS: Group[] = [
   {
-    title: "Financial Tools",
+    title: "Smart Features",
     items: [
       { label: "Smart Categorization", icon: Sparkles, to: "/smart-categorization", description: "Self-learning rules & merchants" },
-      { label: "Loans & EMI", icon: Landmark, to: "/loans" },
-      { label: "Planner", icon: CalendarDays, to: "/planner" },
-      { label: "Goals", icon: Target, to: "/goals" },
       { label: "AI Salary Survival Coach", icon: Bot, to: "/insights/ai-coach" },
     ],
   },
