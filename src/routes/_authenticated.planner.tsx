@@ -1086,125 +1086,132 @@ function BillsTab() {
 
 /* ============================ Goals ============================ */
 
-type SimpleGoal = { id: string; name: string; current: number; target: number; deadline?: string };
-const GOALS_KEY = "fintrackr_goals_v1";
-
-function loadSimpleGoals(): SimpleGoal[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = JSON.parse(localStorage.getItem(GOALS_KEY) || "[]");
-    return (raw as any[]).map((g) => ({
-      id: g.id, name: g.name,
-      current: Number(g.current) || 0,
-      target: Number(g.target) || 0,
-      deadline: g.deadline,
-    }));
-  } catch { return []; }
-}
-
 function GoalsTab() {
   const { data: profile } = useProfile();
   const currency = profile?.currency ?? "INR";
-  const [goals, setGoals] = useState<SimpleGoal[]>([]);
-  const [form, setForm] = useState({ name: "", target: "", deadline: "" });
-  const [open, setOpen] = useState(false);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Goal | undefined>(undefined);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
-  useEffect(() => { setGoals(loadSimpleGoals()); }, []);
+  useEffect(() => {
+    const refresh = () => setGoals(loadGoals());
+    refresh();
+    window.addEventListener(GOALS_EVENT, refresh);
+    return () => window.removeEventListener(GOALS_EVENT, refresh);
+  }, []);
 
-  function persist(next: SimpleGoal[]) {
-    setGoals(next);
-    if (typeof window !== "undefined") {
-      // Merge with existing keys to stay compatible with /goals page schema
-      try {
-        const existing: any[] = JSON.parse(localStorage.getItem(GOALS_KEY) || "[]");
-        const map = new Map(existing.map((g) => [g.id, g]));
-        next.forEach((g) =>
-          map.set(g.id, {
-            id: g.id, name: g.name, kind: "savings",
-            target: g.target, current: g.current, monthly: 0,
-            deadline: g.deadline, createdAt: new Date().toISOString(),
-          })
-        );
-        localStorage.setItem(GOALS_KEY, JSON.stringify([...map.values()]));
-      } catch { /* noop */ }
-    }
+  function save(goal: Goal) {
+    setGoals(upsertGoal(goal));
   }
 
-  function add() {
-    if (!form.name || !Number(form.target)) return;
-    persist([
-      { id: crypto.randomUUID(), name: form.name.trim(), current: 0, target: Number(form.target), deadline: form.deadline || undefined },
-      ...goals,
-    ]);
-    setForm({ name: "", target: "", deadline: "" });
-    setOpen(false);
-  }
+  const active = goals.filter((g) => !isCompleted(g));
+  const completed = goals.filter((g) => isCompleted(g));
+  const detail = goals.find((g) => g.id === detailId) ?? null;
 
   return (
     <div className="space-y-3">
-      {!open ? (
-        <Button onClick={() => setOpen(true)} size="sm" variant="outline" className="w-full gap-1">
-          <Plus className="h-4 w-4" /> Add goal
-        </Button>
-      ) : (
+      <Button
+        onClick={() => { setEditing(undefined); setFormOpen(true); }}
+        size="sm" variant="outline" className="w-full gap-1"
+      >
+        <Plus className="h-4 w-4" /> Add goal
+      </Button>
+
+      {goals.length === 0 && (
         <Card className="shadow-soft">
-          <CardContent className="space-y-2.5 p-4">
-            <div className="space-y-1">
-              <Label className="text-xs">Goal name</Label>
-              <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Emergency fund" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Target ({currency})</Label>
-                <Input type="number" value={form.target} onChange={(e) => setForm((p) => ({ ...p, target: e.target.value }))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Target date</Label>
-                <Input type="date" value={form.deadline} onChange={(e) => setForm((p) => ({ ...p, deadline: e.target.value }))} />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button size="sm" className="flex-1 bg-gradient-primary" onClick={add}>Add</Button>
-            </div>
+          <CardContent className="p-5 text-center text-sm text-muted-foreground">
+            Create your first savings goal — even a small monthly amount builds momentum.
           </CardContent>
         </Card>
       )}
 
-      {goals.length === 0 ? (
-        <Card className="shadow-soft">
-          <CardContent className="p-5 text-center text-sm text-muted-foreground">
-            Create your first savings goal — even ₹5,000 builds momentum.
-          </CardContent>
-        </Card>
-      ) : (
-        goals.map((g) => {
-          const pct = g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0;
-          return (
-            <Card key={g.id} className="shadow-soft">
-              <CardContent className="space-y-2 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{g.name}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {formatCurrency(g.current, currency)} of {formatCurrency(g.target, currency)}
-                      {g.deadline ? ` · by ${new Date(g.deadline).toLocaleDateString(undefined, { month: "short", year: "numeric" })}` : ""}
-                    </p>
-                  </div>
-                  <p className="text-xs font-semibold text-primary">{pct.toFixed(0)}%</p>
-                </div>
-                <Progress value={pct} className="h-1.5" />
-              </CardContent>
-            </Card>
-          );
-        })
+      {active.length > 0 && (
+        <section className="space-y-2">
+          <h3 className="px-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            My Goals
+          </h3>
+          {active.map((g) => (
+            <GoalCard key={g.id} goal={g} currency={currency} onOpen={() => setDetailId(g.id)} />
+          ))}
+        </section>
       )}
-      <Button asChild variant="ghost" size="sm" className="w-full text-xs text-muted-foreground">
-        <Link to="/goals">Open full Goals page</Link>
-      </Button>
+
+      {completed.length > 0 && (
+        <section className="space-y-2 pt-1">
+          <h3 className="px-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Completed Goals
+          </h3>
+          {completed.map((g) => (
+            <GoalCard key={g.id} goal={g} currency={currency} onOpen={() => setDetailId(g.id)} />
+          ))}
+        </section>
+      )}
+
+      <p className="px-1 text-[10px] text-muted-foreground">
+        Goal figures are planning estimates. Nothing here creates transactions or changes balances.
+      </p>
+
+      <GoalFormSheet
+        open={formOpen}
+        onOpenChange={(o) => { setFormOpen(o); if (!o) setEditing(undefined); }}
+        initial={editing}
+        currency={currency}
+        onSave={save}
+      />
+      <GoalDetailSheet
+        goal={detail}
+        onOpenChange={() => setDetailId(null)}
+        currency={currency}
+        onSave={save}
+        onEdit={(g) => { setDetailId(null); setEditing(g); setFormOpen(true); }}
+      />
     </div>
   );
 }
+
+function GoalCard({ goal, currency, onOpen }: { goal: Goal; currency: string; onOpen: () => void }) {
+  const plan = computeGoalPlan(goal);
+  const tone =
+    plan.status === "completed" ? "bg-success/15 text-success"
+      : plan.status === "behind" ? "bg-destructive/15 text-destructive"
+        : plan.status === "on_track" ? "bg-primary/15 text-primary"
+          : "bg-muted text-muted-foreground";
+
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-2 p-4">
+        <button type="button" onClick={onOpen} className="w-full text-left">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{goal.name}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {formatCurrency(goal.current, currency)} of {formatCurrency(goal.target, currency)}
+                {goal.deadline ? ` · by ${new Date(goal.deadline).toLocaleDateString(undefined, { month: "short", year: "numeric" })}` : ""}
+              </p>
+            </div>
+            <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider", tone)}>
+              {GOAL_STATUS_LABEL[plan.status]}
+            </span>
+          </div>
+          <Progress value={plan.progressPct} className="mt-2 h-1.5" />
+          <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+            <span>{plan.progressPct.toFixed(0)}% · {formatCurrency(plan.remaining, currency)} left</span>
+            {plan.requiredMonthly != null && (
+              <span>Need {formatCurrency(plan.requiredMonthly, currency)}/mo</span>
+            )}
+          </div>
+          {goal.monthly > 0 && (
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Your plan: {formatCurrency(goal.monthly, currency)}/month
+            </p>
+          )}
+        </button>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 /* ============================ Can I Buy This ============================ */
 
