@@ -93,6 +93,48 @@ export type Database = {
           },
         ]
       }
+      goals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current: number
+          deadline: string | null
+          id: string
+          kind: string
+          monthly: number
+          name: string
+          target: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current?: number
+          deadline?: string | null
+          id?: string
+          kind?: string
+          monthly?: number
+          name: string
+          target?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current?: number
+          deadline?: string | null
+          id?: string
+          kind?: string
+          monthly?: number
+          name?: string
+          target?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       import_errors: {
         Row: {
           created_at: string

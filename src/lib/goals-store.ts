@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 /**
  * Shared goal storage + read-only planning math.
  *
@@ -175,3 +177,102 @@ export const GOAL_STATUS_LABEL: Record<GoalStatus, string> = {
   behind: "Behind",
   no_date: "No target date",
 };
+
+/* ------------------------- Cloud persistence (Supabase) -------------------------
+ * The localStorage record stays as a device cache so every existing reader keeps
+ * working synchronously. The authenticated `goals` table is the source of truth.
+ */
+
+
+type GoalRow = {
+  id: string;
+  name: string;
+  kind: string;
+  target: number | string;
+  current: number | string;
+  monthly: number | string;
+  deadline: string | null;
+  completed_at: string | null;
+  created_at: string;
+};
+
+function fromRow(r: GoalRow): Goal {
+  return normalize({
+    id: r.id,
+    name: r.name,
+    kind: r.kind,
+    target: Number(r.target),
+    current: Number(r.current),
+    monthly: Number(r.monthly),
+    deadline: r.deadline ?? undefined,
+    createdAt: r.created_at,
+    completedAt: r.completed_at ?? undefined,
+  })!;
+}
+
+function toRow(g: Goal, userId: string) {
+  return {
+    id: g.id,
+    user_id: userId,
+    name: g.name,
+    kind: g.kind,
+    target: g.target,
+    current: g.current,
+    monthly: g.monthly,
+    deadline: g.deadline ?? null,
+    completed_at: g.completedAt ?? null,
+    created_at: g.createdAt,
+  };
+}
+
+async function currentUserId(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user?.id ?? null;
+}
+
+/**
+ * Loads the signed-in user's cloud goals, migrating any local-only goals up
+ * once (never overwriting newer cloud rows, never deleting local data before
+ * the cloud write succeeds). Returns the merged list and refreshes the cache.
+ */
+export async function syncGoalsFromCloud(): Promise<Goal[]> {
+  const userId = await currentUserId();
+  if (!userId) return loadGoals();
+
+  const { data, error } = await supabase
+    .from("goals")
+    .select("id,name,kind,target,current,monthly,deadline,completed_at,created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  const cloud = (data ?? []).map((r) => fromRow(r as GoalRow));
+  const cloudIds = new Set(cloud.map((g) => g.id));
+  const localOnly = loadGoals().filter((g) => !cloudIds.has(g.id));
+
+  if (localOnly.length) {
+    const { error: insertError } = await supabase
+      .from("goals")
+      .insert(localOnly.map((g) => toRow(g, userId)));
+    if (insertError) throw insertError;
+  }
+
+  const merged = [...localOnly, ...cloud];
+  saveGoals(merged);
+  return merged;
+}
+
+/** Writes a single goal to the cloud (insert or update by id). */
+export async function persistGoal(goal: Goal): Promise<void> {
+  const userId = await currentUserId();
+  if (!userId) return;
+  const { error } = await supabase.from("goals").upsert(toRow(goal, userId));
+  if (error) throw error;
+}
+
+/** Removes a goal from the cloud. */
+export async function deleteGoalRemote(id: string): Promise<void> {
+  const userId = await currentUserId();
+  if (!userId) return;
+  const { error } = await supabase.from("goals").delete().eq("id", id);
+  if (error) throw error;
+}

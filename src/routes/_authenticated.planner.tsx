@@ -31,9 +31,11 @@ import { onProfileUpdated } from "@/lib/financial-profile";
 import { PurchaseCheckPanel } from "@/components/finance/PurchaseCheckPanel";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
-  loadGoals, upsertGoal, isCompleted, computeGoalPlan,
+  loadGoals, upsertGoal, isCompleted, computeGoalPlan, saveGoals,
+  syncGoalsFromCloud, persistGoal,
   GOALS_EVENT, GOAL_STATUS_LABEL, type Goal,
 } from "@/lib/goals-store";
+
 
 export const Route = createFileRoute("/_authenticated/planner")({
   component: PlannerPage,
@@ -1103,12 +1105,23 @@ function GoalsTab() {
     const refresh = () => setGoals(loadGoals());
     refresh();
     window.addEventListener(GOALS_EVENT, refresh);
-    return () => window.removeEventListener(GOALS_EVENT, refresh);
+    let alive = true;
+    syncGoalsFromCloud()
+      .then((cloud) => { if (alive) setGoals(cloud); })
+      .catch(() => toast.error("Couldn't load your saved goals from the cloud"));
+    return () => { alive = false; window.removeEventListener(GOALS_EVENT, refresh); };
   }, []);
 
   function save(goal: Goal) {
+    const previous = goals;
     setGoals(upsertGoal(goal));
+    persistGoal(goal).catch(() => {
+      setGoals(previous);
+      saveGoals(previous);
+      toast.error("Couldn't save your goal. Please check your connection and try again.");
+    });
   }
+
 
   const active = goals.filter((g) => !isCompleted(g));
   const completed = goals.filter((g) => isCompleted(g));
