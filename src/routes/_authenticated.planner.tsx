@@ -31,9 +31,11 @@ import { onProfileUpdated } from "@/lib/financial-profile";
 import { PurchaseCheckPanel } from "@/components/finance/PurchaseCheckPanel";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
-  loadGoals, upsertGoal, isCompleted, computeGoalPlan,
+  loadGoals, upsertGoal, isCompleted, computeGoalPlan, saveGoals,
+  syncGoalsFromCloud, persistGoal,
   GOALS_EVENT, GOAL_STATUS_LABEL, type Goal,
 } from "@/lib/goals-store";
+
 
 export const Route = createFileRoute("/_authenticated/planner")({
   component: PlannerPage,
