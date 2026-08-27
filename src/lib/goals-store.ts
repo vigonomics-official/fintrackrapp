@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 /**
  * Shared goal storage + read-only planning math.
  *
@@ -181,7 +183,6 @@ export const GOAL_STATUS_LABEL: Record<GoalStatus, string> = {
  * working synchronously. The authenticated `goals` table is the source of truth.
  */
 
-import { supabase } from "@/integrations/supabase/client";
 
 type GoalRow = {
   id: string;
