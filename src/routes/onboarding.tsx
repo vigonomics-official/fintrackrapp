@@ -207,14 +207,13 @@ function OnboardingPage() {
       return;
     }
 
-    // Persist first goal in the same localStorage shape the app uses
+    // Persist first goal to the cloud Goals table (device cache updated by saveGoal)
     if (firstGoal) {
       try {
-        const raw = localStorage.getItem("fintrackr_goals_v1");
-        const arr = raw ? JSON.parse(raw) : [];
-        arr.push(firstGoal);
-        localStorage.setItem("fintrackr_goals_v1", JSON.stringify(arr));
-      } catch {}
+        await saveGoal(firstGoal as Goal);
+      } catch {
+        toast.error("Your goal could not be saved. You can add it again from Goals.");
+      }
     }
 
     // ---- FIX 8: Data Synchronization ----
