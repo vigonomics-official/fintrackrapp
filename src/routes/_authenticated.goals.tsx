@@ -264,7 +264,7 @@ function Goals() {
                           onClick={() => { setContribOpen(g.id); setContribAmount(String(g.monthly || 1000)); }}>
                           <Plus className="mr-1 h-3.5 w-3.5" /> Add savings
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => removeGoal(g.id)} aria-label="Delete goal">
+                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => { void removeGoal(g.id); }} aria-label="Delete goal">
                           <Trash2 className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </div>
