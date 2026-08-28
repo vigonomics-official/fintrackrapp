@@ -306,9 +306,9 @@ function Goals() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setContribOpen(null)}>Cancel</Button>
-            <Button onClick={() => {
+            <Button disabled={busy} onClick={() => {
               const amt = Number(contribAmount);
-              if (contribOpen && amt > 0) contribute(contribOpen, amt);
+              if (contribOpen && amt > 0) void contribute(contribOpen, amt);
               setContribOpen(null);
             }}>Add</Button>
           </DialogFooter>
