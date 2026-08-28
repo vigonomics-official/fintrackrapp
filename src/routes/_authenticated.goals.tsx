@@ -70,29 +70,27 @@ const SUGGESTIONS: { name: string; kind: GoalKind; target: number; icon: typeof 
   { name: "Down Payment", kind: "savings", target: 1500000, icon: HomeIcon },
 ];
 
-function loadGoals(): Goal[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveGoals(goals: Goal[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
-}
-
 function Goals() {
   const { data: profile } = useProfile();
   const currency = profile?.currency ?? "INR";
   const [goals, setGoals] = useState<Goal[]>([]);
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [contribOpen, setContribOpen] = useState<string | null>(null);
   const [contribAmount, setContribAmount] = useState("");
 
-  useEffect(() => { setGoals(loadGoals()); }, []);
-  useEffect(() => { saveGoals(goals); }, [goals]);
+  // Cloud is the source of truth; the local cache is only a fallback while the
+  // first sync is in flight and is migrated up by syncGoalsFromCloud().
+  useEffect(() => {
+    setGoals(loadGoals());
+    let alive = true;
+    syncGoalsFromCloud()
+      .then((g) => { if (alive) setGoals(g); })
+      .catch(() => toast.error("Could not load your goals from the cloud."));
+    const refresh = () => setGoals(loadGoals());
+    window.addEventListener(GOALS_EVENT, refresh);
+    return () => { alive = false; window.removeEventListener(GOALS_EVENT, refresh); };
+  }, []);
 
   // Context-aware FAB: open Create Goal dialog
   useEffect(() => {
