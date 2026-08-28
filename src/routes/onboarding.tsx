@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { daysUntilSalary, lastSalaryDate, nextSalaryDate } from "@/lib/salary-cycle";
 import { updateFinancialProfile, setRememberedBalance, setRememberedSavings } from "@/lib/financial-profile";
 import type { FinancialGoal } from "@/lib/ai-coach-analysis";
+import { saveGoal, type Goal } from "@/lib/goals-store";
 
 /** Map onboarding pay-date chip → payDay (1..31, 0 = last day, null = unknown). */
 function parsePayDay(label: string): number | null {
