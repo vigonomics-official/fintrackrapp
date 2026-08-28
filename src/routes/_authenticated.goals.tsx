@@ -98,24 +98,50 @@ function Goals() {
     return { target, current, monthly, pct: target > 0 ? (current / target) * 100 : 0 };
   }, [goals]);
 
-  function addGoal(g: Omit<Goal, "id" | "createdAt" | "current">) {
+  async function addGoal(g: Omit<Goal, "id" | "createdAt" | "current">) {
+    if (busy) return;
     const goal: Goal = { ...g, id: crypto.randomUUID(), createdAt: new Date().toISOString(), current: 0 };
-    setGoals((prev) => [goal, ...prev]);
-    toast.success("Goal created", { description: g.name });
+    setBusy(true);
+    try {
+      const saved = await saveGoal(goal);
+      setGoals((prev) => [saved, ...prev]);
+      toast.success("Goal created", { description: g.name });
+    } catch (err) {
+      toast.error(friendlyError(err as any, "Could not save your goal. Please try again."));
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function contribute(id: string, amount: number) {
-    setGoals((prev) => prev.map((g) => {
-      if (g.id !== id) return g;
-      const next = Math.min(g.target, g.current + amount);
-      const completed = g.current < g.target && next >= g.target;
-      if (completed) toast.success("🎉 Goal achieved!", { description: g.name });
-      return { ...g, current: next };
-    }));
+  async function contribute(id: string, amount: number) {
+    if (busy) return;
+    const goal = goals.find((g) => g.id === id);
+    if (!goal) return;
+    const next = Math.min(goal.target, goal.current + amount);
+    const completed = goal.current < goal.target && next >= goal.target;
+    setBusy(true);
+    try {
+      const saved = await saveGoal({ ...goal, current: next });
+      setGoals((prev) => prev.map((g) => (g.id === id ? saved : g)));
+      if (completed) toast.success("🎉 Goal achieved!", { description: goal.name });
+    } catch (err) {
+      toast.error(friendlyError(err as any, "Could not update this goal. Please try again."));
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function removeGoal(id: string) {
-    setGoals((prev) => prev.filter((g) => g.id !== id));
+  async function removeGoal(id: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await removeGoalCloud(id);
+      setGoals((prev) => prev.filter((g) => g.id !== id));
+    } catch (err) {
+      toast.error(friendlyError(err as any, "Could not delete this goal. Please try again."));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
