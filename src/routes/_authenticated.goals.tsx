@@ -35,18 +35,11 @@ export const Route = createFileRoute("/_authenticated/goals")({
   }),
 });
 
-type GoalKind = "savings" | "emergency" | "fire" | "debt" | "investment" | "travel" | "gadget" | "custom";
-
-interface Goal {
-  id: string;
-  name: string;
-  kind: GoalKind;
-  target: number;
-  current: number;
-  monthly: number;
-  deadline?: string;
-  createdAt: string;
-}
+import {
+  loadGoals, syncGoalsFromCloud, saveGoal, removeGoal as removeGoalCloud,
+  GOALS_EVENT, type Goal, type GoalKind,
+} from "@/lib/goals-store";
+import { friendlyError } from "@/lib/error-utils";
 
 const KINDS: { value: GoalKind; label: string; icon: typeof Target; tone: string }[] = [
   { value: "savings", label: "Savings", icon: PiggyBank, tone: "bg-success/15 text-success" },
