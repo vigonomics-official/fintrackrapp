@@ -276,3 +276,20 @@ export async function deleteGoalRemote(id: string): Promise<void> {
   const { error } = await supabase.from("goals").delete().eq("id", id);
   if (error) throw error;
 }
+
+/**
+ * Cloud-first save: the cloud row is written (and must succeed) before the
+ * device cache is refreshed. Signed-out users fall back to the cache only.
+ */
+export async function saveGoal(goal: Goal): Promise<Goal> {
+  const stamped = stampCompletion(goal);
+  await persistGoal(stamped);
+  upsertGoal(stamped);
+  return stamped;
+}
+
+/** Cloud-first delete: removes the cloud row first, then the cached copy. */
+export async function removeGoal(id: string): Promise<void> {
+  await deleteGoalRemote(id);
+  saveGoals(loadGoals().filter((g) => g.id !== id));
+}

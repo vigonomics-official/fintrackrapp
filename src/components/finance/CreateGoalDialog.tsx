@@ -8,40 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/hooks/use-finance";
 import { toast } from "sonner";
-
-type GoalKind = "savings" | "emergency" | "fire" | "debt" | "investment" | "travel" | "gadget" | "custom";
-
-const KINDS: { value: GoalKind; label: string }[] = [
-  { value: "savings", label: "Savings" },
-  { value: "emergency", label: "Emergency Fund" },
-  { value: "fire", label: "Financial Freedom" },
-  { value: "debt", label: "Debt Payoff" },
-  { value: "investment", label: "Investment" },
-  { value: "travel", label: "Travel" },
-  { value: "gadget", label: "Gadget" },
-  { value: "custom", label: "Custom" },
-];
-
-const STORAGE_KEY = "fintrackr_goals_v1";
-
-interface Goal {
-  id: string;
-  name: string;
-  kind: GoalKind;
-  target: number;
-  current: number;
-  monthly: number;
-  deadline?: string;
-  createdAt: string;
-}
-
-function loadGoals(): Goal[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
+import { GOAL_KINDS, saveGoal, type Goal, type GoalKind } from "@/lib/goals-store";
+import { friendlyError } from "@/lib/error-utils";
 
 export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { data: profile } = useProfile();
@@ -51,12 +19,14 @@ export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpen
   const [target, setTarget] = useState("");
   const [monthly, setMonthly] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [saving, setSaving] = useState(false);
 
   function reset() {
     setName(""); setKind("savings"); setTarget(""); setMonthly(""); setDeadline("");
   }
 
-  function create() {
+  async function create() {
+    if (saving) return;
     if (!name || !Number(target)) {
       toast.error("Add a name and target amount");
       return;
@@ -71,15 +41,21 @@ export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpen
       createdAt: new Date().toISOString(),
       current: 0,
     };
-    const existing = loadGoals();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([goal, ...existing]));
-    toast.success("Goal created", { description: name });
-    reset();
-    onOpenChange(false);
+    setSaving(true);
+    try {
+      await saveGoal(goal);
+      toast.success("Goal created", { description: name });
+      reset();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(friendlyError(err as any, "Could not save your goal. Please try again."));
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setTimeout(reset, 200); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (saving) return; onOpenChange(o); if (!o) setTimeout(reset, 200); }}>
       <DialogContent className="w-[calc(100vw-32px)] max-w-md rounded-2xl">
         <DialogHeader><DialogTitle>Create new goal</DialogTitle></DialogHeader>
         <div className="space-y-3">
@@ -92,7 +68,7 @@ export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpen
             <Select value={kind} onValueChange={(v) => setKind(v as GoalKind)}>
               <SelectTrigger id="cg-kind"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
+                {GOAL_KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -112,8 +88,8 @@ export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpen
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={create}>Create goal</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={create} disabled={saving}>{saving ? "Saving…" : "Create goal"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

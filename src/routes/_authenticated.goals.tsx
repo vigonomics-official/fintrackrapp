@@ -35,18 +35,11 @@ export const Route = createFileRoute("/_authenticated/goals")({
   }),
 });
 
-type GoalKind = "savings" | "emergency" | "fire" | "debt" | "investment" | "travel" | "gadget" | "custom";
-
-interface Goal {
-  id: string;
-  name: string;
-  kind: GoalKind;
-  target: number;
-  current: number;
-  monthly: number;
-  deadline?: string;
-  createdAt: string;
-}
+import {
+  loadGoals, syncGoalsFromCloud, saveGoal, removeGoal as removeGoalCloud,
+  GOALS_EVENT, type Goal, type GoalKind,
+} from "@/lib/goals-store";
+import { friendlyError } from "@/lib/error-utils";
 
 const KINDS: { value: GoalKind; label: string; icon: typeof Target; tone: string }[] = [
   { value: "savings", label: "Savings", icon: PiggyBank, tone: "bg-success/15 text-success" },
@@ -59,7 +52,6 @@ const KINDS: { value: GoalKind; label: string; icon: typeof Target; tone: string
   { value: "custom", label: "Custom", icon: Target, tone: "bg-muted text-muted-foreground" },
 ];
 
-const STORAGE_KEY = "fintrackr_goals_v1";
 
 const SUGGESTIONS: { name: string; kind: GoalKind; target: number; icon: typeof Target }[] = [
   { name: "Emergency Fund (6 months)", kind: "emergency", target: 300000, icon: ShieldCheck },
@@ -70,29 +62,27 @@ const SUGGESTIONS: { name: string; kind: GoalKind; target: number; icon: typeof 
   { name: "Down Payment", kind: "savings", target: 1500000, icon: HomeIcon },
 ];
 
-function loadGoals(): Goal[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveGoals(goals: Goal[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
-}
-
 function Goals() {
   const { data: profile } = useProfile();
   const currency = profile?.currency ?? "INR";
   const [goals, setGoals] = useState<Goal[]>([]);
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [contribOpen, setContribOpen] = useState<string | null>(null);
   const [contribAmount, setContribAmount] = useState("");
 
-  useEffect(() => { setGoals(loadGoals()); }, []);
-  useEffect(() => { saveGoals(goals); }, [goals]);
+  // Cloud is the source of truth; the local cache is only a fallback while the
+  // first sync is in flight and is migrated up by syncGoalsFromCloud().
+  useEffect(() => {
+    setGoals(loadGoals());
+    let alive = true;
+    syncGoalsFromCloud()
+      .then((g) => { if (alive) setGoals(g); })
+      .catch(() => toast.error("Could not load your goals from the cloud."));
+    const refresh = () => setGoals(loadGoals());
+    window.addEventListener(GOALS_EVENT, refresh);
+    return () => { alive = false; window.removeEventListener(GOALS_EVENT, refresh); };
+  }, []);
 
   // Context-aware FAB: open Create Goal dialog
   useEffect(() => {
@@ -108,24 +98,50 @@ function Goals() {
     return { target, current, monthly, pct: target > 0 ? (current / target) * 100 : 0 };
   }, [goals]);
 
-  function addGoal(g: Omit<Goal, "id" | "createdAt" | "current">) {
+  async function addGoal(g: Omit<Goal, "id" | "createdAt" | "current">) {
+    if (busy) return;
     const goal: Goal = { ...g, id: crypto.randomUUID(), createdAt: new Date().toISOString(), current: 0 };
-    setGoals((prev) => [goal, ...prev]);
-    toast.success("Goal created", { description: g.name });
+    setBusy(true);
+    try {
+      const saved = await saveGoal(goal);
+      setGoals((prev) => [saved, ...prev]);
+      toast.success("Goal created", { description: g.name });
+    } catch (err) {
+      toast.error(friendlyError(err as any, "Could not save your goal. Please try again."));
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function contribute(id: string, amount: number) {
-    setGoals((prev) => prev.map((g) => {
-      if (g.id !== id) return g;
-      const next = Math.min(g.target, g.current + amount);
-      const completed = g.current < g.target && next >= g.target;
-      if (completed) toast.success("🎉 Goal achieved!", { description: g.name });
-      return { ...g, current: next };
-    }));
+  async function contribute(id: string, amount: number) {
+    if (busy) return;
+    const goal = goals.find((g) => g.id === id);
+    if (!goal) return;
+    const next = Math.min(goal.target, goal.current + amount);
+    const completed = goal.current < goal.target && next >= goal.target;
+    setBusy(true);
+    try {
+      const saved = await saveGoal({ ...goal, current: next });
+      setGoals((prev) => prev.map((g) => (g.id === id ? saved : g)));
+      if (completed) toast.success("🎉 Goal achieved!", { description: goal.name });
+    } catch (err) {
+      toast.error(friendlyError(err as any, "Could not update this goal. Please try again."));
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function removeGoal(id: string) {
-    setGoals((prev) => prev.filter((g) => g.id !== id));
+  async function removeGoal(id: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await removeGoalCloud(id);
+      setGoals((prev) => prev.filter((g) => g.id !== id));
+    } catch (err) {
+      toast.error(friendlyError(err as any, "Could not delete this goal. Please try again."));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -248,7 +264,7 @@ function Goals() {
                           onClick={() => { setContribOpen(g.id); setContribAmount(String(g.monthly || 1000)); }}>
                           <Plus className="mr-1 h-3.5 w-3.5" /> Add savings
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => removeGoal(g.id)} aria-label="Delete goal">
+                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => { void removeGoal(g.id); }} aria-label="Delete goal">
                           <Trash2 className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </div>
@@ -290,9 +306,9 @@ function Goals() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setContribOpen(null)}>Cancel</Button>
-            <Button onClick={() => {
+            <Button disabled={busy} onClick={() => {
               const amt = Number(contribAmount);
-              if (contribOpen && amt > 0) contribute(contribOpen, amt);
+              if (contribOpen && amt > 0) void contribute(contribOpen, amt);
               setContribOpen(null);
             }}>Add</Button>
           </DialogFooter>
