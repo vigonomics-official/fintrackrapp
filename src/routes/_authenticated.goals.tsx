@@ -52,7 +52,6 @@ const KINDS: { value: GoalKind; label: string; icon: typeof Target; tone: string
   { value: "custom", label: "Custom", icon: Target, tone: "bg-muted text-muted-foreground" },
 ];
 
-const STORAGE_KEY = "fintrackr_goals_v1";
 
 const SUGGESTIONS: { name: string; kind: GoalKind; target: number; icon: typeof Target }[] = [
   { name: "Emergency Fund (6 months)", kind: "emergency", target: 300000, icon: ShieldCheck },
