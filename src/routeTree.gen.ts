@@ -20,6 +20,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuidesUpiMicroSpendingRouteImport } from './routes/guides.upi-micro-spending'
+import { Route as Guides503020BudgetCalculatorIndiaRouteImport } from './routes/guides.50-30-20-budget-calculator-india'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
 import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
 import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
@@ -107,6 +108,12 @@ const GuidesUpiMicroSpendingRoute = GuidesUpiMicroSpendingRouteImport.update({
   path: '/guides/upi-micro-spending',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Guides503020BudgetCalculatorIndiaRoute =
+  Guides503020BudgetCalculatorIndiaRouteImport.update({
+    id: '/guides/50-30-20-budget-calculator-india',
+    path: '/guides/50-30-20-budget-calculator-india',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedTransactionsRoute =
   AuthenticatedTransactionsRouteImport.update({
     id: '/transactions',
@@ -318,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/guides/50-30-20-budget-calculator-india': typeof Guides503020BudgetCalculatorIndiaRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
@@ -361,6 +369,7 @@ export interface FileRoutesByTo {
   '/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/split-settle': typeof AuthenticatedSplitSettleRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
+  '/guides/50-30-20-budget-calculator-india': typeof Guides503020BudgetCalculatorIndiaRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
@@ -407,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/sms-intelligence': typeof AuthenticatedSmsIntelligenceRoute
   '/_authenticated/split-settle': typeof AuthenticatedSplitSettleRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
+  '/guides/50-30-20-budget-calculator-india': typeof Guides503020BudgetCalculatorIndiaRoute
   '/guides/upi-micro-spending': typeof GuidesUpiMicroSpendingRoute
   '/_authenticated/insights/ai': typeof AuthenticatedInsightsAiRoute
   '/_authenticated/insights/ai-coach': typeof AuthenticatedInsightsAiCoachRouteWithChildren
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/sms-intelligence'
     | '/split-settle'
     | '/transactions'
+    | '/guides/50-30-20-budget-calculator-india'
     | '/guides/upi-micro-spending'
     | '/insights/ai'
     | '/insights/ai-coach'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/sms-intelligence'
     | '/split-settle'
     | '/transactions'
+    | '/guides/50-30-20-budget-calculator-india'
     | '/guides/upi-micro-spending'
     | '/insights/ai'
     | '/insights/ai-coach'
@@ -541,6 +553,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sms-intelligence'
     | '/_authenticated/split-settle'
     | '/_authenticated/transactions'
+    | '/guides/50-30-20-budget-calculator-india'
     | '/guides/upi-micro-spending'
     | '/_authenticated/insights/ai'
     | '/_authenticated/insights/ai-coach'
@@ -564,6 +577,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  Guides503020BudgetCalculatorIndiaRoute: typeof Guides503020BudgetCalculatorIndiaRoute
   GuidesUpiMicroSpendingRoute: typeof GuidesUpiMicroSpendingRoute
 }
 
@@ -644,6 +658,13 @@ declare module '@tanstack/react-router' {
       path: '/guides/upi-micro-spending'
       fullPath: '/guides/upi-micro-spending'
       preLoaderRoute: typeof GuidesUpiMicroSpendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/50-30-20-budget-calculator-india': {
+      id: '/guides/50-30-20-budget-calculator-india'
+      path: '/guides/50-30-20-budget-calculator-india'
+      fullPath: '/guides/50-30-20-budget-calculator-india'
+      preLoaderRoute: typeof Guides503020BudgetCalculatorIndiaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/transactions': {
@@ -984,6 +1005,8 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  Guides503020BudgetCalculatorIndiaRoute:
+    Guides503020BudgetCalculatorIndiaRoute,
   GuidesUpiMicroSpendingRoute: GuidesUpiMicroSpendingRoute,
 }
 export const routeTree = rootRouteImport

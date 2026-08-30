@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/guides/50-30-20-budget-calculator-india")({
   head: () => ({
@@ -62,6 +63,8 @@ const DEFAULT_SALARY = 75000;
 const DEFAULT_RENT = 18000;
 const DEFAULT_EMI = 12000;
 const DEFAULT_BILLS = 5000;
+const MIN_SALARY = 20000;
+const MAX_SALARY = 500000;
 
 function BudgetCalculatorGuide() {
   const [salaryRaw, setSalaryRaw] = useState(formatInr(DEFAULT_SALARY));
@@ -84,12 +87,13 @@ function BudgetCalculatorGuide() {
   const freeNeeds = Math.max(0, needs - committed);
   const overCommitment = Math.max(0, committed - needs);
 
-  const dailySafeSpend = salary / 30;
-  const weeklySafeSpend = salary / 4;
-
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const num = parseMoney(e.target.value);
     setSalaryRaw(formatInr(num));
+  };
+
+  const handleSliderChange = (value: number[]) => {
+    setSalaryRaw(formatInr(value[0] ?? MIN_SALARY));
   };
 
   const handleRentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,7 +166,7 @@ function BudgetCalculatorGuide() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label htmlFor="salary" className="flex items-center gap-2">
                 <IndianRupee className="h-4 w-4 text-muted-foreground" />
                 Monthly take-home salary
@@ -174,6 +178,14 @@ function BudgetCalculatorGuide() {
                 onChange={handleSalaryChange}
                 placeholder="₹75,000"
                 className="text-lg font-semibold"
+              />
+              <Slider
+                value={[Math.min(Math.max(salary, MIN_SALARY), MAX_SALARY)]}
+                min={MIN_SALARY}
+                max={MAX_SALARY}
+                step={1000}
+                onValueChange={handleSliderChange}
+                aria-label="Adjust monthly salary"
               />
               <p className="text-xs text-muted-foreground">
                 Use the amount credited to your bank after PF, tax and other deductions.
@@ -504,11 +516,4 @@ function RuleCard({ title, desc, highlight }: { title: string; desc: string; hig
       <p className="mt-3 text-xs font-medium text-primary">{highlight}</p>
     </div>
   );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _SliderDemo = Slider; // keep import used if ever extended
-
-function cn(...classes: (string | false | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
 }
