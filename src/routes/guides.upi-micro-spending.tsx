@@ -141,6 +141,11 @@ function UpiMicroSpendingGuide() {
             </Link>
           </Button>
           <Button asChild variant="outline">
+            <Link to="/guides/50-30-20-budget-calculator-india">
+              50-30-20 budget calculator
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
             <Link to="/">Back to home</Link>
           </Button>
         </div>
