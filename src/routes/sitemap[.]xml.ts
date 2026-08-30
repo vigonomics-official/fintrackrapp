@@ -29,6 +29,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/investments", changefreq: "monthly", priority: "0.6" },
           { path: "/loans", changefreq: "monthly", priority: "0.5" },
           { path: "/guides/upi-micro-spending", changefreq: "monthly", priority: "0.7" },
+          { path: "/guides/50-30-20-budget-calculator-india", changefreq: "monthly", priority: "0.8" },
         ];
 
         const urls = entries.map((e) =>
