@@ -1106,9 +1106,12 @@ function GoalsTab() {
     refresh();
     window.addEventListener(GOALS_EVENT, refresh);
     let alive = true;
-    syncGoalsFromCloud()
+    const load = () => syncGoalsFromCloud()
       .then((cloud) => { if (alive) setGoals(cloud); })
-      .catch(() => toast.error("Couldn't load your saved goals from the cloud"));
+      .catch(() => toast.error("Couldn't load your saved goals from the cloud", {
+        action: { label: "Retry", onClick: () => { void load(); } },
+      }));
+    void load();
     return () => { alive = false; window.removeEventListener(GOALS_EVENT, refresh); };
   }, []);
 

@@ -237,6 +237,8 @@ async function currentUserId(): Promise<string | null> {
  */
 export async function syncGoalsFromCloud(): Promise<Goal[]> {
   const userId = await currentUserId();
+  // No session yet: keep whatever the cache holds, never treat this as an error
+  // and never write an empty list over cloud data.
   if (!userId) return loadGoals();
 
   const { data, error } = await supabase
@@ -249,17 +251,28 @@ export async function syncGoalsFromCloud(): Promise<Goal[]> {
   const cloudIds = new Set(cloud.map((g) => g.id));
   const localOnly = loadGoals().filter((g) => !cloudIds.has(g.id));
 
-  if (localOnly.length) {
-    const { error: insertError } = await supabase
-      .from("goals")
-      .insert(localOnly.map((g) => toRow(g, userId)));
-    if (insertError) throw insertError;
+  // Best-effort one-time migration of device-only goals. A migration failure
+  // (e.g. an id already used by another account's row) must never fail the
+  // whole load — the cloud read already succeeded and is the source of truth.
+  const migrated: Goal[] = [];
+  for (const g of localOnly) {
+    let candidate = g;
+    let { error: insertError } = await supabase.from("goals").insert(toRow(candidate, userId));
+    if (insertError && (insertError as any).code === "23505") {
+      candidate = { ...g, id: crypto.randomUUID() };
+      ({ error: insertError } = await supabase.from("goals").insert(toRow(candidate, userId)));
+    }
+    if (!insertError) migrated.push(candidate);
+    else console.warn("[goals] skipped migrating a local goal", insertError);
   }
 
-  const merged = [...localOnly, ...cloud];
+  const byId = new Map<string, Goal>();
+  for (const g of [...migrated, ...cloud]) byId.set(g.id, g);
+  const merged = [...byId.values()];
   saveGoals(merged);
   return merged;
 }
+
 
 /** Writes a single goal to the cloud (insert or update by id). */
 export async function persistGoal(goal: Goal): Promise<void> {

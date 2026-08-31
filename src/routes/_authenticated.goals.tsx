@@ -76,9 +76,12 @@ function Goals() {
   useEffect(() => {
     setGoals(loadGoals());
     let alive = true;
-    syncGoalsFromCloud()
+    const load = () => syncGoalsFromCloud()
       .then((g) => { if (alive) setGoals(g); })
-      .catch(() => toast.error("Could not load your goals from the cloud."));
+      .catch(() => toast.error("Could not load your goals from the cloud.", {
+        action: { label: "Retry", onClick: () => { void load(); } },
+      }));
+    void load();
     const refresh = () => setGoals(loadGoals());
     window.addEventListener(GOALS_EVENT, refresh);
     return () => { alive = false; window.removeEventListener(GOALS_EVENT, refresh); };
