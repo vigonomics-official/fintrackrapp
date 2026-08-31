@@ -235,7 +235,18 @@ async function currentUserId(): Promise<string | null> {
  * once (never overwriting newer cloud rows, never deleting local data before
  * the cloud write succeeds). Returns the merged list and refreshes the cache.
  */
-export async function syncGoalsFromCloud(): Promise<Goal[]> {
+let syncInFlight: Promise<Goal[]> | null = null;
+
+export function syncGoalsFromCloud(): Promise<Goal[]> {
+  // Single-flight: concurrent mounts (StrictMode, two tabs of the same view)
+  // must not each migrate the same local-only goal and create duplicates.
+  if (!syncInFlight) {
+    syncInFlight = runSync().finally(() => { syncInFlight = null; });
+  }
+  return syncInFlight;
+}
+
+async function runSync(): Promise<Goal[]> {
   const userId = await currentUserId();
   // No session yet: keep whatever the cache holds, never treat this as an error
   // and never write an empty list over cloud data.
