@@ -291,6 +291,65 @@ function Goals() {
   );
 }
 
+function GoalTile({
+  goal: g, index, currency, onOpen,
+}: { goal: Goal; index: number; currency: string; onOpen: () => void }) {
+  const kind = KINDS.find((k) => k.value === g.kind) ?? KINDS[0];
+  const Icon = kind.icon;
+  const pct = g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0;
+  const remaining = Math.max(0, g.target - g.current);
+  const monthsLeft = g.monthly > 0 && remaining > 0 ? Math.ceil(remaining / g.monthly) : null;
+  const eta = monthsLeft != null
+    ? new Date(new Date().setMonth(new Date().getMonth() + monthsLeft)).toLocaleDateString(undefined, { month: "short", year: "numeric" })
+    : null;
+  const done = g.target > 0 && g.current >= g.target;
+
+  return (
+    <motion.div layout
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: index * 0.04 }}>
+      <Card className="relative overflow-hidden shadow-soft transition-shadow hover:shadow-elegant">
+        {done && (
+          <div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+            <Trophy className="h-3 w-3" /> Completed
+          </div>
+        )}
+        <CardContent className="p-0">
+          <button type="button" onClick={onOpen} className="w-full space-y-4 p-5 text-left">
+            <div className="flex items-start gap-3">
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${kind.tone}`}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-base font-semibold">{g.name}</p>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{kind.label}</p>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="font-display text-lg font-bold tabular-nums text-foreground">
+                  {formatCurrency(g.current, currency)}
+                </span>
+                <span className="text-muted-foreground">/ {formatCurrency(g.target, currency)}</span>
+              </div>
+              <Progress value={pct} className="mt-2 h-2" />
+              <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>{pct.toFixed(0)}% complete</span>
+                {eta && !done && <span>ETA {eta}</span>}
+              </div>
+            </div>
+
+            <p className="text-[11px] font-medium text-primary">
+              {done ? "View details" : "Tap for details & add money"}
+            </p>
+          </button>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
 function NewGoalDialog({ onCreate, currency }: { onCreate: (g: Omit<Goal, "id" | "createdAt" | "current">) => void; currency: string }) {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<GoalKind>("savings");
