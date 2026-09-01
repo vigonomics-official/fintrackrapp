@@ -1201,6 +1201,7 @@ function GoalsTab() {
         currency={currency}
         onSave={save}
         onEdit={(g) => { setDetailId(null); setEditing(g); setFormOpen(true); }}
+        onDelete={destroy}
       />
     </div>
   );
