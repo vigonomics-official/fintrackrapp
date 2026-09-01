@@ -1125,6 +1125,21 @@ function GoalsTab() {
     });
   }
 
+  async function destroy(goal: Goal) {
+    const previous = goals;
+    setDetailId(null);
+    setGoals((prev) => prev.filter((g) => g.id !== goal.id));
+    try {
+      await removeGoal(goal.id);
+      toast.success("Goal deleted", { description: goal.name });
+    } catch {
+      setGoals(previous);
+      saveGoals(previous);
+      toast.error("Couldn't delete this goal. Please try again.");
+    }
+  }
+
+
 
   const active = goals.filter((g) => !isCompleted(g));
   const completed = goals.filter((g) => isCompleted(g));
