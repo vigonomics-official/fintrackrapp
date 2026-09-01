@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
   Target, Plane, Bike, GraduationCap, Home as HomeIcon, ShieldCheck,
-  Sparkles, Plus, Trash2, Trophy, Flag, PiggyBank, Laptop,
+  Sparkles, Plus, Trophy, Flag, PiggyBank, Laptop, ChevronDown,
 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
