@@ -118,36 +118,38 @@ function Goals() {
     }
   }
 
-  async function contribute(id: string, amount: number) {
-    if (busy) return;
-    const goal = goals.find((g) => g.id === id);
-    if (!goal) return;
-    const next = Math.min(goal.target, goal.current + amount);
-    const completed = goal.current < goal.target && next >= goal.target;
-    setBusy(true);
+  async function updateGoal(goal: Goal) {
+    const previous = goals;
+    setGoals((prev) => prev.map((g) => (g.id === goal.id ? goal : g)));
     try {
-      const saved = await saveGoal({ ...goal, current: next });
-      setGoals((prev) => prev.map((g) => (g.id === id ? saved : g)));
-      if (completed) toast.success("🎉 Goal achieved!", { description: goal.name });
+      const saved = await saveGoal(goal);
+      setGoals((prev) => prev.map((g) => (g.id === saved.id ? saved : g)));
     } catch (err) {
+      setGoals(previous);
       toast.error(friendlyError(err as any, "Could not update this goal. Please try again."));
-    } finally {
-      setBusy(false);
     }
   }
 
-  async function removeGoal(id: string) {
+  async function removeGoal(goal: Goal) {
     if (busy) return;
+    const previous = goals;
     setBusy(true);
+    setDetailId(null);
+    setGoals((prev) => prev.filter((g) => g.id !== goal.id));
     try {
-      await removeGoalCloud(id);
-      setGoals((prev) => prev.filter((g) => g.id !== id));
+      await removeGoalCloud(goal.id);
+      toast.success("Goal deleted", { description: goal.name });
     } catch (err) {
+      setGoals(previous);
       toast.error(friendlyError(err as any, "Could not delete this goal. Please try again."));
     } finally {
       setBusy(false);
     }
   }
+
+  const activeGoals = goals.filter((g) => !isCompleted(g));
+  const completedGoals = goals.filter((g) => isCompleted(g));
+  const detail = goals.find((g) => g.id === detailId) ?? null;
 
   return (
     <div>
