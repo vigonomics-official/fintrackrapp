@@ -195,14 +195,16 @@ function Goals() {
           <Card className="shadow-soft">
             <CardContent className="space-y-4 p-5">
               <div>
-                <h3 className="font-display text-base font-semibold">Start with a popular goal</h3>
-                <p className="text-xs text-muted-foreground">Tap one to get going — you can edit later.</p>
+                <h3 className="font-display text-base font-semibold">Add your first goal</h3>
+                <p className="text-xs text-muted-foreground">
+                  Tap a popular goal to get going, or use “New goal” — you can edit everything later.
+                </p>
               </div>
               <div className="grid gap-2.5 sm:grid-cols-2">
                 {SUGGESTIONS.map((s) => (
-                  <button key={s.name}
+                  <button key={s.name} disabled={busy}
                     onClick={() => addGoal({ name: s.name, kind: s.kind, target: s.target, monthly: Math.round(s.target / 24) })}
-                    className="group flex items-center gap-3 rounded-xl border bg-card p-3 text-left transition-all hover:border-primary/50 hover:shadow-soft">
+                    className="group flex items-center gap-3 rounded-xl border bg-card p-3 text-left transition-all hover:border-primary/50 hover:shadow-soft disabled:opacity-60">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <s.icon className="h-5 w-5" />
                     </span>
@@ -218,70 +220,36 @@ function Goals() {
           </Card>
         )}
 
-        {/* Goal cards */}
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <AnimatePresence>
-            {goals.map((g, i) => {
-              const kind = KINDS.find((k) => k.value === g.kind) ?? KINDS[0];
-              const Icon = kind.icon;
-              const pct = g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0;
-              const remaining = Math.max(0, g.target - g.current);
-              const monthsLeft = g.monthly > 0 ? Math.ceil(remaining / g.monthly) : null;
-              const eta = monthsLeft != null
-                ? new Date(new Date().setMonth(new Date().getMonth() + monthsLeft)).toLocaleDateString(undefined, { month: "short", year: "numeric" })
-                : null;
-              const done = g.current >= g.target && g.target > 0;
-              return (
-                <motion.div key={g.id} layout
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: i * 0.04 }}>
-                  <Card className="relative overflow-hidden shadow-soft transition-shadow hover:shadow-elegant">
-                    {done && (
-                      <div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
-                        <Trophy className="h-3 w-3" /> Achieved
-                      </div>
-                    )}
-                    <CardContent className="space-y-4 p-5">
-                      <div className="flex items-start gap-3">
-                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${kind.tone}`}>
-                          <Icon className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-display text-base font-semibold">{g.name}</p>
-                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{kind.label}</p>
-                        </div>
-                      </div>
+        {/* Active goals */}
+        {activeGoals.length > 0 && (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <AnimatePresence>
+              {activeGoals.map((g, i) => (
+                <GoalTile key={g.id} goal={g} index={i} currency={currency} onOpen={() => setDetailId(g.id)} />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
 
-                      <div>
-                        <div className="flex items-baseline justify-between text-xs">
-                          <span className="font-display text-lg font-bold tabular-nums text-foreground">
-                            {formatCurrency(g.current, currency)}
-                          </span>
-                          <span className="text-muted-foreground">/ {formatCurrency(g.target, currency)}</span>
-                        </div>
-                        <Progress value={pct} className="mt-2 h-2" />
-                        <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
-                          <span>{pct.toFixed(0)}% complete</span>
-                          {eta && !done && <span>ETA {eta}</span>}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" className="flex-1"
-                          onClick={() => { setContribOpen(g.id); setContribAmount(String(g.monthly || 1000)); }}>
-                          <Plus className="mr-1 h-3.5 w-3.5" /> Add savings
-                        </Button>
-                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => { void removeGoal(g.id); }} aria-label="Delete goal">
-                          <Trash2 className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
+        {/* Completed goals */}
+        {completedGoals.length > 0 && (
+          <Collapsible defaultOpen={activeGoals.length === 0}>
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl border bg-card px-4 py-3 text-left">
+              <span className="flex items-center gap-2 text-sm font-semibold">
+                <Trophy className="h-4 w-4 text-success" /> Completed goals
+                <span className="text-xs font-normal text-muted-foreground">({completedGoals.length})</span>
+              </span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {completedGoals.map((g, i) => (
+                  <GoalTile key={g.id} goal={g} index={i} currency={currency} onOpen={() => setDetailId(g.id)} />
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
         {/* Smart insights */}
         {goals.length > 0 && (
@@ -303,24 +271,21 @@ function Goals() {
         )}
       </div>
 
-      {/* Contribute dialog */}
-      <Dialog open={!!contribOpen} onOpenChange={(o) => !o && setContribOpen(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Add savings</DialogTitle></DialogHeader>
-          <div className="space-y-2">
-            <Label>Amount</Label>
-            <Input type="number" inputMode="decimal" value={contribAmount} onChange={(e) => setContribAmount(e.target.value)} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setContribOpen(null)}>Cancel</Button>
-            <Button disabled={busy} onClick={() => {
-              const amt = Number(contribAmount);
-              if (contribOpen && amt > 0) void contribute(contribOpen, amt);
-              setContribOpen(null);
-            }}>Add</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <GoalDetailSheet
+        goal={detail}
+        onOpenChange={() => setDetailId(null)}
+        currency={currency}
+        onSave={(g) => { void updateGoal(g); }}
+        onEdit={(g) => { setDetailId(null); setEditing(g); setEditOpen(true); }}
+        onDelete={(g) => removeGoal(g)}
+      />
+      <GoalFormSheet
+        open={editOpen}
+        onOpenChange={(o) => { setEditOpen(o); if (!o) setEditing(undefined); }}
+        initial={editing}
+        currency={currency}
+        onSave={(g) => { void updateGoal(g); }}
+      />
     </div>
   );
 }
