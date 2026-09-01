@@ -110,7 +110,11 @@ function Goals() {
     setBusy(true);
     try {
       const saved = await saveGoal(goal);
-      setGoals((prev) => [saved, ...prev]);
+      // saveGoal() already refreshed the cache (and this view via GOALS_EVENT),
+      // so replace-or-prepend instead of blindly prepending a duplicate.
+      setGoals((prev) => (prev.some((x) => x.id === saved.id)
+        ? prev.map((x) => (x.id === saved.id ? saved : x))
+        : [saved, ...prev]));
       toast.success("Goal created", { description: g.name });
     } catch (err) {
       toast.error(friendlyError(err as any, "Could not save your goal. Please try again."));
