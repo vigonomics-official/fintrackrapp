@@ -186,7 +186,7 @@ function Goals() {
                     initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.pct)}%` }} transition={{ duration: 0.8 }} />
                 </div>
                 <div className="mt-4 flex items-center gap-4 text-xs opacity-90">
-                  <span>{goals.length} active</span>
+                  <span>{activeGoals.length} active</span>
                   <span>•</span>
                   <span>Monthly commit {formatCurrency(totals.monthly, currency)}</span>
                 </div>
