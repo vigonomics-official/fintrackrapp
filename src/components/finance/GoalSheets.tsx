@@ -147,15 +147,17 @@ export function GoalFormSheet({
 /* --------------------------------- Detail ---------------------------------- */
 
 export function GoalDetailSheet({
-  goal, onOpenChange, currency, onSave, onEdit,
+  goal, onOpenChange, currency, onSave, onEdit, onDelete,
 }: {
   goal: Goal | null;
   onOpenChange: (o: boolean) => void;
   currency: string;
   onSave: (g: Goal) => void;
   onEdit: (g: Goal) => void;
+  onDelete?: (g: Goal) => void | Promise<void>;
 }) {
   const [contribution, setContribution] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const plan = goal ? computeGoalPlan(goal) : null;
 
   function addSavings() {
