@@ -32,7 +32,7 @@ import { PurchaseCheckPanel } from "@/components/finance/PurchaseCheckPanel";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
   loadGoals, upsertGoal, isCompleted, computeGoalPlan, saveGoals,
-  syncGoalsFromCloud, persistGoal,
+  syncGoalsFromCloud, persistGoal, removeGoal,
   GOALS_EVENT, GOAL_STATUS_LABEL, type Goal,
 } from "@/lib/goals-store";
 
