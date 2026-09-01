@@ -69,8 +69,9 @@ function Goals() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [contribOpen, setContribOpen] = useState<string | null>(null);
-  const [contribAmount, setContribAmount] = useState("");
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Goal | undefined>(undefined);
+  const [editOpen, setEditOpen] = useState(false);
 
   // Cloud is the source of truth; the local cache is only a fallback while the
   // first sync is in flight and is migrated up by syncGoalsFromCloud().
