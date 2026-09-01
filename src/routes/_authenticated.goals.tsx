@@ -110,7 +110,11 @@ function Goals() {
     setBusy(true);
     try {
       const saved = await saveGoal(goal);
-      setGoals((prev) => [saved, ...prev]);
+      // saveGoal() already refreshed the cache (and this view via GOALS_EVENT),
+      // so replace-or-prepend instead of blindly prepending a duplicate.
+      setGoals((prev) => (prev.some((x) => x.id === saved.id)
+        ? prev.map((x) => (x.id === saved.id ? saved : x))
+        : [saved, ...prev]));
       toast.success("Goal created", { description: g.name });
     } catch (err) {
       toast.error(friendlyError(err as any, "Could not save your goal. Please try again."));
@@ -182,7 +186,7 @@ function Goals() {
                     initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.pct)}%` }} transition={{ duration: 0.8 }} />
                 </div>
                 <div className="mt-4 flex items-center gap-4 text-xs opacity-90">
-                  <span>{goals.length} active</span>
+                  <span>{activeGoals.length} active</span>
                   <span>•</span>
                   <span>Monthly commit {formatCurrency(totals.monthly, currency)}</span>
                 </div>
