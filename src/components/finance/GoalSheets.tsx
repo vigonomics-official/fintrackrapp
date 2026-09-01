@@ -259,11 +259,11 @@ export function GoalDetailSheet({
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="goal-contrib" className="text-xs">Record saved amount</Label>
+                <Label htmlFor="goal-contrib" className="text-xs">Add money to this goal</Label>
                 <div className="flex gap-2">
                   <Input id="goal-contrib" type="number" inputMode="decimal" min="0" value={contribution}
                     onChange={(e) => setContribution(e.target.value)} placeholder="0" />
-                  <Button size="sm" onClick={addSavings}>Add</Button>
+                  <Button size="sm" onClick={addSavings}>Add money</Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
                   Updates this goal&apos;s saved amount only — no transaction is created.
@@ -273,7 +273,41 @@ export function GoalDetailSheet({
               <Button variant="outline" size="sm" className="w-full" onClick={() => onEdit(goal)}>
                 Edit goal details
               </Button>
+
+              {onDelete && (
+                <Button
+                  variant="ghost" size="sm"
+                  className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Delete goal
+                </Button>
+              )}
             </div>
+
+            <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete “{goal.name}”?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This permanently removes the goal and its saved progress from your account.
+                    This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => {
+                      setConfirmDelete(false);
+                      void onDelete?.(goal);
+                    }}
+                  >
+                    Delete permanently
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
         )}
       </SheetContent>
