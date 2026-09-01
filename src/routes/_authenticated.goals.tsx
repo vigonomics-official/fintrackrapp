@@ -37,8 +37,9 @@ export const Route = createFileRoute("/_authenticated/goals")({
 
 import {
   loadGoals, syncGoalsFromCloud, saveGoal, removeGoal as removeGoalCloud,
-  GOALS_EVENT, type Goal, type GoalKind,
+  isCompleted, GOALS_EVENT, type Goal, type GoalKind,
 } from "@/lib/goals-store";
+import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import { friendlyError } from "@/lib/error-utils";
 
 const KINDS: { value: GoalKind; label: string; icon: typeof Target; tone: string }[] = [
