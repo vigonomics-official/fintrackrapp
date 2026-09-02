@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   CheckCircle2, Home, Car, GraduationCap, CreditCard, Coins, User,
-  Briefcase, Landmark, ShieldCheck,
+  Briefcase, Landmark, ShieldCheck, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
