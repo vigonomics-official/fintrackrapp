@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   CheckCircle2, Home, Car, GraduationCap, CreditCard, Coins, User,
-  Briefcase, Landmark, ShieldCheck,
+  Briefcase, Landmark, ShieldCheck, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -190,8 +190,26 @@ export function LoanDetailSheet({
   const { data: payments = [] } = useLoanPayments(loan.id);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmPaidOff, setConfirmPaidOff] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [payAmount, setPayAmount] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const deleteLoan = async () => {
+    if (busy) return;
+    setBusy(true);
+    const { error: pe } = await supabase.from("loan_payments" as any).delete().eq("loan_id", loan.id);
+    if (pe) { setBusy(false); return toast.error(friendlyError(pe)); }
+    const { error } = await supabase.from("loans" as any).delete().eq("id", loan.id);
+    setBusy(false);
+    if (error) return toast.error(friendlyError(error));
+    toast.success("Loan deleted");
+    setConfirmDelete(false);
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["loans"] }),
+      qc.invalidateQueries({ queryKey: ["loan_payments"] }),
+    ]);
+    onOpenChange(false);
+  };
 
   const paid = Math.max(0, loan.total_amount - loan.remaining_balance);
   const pct = loan.total_amount > 0 ? Math.min(100, (paid / loan.total_amount) * 100) : 0;
@@ -364,6 +382,14 @@ export function LoanDetailSheet({
                   Mark as Paid Off
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="mr-1.5 h-4 w-4" />
+                Delete loan
+              </Button>
             </div>
           </div>
         </SheetContent>
@@ -384,6 +410,29 @@ export function LoanDetailSheet({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); markPaidOff(); }}>
               Yes, mark paid off
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete “{loan.loan_name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the loan and its payment history from your account.
+              Your outstanding balance, EMI pressure and debt-free date will be recalculated.
+              This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => { e.preventDefault(); deleteLoan(); }}
+            >
+              Delete permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

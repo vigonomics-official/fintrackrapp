@@ -266,6 +266,7 @@ async function runSync(): Promise<Goal[]> {
   // (e.g. an id already used by another account's row) must never fail the
   // whole load — the cloud read already succeeded and is the source of truth.
   const migrated: Goal[] = [];
+  const pending: Goal[] = [];
   for (const g of localOnly) {
     let candidate = g;
     let { error: insertError } = await supabase.from("goals").insert(toRow(candidate, userId));
@@ -274,11 +275,16 @@ async function runSync(): Promise<Goal[]> {
       ({ error: insertError } = await supabase.from("goals").insert(toRow(candidate, userId)));
     }
     if (!insertError) migrated.push(candidate);
-    else console.warn("[goals] skipped migrating a local goal", insertError);
+    else {
+      // Upload failed: keep the device copy so the goal is never lost. It stays
+      // in the list and will be retried on the next sync.
+      console.warn("[goals] could not upload a local goal yet", insertError);
+      pending.push(g);
+    }
   }
 
   const byId = new Map<string, Goal>();
-  for (const g of [...migrated, ...cloud]) byId.set(g.id, g);
+  for (const g of [...migrated, ...pending, ...cloud]) byId.set(g.id, g);
   const merged = [...byId.values()];
   saveGoals(merged);
   return merged;

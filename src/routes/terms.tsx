@@ -125,7 +125,7 @@ const SECTIONS = [
 function TermsPage() {
   return (
     <div className="w-full overflow-x-hidden">
-      <PageHeader title="Terms & Conditions" subtitle={`Last updated ${LAST_UPDATED}`} />
+      <PageHeader showBack title="Terms & Conditions" subtitle={`Last updated ${LAST_UPDATED}`} />
 
       <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5 sm:space-y-6 sm:px-6 sm:py-6 md:px-10">
         {SECTIONS.map((section) => {
