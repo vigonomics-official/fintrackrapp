@@ -382,6 +382,14 @@ export function LoanDetailSheet({
                   Mark as Paid Off
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="mr-1.5 h-4 w-4" />
+                Delete loan
+              </Button>
             </div>
           </div>
         </SheetContent>
