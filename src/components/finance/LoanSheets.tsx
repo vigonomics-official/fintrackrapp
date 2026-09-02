@@ -190,8 +190,26 @@ export function LoanDetailSheet({
   const { data: payments = [] } = useLoanPayments(loan.id);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmPaidOff, setConfirmPaidOff] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [payAmount, setPayAmount] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const deleteLoan = async () => {
+    if (busy) return;
+    setBusy(true);
+    const { error: pe } = await supabase.from("loan_payments" as any).delete().eq("loan_id", loan.id);
+    if (pe) { setBusy(false); return toast.error(friendlyError(pe)); }
+    const { error } = await supabase.from("loans" as any).delete().eq("id", loan.id);
+    setBusy(false);
+    if (error) return toast.error(friendlyError(error));
+    toast.success("Loan deleted");
+    setConfirmDelete(false);
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["loans"] }),
+      qc.invalidateQueries({ queryKey: ["loan_payments"] }),
+    ]);
+    onOpenChange(false);
+  };
 
   const paid = Math.max(0, loan.total_amount - loan.remaining_balance);
   const pct = loan.total_amount > 0 ? Math.min(100, (paid / loan.total_amount) * 100) : 0;
