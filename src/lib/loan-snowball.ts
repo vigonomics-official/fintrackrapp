@@ -20,7 +20,10 @@ export type SnowballStep = {
   payoffDate: Date | null;
 };
 
+export type PayoffStrategy = "snowball" | "avalanche";
+
 export type SnowballPlan = {
+  strategy: PayoffStrategy;
   order: SnowballStep[];
   target: SnowballStep | null;
   extraApplied: number;
@@ -47,7 +50,12 @@ function addMonths(months: number): Date | null {
 
 type Sim = { id: string; balance: number; emi: number; rate: number; closedAt: number | null };
 
-function simulate(loans: Loan[], extra: number) {
+function sorter(strategy: PayoffStrategy) {
+  return (a: { balance: number; rate: number }, b: { balance: number; rate: number }) =>
+    strategy === "avalanche" ? b.rate - a.rate || a.balance - b.balance : a.balance - b.balance;
+}
+
+function simulate(loans: Loan[], extra: number, strategy: PayoffStrategy) {
   const sim: Sim[] = loans
     .map((l) => ({
       id: l.id,
@@ -56,7 +64,7 @@ function simulate(loans: Loan[], extra: number) {
       rate: Math.max(0, Number(l.interest_rate) || 0),
       closedAt: null as number | null,
     }))
-    .sort((a, b) => a.balance - b.balance);
+    .sort(sorter(strategy));
 
   let month = 0;
   let stalled = false;
@@ -94,19 +102,28 @@ function simulate(loans: Loan[], extra: number) {
   return { sim, months: stalled ? 0 : month };
 }
 
-export function buildSnowballPlan(allLoans: Loan[], extra = 0): SnowballPlan {
+export function buildSnowballPlan(
+  allLoans: Loan[],
+  extra = 0,
+  strategy: PayoffStrategy = "snowball",
+): SnowballPlan {
   const active = allLoans.filter((l) => Number(l.remaining_balance) > 0);
   const extraApplied = Math.max(0, Number(extra) || 0);
   const monthlyEmi = active.reduce((s, l) => s + (Number(l.emi_amount) || 0), 0);
   const totalOutstanding = active.reduce((s, l) => s + (Number(l.remaining_balance) || 0), 0);
   const borrowed = active.reduce((s, l) => s + (Number(l.total_amount) || 0), 0);
 
-  const withExtra = simulate(active, extraApplied);
-  const baseline = extraApplied > 0 ? simulate(active, 0) : withExtra;
+  const withExtra = simulate(active, extraApplied, strategy);
+  const baseline = extraApplied > 0 ? simulate(active, 0, strategy) : withExtra;
 
-  const ordered = [...active].sort(
-    (a, b) => Number(a.remaining_balance) - Number(b.remaining_balance),
-  );
+  const ordered = [...active]
+    .map((l) => ({
+      loan: l,
+      balance: Number(l.remaining_balance) || 0,
+      rate: Number(l.interest_rate) || 0,
+    }))
+    .sort(sorter(strategy))
+    .map((x) => x.loan);
 
   const order: SnowballStep[] = ordered.map((l) => {
     const s = withExtra.sim.find((x) => x.id === l.id);
@@ -123,6 +140,7 @@ export function buildSnowballPlan(allLoans: Loan[], extra = 0): SnowballPlan {
   });
 
   return {
+    strategy,
     order,
     target: order[0] ?? null,
     extraApplied,
