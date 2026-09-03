@@ -69,14 +69,19 @@ function LoanFields({
     notes: initial?.notes ?? "",
   });
 
+  const flexible = form.loan_type === "credit_card" || form.loan_type === "informal";
+
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || saving) return;
-    if (!form.loan_name || !form.total_amount || !form.emi_amount || !form.tenure_months) {
-      return toast.error("Please fill the required fields");
+    if (!form.loan_name || !form.total_amount) {
+      return toast.error("Please add a loan name and the original loan amount");
+    }
+    if (!flexible && (!form.emi_amount || !form.tenure_months)) {
+      return toast.error("Please add the monthly EMI and tenure for this loan type");
     }
     const payload = {
       user_id: user.id,
@@ -84,8 +89,8 @@ function LoanFields({
       loan_type: form.loan_type,
       total_amount: Number(form.total_amount),
       interest_rate: Number(form.interest_rate || 0),
-      emi_amount: Number(form.emi_amount),
-      tenure_months: Number(form.tenure_months),
+      emi_amount: Number(form.emi_amount || 0),
+      tenure_months: Number(form.tenure_months || 0),
       remaining_balance: Number(form.remaining_balance || form.total_amount),
       start_date: form.start_date,
       due_day: Math.min(28, Math.max(1, Number(form.due_day || 1))),
@@ -116,18 +121,23 @@ function LoanFields({
             {LOAN_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        {flexible && (
+          <p className="text-[11px] text-muted-foreground">
+            EMI, interest and tenure are optional for this loan type.
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-2.5">
         <div className="space-y-1.5">
-          <Label className="text-xs">Total amount *</Label>
+          <Label className="text-xs">Original loan amount *</Label>
           <Input type="number" inputMode="decimal" step="0.01" value={form.total_amount} onChange={(e) => set("total_amount", e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Outstanding</Label>
+          <Label className="text-xs">Current outstanding</Label>
           <Input type="number" inputMode="decimal" step="0.01" placeholder="Same as total" value={form.remaining_balance} onChange={(e) => set("remaining_balance", e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Monthly EMI *</Label>
+          <Label className="text-xs">Monthly EMI{flexible ? "" : " *"}</Label>
           <Input type="number" inputMode="decimal" step="0.01" value={form.emi_amount} onChange={(e) => set("emi_amount", e.target.value)} />
         </div>
         <div className="space-y-1.5">
@@ -135,7 +145,7 @@ function LoanFields({
           <Input type="number" inputMode="decimal" step="0.01" value={form.interest_rate} onChange={(e) => set("interest_rate", e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Tenure (months) *</Label>
+          <Label className="text-xs">Tenure (months){flexible ? "" : " *"}</Label>
           <Input type="number" inputMode="numeric" value={form.tenure_months} onChange={(e) => set("tenure_months", e.target.value)} />
         </div>
         <div className="space-y-1.5">
@@ -315,7 +325,7 @@ export function LoanDetailSheet({
               <Field label="Monthly EMI" value={formatCurrency(loan.emi_amount, currency)} />
               <Field label="Interest" value={`${loan.interest_rate}% p.a.`} />
               <Field label="Tenure" value={`${loan.tenure_months} months`} />
-              <Field label="Borrowed" value={formatCurrency(loan.total_amount, currency)} />
+              <Field label="Original amount" value={formatCurrency(loan.total_amount, currency)} />
               <Field
                 label="Next payment"
                 value={isClosed ? "—" : due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
@@ -336,12 +346,30 @@ export function LoanDetailSheet({
                     value={payAmount}
                     onChange={(e) => setPayAmount(e.target.value)}
                   />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button" variant="outline" size="sm"
+                      disabled={busy || loan.emi_amount <= 0}
+                      onClick={() => setPayAmount(String(loan.emi_amount))}
+                    >
+                      One EMI
+                    </Button>
+                    <Button
+                      type="button" variant="outline" size="sm"
+                      disabled={busy || loan.emi_amount <= 0}
+                      onClick={() => setPayAmount(String(loan.emi_amount * 2))}
+                    >
+                      EMI + extra
+                    </Button>
+                  </div>
                   <Button className="w-full bg-gradient-primary" disabled={busy} onClick={recordPayment}>
                     <CheckCircle2 className="mr-1.5 h-4 w-4" />
                     Record payment
                   </Button>
                   <p className="text-[11px] text-muted-foreground">
-                    Leave blank to record one full EMI. This updates only this loan's outstanding balance.
+                    Leave blank to record one full EMI, or enter any amount for an extra payment.
+                    This only updates this loan's outstanding balance — no expense transaction is created.
+                    When the balance reaches zero the loan is closed automatically and kept in history.
                   </p>
                 </CardContent>
               </Card>
