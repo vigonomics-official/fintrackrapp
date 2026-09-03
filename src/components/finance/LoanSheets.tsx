@@ -77,7 +77,6 @@ function LoanFields({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || saving) return;
-    const flexible = form.loan_type === "credit_card" || form.loan_type === "informal";
     if (!form.loan_name || !form.total_amount) {
       return toast.error("Please add a loan name and the original loan amount");
     }
