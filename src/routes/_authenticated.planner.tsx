@@ -677,6 +677,7 @@ function LoansTab() {
   const [selected, setSelected] = useState<Loan | null>(null);
   const [extra, setExtra] = useState("");
   const [strategy, setStrategy] = useState<PayoffStrategy>("snowball");
+  const [showClosed, setShowClosed] = useState(false);
   const extraAmt = Math.max(0, Number(extra) || 0);
 
   const active = useMemo(
@@ -954,10 +955,15 @@ function LoansTab() {
       {/* 5 — Closed loans (kept as history) */}
       {closed.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Closed Loans
-          </p>
-          {closed.map((l) => (
+          <button
+            type="button"
+            onClick={() => setShowClosed((v) => !v)}
+            className="flex w-full items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            <span>Closed Loans ({closed.length})</span>
+            <span>{showClosed ? "Hide" : "Show"}</span>
+          </button>
+          {showClosed && closed.map((l) => (
             <Card key={l.id} className="border-dashed shadow-none">
               <CardContent className="flex items-center justify-between gap-2 p-3">
                 <div className="min-w-0">
