@@ -17,7 +17,7 @@ import { useTransactions, useLoans, useProfile, useCategories, type Loan } from 
 import {
   LoanFormSheet, LoanDetailSheet, loanTypeMeta, nextLoanDueDate,
 } from "@/components/finance/LoanSheets";
-import { buildSnowballPlan } from "@/lib/loan-snowball";
+import { buildSnowballPlan, type PayoffStrategy } from "@/lib/loan-snowball";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { formatCurrency } from "@/lib/currency";
@@ -676,6 +676,7 @@ function LoansTab() {
   const [addOpen, setAddOpen] = useState(false);
   const [selected, setSelected] = useState<Loan | null>(null);
   const [extra, setExtra] = useState("");
+  const [strategy, setStrategy] = useState<PayoffStrategy>("snowball");
   const extraAmt = Math.max(0, Number(extra) || 0);
 
   const active = useMemo(
@@ -709,7 +710,10 @@ function LoansTab() {
   }, [loans, txs]);
 
   // Read-only snowball projection — never writes to any loan or transaction.
-  const plan = useMemo(() => buildSnowballPlan(active, extraAmt), [active, extraAmt]);
+  const plan = useMemo(
+    () => buildSnowballPlan(active, extraAmt, strategy),
+    [active, extraAmt, strategy],
+  );
 
   return (
     <div className="space-y-4">
@@ -780,9 +784,14 @@ function LoansTab() {
                           </p>
                         </div>
                       </div>
-                      <p className="shrink-0 font-display text-sm font-bold tabular-nums">
-                        {formatCurrency(l.remaining_balance, currency)}
-                      </p>
+                      <div className="shrink-0 text-right">
+                        <p className="font-display text-sm font-bold tabular-nums">
+                          {formatCurrency(l.remaining_balance, currency)}
+                        </p>
+                        <span className="mt-0.5 inline-block rounded-full bg-success/10 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+                          Active
+                        </span>
+                      </div>
                     </div>
                     <Progress value={pct} className="h-1.5" />
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
@@ -790,7 +799,7 @@ function LoansTab() {
                       <span>·</span>
                       <span>EMI {formatCurrency(l.emi_amount, currency)}</span>
                       <span>·</span>
-                      <span>{emisLeft} left</span>
+                      <span>{emisLeft > 0 ? `${emisLeft} EMIs left` : "Tenure not set"}</span>
                       <span>·</span>
                       <span>Next {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span>
                     </div>
@@ -806,16 +815,35 @@ function LoansTab() {
             })}
           </div>
 
-          {/* 4 — Payoff strategy (read-only estimate) */}
+          {/* 4 — Payoff strategy (read-only estimate) — only with 2+ active loans */}
+          {active.length >= 2 && (
           <Card className="border-primary/20 bg-primary/5 shadow-soft">
             <CardContent className="space-y-3 p-4">
               <div className="flex items-center gap-2">
                 <TrendingDown className="h-4 w-4 text-primary" />
                 <p className="text-sm font-semibold">Debt Payoff Plan</p>
               </div>
+
+              <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-background p-1">
+                {(["snowball", "avalanche"] as PayoffStrategy[]).map((sKey) => (
+                  <button
+                    key={sKey}
+                    type="button"
+                    onClick={() => setStrategy(sKey)}
+                    className={`rounded-md px-2 py-1.5 text-xs font-semibold transition ${
+                      strategy === sKey
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {sKey === "snowball" ? "Snowball" : "Avalanche"}
+                  </button>
+                ))}
+              </div>
               <p className="text-[11px] text-muted-foreground">
-                Snowball method: keep paying every minimum EMI, then put any extra money on the
-                smallest balance first. When it closes, roll that payment into the next loan.
+                {strategy === "snowball"
+                  ? "Snowball: keep paying every minimum EMI, then put any extra money on the smallest outstanding balance first. When it closes, roll that payment into the next loan."
+                  : "Avalanche: keep paying every minimum EMI, then put any extra money on the highest interest rate first. This usually costs the least interest overall."}
               </p>
 
               <div className="space-y-1.5">
@@ -824,11 +852,31 @@ function LoansTab() {
                   type="number" inputMode="decimal" placeholder="1000"
                   value={extra} onChange={(e) => setExtra(e.target.value)}
                 />
+                <div className="grid grid-cols-3 gap-2 rounded-lg bg-background p-2.5 text-center">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Now</p>
+                    <p className="text-sm font-semibold tabular-nums">
+                      {plan.baselineMonths > 0 ? `${plan.baselineMonths} mo` : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">With extra</p>
+                    <p className="text-sm font-semibold tabular-nums">
+                      {plan.monthsToDebtFree > 0 ? `${plan.monthsToDebtFree} mo` : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Saved</p>
+                    <p className="text-sm font-semibold tabular-nums text-success">
+                      {plan.monthsSaved} mo
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {plan.target && (
                 <div className="rounded-lg bg-background p-2.5">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Current target loan</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended next loan</p>
                   <p className="mt-0.5 text-sm font-semibold">{plan.target.name}</p>
                   <p className="text-[11px] text-muted-foreground tabular-nums">
                     {formatCurrency(plan.target.balance, currency)} outstanding · EMI{" "}
@@ -894,11 +942,12 @@ function LoansTab() {
 
               <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
                 <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
-                These are estimates only. Nothing here changes your real balances, transactions or
-                budgets — record a payment from a loan to update it for real.
+                Planning estimate — actual payoff depends on lender terms, interest, fees and
+                payment timing. Nothing here changes your real balances or transactions.
               </p>
             </CardContent>
           </Card>
+          )}
         </>
       )}
 
