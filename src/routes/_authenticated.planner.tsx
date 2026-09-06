@@ -1135,10 +1135,9 @@ function BillsTab() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{b.name}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      Due {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {days === 0 ? "Today" : `in ${days}d`}
-                      {b.autoRenew ? " · Auto-renews" : ""}
+                      {b.recurring ? "Recurring" : "One-time"} · Due {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {days === 0 ? "Today" : `in ${days}d`}
                     </p>
-                  </div>
+
                   <p className="shrink-0 font-display text-sm font-bold tabular-nums">
                     {formatCurrency(b.amount, s.currency)}
                   </p>
