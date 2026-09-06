@@ -1099,12 +1099,13 @@ function BillsTab() {
             </div>
             <label className="flex items-center gap-2 text-xs">
               <input
-                type="checkbox" checked={form.autoRenew}
-                onChange={(e) => setForm((p) => ({ ...p, autoRenew: e.target.checked }))}
+                type="checkbox" checked={form.recurring}
+                onChange={(e) => setForm((p) => ({ ...p, recurring: e.target.checked }))}
                 className="accent-primary"
               />
-              Auto-renews
+              Recurring
             </label>
+
             <div className="flex gap-2">
               <Button size="sm" variant="ghost" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
               <Button size="sm" className="flex-1 bg-gradient-primary" onClick={add}>Add</Button>
