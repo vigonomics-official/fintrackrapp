@@ -1005,20 +1005,31 @@ type Bill = {
   name: string;
   amount: number;
   dueDay: number;
-  autoRenew: boolean;
+  recurring: boolean;
 };
 const BILLS_KEY = "fintrackr_bills_v1";
 
 function loadBills(): Bill[] {
   if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(BILLS_KEY) || "[]"); } catch { return []; }
+  try {
+    const raw = JSON.parse(localStorage.getItem(BILLS_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw.map((b: any) => ({
+      id: String(b?.id ?? crypto.randomUUID()),
+      name: String(b?.name ?? ""),
+      amount: Number(b?.amount) || 0,
+      dueDay: Math.min(28, Math.max(1, Number(b?.dueDay) || 1)),
+      // backward compatible: older bills stored `autoRenew`
+      recurring: typeof b?.recurring === "boolean" ? b.recurring : Boolean(b?.autoRenew),
+    }));
+  } catch { return []; }
 }
 
 function BillsTab() {
   const s = useSurvival();
   const [bills, setBills] = useState<Bill[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", amount: "", dueDay: "5", autoRenew: true });
+  const [form, setForm] = useState({ name: "", amount: "", dueDay: "5", recurring: true });
 
   useEffect(() => { setBills(loadBills()); }, []);
   useEffect(() => {
@@ -1037,12 +1048,13 @@ function BillsTab() {
         name: form.name.trim(),
         amount: Number(form.amount),
         dueDay: Math.min(28, Math.max(1, Number(form.dueDay) || 1)),
-        autoRenew: form.autoRenew,
+        recurring: form.recurring,
       },
     ]);
-    setForm({ name: "", amount: "", dueDay: "5", autoRenew: true });
+    setForm({ name: "", amount: "", dueDay: "5", recurring: true });
     setOpen(false);
   }
+
 
   const today = new Date();
   const sorted = [...bills].sort((a, b) => {
@@ -1087,12 +1099,13 @@ function BillsTab() {
             </div>
             <label className="flex items-center gap-2 text-xs">
               <input
-                type="checkbox" checked={form.autoRenew}
-                onChange={(e) => setForm((p) => ({ ...p, autoRenew: e.target.checked }))}
+                type="checkbox" checked={form.recurring}
+                onChange={(e) => setForm((p) => ({ ...p, recurring: e.target.checked }))}
                 className="accent-primary"
               />
-              Auto-renews
+              Recurring
             </label>
+
             <div className="flex gap-2">
               <Button size="sm" variant="ghost" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
               <Button size="sm" className="flex-1 bg-gradient-primary" onClick={add}>Add</Button>
@@ -1122,10 +1135,11 @@ function BillsTab() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{b.name}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      Due {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {days === 0 ? "Today" : `in ${days}d`}
-                      {b.autoRenew ? " · Auto-renews" : ""}
+                      {b.recurring ? "Recurring" : "One-time"} · Due {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {days === 0 ? "Today" : `in ${days}d`}
                     </p>
                   </div>
+
+
                   <p className="shrink-0 font-display text-sm font-bold tabular-nums">
                     {formatCurrency(b.amount, s.currency)}
                   </p>
