@@ -50,6 +50,12 @@ export const Route = createFileRoute("/onboarding")({
     meta: [
       { title: "Set up your salary survival system — FinTrackr" },
       { name: "description", content: "Personalize FinTrackr in 5 quick steps." },
+      { property: "og:title", content: "Set up your salary survival system — FinTrackr" },
+      { property: "og:description", content: "Personalize FinTrackr in 5 quick steps." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Set up your salary survival system — FinTrackr" },
+      { name: "twitter:description", content: "Personalize FinTrackr in 5 quick steps." },
       { name: "robots", content: "noindex" },
     ],
   }),

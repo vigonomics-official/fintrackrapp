@@ -20,7 +20,18 @@ import { Info, Sparkles, Printer, Download, Share2, Image as ImageIcon, ChevronD
 
 export const Route = createFileRoute("/_authenticated/insights/report")({
   component: ReportPage,
-  head: () => ({ meta: [{ title: "Monthly Report Card — FinTrackr" }] }),
+  head: () => ({
+    meta: [
+      { title: "Monthly Report Card — FinTrackr" },
+      { name: "description", content: "Your monthly money report: spending, savings and survival score." },
+      { property: "og:title", content: "Monthly Report Card — FinTrackr" },
+      { property: "og:description", content: "Your monthly money report: spending, savings and survival score." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Monthly Report Card — FinTrackr" },
+      { name: "twitter:description", content: "Your monthly money report: spending, savings and survival score." },
+    ],
+  }),
 });
 
 const fmt = (n: number, currency = "INR") => formatCurrency(n, currency).replace(/\.00$/, "");

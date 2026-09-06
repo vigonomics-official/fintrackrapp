@@ -33,7 +33,18 @@ const COACH_OPEN_FORM_KEY = "fintrackr:ai-coach:open-form";
 
 export const Route = createFileRoute("/_authenticated/insights/ai-coach/results")({
   component: ResultsPage,
-  head: () => ({ meta: [{ title: "AI Analysis Results — FinTrackr" }] }),
+  head: () => ({
+    meta: [
+      { title: "AI Analysis Results — FinTrackr" },
+      { name: "description", content: "Your latest AI salary survival analysis, with confidence and recommendations." },
+      { property: "og:title", content: "AI Analysis Results — FinTrackr" },
+      { property: "og:description", content: "Your latest AI salary survival analysis, with confidence and recommendations." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "AI Analysis Results — FinTrackr" },
+      { name: "twitter:description", content: "Your latest AI salary survival analysis, with confidence and recommendations." },
+    ],
+  }),
 });
 
 function ResultsPage() {
