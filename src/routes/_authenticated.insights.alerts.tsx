@@ -54,6 +54,12 @@ export const Route = createFileRoute("/_authenticated/insights/alerts")({
     meta: [
       { title: "Danger Alerts — FinTrackr" },
       { name: "description", content: "Smart, prioritized financial risk alerts with AI reasoning and one-tap actions." },
+      { property: "og:title", content: "Danger Alerts — FinTrackr" },
+      { property: "og:description", content: "Smart, prioritized financial risk alerts with AI reasoning and one-tap actions." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Danger Alerts — FinTrackr" },
+      { name: "twitter:description", content: "Smart, prioritized financial risk alerts with AI reasoning and one-tap actions." },
     ],
   }),
 });

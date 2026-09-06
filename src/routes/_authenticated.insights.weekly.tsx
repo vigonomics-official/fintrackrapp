@@ -28,7 +28,18 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/insights/weekly")({
   component: WeeklyReportPage,
-  head: () => ({ meta: [{ title: "Weekly Survival Report — FinTrackr" }] }),
+  head: () => ({
+    meta: [
+      { title: "Weekly Survival Report — FinTrackr" },
+      { name: "description", content: "Your week in money: spending pace, risks and quick wins." },
+      { property: "og:title", content: "Weekly Survival Report — FinTrackr" },
+      { property: "og:description", content: "Your week in money: spending pace, risks and quick wins." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Weekly Survival Report — FinTrackr" },
+      { name: "twitter:description", content: "Your week in money: spending pace, risks and quick wins." },
+    ],
+  }),
 });
 
 function startOfWeek(d: Date) {
