@@ -34,7 +34,15 @@ function DecisionIcon({ decision }: { decision: PurchaseCheckResult["decision"] 
   return <HelpCircle className={cls} />;
 }
 
-export function PurchaseCheckPanel({ compact = false }: { compact?: boolean }) {
+export type PurchasePrefill = { item: string; price: number; nonce: number };
+
+export function PurchaseCheckPanel({
+  compact = false,
+  prefill,
+}: {
+  compact?: boolean;
+  prefill?: PurchasePrefill | null;
+}) {
   const { data: profile } = useProfile();
   const { data: transactions = [] } = useTransactions();
   const { data: loans = [] } = useLoans();
