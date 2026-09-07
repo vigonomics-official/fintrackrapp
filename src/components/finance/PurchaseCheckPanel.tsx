@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,15 @@ function DecisionIcon({ decision }: { decision: PurchaseCheckResult["decision"] 
   return <HelpCircle className={cls} />;
 }
 
-export function PurchaseCheckPanel({ compact = false }: { compact?: boolean }) {
+export type PurchasePrefill = { item: string; price: number; nonce: number };
+
+export function PurchaseCheckPanel({
+  compact = false,
+  prefill,
+}: {
+  compact?: boolean;
+  prefill?: PurchasePrefill | null;
+}) {
   const { data: profile } = useProfile();
   const { data: transactions = [] } = useTransactions();
   const { data: loans = [] } = useLoans();
@@ -49,6 +57,18 @@ export function PurchaseCheckPanel({ compact = false }: { compact?: boolean }) {
   const [result, setResult] = useState<PurchaseCheckResult | null>(null);
   const [narration, setNarration] = useState<PurchaseNarration | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Loading a saved purchase-list item only fills the form; the affordability
+  // calculation below is untouched and still runs on "Check Purchase".
+  useEffect(() => {
+    if (!prefill) return;
+    setItem(prefill.item);
+    setPriceStr(prefill.price > 0 ? String(prefill.price) : "");
+    setError(null);
+    setResult(null);
+    setNarration(null);
+  }, [prefill?.nonce]);
+
 
   const budgetRemaining = useMemo(() => {
     if (budgets.length === 0) return null;
