@@ -58,6 +58,18 @@ export function PurchaseCheckPanel({
   const [narration, setNarration] = useState<PurchaseNarration | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Loading a saved purchase-list item only fills the form; the affordability
+  // calculation below is untouched and still runs on "Check Purchase".
+  useEffect(() => {
+    if (!prefill) return;
+    setItem(prefill.item);
+    setPriceStr(prefill.price > 0 ? String(prefill.price) : "");
+    setError(null);
+    setResult(null);
+    setNarration(null);
+  }, [prefill?.nonce]);
+
+
   const budgetRemaining = useMemo(() => {
     if (budgets.length === 0) return null;
     const total = budgets.reduce((s, b) => s + b.monthly_limit, 0);
