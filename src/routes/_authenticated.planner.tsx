@@ -28,7 +28,8 @@ import {
 } from "@/lib/future-insights";
 import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
-import { PurchaseCheckPanel } from "@/components/finance/PurchaseCheckPanel";
+import { PurchaseCheckPanel, type PurchasePrefill } from "@/components/finance/PurchaseCheckPanel";
+import { PurchaseListSection } from "@/components/finance/PurchaseListSection";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
   loadGoals, upsertGoal, isCompleted, computeGoalPlan, saveGoals,
@@ -1322,7 +1323,25 @@ function GoalCard({ goal, currency, onOpen }: { goal: Goal; currency: string; on
 /* ============================ Can I Buy This ============================ */
 
 function CanIBuyThisTab() {
-  return <PurchaseCheckPanel />;
+  const [prefill, setPrefill] = useState<PurchasePrefill | null>(null);
+
+  return (
+    <div className="space-y-5">
+      <div id="can-i-buy" className="space-y-0.5">
+        <h2 className="font-display text-base font-bold">Can I Buy?</h2>
+        <p className="text-xs text-muted-foreground">A quick, data-backed check before you spend.</p>
+      </div>
+
+      <PurchaseCheckPanel prefill={prefill} />
+
+      <PurchaseListSection
+        onCheck={(item) => {
+          setPrefill({ item: item.item_name, price: item.estimated_price, nonce: Date.now() });
+          document.getElementById("can-i-buy")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      />
+    </div>
+  );
 }
 
 /* ============================ Future Tab ============================ */
