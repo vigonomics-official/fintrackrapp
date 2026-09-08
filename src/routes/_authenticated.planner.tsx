@@ -28,7 +28,8 @@ import {
 } from "@/lib/future-insights";
 import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
-import { PurchaseCheckPanel } from "@/components/finance/PurchaseCheckPanel";
+import { PurchaseCheckPanel, type PurchasePrefill } from "@/components/finance/PurchaseCheckPanel";
+import { PurchaseListSection } from "@/components/finance/PurchaseListSection";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
   loadGoals, upsertGoal, isCompleted, computeGoalPlan, saveGoals,
