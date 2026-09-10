@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type EmploymentType = "salaried" | "daily_wage" | "freelance";
 
@@ -29,8 +30,63 @@ function read(): SalarySettings {
   }
 }
 
+function write(next: SalarySettings) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event("fintrackr:salary-updated"));
+    window.dispatchEvent(new Event("fintrackr:ai-coach:profile-updated"));
+    window.dispatchEvent(new Event("fintrackr:notifications:updated"));
+  } catch {}
+}
+
+/** Keep the signed-in user's salary in their cloud profile so it survives
+ *  logout, refresh and a different device. localStorage stays a fast cache. */
+async function syncSalaryWithCloud(local: SalarySettings): Promise<SalarySettings | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("monthly_salary, salary_date")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (error) return null;
+
+  const cloudAmount = data?.monthly_salary != null ? Number(data.monthly_salary) : null;
+  const cloudPayDay = data?.salary_date != null ? Number(data.salary_date) : null;
+
+  // Nothing stored in the cloud yet but we have local values → push them up.
+  if (cloudAmount == null && cloudPayDay == null) {
+    if (local.amount != null || local.payDay != null) {
+      await supabase
+        .from("profiles")
+        .update({ monthly_salary: local.amount, salary_date: local.payDay })
+        .eq("id", user.id);
+    }
+    return null;
+  }
+
+  const merged: SalarySettings = {
+    ...local,
+    amount: cloudAmount ?? local.amount,
+    payDay: cloudPayDay ?? local.payDay,
+  };
+  if (merged.amount === local.amount && merged.payDay === local.payDay) return null;
+  write(merged);
+  return merged;
+}
+
 export function useSalarySettings() {
   const [settings, setSettings] = useState<SalarySettings>(read);
+
+  useEffect(() => {
+    let cancelled = false;
+    syncSalaryWithCloud(read())
+      .then((merged) => { if (merged && !cancelled) setSettings(merged); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
