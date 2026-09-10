@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight, Sparkles, Plus, Trash2, TrendingDown, BellRing,
   CheckCircle2, Flame, Target as TargetIcon, ShieldCheck, Rocket, Lock, CheckCircle,
@@ -543,10 +543,11 @@ function loadAlloc(): Alloc {
 
 function SalaryAllocation() {
   const s = useSurvival();
-  const [alloc, setAlloc] = useState<Alloc>(defaultAlloc);
+  const [alloc, setAlloc] = useState<Alloc>(() => loadAlloc());
+  const allocLoadedRef = useRef(false);
 
-  useEffect(() => { setAlloc(loadAlloc()); }, []);
   useEffect(() => {
+    if (!allocLoadedRef.current) { allocLoadedRef.current = true; return; }
     if (typeof window !== "undefined") localStorage.setItem(ALLOC_KEY, JSON.stringify(alloc));
   }, [alloc]);
 
@@ -1028,12 +1029,15 @@ function loadBills(): Bill[] {
 
 function BillsTab() {
   const s = useSurvival();
-  const [bills, setBills] = useState<Bill[]>([]);
+  const [bills, setBills] = useState<Bill[]>(() => loadBills());
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", dueDay: "5", recurring: true });
+  const loadedRef = useRef(false);
 
-  useEffect(() => { setBills(loadBills()); }, []);
+  // Never write to storage on the first render pass — that used to clear saved
+  // bills before the stored list had been read back in.
   useEffect(() => {
+    if (!loadedRef.current) { loadedRef.current = true; return; }
     if (typeof window !== "undefined") localStorage.setItem(BILLS_KEY, JSON.stringify(bills));
   }, [bills]);
 
