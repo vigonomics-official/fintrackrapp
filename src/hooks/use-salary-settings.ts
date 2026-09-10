@@ -104,12 +104,19 @@ export function useSalarySettings() {
   const update = useCallback((patch: Partial<SalarySettings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...patch };
-      try {
-        localStorage.setItem(KEY, JSON.stringify(next));
-        window.dispatchEvent(new Event("fintrackr:salary-updated"));
-        window.dispatchEvent(new Event("fintrackr:ai-coach:profile-updated"));
-        window.dispatchEvent(new Event("fintrackr:notifications:updated"));
-      } catch {}
+      write(next);
+      if (patch.amount !== undefined || patch.payDay !== undefined) {
+        void (async () => {
+          try {
+            const { data: auth } = await supabase.auth.getUser();
+            if (!auth?.user) return;
+            await supabase
+              .from("profiles")
+              .update({ monthly_salary: next.amount, salary_date: next.payDay })
+              .eq("id", auth.user.id);
+          } catch {}
+        })();
+      }
       return next;
     });
   }, []);
