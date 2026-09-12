@@ -43,14 +43,19 @@ export type PurchaseItemInput = {
 const KEY = "purchase_list";
 
 export function usePurchaseList() {
-  const { user } = useAuth();
-  return useQuery({
+  const { user, loading: authLoading } = useAuth();
+  const query = useQuery({
     queryKey: [KEY, user?.id],
     enabled: !!user,
+    // Always re-read on mount so returning to Planner → Buy shows the latest
+    // list instead of a cached/empty result from before the session hydrated.
+    staleTime: 0,
+    refetchOnMount: "always",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("purchase_list" as any)
         .select("*")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return ((data ?? []) as any[]).map((r) => ({
@@ -59,6 +64,13 @@ export function usePurchaseList() {
       })) as PurchaseItem[];
     },
   });
+
+  // While the session is still resolving the query is disabled, which would
+  // otherwise look like "no items" instead of "still loading".
+  return {
+    ...query,
+    isLoading: authLoading || (!!user && query.isPending) || query.isLoading,
+  };
 }
 
 export function usePurchaseListMutations() {
