@@ -143,7 +143,14 @@ export function PurchaseListSection({
         </p>
       </div>
 
-      {planned.length === 0 && purchased.length === 0 && !isLoading ? (
+      {isLoading && items.length === 0 ? (
+        <Card className="shadow-soft">
+          <CardContent className="space-y-2 p-3.5">
+            <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+          </CardContent>
+        </Card>
+      ) : planned.length === 0 && purchased.length === 0 ? (
         <Card className="shadow-soft">
           <CardContent className="flex flex-col items-center gap-2 p-6 text-center">
             <ShoppingBag className="h-8 w-8 text-muted-foreground" />
