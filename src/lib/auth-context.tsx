@@ -23,7 +23,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       // Drop any cached account data so the next sign-in never shows the
       // previous user's rows.
-      if (e === "SIGNED_OUT") qc.clear();
+      if (e === "SIGNED_OUT") {
+        qc.clear();
+        clearSalarySettingsCache();
+      }
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
