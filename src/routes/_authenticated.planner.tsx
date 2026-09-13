@@ -29,6 +29,8 @@ import {
 import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
 import { PurchaseCheckPanel, type PurchasePrefill } from "@/components/finance/PurchaseCheckPanel";
+import { useAllocation, type Alloc } from "@/lib/allocation";
+import { useBills, useBillMutations, type Bill } from "@/lib/bills";
 import { PurchaseListSection } from "@/components/finance/PurchaseListSection";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
@@ -529,27 +531,25 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
 
 /* ============================ Salary Allocation ============================ */
 
-type Alloc = { rent: number; food: number; travel: number; emi: number; savings: number };
-const ALLOC_KEY = "fintrackr_alloc_v1";
-const defaultAlloc: Alloc = { rent: 30, food: 15, travel: 10, emi: 20, savings: 20 };
-
-function loadAlloc(): Alloc {
-  if (typeof window === "undefined") return defaultAlloc;
-  try {
-    const raw = localStorage.getItem(ALLOC_KEY);
-    return raw ? { ...defaultAlloc, ...JSON.parse(raw) } : defaultAlloc;
-  } catch { return defaultAlloc; }
-}
-
 function SalaryAllocation() {
   const s = useSurvival();
-  const [alloc, setAlloc] = useState<Alloc>(() => loadAlloc());
-  const allocLoadedRef = useRef(false);
+  const { alloc: savedAlloc, isLoading: allocLoading, save: saveAlloc } = useAllocation();
+  const [draft, setDraft] = useState<Alloc | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (!allocLoadedRef.current) { allocLoadedRef.current = true; return; }
-    if (typeof window !== "undefined") localStorage.setItem(ALLOC_KEY, JSON.stringify(alloc));
-  }, [alloc]);
+  // Show the account value until the user starts dragging.
+  const alloc = draft ?? savedAlloc;
+
+  const setAlloc = (updater: (prev: Alloc) => Alloc) => {
+    setDraft((prev) => {
+      const next = updater(prev ?? savedAlloc);
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => saveAlloc(next), 400);
+      return next;
+    });
+  };
+
+  useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
 
   const totalPct = alloc.rent + alloc.food + alloc.travel + alloc.emi + alloc.savings;
   const over = totalPct > 100;
@@ -1002,70 +1002,72 @@ function LoansTab() {
 
 /* ============================ Bills & Subscriptions ============================ */
 
-type Bill = {
-  id: string;
-  name: string;
-  amount: number;
-  dueDay: number;
-  recurring: boolean;
-};
-const BILLS_KEY = "fintrackr_bills_v1";
+const LEGACY_BILLS_KEY = "fintrackr_bills_v1";
 
-function loadBills(): Bill[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = JSON.parse(localStorage.getItem(BILLS_KEY) || "[]");
-    if (!Array.isArray(raw)) return [];
-    return raw.map((b: any) => ({
-      id: String(b?.id ?? crypto.randomUUID()),
-      name: String(b?.name ?? ""),
-      amount: Number(b?.amount) || 0,
-      dueDay: Math.min(28, Math.max(1, Number(b?.dueDay) || 1)),
-      // backward compatible: older bills stored `autoRenew`
-      recurring: typeof b?.recurring === "boolean" ? b.recurring : Boolean(b?.autoRenew),
-    }));
-  } catch { return []; }
+/** One-time lift of device-only bills into the signed-in account. */
+function useLegacyBillsMigration(
+  ready: boolean,
+  hasCloudBills: boolean,
+  create: ReturnType<typeof useBillMutations>["create"],
+) {
+  const doneRef = useRef(false);
+  useEffect(() => {
+    if (!ready || doneRef.current || typeof window === "undefined") return;
+    doneRef.current = true;
+    let raw: any[] = [];
+    try { raw = JSON.parse(localStorage.getItem(LEGACY_BILLS_KEY) || "[]"); } catch { raw = []; }
+    if (!Array.isArray(raw) || raw.length === 0) {
+      localStorage.removeItem(LEGACY_BILLS_KEY);
+      return;
+    }
+    if (hasCloudBills) { localStorage.removeItem(LEGACY_BILLS_KEY); return; }
+    Promise.all(
+      raw.map((b: any) => create.mutateAsync({
+        name: String(b?.name ?? "").trim() || "Bill",
+        amount: Number(b?.amount) || 0,
+        due_day: Math.min(28, Math.max(1, Number(b?.dueDay) || 1)),
+        recurring: typeof b?.recurring === "boolean" ? b.recurring : Boolean(b?.autoRenew),
+      })),
+    )
+      .then(() => localStorage.removeItem(LEGACY_BILLS_KEY))
+      .catch(() => { doneRef.current = false; });
+  }, [ready, hasCloudBills, create]);
 }
 
 function BillsTab() {
   const s = useSurvival();
-  const [bills, setBills] = useState<Bill[]>(() => loadBills());
+  const { bills, isLoading } = useBills();
+  const { create, remove } = useBillMutations();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", dueDay: "5", recurring: true });
-  const loadedRef = useRef(false);
 
-  // Never write to storage on the first render pass — that used to clear saved
-  // bills before the stored list had been read back in.
-  useEffect(() => {
-    if (!loadedRef.current) { loadedRef.current = true; return; }
-    if (typeof window !== "undefined") localStorage.setItem(BILLS_KEY, JSON.stringify(bills));
-  }, [bills]);
+  useLegacyBillsMigration(!isLoading, bills.length > 0, create);
 
   const totalBills = bills.reduce((acc, b) => acc + b.amount, 0);
   const afterBills = Math.max(0, s.salaryLeft - totalBills);
 
   function add() {
     if (!form.name || !form.amount) return;
-    setBills((p) => [
-      ...p,
+    create.mutate(
       {
-        id: crypto.randomUUID(),
         name: form.name.trim(),
         amount: Number(form.amount),
-        dueDay: Math.min(28, Math.max(1, Number(form.dueDay) || 1)),
+        due_day: Math.min(28, Math.max(1, Number(form.dueDay) || 1)),
         recurring: form.recurring,
       },
-    ]);
+      { onError: () => toast.error("Couldn't save this bill. Please try again.") },
+    );
     setForm({ name: "", amount: "", dueDay: "5", recurring: true });
     setOpen(false);
   }
 
 
+
   const today = new Date();
   const sorted = [...bills].sort((a, b) => {
-    const da = new Date(today.getFullYear(), today.getMonth(), a.dueDay);
+    const da = new Date(today.getFullYear(), today.getMonth(), a.due_day);
     if (da < today) da.setMonth(da.getMonth() + 1);
-    const db = new Date(today.getFullYear(), today.getMonth(), b.dueDay);
+    const db = new Date(today.getFullYear(), today.getMonth(), b.due_day);
     if (db < today) db.setMonth(db.getMonth() + 1);
     return da.getTime() - db.getTime();
   });
@@ -1119,7 +1121,14 @@ function BillsTab() {
         </Card>
       )}
 
-      {sorted.length === 0 ? (
+      {isLoading && sorted.length === 0 ? (
+        <Card className="shadow-soft">
+          <CardContent className="space-y-2 p-3.5">
+            <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+          </CardContent>
+        </Card>
+      ) : sorted.length === 0 ? (
         <Card className="shadow-soft">
           <CardContent className="p-5 text-center text-sm text-muted-foreground">
             Add recurring bills (rent, electricity, OTT) to improve forecasting.
@@ -1128,7 +1137,7 @@ function BillsTab() {
       ) : (
         <div className="space-y-2">
           {sorted.map((b) => {
-            const due = new Date(today.getFullYear(), today.getMonth(), b.dueDay);
+            const due = new Date(today.getFullYear(), today.getMonth(), b.due_day);
             if (due < today) due.setMonth(due.getMonth() + 1);
             const days = Math.ceil((due.getTime() - today.getTime()) / 86_400_000);
             return (
@@ -1149,7 +1158,9 @@ function BillsTab() {
                     {formatCurrency(b.amount, s.currency)}
                   </p>
                   <button
-                    onClick={() => setBills((p) => p.filter((x) => x.id !== b.id))}
+                    onClick={() => remove.mutate(b.id, {
+                      onError: () => toast.error("Couldn't delete this bill. Please try again."),
+                    })}
                     className="text-muted-foreground hover:text-destructive"
                     aria-label="Remove"
                   >
