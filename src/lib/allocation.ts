@@ -10,6 +10,17 @@ export type Alloc = { rent: number; food: number; travel: number; emi: number; s
 export const DEFAULT_ALLOC: Alloc = { rent: 30, food: 15, travel: 10, emi: 20, savings: 20 };
 
 const KEY = "allocation";
+const LEGACY_KEY = "fintrackr_alloc_v1";
+
+function readLegacy(): Alloc | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LEGACY_KEY);
+    return raw ? normalize(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
 
 function normalize(raw: any): Alloc {
   if (!raw || typeof raw !== "object") return DEFAULT_ALLOC;
