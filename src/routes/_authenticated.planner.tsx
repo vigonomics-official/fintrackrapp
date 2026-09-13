@@ -1065,9 +1065,9 @@ function BillsTab() {
 
   const today = new Date();
   const sorted = [...bills].sort((a, b) => {
-    const da = new Date(today.getFullYear(), today.getMonth(), a.dueDay);
+    const da = new Date(today.getFullYear(), today.getMonth(), a.due_day);
     if (da < today) da.setMonth(da.getMonth() + 1);
-    const db = new Date(today.getFullYear(), today.getMonth(), b.dueDay);
+    const db = new Date(today.getFullYear(), today.getMonth(), b.due_day);
     if (db < today) db.setMonth(db.getMonth() + 1);
     return da.getTime() - db.getTime();
   });
@@ -1130,7 +1130,7 @@ function BillsTab() {
       ) : (
         <div className="space-y-2">
           {sorted.map((b) => {
-            const due = new Date(today.getFullYear(), today.getMonth(), b.dueDay);
+            const due = new Date(today.getFullYear(), today.getMonth(), b.due_day);
             if (due < today) due.setMonth(due.getMonth() + 1);
             const days = Math.ceil((due.getTime() - today.getTime()) / 86_400_000);
             return (
