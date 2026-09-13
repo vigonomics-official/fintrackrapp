@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      bills: {
+        Row: {
+          amount: number
+          created_at: string
+          due_day: number
+          id: string
+          name: string
+          recurring: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          due_day?: number
+          id?: string
+          name: string
+          recurring?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_day?: number
+          id?: string
+          name?: string
+          recurring?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           category_id: string | null
@@ -317,11 +350,13 @@ export type Database = {
         Row: {
           active_loans: number | null
           age_group: string | null
+          allocation: Json | null
           avatar_url: string | null
           city: string | null
           created_at: string
           currency: string
           email: string | null
+          employment_type: string | null
           expense_categories: string[] | null
           financial_journey_completed: boolean
           financial_situation: string | null
@@ -338,11 +373,13 @@ export type Database = {
         Insert: {
           active_loans?: number | null
           age_group?: string | null
+          allocation?: Json | null
           avatar_url?: string | null
           city?: string | null
           created_at?: string
           currency?: string
           email?: string | null
+          employment_type?: string | null
           expense_categories?: string[] | null
           financial_journey_completed?: boolean
           financial_situation?: string | null
@@ -359,11 +396,13 @@ export type Database = {
         Update: {
           active_loans?: number | null
           age_group?: string | null
+          allocation?: Json | null
           avatar_url?: string | null
           city?: string | null
           created_at?: string
           currency?: string
           email?: string | null
+          employment_type?: string | null
           expense_categories?: string[] | null
           financial_journey_completed?: boolean
           financial_situation?: string | null
