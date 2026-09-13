@@ -1121,7 +1121,14 @@ function BillsTab() {
         </Card>
       )}
 
-      {sorted.length === 0 ? (
+      {isLoading && sorted.length === 0 ? (
+        <Card className="shadow-soft">
+          <CardContent className="space-y-2 p-3.5">
+            <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+          </CardContent>
+        </Card>
+      ) : sorted.length === 0 ? (
         <Card className="shadow-soft">
           <CardContent className="p-5 text-center text-sm text-muted-foreground">
             Add recurring bills (rent, electricity, OTT) to improve forecasting.
