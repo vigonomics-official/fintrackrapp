@@ -186,11 +186,26 @@ export function PurchaseCheckPanel({
                 <Line label="This purchase" value={formatCurrency(result.purchaseAmount, currency)} />
                 {v.salaryLeft != null && (
                   <Line label="Salary left" value={formatCurrency(v.salaryLeft, currency)}
-                    after={v.salaryLeftAfter != null ? formatCurrency(v.salaryLeftAfter, currency) : undefined} />
+                    after={
+                      v.salaryLeftAfter != null
+                        ? v.salaryLeftAfter < 0
+                          ? `Shortfall of ${formatCurrency(-v.salaryLeftAfter, currency)}`
+                          : formatCurrency(v.salaryLeftAfter, currency)
+                        : undefined
+                    } />
+                )}
+                {v.shortfall != null && v.shortfall > 0 && (
+                  <Line label="Shortfall" value={`-${formatCurrency(v.shortfall, currency)}`} />
                 )}
                 {v.safeDailySpend != null && (
                   <Line label="Safe daily spend" value={formatCurrency(v.safeDailySpend, currency)}
-                    after={v.safeDailySpendAfter != null ? formatCurrency(v.safeDailySpendAfter, currency) : undefined} />
+                    after={
+                      v.shortfall != null && v.shortfall > 0
+                        ? "Not affordable"
+                        : v.safeDailySpendAfter != null
+                          ? formatCurrency(v.safeDailySpendAfter, currency)
+                          : undefined
+                    } />
                 )}
                 {v.daysRemaining != null && <Line label="Days to salary" value={`${v.daysRemaining}`} />}
                 {v.forecastBefore != null && (
