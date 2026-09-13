@@ -37,7 +37,19 @@ export function useAllocation() {
         .eq("id", user!.id)
         .maybeSingle();
       if (error) throw error;
-      return normalize((data as any)?.allocation);
+      const cloud = (data as any)?.allocation;
+      if (cloud) {
+        if (typeof window !== "undefined") localStorage.removeItem(LEGACY_KEY);
+        return normalize(cloud);
+      }
+      // One-time lift of the device-only split into this account.
+      const legacy = readLegacy();
+      if (legacy) {
+        await supabase.from("profiles").update({ allocation: legacy } as any).eq("id", user!.id);
+        if (typeof window !== "undefined") localStorage.removeItem(LEGACY_KEY);
+        return legacy;
+      }
+      return DEFAULT_ALLOC;
     },
   });
 
