@@ -149,7 +149,14 @@ export type PurchaseCheckResult = {
   /** Only keys with real data are present. */
   values: {
     salaryLeft?: number;
+    /**
+     * Unclamped salary left after the purchase — negative when the purchase
+     * exceeds what's left, so the UI can show the real shortfall instead of
+     * a misleading ₹0.
+     */
     salaryLeftAfter?: number;
+    /** Amount by which the purchase exceeds salary left (0 when affordable). */
+    shortfall?: number;
     safeDailySpend?: number;
     safeDailySpendAfter?: number;
     daysRemaining?: number;
@@ -234,9 +241,12 @@ export function checkPurchaseAffordability(input: PurchaseCheckInput): PurchaseC
   }
 
   const salaryLeft = Math.round(before.salaryLeft);
-  const salaryLeftAfter = Math.round(after.salaryLeft);
+  // Salary left is clamped to 0 inside computeSurvival, so derive the real
+  // post-purchase figure (possibly negative) from the pre-purchase amount.
+  const salaryLeftAfter = Math.round(salaryLeft - price);
+  const shortfall = Math.max(0, -salaryLeftAfter);
   const safeDaily = Math.round(before.safeDaily);
-  const safeDailyAfter = Math.round(after.safeDaily);
+  const safeDailyAfter = shortfall > 0 ? 0 : Math.round(after.safeDaily);
   const days = before.daysRemaining;
   const forecastBefore = Math.round(before.forecastBalance);
   const forecastAfter = Math.round(after.forecastBalance);
