@@ -529,27 +529,25 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
 
 /* ============================ Salary Allocation ============================ */
 
-type Alloc = { rent: number; food: number; travel: number; emi: number; savings: number };
-const ALLOC_KEY = "fintrackr_alloc_v1";
-const defaultAlloc: Alloc = { rent: 30, food: 15, travel: 10, emi: 20, savings: 20 };
-
-function loadAlloc(): Alloc {
-  if (typeof window === "undefined") return defaultAlloc;
-  try {
-    const raw = localStorage.getItem(ALLOC_KEY);
-    return raw ? { ...defaultAlloc, ...JSON.parse(raw) } : defaultAlloc;
-  } catch { return defaultAlloc; }
-}
-
 function SalaryAllocation() {
   const s = useSurvival();
-  const [alloc, setAlloc] = useState<Alloc>(() => loadAlloc());
-  const allocLoadedRef = useRef(false);
+  const { alloc: savedAlloc, isLoading: allocLoading, save: saveAlloc } = useAllocation();
+  const [draft, setDraft] = useState<Alloc | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (!allocLoadedRef.current) { allocLoadedRef.current = true; return; }
-    if (typeof window !== "undefined") localStorage.setItem(ALLOC_KEY, JSON.stringify(alloc));
-  }, [alloc]);
+  // Show the account value until the user starts dragging.
+  const alloc = draft ?? savedAlloc;
+
+  const setAlloc = (updater: (prev: Alloc) => Alloc) => {
+    setDraft((prev) => {
+      const next = updater(prev ?? savedAlloc);
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => saveAlloc(next), 400);
+      return next;
+    });
+  };
+
+  useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
 
   const totalPct = alloc.rent + alloc.food + alloc.travel + alloc.emi + alloc.savings;
   const over = totalPct > 100;
