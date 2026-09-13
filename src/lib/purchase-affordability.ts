@@ -351,6 +351,7 @@ export function checkPurchaseAffordability(input: PurchaseCheckInput): PurchaseC
   const values: PurchaseCheckResult["values"] = {
     salaryLeft,
     salaryLeftAfter,
+    shortfall,
     safeDailySpend: safeDaily,
     safeDailySpendAfter: safeDailyAfter,
     survivalScore: before.score,
