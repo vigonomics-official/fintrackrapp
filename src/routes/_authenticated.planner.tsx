@@ -29,6 +29,8 @@ import {
 import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
 import { PurchaseCheckPanel, type PurchasePrefill } from "@/components/finance/PurchaseCheckPanel";
+import { useAllocation, type Alloc } from "@/lib/allocation";
+import { useBills, useBillMutations, type Bill } from "@/lib/bills";
 import { PurchaseListSection } from "@/components/finance/PurchaseListSection";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
