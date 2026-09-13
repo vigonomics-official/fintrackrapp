@@ -1002,63 +1002,65 @@ function LoansTab() {
 
 /* ============================ Bills & Subscriptions ============================ */
 
-type Bill = {
-  id: string;
-  name: string;
-  amount: number;
-  dueDay: number;
-  recurring: boolean;
-};
-const BILLS_KEY = "fintrackr_bills_v1";
+const LEGACY_BILLS_KEY = "fintrackr_bills_v1";
 
-function loadBills(): Bill[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = JSON.parse(localStorage.getItem(BILLS_KEY) || "[]");
-    if (!Array.isArray(raw)) return [];
-    return raw.map((b: any) => ({
-      id: String(b?.id ?? crypto.randomUUID()),
-      name: String(b?.name ?? ""),
-      amount: Number(b?.amount) || 0,
-      dueDay: Math.min(28, Math.max(1, Number(b?.dueDay) || 1)),
-      // backward compatible: older bills stored `autoRenew`
-      recurring: typeof b?.recurring === "boolean" ? b.recurring : Boolean(b?.autoRenew),
-    }));
-  } catch { return []; }
+/** One-time lift of device-only bills into the signed-in account. */
+function useLegacyBillsMigration(
+  ready: boolean,
+  hasCloudBills: boolean,
+  create: ReturnType<typeof useBillMutations>["create"],
+) {
+  const doneRef = useRef(false);
+  useEffect(() => {
+    if (!ready || doneRef.current || typeof window === "undefined") return;
+    doneRef.current = true;
+    let raw: any[] = [];
+    try { raw = JSON.parse(localStorage.getItem(LEGACY_BILLS_KEY) || "[]"); } catch { raw = []; }
+    if (!Array.isArray(raw) || raw.length === 0) {
+      localStorage.removeItem(LEGACY_BILLS_KEY);
+      return;
+    }
+    if (hasCloudBills) { localStorage.removeItem(LEGACY_BILLS_KEY); return; }
+    Promise.all(
+      raw.map((b: any) => create.mutateAsync({
+        name: String(b?.name ?? "").trim() || "Bill",
+        amount: Number(b?.amount) || 0,
+        due_day: Math.min(28, Math.max(1, Number(b?.dueDay) || 1)),
+        recurring: typeof b?.recurring === "boolean" ? b.recurring : Boolean(b?.autoRenew),
+      })),
+    )
+      .then(() => localStorage.removeItem(LEGACY_BILLS_KEY))
+      .catch(() => { doneRef.current = false; });
+  }, [ready, hasCloudBills, create]);
 }
 
 function BillsTab() {
   const s = useSurvival();
-  const [bills, setBills] = useState<Bill[]>(() => loadBills());
+  const { bills, isLoading } = useBills();
+  const { create, remove } = useBillMutations();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", dueDay: "5", recurring: true });
-  const loadedRef = useRef(false);
 
-  // Never write to storage on the first render pass — that used to clear saved
-  // bills before the stored list had been read back in.
-  useEffect(() => {
-    if (!loadedRef.current) { loadedRef.current = true; return; }
-    if (typeof window !== "undefined") localStorage.setItem(BILLS_KEY, JSON.stringify(bills));
-  }, [bills]);
+  useLegacyBillsMigration(!isLoading, bills.length > 0, create);
 
   const totalBills = bills.reduce((acc, b) => acc + b.amount, 0);
   const afterBills = Math.max(0, s.salaryLeft - totalBills);
 
   function add() {
     if (!form.name || !form.amount) return;
-    setBills((p) => [
-      ...p,
+    create.mutate(
       {
-        id: crypto.randomUUID(),
         name: form.name.trim(),
         amount: Number(form.amount),
-        dueDay: Math.min(28, Math.max(1, Number(form.dueDay) || 1)),
+        due_day: Math.min(28, Math.max(1, Number(form.dueDay) || 1)),
         recurring: form.recurring,
       },
-    ]);
+      { onError: () => toast.error("Couldn't save this bill. Please try again.") },
+    );
     setForm({ name: "", amount: "", dueDay: "5", recurring: true });
     setOpen(false);
   }
+
 
 
   const today = new Date();
