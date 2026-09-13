@@ -1151,7 +1151,9 @@ function BillsTab() {
                     {formatCurrency(b.amount, s.currency)}
                   </p>
                   <button
-                    onClick={() => setBills((p) => p.filter((x) => x.id !== b.id))}
+                    onClick={() => remove.mutate(b.id, {
+                      onError: () => toast.error("Couldn't delete this bill. Please try again."),
+                    })}
                     className="text-muted-foreground hover:text-destructive"
                     aria-label="Remove"
                   >
