@@ -151,7 +151,12 @@ export function useSalarySettings() {
     });
   }, []);
 
-  return { settings, update, isConfigured: settings.amount != null && settings.payDay != null };
+  return {
+    settings,
+    update,
+    loading,
+    isConfigured: settings.amount != null && settings.payDay != null,
+  };
 }
 
 export function payDayLabel(day: number | null): string {
