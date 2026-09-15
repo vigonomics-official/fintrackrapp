@@ -395,15 +395,16 @@ function SalaryLeftSection() {
 
 function ProblemSection() {
   const items = [
-    { icon: Wallet, title: "Salary disappears quickly", desc: "Gone by the 15th. No idea where." },
-    { icon: Receipt, title: "UPI spending confusion", desc: "₹50–₹200 spends silently drain you." },
-    { icon: CalendarClock, title: "Month-end stress", desc: "Rent, EMIs, bills — barely anything left." },
-    { icon: PiggyBank, title: "Don't know how to save", desc: "Want to, but don't know where to start." },
+    { icon: Wallet, title: "Where did my salary go?", desc: "Gone by mid-month and you can't trace it." },
+    { icon: ShoppingCart, title: "Can I afford this?", desc: "No clear answer before you tap Pay." },
+    { icon: Zap, title: "How much can I spend today?", desc: "Guessing never ends well." },
+    { icon: CalendarClock, title: "Will I have enough until salary day?", desc: "That quiet month-end worry, every month." },
+    { icon: Landmark, title: "How will I manage my EMIs and bills?", desc: "Rent, EMIs, subscriptions — all landing at once." },
   ];
   return (
     <section className="mx-auto max-w-6xl px-5 py-10 md:py-14">
       <h2 className="text-center font-display text-xl font-bold text-foreground md:text-2xl">Sound familiar?</h2>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it, i) => (
           <motion.div
             key={it.title}
@@ -430,21 +431,17 @@ function ProblemSection() {
 
 function Features() {
   const items = [
-    { icon: Zap, title: "Quick Expense Entry", desc: "Log a spend in under 3 seconds — amount, tap, done." },
-    { icon: PieChart, title: "Spending Insights", desc: "See where your money flows with clean weekly and monthly breakdowns." },
-    { icon: Bell, title: "Budget Alerts", desc: "Gentle nudges before you overshoot a category — no nasty surprises." },
-    { icon: CalendarClock, title: "Salary Countdown", desc: "Always know how many days till your next paycheck and your runway." },
-    { icon: Flame, title: "Daily Streak", desc: "Build a daily tracking habit. Watch your streak — and savings — grow." },
-    { icon: FileDown, title: "CSV Export", desc: "Export every transaction in one tap. Your data, your file." },
-    { icon: MessageSquare, title: "SMS Intelligence", desc: "Reads bank and UPI alerts automatically — no manual entry needed." },
-    { icon: Tags, title: "Smart Categorization", desc: "Learns your habits and labels Swiggy, Uber, EMIs the right way." },
+    { icon: Wallet, title: "Salary Left", desc: "See exactly how much of your salary is left — updated every time you spend." },
+    { icon: Receipt, title: "Expenses", desc: "Log a spend in seconds and see where your money actually goes." },
+    { icon: CalendarClock, title: "Planner", desc: "Plan your month with salary allocation, EMIs, bills and goals." },
+    { icon: ShoppingCart, title: "Can I Buy?", desc: "Check any purchase before you make it — know instantly if it's safe." },
   ];
   return (
     <section id="features" className="mx-auto max-w-6xl px-5 py-14 md:py-20">
       <div className="mx-auto max-w-xl text-center">
         <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">Your money, finally clear.</h2>
         <p className="mt-3 text-sm text-muted-foreground">
-          Everything you need to take control of your salary, spends and savings — in one calm dashboard.
+          Four tools that answer the only questions that matter about your salary.
         </p>
       </div>
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -615,10 +612,10 @@ function DashboardShowcase() {
             <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinTrackr
           </span>
           <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl">
-            One calm dashboard for your whole salary.
+            Your salary, under control
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            A quiet control center — budgets, categories, transactions and gentle nudges. No noise, no spreadsheets.
+            See your Salary Left, Safe Daily Spend, upcoming bills and spending at a glance.
           </p>
         </div>
 
