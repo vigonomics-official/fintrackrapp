@@ -819,9 +819,9 @@ function DashboardShowcase() {
 
 function HowItWorks() {
   const steps = [
-    { n: "1", title: "Add your salary cycle", desc: "Set payday. We build your month around it." },
-    { n: "2", title: "Track UPI & expenses automatically", desc: "Log spends in seconds with auto-categories." },
-    { n: "3", title: "Save more, stress less", desc: "Stay on budget and breathe easy at month-end." },
+    { n: "01", title: "Add your salary", desc: "Set your salary and payday. Your month is built around it." },
+    { n: "02", title: "Track your spending", desc: "Log expenses in seconds and see where your money goes." },
+    { n: "03", title: "Know what you can safely spend", desc: "Get your Salary Left and Safe Daily Spend, updated live." },
   ];
   return (
     <section id="how" className="bg-card py-10 md:py-14">
@@ -850,6 +850,91 @@ function HowItWorks() {
                 <h3 className="text-sm font-semibold text-foreground">{s.title}</h3>
                 <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{s.desc}</p>
               </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function IndianLifeSection() {
+  const items = [
+    { icon: Wallet, title: "Salary-based planning", desc: "Your whole month is planned around your salary, not a calendar." },
+    { icon: Landmark, title: "EMI tracking", desc: "Every EMI tracked so loans never surprise you." },
+    { icon: Repeat, title: "Bills & subscriptions", desc: "Recurring bills and subscriptions, always accounted for." },
+    { icon: PiggyBank, title: "Goals", desc: "Save for what matters without breaking your month." },
+    { icon: ShieldCheck, title: "Safe Daily Spend", desc: "One number that tells you what's safe to spend today." },
+    { icon: ShoppingCart, title: "Can I Buy?", desc: "Check any purchase before you make it." },
+  ];
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+      <div className="mx-auto max-w-xl text-center">
+        <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">Built for Indian salaried life</h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Salary cycles, EMIs, UPI spends and month-end pressure — FinTrackr is designed for exactly how you get paid and spend.
+        </p>
+      </div>
+      <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((it, i) => (
+          <motion.div
+            key={it.title}
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.05 }}
+            className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+          >
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+              style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
+            >
+              <it.icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
+              <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{it.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PrivacySection() {
+  const items = [
+    { icon: Landmark, title: "No bank login required.", desc: "You enter your own data — we never connect to your bank." },
+    { icon: Lock, title: "No bank password required.", desc: "Nothing to hand over, nothing to leak." },
+    { icon: ShieldCheck, title: "Your financial data belongs to you.", desc: "Stored in your private account. Export or delete it anytime." },
+  ];
+  return (
+    <section className="bg-card py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-5">
+        <div className="mx-auto max-w-xl text-center">
+          <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">Private by design</h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Tracking your money shouldn't mean handing over your bank.
+          </p>
+        </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {items.map((it, i) => (
+            <motion.div
+              key={it.title}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06 }}
+              className="rounded-2xl border border-border bg-muted/40 p-5 text-center"
+            >
+              <div
+                className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{ background: "rgba(20,184,166,0.12)", color: BRAND.accent }}
+              >
+                <it.icon className="h-5 w-5" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{it.desc}</p>
             </motion.div>
           ))}
         </div>
