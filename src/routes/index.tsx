@@ -1090,7 +1090,7 @@ function FinalCTA() {
           viewport={{ once: true }}
           className="font-display text-3xl font-bold text-white md:text-5xl"
         >
-          Start tracking your money today.
+          Start controlling your salary today.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -1099,7 +1099,7 @@ function FinalCTA() {
           transition={{ delay: 0.05 }}
           className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/90 md:text-base"
         >
-          Join Indian salary earners who finally understand where their money goes.
+          Know where your money goes. Know what you can spend.
         </motion.p>
 
         <motion.div
@@ -1115,7 +1115,7 @@ function FinalCTA() {
               className="rounded-xl bg-card px-7 text-sm font-semibold text-[#0F766E] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-card/95"
               style={{ boxShadow: "0 20px 50px -15px rgba(0,0,0,0.25)" }}
             >
-              Create Free Account <ArrowRight className="ml-1 h-4 w-4" />
+              Start Tracking Free <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
           <Link to="/login">
@@ -1149,14 +1149,14 @@ function Footer() {
       title: "Product",
       links: [
         { label: "Features", href: "#features" },
-        { label: "Early Access", href: "#early" },
+        { label: "How it Works", href: "#how" },
       ],
     },
     {
       title: "Company",
       links: [
         { label: "Privacy Policy", href: "/privacy" },
-        { label: "Terms & Conditions", href: "/terms" },
+        { label: "Terms of Service", href: "/terms" },
         { label: "Contact", href: "mailto:support@fintrackrapp.com" },
       ],
     },
