@@ -1208,9 +1208,13 @@ function Landing() {
       <Navbar />
       <main>
         <Hero />
+        <SalaryLeftSection />
         <DashboardShowcase />
         <ProblemSection />
+        <Features />
+        <IndianLifeSection />
         <HowItWorks />
+        <PrivacySection />
         <FinalCTA />
       </main>
       <Footer />
