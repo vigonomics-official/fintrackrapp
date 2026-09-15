@@ -3,22 +3,14 @@ import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
-  ArrowDown,
   Wallet,
   TrendingDown,
   CalendarClock,
   PiggyBank,
   ShieldCheck,
-  Smartphone,
-  Cpu,
-  Bell,
   Receipt,
   Sparkles,
-  CheckCircle2,
   Zap,
-  PieChart,
-  Flame,
-  FileDown,
   MessageSquare,
   Tags,
   Brain,
@@ -31,6 +23,8 @@ import {
   Repeat,
   Quote,
   Heart,
+  ShoppingCart,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -199,7 +193,7 @@ function HeroMockup() {
               </div>
             </div>
             <div className="flex-1">
-              <p className="text-[11px] font-medium text-muted-foreground">Remaining balance</p>
+              <p className="text-[11px] font-medium text-muted-foreground">Salary Left</p>
               <p className="font-display text-2xl font-bold text-foreground">₹ 12,840</p>
               <p
                 className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold"
@@ -306,7 +300,7 @@ function Hero() {
           transition={{ delay: 0.1 }}
           className="mx-auto mt-5 max-w-xl text-base text-muted-foreground md:text-lg"
         >
-          FinTrackr helps Indian salary earners track spending, manage budgets, and save more — without spreadsheets or confusion.
+          Track expenses, plan your month, manage EMIs and know how much you can safely spend.
         </motion.p>
 
         <motion.div
@@ -324,19 +318,17 @@ function Hero() {
                 boxShadow: "0 18px 40px -16px rgba(37,99,235,0.55)",
               }}
             >
-              Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
+              Start Tracking Free <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
         </motion.div>
 
-        {/* Trust row */}
-        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium text-muted-foreground md:text-xs">
-          {["No bank login needed", "Built for India", "Setup in under 60 seconds"].map((t) => (
-            <div key={t} className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
-              {t}
-            </div>
-          ))}
+        {/* Trust line */}
+        <div className="mt-6 flex justify-center">
+          <p className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground md:text-xs">
+            <ShieldCheck className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
+            No bank login required <span className="text-border">•</span> Privacy-first
+          </p>
         </div>
 
         <HeroMockup />
@@ -346,17 +338,36 @@ function Hero() {
 }
 
 
-function TrustSection() {
-  const items = [
-    { icon: ShieldCheck, title: "Privacy-first finance tracking", desc: "Your data stays yours. No selling, no snooping." },
-    { icon: Smartphone, title: "Built for UPI-first India", desc: "Designed for how you actually spend — PhonePe, GPay, Paytm." },
-    { icon: Cpu, title: "Smart categorization on-device", desc: "Transactions sorted instantly, right on your phone." },
+function SalaryLeftSection() {
+  const metrics = [
+    {
+      icon: Wallet,
+      title: "Salary Left",
+      desc: "Exactly how much of your salary is left to spend right now.",
+    },
+    {
+      icon: Zap,
+      title: "Safe Daily Spend",
+      desc: "A daily number you can spend and still make it comfortably to payday.",
+    },
+    {
+      icon: CalendarClock,
+      title: "Days Until Salary",
+      desc: "Know your runway, so month-end never catches you by surprise.",
+    },
   ];
   return (
-    <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
-      <h2 className="sr-only">Why FinTrackr</h2>
-      <div className="grid gap-4 md:grid-cols-3">
-        {items.map((it, i) => (
+    <section id="salary-left" className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+      <div className="mx-auto max-w-xl text-center">
+        <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+          Know what you can actually spend.
+        </h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          FinTrackr turns your salary into three simple numbers — updated live as you spend.
+        </p>
+      </div>
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        {metrics.map((it, i) => (
           <motion.div
             key={it.title}
             initial={{ opacity: 0, y: 16 }}
@@ -371,8 +382,8 @@ function TrustSection() {
             >
               <it.icon className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{it.desc}</p>
+            <h3 className="text-base font-semibold text-foreground">{it.title}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{it.desc}</p>
           </motion.div>
         ))}
       </div>
@@ -382,15 +393,16 @@ function TrustSection() {
 
 function ProblemSection() {
   const items = [
-    { icon: Wallet, title: "Salary disappears quickly", desc: "Gone by the 15th. No idea where." },
-    { icon: Receipt, title: "UPI spending confusion", desc: "₹50–₹200 spends silently drain you." },
-    { icon: CalendarClock, title: "Month-end stress", desc: "Rent, EMIs, bills — barely anything left." },
-    { icon: PiggyBank, title: "Don't know how to save", desc: "Want to, but don't know where to start." },
+    { icon: Wallet, title: "Where did my salary go?", desc: "Gone by mid-month and you can't trace it." },
+    { icon: ShoppingCart, title: "Can I afford this?", desc: "No clear answer before you tap Pay." },
+    { icon: Zap, title: "How much can I spend today?", desc: "Guessing never ends well." },
+    { icon: CalendarClock, title: "Will I have enough until salary day?", desc: "That quiet month-end worry, every month." },
+    { icon: Landmark, title: "How will I manage my EMIs and bills?", desc: "Rent, EMIs, subscriptions — all landing at once." },
   ];
   return (
     <section className="mx-auto max-w-6xl px-5 py-10 md:py-14">
       <h2 className="text-center font-display text-xl font-bold text-foreground md:text-2xl">Sound familiar?</h2>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it, i) => (
           <motion.div
             key={it.title}
@@ -417,21 +429,17 @@ function ProblemSection() {
 
 function Features() {
   const items = [
-    { icon: Zap, title: "Quick Expense Entry", desc: "Log a spend in under 3 seconds — amount, tap, done." },
-    { icon: PieChart, title: "Spending Insights", desc: "See where your money flows with clean weekly and monthly breakdowns." },
-    { icon: Bell, title: "Budget Alerts", desc: "Gentle nudges before you overshoot a category — no nasty surprises." },
-    { icon: CalendarClock, title: "Salary Countdown", desc: "Always know how many days till your next paycheck and your runway." },
-    { icon: Flame, title: "Daily Streak", desc: "Build a daily tracking habit. Watch your streak — and savings — grow." },
-    { icon: FileDown, title: "CSV Export", desc: "Export every transaction in one tap. Your data, your file." },
-    { icon: MessageSquare, title: "SMS Intelligence", desc: "Reads bank and UPI alerts automatically — no manual entry needed." },
-    { icon: Tags, title: "Smart Categorization", desc: "Learns your habits and labels Swiggy, Uber, EMIs the right way." },
+    { icon: Wallet, title: "Salary Left", desc: "See exactly how much of your salary is left — updated every time you spend." },
+    { icon: Receipt, title: "Expenses", desc: "Log a spend in seconds and see where your money actually goes." },
+    { icon: CalendarClock, title: "Planner", desc: "Plan your month with salary allocation, EMIs, bills and goals." },
+    { icon: ShoppingCart, title: "Can I Buy?", desc: "Check any purchase before you make it — know instantly if it's safe." },
   ];
   return (
     <section id="features" className="mx-auto max-w-6xl px-5 py-14 md:py-20">
       <div className="mx-auto max-w-xl text-center">
         <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">Your money, finally clear.</h2>
         <p className="mt-3 text-sm text-muted-foreground">
-          Everything you need to take control of your salary, spends and savings — in one calm dashboard.
+          Four tools that answer the only questions that matter about your salary.
         </p>
       </div>
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -602,10 +610,10 @@ function DashboardShowcase() {
             <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinTrackr
           </span>
           <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl">
-            One calm dashboard for your whole salary.
+            Your salary, under control
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            A quiet control center — budgets, categories, transactions and gentle nudges. No noise, no spreadsheets.
+            See your Salary Left, Safe Daily Spend, upcoming bills and spending at a glance.
           </p>
         </div>
 
@@ -809,9 +817,9 @@ function DashboardShowcase() {
 
 function HowItWorks() {
   const steps = [
-    { n: "1", title: "Add your salary cycle", desc: "Set payday. We build your month around it." },
-    { n: "2", title: "Track UPI & expenses automatically", desc: "Log spends in seconds with auto-categories." },
-    { n: "3", title: "Save more, stress less", desc: "Stay on budget and breathe easy at month-end." },
+    { n: "01", title: "Add your salary", desc: "Set your salary and payday. Your month is built around it." },
+    { n: "02", title: "Track your spending", desc: "Log expenses in seconds and see where your money goes." },
+    { n: "03", title: "Know what you can safely spend", desc: "Get your Salary Left and Safe Daily Spend, updated live." },
   ];
   return (
     <section id="how" className="bg-card py-10 md:py-14">
@@ -840,6 +848,91 @@ function HowItWorks() {
                 <h3 className="text-sm font-semibold text-foreground">{s.title}</h3>
                 <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{s.desc}</p>
               </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function IndianLifeSection() {
+  const items = [
+    { icon: Wallet, title: "Salary-based planning", desc: "Your whole month is planned around your salary, not a calendar." },
+    { icon: Landmark, title: "EMI tracking", desc: "Every EMI tracked so loans never surprise you." },
+    { icon: Repeat, title: "Bills & subscriptions", desc: "Recurring bills and subscriptions, always accounted for." },
+    { icon: PiggyBank, title: "Goals", desc: "Save for what matters without breaking your month." },
+    { icon: ShieldCheck, title: "Safe Daily Spend", desc: "One number that tells you what's safe to spend today." },
+    { icon: ShoppingCart, title: "Can I Buy?", desc: "Check any purchase before you make it." },
+  ];
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+      <div className="mx-auto max-w-xl text-center">
+        <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">Built for Indian salaried life</h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Salary cycles, EMIs, UPI spends and month-end pressure — FinTrackr is designed for exactly how you get paid and spend.
+        </p>
+      </div>
+      <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((it, i) => (
+          <motion.div
+            key={it.title}
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.05 }}
+            className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
+          >
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+              style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
+            >
+              <it.icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
+              <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{it.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PrivacySection() {
+  const items = [
+    { icon: Landmark, title: "No bank login required.", desc: "You enter your own data — we never connect to your bank." },
+    { icon: Lock, title: "No bank password required.", desc: "Nothing to hand over, nothing to leak." },
+    { icon: ShieldCheck, title: "Your financial data belongs to you.", desc: "Stored in your private account. Export or delete it anytime." },
+  ];
+  return (
+    <section className="bg-card py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-5">
+        <div className="mx-auto max-w-xl text-center">
+          <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">Private by design</h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Tracking your money shouldn't mean handing over your bank.
+          </p>
+        </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {items.map((it, i) => (
+            <motion.div
+              key={it.title}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06 }}
+              className="rounded-2xl border border-border bg-muted/40 p-5 text-center"
+            >
+              <div
+                className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{ background: "rgba(20,184,166,0.12)", color: BRAND.accent }}
+              >
+                <it.icon className="h-5 w-5" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{it.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -995,7 +1088,7 @@ function FinalCTA() {
           viewport={{ once: true }}
           className="font-display text-3xl font-bold text-white md:text-5xl"
         >
-          Start tracking your money today.
+          Start controlling your salary today.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -1004,7 +1097,7 @@ function FinalCTA() {
           transition={{ delay: 0.05 }}
           className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/90 md:text-base"
         >
-          Join Indian salary earners who finally understand where their money goes.
+          Know where your money goes. Know what you can spend.
         </motion.p>
 
         <motion.div
@@ -1020,7 +1113,7 @@ function FinalCTA() {
               className="rounded-xl bg-card px-7 text-sm font-semibold text-[#0F766E] shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-card/95"
               style={{ boxShadow: "0 20px 50px -15px rgba(0,0,0,0.25)" }}
             >
-              Create Free Account <ArrowRight className="ml-1 h-4 w-4" />
+              Start Tracking Free <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
           <Link to="/login">
@@ -1054,14 +1147,14 @@ function Footer() {
       title: "Product",
       links: [
         { label: "Features", href: "#features" },
-        { label: "Early Access", href: "#early" },
+        { label: "How it Works", href: "#how" },
       ],
     },
     {
       title: "Company",
       links: [
         { label: "Privacy Policy", href: "/privacy" },
-        { label: "Terms & Conditions", href: "/terms" },
+        { label: "Terms of Service", href: "/terms" },
         { label: "Contact", href: "mailto:support@fintrackrapp.com" },
       ],
     },
@@ -1113,9 +1206,13 @@ function Landing() {
       <Navbar />
       <main>
         <Hero />
+        <SalaryLeftSection />
         <DashboardShowcase />
         <ProblemSection />
+        <Features />
+        <IndianLifeSection />
         <HowItWorks />
+        <PrivacySection />
         <FinalCTA />
       </main>
       <Footer />
