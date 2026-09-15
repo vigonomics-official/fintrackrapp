@@ -3,22 +3,16 @@ import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
-  ArrowDown,
   Wallet,
   TrendingDown,
   CalendarClock,
   PiggyBank,
   ShieldCheck,
   Smartphone,
-  Cpu,
-  Bell,
   Receipt,
   Sparkles,
   CheckCircle2,
   Zap,
-  PieChart,
-  Flame,
-  FileDown,
   MessageSquare,
   Tags,
   Brain,
@@ -31,6 +25,8 @@ import {
   Repeat,
   Quote,
   Heart,
+  ShoppingCart,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -199,7 +195,7 @@ function HeroMockup() {
               </div>
             </div>
             <div className="flex-1">
-              <p className="text-[11px] font-medium text-muted-foreground">Remaining balance</p>
+              <p className="text-[11px] font-medium text-muted-foreground">Salary Left</p>
               <p className="font-display text-2xl font-bold text-foreground">₹ 12,840</p>
               <p
                 className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold"
@@ -306,7 +302,7 @@ function Hero() {
           transition={{ delay: 0.1 }}
           className="mx-auto mt-5 max-w-xl text-base text-muted-foreground md:text-lg"
         >
-          FinTrackr helps Indian salary earners track spending, manage budgets, and save more — without spreadsheets or confusion.
+          Track expenses, plan your month, manage EMIs and know how much you can safely spend.
         </motion.p>
 
         <motion.div
@@ -324,19 +320,17 @@ function Hero() {
                 boxShadow: "0 18px 40px -16px rgba(37,99,235,0.55)",
               }}
             >
-              Get Early Access <ArrowRight className="ml-1 h-4 w-4" />
+              Start Tracking Free <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
         </motion.div>
 
-        {/* Trust row */}
-        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-medium text-muted-foreground md:text-xs">
-          {["No bank login needed", "Built for India", "Setup in under 60 seconds"].map((t) => (
-            <div key={t} className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
-              {t}
-            </div>
-          ))}
+        {/* Trust line */}
+        <div className="mt-6 flex justify-center">
+          <p className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground md:text-xs">
+            <ShieldCheck className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
+            No bank login required <span className="text-border">•</span> Privacy-first
+          </p>
         </div>
 
         <HeroMockup />
@@ -346,17 +340,36 @@ function Hero() {
 }
 
 
-function TrustSection() {
-  const items = [
-    { icon: ShieldCheck, title: "Privacy-first finance tracking", desc: "Your data stays yours. No selling, no snooping." },
-    { icon: Smartphone, title: "Built for UPI-first India", desc: "Designed for how you actually spend — PhonePe, GPay, Paytm." },
-    { icon: Cpu, title: "Smart categorization on-device", desc: "Transactions sorted instantly, right on your phone." },
+function SalaryLeftSection() {
+  const metrics = [
+    {
+      icon: Wallet,
+      title: "Salary Left",
+      desc: "Exactly how much of your salary is left to spend right now.",
+    },
+    {
+      icon: Zap,
+      title: "Safe Daily Spend",
+      desc: "A daily number you can spend and still make it comfortably to payday.",
+    },
+    {
+      icon: CalendarClock,
+      title: "Days Until Salary",
+      desc: "Know your runway, so month-end never catches you by surprise.",
+    },
   ];
   return (
-    <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
-      <h2 className="sr-only">Why FinTrackr</h2>
-      <div className="grid gap-4 md:grid-cols-3">
-        {items.map((it, i) => (
+    <section id="salary-left" className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+      <div className="mx-auto max-w-xl text-center">
+        <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+          Know what you can actually spend.
+        </h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          FinTrackr turns your salary into three simple numbers — updated live as you spend.
+        </p>
+      </div>
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        {metrics.map((it, i) => (
           <motion.div
             key={it.title}
             initial={{ opacity: 0, y: 16 }}
@@ -371,8 +384,8 @@ function TrustSection() {
             >
               <it.icon className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{it.desc}</p>
+            <h3 className="text-base font-semibold text-foreground">{it.title}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{it.desc}</p>
           </motion.div>
         ))}
       </div>
