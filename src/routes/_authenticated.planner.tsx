@@ -641,12 +641,15 @@ function SalaryAllocation() {
                     )}
                   </div>
                 </div>
-                <input
-                  type="range" min={0} max={60} value={pct}
-                  disabled={allocLoading}
-                  onChange={(e) => setAlloc((p) => ({ ...p, [r.key]: Number(e.target.value) }))}
-                  className="w-full accent-primary disabled:opacity-50"
-                />
+                {allocLoading || !allocLoaded ? (
+                  <div className="h-2 w-full animate-pulse rounded-full bg-muted" />
+                ) : (
+                  <input
+                    type="range" min={0} max={60} value={pct}
+                    onChange={(e) => setAlloc((p) => ({ ...p, [r.key]: Number(e.target.value) }))}
+                    className="w-full accent-primary"
+                  />
+                )}
               </CardContent>
             </Card>
           );
