@@ -580,13 +580,13 @@ function SalaryAllocation() {
   const remainingPct = Math.max(0, 100 - totalPct);
   const remainingAmt = (s.salary * remainingPct) / 100;
 
-  const rows: { key: keyof Alloc; label: string; tip: string }[] = [
+  const rows: { key: keyof Alloc; label: string; tip: string; max?: number }[] = [
     { key: "rent", label: "Rent", tip: "Suggested range: up to 30%" },
     { key: "food", label: "Food", tip: "Suggested range: 10–15%" },
     { key: "travel", label: "Travel", tip: "Suggested range: 5–10%" },
     { key: "emi", label: "EMI", tip: "Suggested range: up to 40%" },
     { key: "savings", label: "Savings", tip: "Recommended target: 20%+" },
-    { key: "other", label: "Other / Personal", tip: "Use this for the rest of your salary" },
+    { key: "other", label: "Other / Personal", tip: "Use this for the rest of your salary", max: 100 },
   ];
 
   return (
@@ -644,7 +644,7 @@ function SalaryAllocation() {
                   <div className="h-2 w-full animate-pulse rounded-full bg-muted" />
                 ) : (
                   <input
-                    type="range" min={0} max={60} value={pct}
+                    type="range" min={0} max={r.max ?? 60} value={pct}
                     onChange={(e) => setAlloc((p) => ({ ...p, [r.key]: Number(e.target.value) }))}
                     className="w-full accent-primary"
                   />
