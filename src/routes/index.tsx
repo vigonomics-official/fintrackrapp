@@ -98,10 +98,10 @@ function Navbar() {
     <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Logo />
-        <div className="hidden items-center gap-7 md:flex">
-          <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</a>
-          <a href="#how" className="text-sm font-medium text-muted-foreground hover:text-foreground">How it Works</a>
-          <a href="#final" className="text-sm font-medium text-muted-foreground hover:text-foreground">Get Started</a>
+        <div className="hidden items-center gap-4 md:flex lg:gap-5">
+          <a href="#features" className="whitespace-nowrap text-[13px] font-medium text-muted-foreground hover:text-foreground">Features</a>
+          <a href="#how" className="whitespace-nowrap text-[13px] font-medium text-muted-foreground hover:text-foreground">How it Works</a>
+          <a href="#final" className="whitespace-nowrap text-[13px] font-medium text-muted-foreground hover:text-foreground">Get Started</a>
         </div>
       </nav>
     </header>
