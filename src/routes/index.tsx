@@ -1,29 +1,21 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { motion, useInView } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Wallet,
   TrendingDown,
   CalendarClock,
-  PiggyBank,
   ShieldCheck,
-  Receipt,
   Sparkles,
   Zap,
-  MessageSquare,
-  Tags,
-  Brain,
-  Utensils,
-  Fuel,
+  ShoppingCart,
   Landmark,
   Smartphone as PhoneIcon,
   Home,
   TrendingUp,
   Repeat,
-  Quote,
-  Heart,
-  ShoppingCart,
+  Utensils,
+  Fuel,
   Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -122,7 +114,7 @@ function HeroMockup() {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.6 }}
-      className="relative mx-auto mt-12 w-full max-w-sm"
+      className="relative mx-auto mt-8 w-full max-w-[22rem] sm:max-w-sm"
     >
       {/* Soft gradient glow behind phone */}
       <div
@@ -171,8 +163,8 @@ function HeroMockup() {
 
           {/* Spending ring + remaining */}
           <div className="mt-5 flex items-center gap-5">
-            <div className="relative h-28 w-28">
-              <svg viewBox="0 0 36 36" className="h-28 w-28 -rotate-90">
+            <div className="relative h-32 w-32 shrink-0">
+              <svg viewBox="0 0 36 36" className="h-32 w-32 -rotate-90">
                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EEF2F7" strokeWidth="3.4" />
                 <motion.circle
                   cx="18"
@@ -192,9 +184,9 @@ function HeroMockup() {
                 <span className="text-base font-bold text-foreground">68%</span>
               </div>
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <p className="text-[11px] font-medium text-muted-foreground">Salary Left</p>
-              <p className="font-display text-2xl font-bold text-foreground">₹ 12,840</p>
+              <p className="font-display text-3xl font-bold text-foreground">₹ 12,840</p>
               <p
                 className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold"
                 style={{ color: BRAND.accent }}
@@ -218,11 +210,11 @@ function HeroMockup() {
               >
                 <Sparkles className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Smart insight
                 </p>
-                <p className="mt-0.5 text-[12px] font-medium leading-snug text-foreground">
+                <p className="mt-0.5 text-[13px] font-medium leading-snug text-foreground">
                   Food spends are up <span className="font-bold">₹ 1,240</span> this week. Cook 2 nights to save ~₹ 800.
                 </p>
               </div>
@@ -230,27 +222,6 @@ function HeroMockup() {
           </motion.div>
         </div>
       </div>
-
-      {/* Floating accent cards */}
-      <motion.div
-        initial={{ opacity: 0, x: -16, y: 10 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="absolute -left-4 top-28 hidden rounded-2xl bg-card px-3 py-2 shadow-lg ring-1 ring-border sm:block"
-      >
-        <p className="text-[10px] text-muted-foreground">Saved this month</p>
-        <p className="text-sm font-bold" style={{ color: BRAND.accent }}>+ ₹ 2,340</p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, x: 16, y: 10 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ delay: 0.9 }}
-        className="absolute -right-4 bottom-20 hidden rounded-2xl bg-card px-3 py-2 shadow-lg ring-1 ring-border sm:block"
-      >
-        <p className="text-[10px] text-muted-foreground">Daily streak</p>
-        <p className="text-sm font-bold text-foreground">🔥 28 days</p>
-      </motion.div>
     </motion.div>
   );
 }
@@ -269,7 +240,7 @@ function Hero() {
       <div className="pointer-events-none absolute -left-24 top-32 -z-10 h-72 w-72 rounded-full bg-blue-300/25 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 top-48 -z-10 h-72 w-72 rounded-full bg-emerald-300/25 blur-3xl" />
 
-      <div className="mx-auto max-w-6xl px-5 pb-10 pt-12 text-center md:pt-20">
+      <div className="mx-auto max-w-6xl px-5 pb-6 pt-10 text-center md:pt-14">
         <motion.span
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -298,16 +269,16 @@ function Hero() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mx-auto mt-5 max-w-xl text-base text-muted-foreground md:text-lg"
+          className="mx-auto mt-4 max-w-xl text-base text-muted-foreground md:text-lg"
         >
-          Track expenses, plan your month, manage EMIs and know how much you can safely spend.
+          Track expenses, plan your salary, and know how much you can safely spend — all in one simple dashboard.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mt-7 flex justify-center"
+          className="mt-6 flex justify-center"
         >
           <Link to="/signup" className="w-full sm:w-auto">
             <Button
@@ -324,7 +295,7 @@ function Hero() {
         </motion.div>
 
         {/* Trust line */}
-        <div className="mt-6 flex justify-center">
+        <div className="mt-5 flex justify-center">
           <p className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground md:text-xs">
             <ShieldCheck className="h-3.5 w-3.5" style={{ color: BRAND.accent }} />
             No bank login required <span className="text-border">•</span> Privacy-first
@@ -357,16 +328,16 @@ function SalaryLeftSection() {
     },
   ];
   return (
-    <section id="salary-left" className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+    <section id="salary-left" className="mx-auto max-w-6xl px-5 py-8 md:py-12">
       <div className="mx-auto max-w-xl text-center">
         <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
           Know what you can actually spend.
         </h2>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           FinTrackr turns your salary into three simple numbers — updated live as you spend.
         </p>
       </div>
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      <div className="mt-7 grid gap-4 sm:grid-cols-3">
         {metrics.map((it, i) => (
           <motion.div
             key={it.title}
@@ -391,6 +362,197 @@ function SalaryLeftSection() {
   );
 }
 
+function AppScreens() {
+  const expenses = [
+    { icon: Utensils, name: "Swiggy", tag: "Food · UPI", amt: 340 },
+    { icon: Fuel, name: "HP Petrol", tag: "Fuel · Card", amt: 1200 },
+    { icon: PhoneIcon, name: "Jio Recharge", tag: "Bills · UPI", amt: 299 },
+  ];
+  const allocation = [
+    { label: "Needs", pct: 50, color: BRAND.primary },
+    { label: "Wants", pct: 30, color: BRAND.accent },
+    { label: "Savings", pct: 20, color: "#2563EB" },
+  ];
+  const insights = [
+    { icon: Sparkles, text: "Food up ₹1,240 this week — cook 2 nights to save ~₹800." },
+    { icon: Repeat, text: "Netflix renews in 3 days · ₹649" },
+    { icon: TrendingUp, text: "You're spending 12% less than last month." },
+  ];
+  const cardCls = "rounded-3xl border border-border bg-card p-5 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]";
+
+  return (
+    <section id="dashboard" className="relative overflow-hidden py-10 md:py-14">
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(60% 60% at 20% 10%, rgba(37,99,235,0.10), transparent 60%), radial-gradient(50% 50% at 90% 80%, rgba(20,184,166,0.10), transparent 60%)",
+        }}
+      />
+      <div className="mx-auto max-w-6xl px-5">
+        <div className="mx-auto max-w-xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
+            <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinTrackr
+          </span>
+          <h2 className="mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
+            Your salary, under control
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            See your Salary Left, Safe Daily Spend, upcoming bills and spending at a glance.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          {/* Home — larger, featured */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className={`lg:col-span-2 ${cardCls}`}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Home</p>
+              <span className="text-[10px] text-muted-foreground">November</span>
+            </div>
+            <div className="mt-4 grid items-center gap-5 sm:grid-cols-[auto_1fr]">
+              <div className="relative mx-auto h-36 w-36 shrink-0">
+                <svg viewBox="0 0 36 36" className="h-36 w-36 -rotate-90">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EEF2F7" strokeWidth="3.5" />
+                  <motion.circle
+                    cx="18"
+                    cy="18"
+                    r="15.9"
+                    fill="none"
+                    stroke={BRAND.primary}
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    initial={{ strokeDasharray: "0 100" }}
+                    whileInView={{ strokeDasharray: "72 100" }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.1, ease: "easeOut" }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-medium text-muted-foreground">Spent</span>
+                  <span className="font-display text-lg font-bold text-foreground">72%</span>
+                </div>
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-xs text-muted-foreground">Salary Left</p>
+                <p className="font-display text-4xl font-bold text-foreground">₹ 9,441</p>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                    <CalendarClock className="h-3 w-3" /> Salary in 5 days
+                  </span>
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                    style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
+                  >
+                    <Zap className="h-3 w-3" /> Safe Daily Spend ₹ 428
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Expenses */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className={cardCls}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Expenses</p>
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                Auto-categorized
+              </span>
+            </div>
+            <div className="mt-3 divide-y divide-border">
+              {expenses.map((t) => (
+                <div key={t.name} className="flex items-center justify-between py-2.5">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                      style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
+                    >
+                      <t.icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-foreground">{t.name}</p>
+                      <p className="truncate text-[10px] text-muted-foreground">{t.tag}</p>
+                    </div>
+                  </div>
+                  <p className="shrink-0 text-xs font-bold text-foreground">− ₹ {t.amt.toLocaleString("en-IN")}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Planner */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className={cardCls}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Planner</p>
+            <div className="mt-4 space-y-3">
+              {allocation.map((a, i) => (
+                <div key={a.label}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-muted-foreground">{a.label}</span>
+                    <span className="font-semibold text-foreground">{a.pct}%</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${a.pct}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.9, delay: 0.1 + i * 0.06, ease: "easeOut" }}
+                      className="h-full rounded-full"
+                      style={{ background: a.color }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-muted/60 px-3 py-2.5">
+              <Landmark className="h-4 w-4 shrink-0" style={{ color: BRAND.primary }} />
+              <p className="text-[11px] font-medium text-muted-foreground">EMIs, bills and goals planned for the month</p>
+            </div>
+          </motion.div>
+
+          {/* Insights */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="rounded-3xl p-5 text-white shadow-[0_20px_50px_-20px_rgba(37,99,235,0.45)] lg:col-span-2"
+            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #2563EB)` }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest opacity-90">Insights</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              {insights.map((it, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-3 rounded-2xl bg-card/10 p-4 backdrop-blur-sm ring-1 ring-white/15"
+                >
+                  <it.icon className="mt-0.5 h-4 w-4 shrink-0 opacity-90" />
+                  <p className="text-xs leading-snug">{it.text}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ProblemSection() {
   const items = [
     { icon: Wallet, title: "Where did my salary go?", desc: "Gone by mid-month and you can't trace it." },
@@ -400,9 +562,9 @@ function ProblemSection() {
     { icon: Landmark, title: "How will I manage my EMIs and bills?", desc: "Rent, EMIs, subscriptions — all landing at once." },
   ];
   return (
-    <section className="mx-auto max-w-6xl px-5 py-10 md:py-14">
+    <section className="mx-auto max-w-6xl px-5 py-8 md:py-10">
       <h2 className="text-center font-display text-xl font-bold text-foreground md:text-2xl">Sound familiar?</h2>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it, i) => (
           <motion.div
             key={it.title}
@@ -427,22 +589,24 @@ function ProblemSection() {
   );
 }
 
-function Features() {
+function BuiltForSalary() {
   const items = [
-    { icon: Wallet, title: "Salary Left", desc: "See exactly how much of your salary is left — updated every time you spend." },
-    { icon: Receipt, title: "Expenses", desc: "Log a spend in seconds and see where your money actually goes." },
-    { icon: CalendarClock, title: "Planner", desc: "Plan your month with salary allocation, EMIs, bills and goals." },
-    { icon: ShoppingCart, title: "Can I Buy?", desc: "Check any purchase before you make it — know instantly if it's safe." },
+    { icon: Zap, title: "Know your safe daily spending", desc: "One clear number tells you what's safe to spend today." },
+    { icon: CalendarClock, title: "Plan your monthly salary", desc: "Split your salary across needs, wants and savings." },
+    { icon: Landmark, title: "Stay ahead of bills and EMIs", desc: "Recurring bills and EMIs are planned before they land." },
+    { icon: TrendingUp, title: "Understand your spending", desc: "See where every rupee actually goes." },
   ];
   return (
-    <section id="features" className="mx-auto max-w-6xl px-5 py-14 md:py-20">
+    <section id="features" className="mx-auto max-w-6xl px-5 py-8 md:py-12">
       <div className="mx-auto max-w-xl text-center">
-        <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">Your money, finally clear.</h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Four tools that answer the only questions that matter about your salary.
+        <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+          Built for your salary, not just your expenses
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          FinTrackr plans around your pay cycle — so your money lasts the full month.
         </p>
       </div>
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((it, i) => (
           <motion.div
             key={it.title}
@@ -467,354 +631,6 @@ function Features() {
   );
 }
 
-function SmartFeatures() {
-  const cards = [
-    {
-      icon: MessageSquare,
-      title: "SMS Intelligence",
-      desc: "Automatically detects bank and UPI transaction messages — so you don't have to type a thing.",
-    },
-    {
-      icon: Tags,
-      title: "Smart Categorization",
-      desc: "Learns and categorizes your spending automatically — Swiggy is food, HP is fuel, HDFC is EMI.",
-    },
-    {
-      icon: Brain,
-      title: "Self-Learning Engine",
-      desc: "The more you use FinTrackr, the smarter your expense tracking becomes. It adapts to your habits.",
-    },
-  ];
-  const examples = [
-    { icon: Utensils, from: "Swiggy", to: "Food" },
-    { icon: Fuel, from: "HP Petrol", to: "Fuel" },
-    { icon: Landmark, from: "EMI HDFC", to: "EMI" },
-    { icon: PhoneIcon, from: "Recharge", to: "Utilities" },
-  ];
-  return (
-    <section className="relative overflow-hidden bg-card py-14 md:py-20">
-      <div
-        className="absolute inset-x-0 top-0 -z-10 h-72"
-        style={{
-          background:
-            "radial-gradient(50% 60% at 50% 0%, rgba(37,99,235,0.07), transparent 70%)",
-        }}
-      />
-      <div className="mx-auto max-w-6xl px-5">
-        <div className="mx-auto max-w-xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
-            <Brain className="h-3 w-3" style={{ color: BRAND.primary }} /> Smarter over time
-          </span>
-          <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl">
-            Built to learn your habits.
-          </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            FinTrackr reads your transaction messages and quietly organizes them — no setup, no spreadsheets.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {cards.map((c, i) => (
-            <motion.div
-              key={c.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="rounded-2xl border border-border bg-gradient-to-br from-white to-muted p-6 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
-            >
-              <div
-                className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
-                style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
-              >
-                <c.icon className="h-5 w-5" />
-              </div>
-              <h3 className="text-base font-semibold text-foreground">{c.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{c.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="mt-10 rounded-3xl border border-border bg-muted/70 p-6 md:p-8">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            How it learns
-          </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {examples.map((ex, i) => (
-              <motion.div
-                key={ex.from}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center justify-between rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-9 w-9 items-center justify-center rounded-lg"
-                    style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
-                  >
-                    <ex.icon className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-semibold text-foreground">{ex.from}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span
-                    className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                    style={{ background: "rgba(20,184,166,0.12)", color: BRAND.accent }}
-                  >
-                    {ex.to}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function DashboardShowcase() {
-  const categories = [
-    { label: "Food & Dining", pct: 28, amt: 4640, color: "#0F766E" },
-    { label: "Rent & EMI", pct: 32, amt: 5300, color: "#14B8A6" },
-    { label: "Fuel & Travel", pct: 18, amt: 2980, color: "#6366F1" },
-    { label: "Bills & Other", pct: 22, amt: 3640, color: "#F59E0B" },
-  ];
-  const txns = [
-    { icon: Utensils, name: "Swiggy", tag: "Food · UPI", amt: 340 },
-    { icon: Fuel, name: "HP Petrol", tag: "Fuel · Card", amt: 1200 },
-    { icon: Home, name: "Rent", tag: "Housing · NEFT", amt: 8000 },
-    { icon: PhoneIcon, name: "Jio Recharge", tag: "Bills · UPI", amt: 299 },
-  ];
-  const insights = [
-    { icon: Sparkles, text: "Food orders up ₹1,240 this week. Cook 2 nights to save ~₹800." },
-    { icon: Repeat, text: "Netflix renews in 3 days · ₹649" },
-    { icon: TrendingUp, text: "You're spending 12% less than last month." },
-  ];
-
-  return (
-    <section id="dashboard" className="relative overflow-hidden py-14 md:py-20">
-      <div
-        className="absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(60% 60% at 20% 10%, rgba(37,99,235,0.10), transparent 60%), radial-gradient(50% 50% at 90% 80%, rgba(20,184,166,0.10), transparent 60%)",
-        }}
-      />
-      <div className="mx-auto max-w-6xl px-5">
-        <div className="mx-auto max-w-xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
-            <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinTrackr
-          </span>
-          <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl">
-            Your salary, under control
-          </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            See your Salary Left, Safe Daily Spend, upcoming bills and spending at a glance.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-4 md:gap-5 lg:grid-cols-12">
-          {/* Budget ring + salary countdown */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-5 rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
-          >
-            <p className="text-xs font-medium text-muted-foreground">November · Budget</p>
-            <div className="mt-4 flex items-center gap-5">
-              <div className="relative h-28 w-28 shrink-0">
-                <svg viewBox="0 0 36 36" className="h-28 w-28 -rotate-90">
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EEF2F7" strokeWidth="3.5" />
-                  <motion.circle
-                    cx="18"
-                    cy="18"
-                    r="15.9"
-                    fill="none"
-                    stroke={BRAND.primary}
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                    initial={{ strokeDasharray: "0 100" }}
-                    whileInView={{ strokeDasharray: "72 100" }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.1, ease: "easeOut" }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-medium text-muted-foreground">Spent</span>
-                  <span className="font-display text-lg font-bold text-foreground">72%</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Remaining</p>
-                <p className="font-display text-3xl font-bold text-foreground">₹ 9,441</p>
-                <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                  <CalendarClock className="h-3 w-3" /> Salary in 5 days
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Savings goal */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.05 }}
-            className="lg:col-span-7 rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">Savings goal · Goa trip</p>
-                <p className="font-display text-2xl font-bold text-foreground">
-                  ₹ 38,200 <span className="text-sm font-medium text-muted-foreground">/ 50,000</span>
-                </p>
-              </div>
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-2xl"
-                style={{ background: "rgba(20,184,166,0.10)", color: BRAND.accent }}
-              >
-                <PiggyBank className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-muted">
-              <motion.div
-                initial={{ width: 0 }}
-                whileInView={{ width: "76%" }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.1, ease: "easeOut" }}
-                className="h-full rounded-full"
-                style={{ background: `linear-gradient(90deg, ${BRAND.primary}, ${BRAND.accent})` }}
-              />
-            </div>
-            <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>76% complete</span>
-              <span>On track for Dec 18</span>
-            </div>
-          </motion.div>
-
-          {/* Spending categories */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-5 rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-muted-foreground">Spending by category</p>
-              <span className="text-[10px] text-muted-foreground">This month</span>
-            </div>
-            <div className="mt-4 space-y-3.5">
-              {categories.map((c, i) => (
-                <div key={c.label}>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-2 font-medium text-muted-foreground">
-                      <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
-                      {c.label}
-                    </span>
-                    <span className="font-semibold text-foreground">₹ {c.amt.toLocaleString("en-IN")}</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      whileInView={{ width: `${c.pct}%` }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.9, delay: 0.1 + i * 0.06, ease: "easeOut" }}
-                      className="h-full rounded-full"
-                      style={{ background: c.color }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Recent transactions */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.15 }}
-            className="lg:col-span-7 rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_-20px_rgba(17,24,39,0.18)]"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-muted-foreground">Recent transactions</p>
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                <MessageSquare className="h-3 w-3" /> Auto from SMS
-              </span>
-            </div>
-            <div className="mt-3 divide-y divide-border">
-              {txns.map((t) => (
-                <div key={t.name} className="flex items-center justify-between py-2.5">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-9 w-9 items-center justify-center rounded-xl"
-                      style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
-                    >
-                      <t.icon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-foreground">{t.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{t.tag}</p>
-                    </div>
-                  </div>
-                  <p className="text-xs font-bold text-foreground">− ₹ {t.amt.toLocaleString("en-IN")}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Smart insights */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-12 rounded-3xl p-6 text-white shadow-[0_20px_50px_-20px_rgba(37,99,235,0.45)]"
-            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, #2563EB)` }}
-          >
-            <div className="flex items-center gap-2">
-              <Brain className="h-4 w-4" />
-              <p className="text-[11px] font-semibold uppercase tracking-widest opacity-90">Smart insights</p>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              {insights.map((it, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-3 rounded-2xl bg-card/10 p-4 backdrop-blur-sm ring-1 ring-white/15"
-                >
-                  <it.icon className="mt-0.5 h-4 w-4 shrink-0 opacity-90" />
-                  <p className="text-xs leading-snug">{it.text}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Middle CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 1.2, duration: 0.7 }}
-          className="mt-10 flex justify-center"
-        >
-          <a href="#dashboard" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition-all hover:bg-muted hover:shadow-md">
-            <Sparkles className="h-4 w-4" style={{ color: BRAND.primary }} />
-            See Demo
-            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-          </a>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
 function HowItWorks() {
   const steps = [
     { n: "01", title: "Add your salary", desc: "Set your salary and payday. Your month is built around it." },
@@ -822,13 +638,13 @@ function HowItWorks() {
     { n: "03", title: "Know what you can safely spend", desc: "Get your Salary Left and Safe Daily Spend, updated live." },
   ];
   return (
-    <section id="how" className="bg-card py-10 md:py-14">
+    <section id="how" className="bg-card py-8 md:py-10">
       <div className="mx-auto max-w-6xl px-5">
         <div className="text-center">
           <h2 className="font-display text-xl font-bold text-foreground md:text-2xl">How it works</h2>
           <p className="mt-1 text-xs text-muted-foreground">Three steps. No spreadsheets.</p>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {steps.map((s, i) => (
             <motion.div
               key={s.n}
@@ -856,66 +672,22 @@ function HowItWorks() {
   );
 }
 
-function IndianLifeSection() {
-  const items = [
-    { icon: Wallet, title: "Salary-based planning", desc: "Your whole month is planned around your salary, not a calendar." },
-    { icon: Landmark, title: "EMI tracking", desc: "Every EMI tracked so loans never surprise you." },
-    { icon: Repeat, title: "Bills & subscriptions", desc: "Recurring bills and subscriptions, always accounted for." },
-    { icon: PiggyBank, title: "Goals", desc: "Save for what matters without breaking your month." },
-    { icon: ShieldCheck, title: "Safe Daily Spend", desc: "One number that tells you what's safe to spend today." },
-    { icon: ShoppingCart, title: "Can I Buy?", desc: "Check any purchase before you make it." },
-  ];
-  return (
-    <section className="mx-auto max-w-6xl px-5 py-12 md:py-16">
-      <div className="mx-auto max-w-xl text-center">
-        <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">Built for Indian salaried life</h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Salary cycles, EMIs, UPI spends and month-end pressure — FinTrackr is designed for exactly how you get paid and spend.
-        </p>
-      </div>
-      <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((it, i) => (
-          <motion.div
-            key={it.title}
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.05 }}
-            className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-[0_4px_20px_-8px_rgba(17,24,39,0.08)]"
-          >
-            <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-              style={{ background: "rgba(37,99,235,0.08)", color: BRAND.primary }}
-            >
-              <it.icon className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
-              <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{it.desc}</p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function PrivacySection() {
   const items = [
-    { icon: Landmark, title: "No bank login required.", desc: "You enter your own data — we never connect to your bank." },
-    { icon: Lock, title: "No bank password required.", desc: "Nothing to hand over, nothing to leak." },
-    { icon: ShieldCheck, title: "Your financial data belongs to you.", desc: "Stored in your private account. Export or delete it anytime." },
+    { icon: Landmark, title: "No bank login required.", desc: "FinTrackr never connects to your bank — you add your own data." },
+    { icon: Lock, title: "No bank password required.", desc: "Nothing sensitive to hand over, nothing to leak." },
+    { icon: ShieldCheck, title: "Your data belongs to you.", desc: "Stored privately in your own account. Export or delete it anytime." },
   ];
   return (
-    <section className="bg-card py-12 md:py-16">
+    <section className="bg-card py-8 md:py-12">
       <div className="mx-auto max-w-6xl px-5">
         <div className="mx-auto max-w-xl text-center">
-          <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">Private by design</h2>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">Your money data stays yours</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             Tracking your money shouldn't mean handing over your bank.
           </p>
         </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {items.map((it, i) => (
             <motion.div
               key={it.title}
@@ -941,132 +713,6 @@ function PrivacySection() {
   );
 }
 
-function useCountUp(target: number, duration = 1400) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    let raf = 0;
-    const start = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / duration);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setVal(Math.round(target * eased));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, target, duration]);
-  return { ref, val };
-}
-
-function Counter({ to, prefix = "", suffix = "" }: { to: number; prefix?: string; suffix?: string }) {
-  const { ref, val } = useCountUp(to);
-  return (
-    <span ref={ref}>
-      {prefix}
-      {val.toLocaleString("en-IN")}
-      {suffix}
-    </span>
-  );
-}
-
-function StatsStrip() {
-  const stats = [
-    { to: 12000, suffix: "+", label: "Indians on waitlist" },
-    { to: 6400, prefix: "₹", label: "Avg. saved / month" },
-    { to: 98, suffix: "%", label: "Love the SMS auto-detect" },
-  ];
-  return (
-    <section className="mx-auto max-w-6xl px-5 pb-2 pt-2">
-      <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-card/70 p-4 shadow-sm backdrop-blur md:gap-6 md:p-6">
-        {stats.map((s) => (
-          <div key={s.label} className="text-center">
-            <p className="font-display text-xl font-bold text-foreground md:text-3xl" style={{ color: BRAND.primary }}>
-              <Counter to={s.to} prefix={s.prefix} suffix={s.suffix} />
-            </p>
-            <p className="mt-1 text-[10px] font-medium text-muted-foreground md:text-xs">{s.label}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Testimonials() {
-  const cards = [
-    {
-      name: "Aarav S.",
-      role: "Software Engineer · Bengaluru",
-      grad: "from-blue-50 to-indigo-50",
-      ring: "ring-blue-100",
-      quote:
-        "I used to wonder where my ₹23,000 salary disappears every month. FinTrackr showed me ₹6,000 was just on food delivery.",
-    },
-    {
-      name: "Priya M.",
-      role: "Marketing Lead · Pune",
-      grad: "from-emerald-50 to-teal-50",
-      ring: "ring-emerald-100",
-      quote: "Finally an app that understands Indian expenses.",
-    },
-    {
-      name: "Rahul K.",
-      role: "Student · Delhi",
-      grad: "from-amber-50 to-orange-50",
-      ring: "ring-amber-100",
-      quote: "Simple. Clean. No confusion.",
-    },
-  ];
-  return (
-    <section className="relative mx-auto max-w-6xl px-5 py-16 md:py-24">
-      <div className="mx-auto max-w-xl text-center">
-        <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">What our users say</h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Real stories from real salary earners across India.
-        </p>
-      </div>
-      <div className="mt-10 grid gap-5 md:grid-cols-3">
-        {cards.map((c, i) => {
-          const initials = c.name
-            .split(" ")
-            .map((p) => p[0])
-            .join("")
-            .slice(0, 2);
-          return (
-            <motion.div
-              key={c.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              whileHover={{ y: -6 }}
-              className={`group relative rounded-3xl bg-gradient-to-br ${c.grad} p-6 ring-1 ${c.ring} shadow-[0_10px_40px_-20px_rgba(17,24,39,0.18)] transition-shadow hover:shadow-[0_24px_60px_-20px_rgba(17,24,39,0.25)]`}
-            >
-              <Quote className="absolute right-5 top-5 h-7 w-7 text-white/95" />
-              <p className="text-sm leading-relaxed text-foreground">"{c.quote}"</p>
-              <div className="mt-6 flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm"
-                  style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
-                >
-                  {initials}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{c.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{c.role}</p>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-
 function FinalCTA() {
   return (
     <section
@@ -1081,7 +727,7 @@ function FinalCTA() {
       <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-teal-300/[0.10] blur-[80px]" />
       <div className="pointer-events-none absolute bottom-0 left-0 h-80 w-80 rounded-full bg-blue-300/[0.10] blur-[80px]" />
 
-      <div className="relative mx-auto max-w-2xl px-5 py-20 text-center md:py-28">
+      <div className="relative mx-auto max-w-2xl px-5 py-14 text-center md:py-20">
         <motion.h2
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -1105,7 +751,7 @@ function FinalCTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
+          className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
           <Link to="/signup">
             <Button
@@ -1132,7 +778,7 @@ function FinalCTA() {
           initial={{ opacity: 1 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-5 text-xs font-medium text-white/90"
+          className="mt-4 text-xs font-medium text-white/90"
         >
           No credit card required · Takes 30 seconds
         </motion.p>
@@ -1161,7 +807,7 @@ function Footer() {
   ];
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 md:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 sm:grid-cols-2 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo />
           <p className="mt-3 max-w-xs text-xs text-muted-foreground">
@@ -1207,10 +853,9 @@ function Landing() {
       <main>
         <Hero />
         <SalaryLeftSection />
-        <DashboardShowcase />
+        <AppScreens />
         <ProblemSection />
-        <Features />
-        <IndianLifeSection />
+        <BuiltForSalary />
         <HowItWorks />
         <PrivacySection />
         <FinalCTA />
