@@ -6,9 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
-export type Alloc = { rent: number; food: number; travel: number; emi: number; savings: number };
+export type Alloc = { rent: number; food: number; travel: number; emi: number; savings: number; other: number };
 
-export const DEFAULT_ALLOC: Alloc = { rent: 30, food: 15, travel: 10, emi: 20, savings: 20 };
+export const DEFAULT_ALLOC: Alloc = { rent: 30, food: 15, travel: 10, emi: 20, savings: 20, other: 5 };
 
 const KEY = "allocation";
 const LEGACY_KEY = "fintrackr_alloc_v1";
@@ -23,14 +23,21 @@ function readLegacy(): Alloc | null {
   }
 }
 
+const ALLOC_KEYS = Object.keys(DEFAULT_ALLOC) as (keyof Alloc)[];
+
 function normalize(raw: any): Alloc {
   if (!raw || typeof raw !== "object") return DEFAULT_ALLOC;
   const out = { ...DEFAULT_ALLOC };
-  (Object.keys(DEFAULT_ALLOC) as (keyof Alloc)[]).forEach((k) => {
+  ALLOC_KEYS.forEach((k) => {
     const n = Number(raw[k]);
     if (Number.isFinite(n)) out[k] = Math.max(0, Math.min(100, n));
+    else if (k === "other") out[k] = 0;
   });
   return out;
+}
+
+function totalAllocation(alloc: Alloc) {
+  return ALLOC_KEYS.reduce((sum, key) => sum + alloc[key], 0);
 }
 
 export function useAllocation() {
@@ -43,10 +50,11 @@ export function useAllocation() {
     staleTime: 0,
     refetchOnMount: "always",
     queryFn: async () => {
+      if (!user) return DEFAULT_ALLOC;
       const { data, error } = await supabase
         .from("profiles")
         .select("allocation")
-        .eq("id", user!.id)
+        .eq("id", user.id)
         .maybeSingle();
       if (error) throw error;
       const cloud = (data as any)?.allocation;
@@ -57,7 +65,7 @@ export function useAllocation() {
       // One-time lift of the device-only split into this account.
       const legacy = readLegacy();
       if (legacy) {
-        await supabase.from("profiles").update({ allocation: legacy } as any).eq("id", user!.id);
+        await supabase.from("profiles").update({ allocation: legacy } as any).eq("id", user.id);
         if (typeof window !== "undefined") localStorage.removeItem(LEGACY_KEY);
         return legacy;
       }
@@ -67,10 +75,12 @@ export function useAllocation() {
 
   const save = useMutation({
     mutationFn: async (next: Alloc) => {
+      if (!user) throw new Error("Sign in required to save allocation.");
+      if (totalAllocation(next) > 100) throw new Error("Allocation cannot exceed 100%.");
       const { error } = await supabase
         .from("profiles")
         .update({ allocation: next } as any)
-        .eq("id", user!.id);
+        .eq("id", user.id);
       if (error) throw error;
       return next;
     },
@@ -86,7 +96,10 @@ export function useAllocation() {
   return {
     alloc: query.data ?? DEFAULT_ALLOC,
     isLoading: authLoading || (!!user && query.isPending) || query.isLoading,
+    isLoaded: !!user && query.isSuccess,
+    isError: query.isError,
     save: (next: Alloc) => {
+      if (totalAllocation(next) > 100) return;
       qc.setQueryData([KEY, user?.id], next);
       save.mutate(next);
     },
