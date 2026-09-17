@@ -695,7 +695,7 @@ function SalaryAllocation() {
       {(() => {
         const insights: { tone: "ok" | "warn"; text: string }[] = [];
         if (alloc.savings >= 20) insights.push({ tone: "ok", text: "Savings healthy" });
-        else insights.push({ tone: "warn", text: `Savings low — target 20% (now ${alloc.savings}%)` });
+        else insights.push({ tone: "warn", text: `Savings low — recommended target 20% (now ${alloc.savings}%)` });
         if (alloc.food > 20) insights.push({ tone: "warn", text: "Food spending high" });
         if (alloc.travel > 15) insights.push({ tone: "warn", text: "Travel budget needs review" });
         if (alloc.rent > 35) insights.push({ tone: "warn", text: "Rent above 35% — heavy load" });
