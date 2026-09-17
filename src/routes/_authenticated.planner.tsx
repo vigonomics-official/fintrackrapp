@@ -541,6 +541,8 @@ function SalaryAllocation() {
   const alloc = draft ?? savedAlloc;
 
   const setAlloc = (updater: (prev: Alloc) => Alloc) => {
+    // Don't let an early drag persist the placeholder defaults over the saved split.
+    if (allocLoading) return;
     setDraft((prev) => {
       const next = updater(prev ?? savedAlloc);
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -587,14 +589,21 @@ function SalaryAllocation() {
                     <p className="text-[11px] text-muted-foreground">{r.tip}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-base font-bold tabular-nums">{formatCurrency(amt, s.currency)}</p>
-                    <p className="text-[11px] text-muted-foreground">{pct}%</p>
+                    {allocLoading ? (
+                      <div className="ml-auto h-5 w-20 animate-pulse rounded bg-muted" />
+                    ) : (
+                      <>
+                        <p className="font-display text-base font-bold tabular-nums">{formatCurrency(amt, s.currency)}</p>
+                        <p className="text-[11px] text-muted-foreground">{pct}%</p>
+                      </>
+                    )}
                   </div>
                 </div>
                 <input
                   type="range" min={0} max={60} value={pct}
+                  disabled={allocLoading}
                   onChange={(e) => setAlloc((p) => ({ ...p, [r.key]: Number(e.target.value) }))}
-                  className="w-full accent-primary"
+                  className="w-full accent-primary disabled:opacity-50"
                 />
               </CardContent>
             </Card>

@@ -4,6 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 export type Alloc = { rent: number; food: number; travel: number; emi: number; savings: number };
 
@@ -75,6 +76,10 @@ export function useAllocation() {
     },
     onSuccess: (next) => {
       qc.setQueryData([KEY, user?.id], next);
+    },
+    onError: () => {
+      toast.error("Couldn't save your allocation. Please try again.");
+      qc.invalidateQueries({ queryKey: [KEY, user?.id] });
     },
   });
 
