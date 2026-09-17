@@ -554,8 +554,7 @@ function SalaryAllocation() {
     if (allocLoading || !allocLoaded) return;
     setDraft((prev) => {
       const next = updater(prev ?? savedAlloc);
-      setPendingSuggestion(false);
-      scheduleSave(next);
+      if (!pendingSuggestion) scheduleSave(next);
       return next;
     });
   };
