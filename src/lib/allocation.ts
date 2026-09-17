@@ -76,6 +76,10 @@ export function useAllocation() {
     onSuccess: (next) => {
       qc.setQueryData([KEY, user?.id], next);
     },
+    onError: () => {
+      toast.error("Couldn't save your allocation. Please try again.");
+      qc.invalidateQueries({ queryKey: [KEY, user?.id] });
+    },
   });
 
   return {
