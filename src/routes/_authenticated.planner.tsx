@@ -678,6 +678,7 @@ function SalaryAllocation() {
               <p className="font-display text-lg font-bold tabular-nums">{over ? "0%" : `${remainingPct}%`}</p>
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground">Remaining amount</p>
           <p className="font-display text-xl font-bold tabular-nums">
             {over ? "Over-allocated" : formatCurrency(remainingAmt, s.currency)}
           </p>
