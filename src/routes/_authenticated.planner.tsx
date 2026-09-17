@@ -533,37 +533,61 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
 
 function SalaryAllocation() {
   const s = useSurvival();
-  const { alloc: savedAlloc, isLoading: allocLoading, save: saveAlloc } = useAllocation();
+  const { alloc: savedAlloc, isLoading: allocLoading, isLoaded: allocLoaded, save: saveAlloc } = useAllocation();
   const [draft, setDraft] = useState<Alloc | null>(null);
+  const [pendingSuggestion, setPendingSuggestion] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Show the account value until the user starts dragging.
   const alloc = draft ?? savedAlloc;
 
+  const sumAlloc = (value: Alloc) => value.rent + value.food + value.travel + value.emi + value.savings + value.other;
+
+  const scheduleSave = (next: Alloc) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    if (sumAlloc(next) > 100) return;
+    saveTimer.current = setTimeout(() => saveAlloc(next), 400);
+  };
+
   const setAlloc = (updater: (prev: Alloc) => Alloc) => {
     // Don't let an early drag persist the placeholder defaults over the saved split.
-    if (allocLoading) return;
+    if (allocLoading || !allocLoaded) return;
     setDraft((prev) => {
       const next = updater(prev ?? savedAlloc);
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => saveAlloc(next), 400);
+      setPendingSuggestion(false);
+      scheduleSave(next);
       return next;
     });
   };
 
+  const autoAllocate = () => {
+    if (allocLoading || !allocLoaded) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    const withOther = { ...alloc, other: Math.max(0, 100 - (alloc.rent + alloc.food + alloc.travel + alloc.emi + alloc.savings)) };
+    setDraft(withOther);
+    setPendingSuggestion(true);
+  };
+
+  const saveSuggestion = () => {
+    if (sumAlloc(alloc) > 100) return;
+    saveAlloc(alloc);
+    setPendingSuggestion(false);
+  };
+
   useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
 
-  const totalPct = alloc.rent + alloc.food + alloc.travel + alloc.emi + alloc.savings;
+  const totalPct = sumAlloc(alloc);
   const over = totalPct > 100;
   const remainingPct = Math.max(0, 100 - totalPct);
   const remainingAmt = (s.salary * remainingPct) / 100;
 
   const rows: { key: keyof Alloc; label: string; tip: string }[] = [
-    { key: "rent", label: "Rent", tip: "Keep under 30%" },
-    { key: "food", label: "Food", tip: "Aim for 10–15%" },
-    { key: "travel", label: "Travel", tip: "Aim for 5–10%" },
-    { key: "emi", label: "EMI", tip: "Stay under 40%" },
-    { key: "savings", label: "Savings", tip: "Target 20%+" },
+    { key: "rent", label: "Rent", tip: "Suggested range: up to 30%" },
+    { key: "food", label: "Food", tip: "Suggested range: 10–15%" },
+    { key: "travel", label: "Travel", tip: "Suggested range: 5–10%" },
+    { key: "emi", label: "EMI", tip: "Suggested range: up to 40%" },
+    { key: "savings", label: "Savings", tip: "Recommended target: 20%+" },
+    { key: "other", label: "Other / Personal", tip: "Use this for the rest of your salary" },
   ];
 
   return (
@@ -573,6 +597,24 @@ function SalaryAllocation() {
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">This month's salary</p>
           <p className="font-display text-2xl font-bold">{formatCurrency(s.salary, s.currency)}</p>
           {!s.hasIncome && <p className="text-xs text-muted-foreground">Add income to see allocation amounts.</p>}
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={allocLoading || !allocLoaded}
+            onClick={autoAllocate}
+            className="mt-2 h-8"
+          >
+            Auto Allocate
+          </Button>
+          {pendingSuggestion && (
+            <div className="flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/5 p-2.5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">Review this suggestion, adjust if needed, then save it.</p>
+              <Button type="button" size="sm" onClick={saveSuggestion} disabled={over} className="h-8 self-start sm:self-auto">
+                Save allocation
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -619,20 +661,30 @@ function SalaryAllocation() {
       >
         <CardContent className="space-y-1 p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Remaining Balance</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Allocation Summary</p>
             <span className={cn("text-[11px] font-semibold", over ? "text-destructive" : "text-success")}>
               {totalPct}% allocated
             </span>
           </div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <p className="text-[11px] text-muted-foreground">Total allocated</p>
+              <p className="font-display text-lg font-bold tabular-nums">{totalPct}%</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground">Remaining</p>
+              <p className="font-display text-lg font-bold tabular-nums">{over ? "0%" : `${remainingPct}%`}</p>
+            </div>
+          </div>
           <p className="font-display text-xl font-bold tabular-nums">
             {over ? "Over-allocated" : formatCurrency(remainingAmt, s.currency)}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className={cn("text-xs", over ? "text-destructive" : "text-muted-foreground")}>
             {over
-              ? "⚠ You've allocated more than 100%. Reduce a category."
+              ? "You've allocated more than 100%. Reduce a category before it can be saved."
               : remainingPct === 0
-                ? "Perfectly allocated."
-                : `${remainingPct}% unassigned — consider moving to savings.`}
+                ? "100% allocated — your full salary has a plan."
+                : `${remainingPct}% of your salary is still unassigned.`}
           </p>
         </CardContent>
       </Card>
