@@ -743,7 +743,7 @@ function SalaryAllocation() {
             {over
               ? "You've allocated more than 100%. Reduce a category before it can be saved."
               : remainingPct === 0
-                ? "100% allocated — your full salary has a plan."
+                ? "Your salary is fully planned."
                 : `${remainingPct}% of your salary is still unassigned.`}
           </p>
         </CardContent>
@@ -752,13 +752,22 @@ function SalaryAllocation() {
       {/* Allocation Health Score */}
       {(() => {
         const insights: { tone: "ok" | "warn"; text: string }[] = [];
+        if (over) insights.push({ tone: "warn", text: `Over-allocated by ${totalPct - 100}%` });
+        else if (remainingPct === 0) insights.push({ tone: "ok", text: "Whole salary planned" });
+        else insights.push({ tone: "warn", text: `${remainingPct}% of your salary is still unassigned` });
         if (alloc.savings >= 20) insights.push({ tone: "ok", text: "Savings healthy" });
         else insights.push({ tone: "warn", text: `Savings low — recommended target 20% (now ${alloc.savings}%)` });
         if (alloc.food > 20) insights.push({ tone: "warn", text: "Food spending high" });
         if (alloc.travel > 15) insights.push({ tone: "warn", text: "Travel budget needs review" });
         if (alloc.rent > 35) insights.push({ tone: "warn", text: "Rent above 35% — heavy load" });
         if (alloc.emi > 40) insights.push({ tone: "warn", text: "EMI above 40% — debt stress" });
-        const penalty = insights.filter((i) => i.tone === "warn").length * 8 + (over ? 20 : 0);
+        if (!over && alloc.rent === 0 && alloc.food === 0)
+          insights.push({ tone: "warn", text: "Essentials like rent and food aren't funded yet" });
+        // Unassigned salary is itself an incomplete plan, so it always costs points.
+        const unassignedPenalty = over ? 25 : Math.min(45, Math.round(remainingPct * 0.9));
+        const penalty =
+          insights.filter((i) => i.tone === "warn" && !i.text.includes("unassigned") && !i.text.startsWith("Over-allocated")).length * 8 +
+          unassignedPenalty;
         const score = Math.max(0, Math.min(100, 100 - penalty));
         return (
           <Card className="shadow-soft">
