@@ -29,7 +29,7 @@ import {
 import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
 import { PurchaseCheckPanel, type PurchasePrefill } from "@/components/finance/PurchaseCheckPanel";
-import { useAllocation, type Alloc } from "@/lib/allocation";
+import { useAllocation, DEFAULT_ALLOC, type Alloc } from "@/lib/allocation";
 import { useBills, useBillMutations, type Bill } from "@/lib/bills";
 import { PurchaseListSection } from "@/components/finance/PurchaseListSection";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
@@ -559,17 +559,60 @@ function SalaryAllocation() {
     });
   };
 
+  /** Build a suggestion that always totals exactly 100%. */
+  const buildSuggestion = (base: Alloc): Alloc => {
+    const keys: (keyof Alloc)[] = ["rent", "food", "travel", "emi", "savings", "other"];
+    const start = sumAlloc(base) <= 0 ? { ...DEFAULT_ALLOC } : { ...base };
+    const total = sumAlloc(start);
+
+    if (total === 100) return start;
+
+    if (total < 100) {
+      // Give the unassigned share to Other / Personal, topping up Savings first
+      // when it is below the recommended target.
+      const next = { ...start };
+      let left = 100 - total;
+      if (next.savings < 20) {
+        const bump = Math.min(left, 20 - next.savings);
+        next.savings += bump;
+        left -= bump;
+      }
+      next.other += left;
+      return next;
+    }
+
+    // Over 100% — scale every category down proportionally, then hand the
+    // rounding remainder to the largest categories so the total is exact.
+    const scaled = keys.map((k) => ({ k, exact: (start[k] * 100) / total }));
+    const next = { ...start } as Alloc;
+    let used = 0;
+    scaled.forEach(({ k, exact }) => {
+      const v = Math.floor(exact);
+      next[k] = v;
+      used += v;
+    });
+    scaled
+      .sort((a, b) => (b.exact - Math.floor(b.exact)) - (a.exact - Math.floor(a.exact)))
+      .slice(0, 100 - used)
+      .forEach(({ k }) => { next[k] += 1; });
+    return next;
+  };
+
   const autoAllocate = () => {
     if (allocLoading || !allocLoaded) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    const withOther = { ...alloc, other: Math.max(0, 100 - (alloc.rent + alloc.food + alloc.travel + alloc.emi + alloc.savings)) };
-    setDraft(withOther);
+    setDraft(buildSuggestion(alloc));
     setPendingSuggestion(true);
   };
 
   const saveSuggestion = () => {
-    if (sumAlloc(alloc) > 100) return;
+    if (sumAlloc(alloc) !== 100 && sumAlloc(alloc) > 100) return;
     saveAlloc(alloc);
+    setPendingSuggestion(false);
+  };
+
+  const cancelSuggestion = () => {
+    setDraft(null);
     setPendingSuggestion(false);
   };
 
@@ -578,13 +621,18 @@ function SalaryAllocation() {
   const totalPct = sumAlloc(alloc);
   const over = totalPct > 100;
   const remainingPct = Math.max(0, 100 - totalPct);
-  const remainingAmt = (s.salary * remainingPct) / 100;
 
-  const rows: { key: keyof Alloc; label: string; tip: string; max?: number }[] = [
-    { key: "rent", label: "Rent", tip: "Suggested range: up to 30%" },
-    { key: "food", label: "Food", tip: "Suggested range: 10–15%" },
-    { key: "travel", label: "Travel", tip: "Suggested range: 5–10%" },
-    { key: "emi", label: "EMI", tip: "Suggested range: up to 40%" },
+  // Amounts are derived from the salary so categories + remaining always add
+  // back up to exactly the salary (bar normal currency rounding).
+  const amountFor = (pct: number) => (s.salary * pct) / 100;
+  const remainingAmt = over ? 0 : s.salary - (["rent", "food", "travel", "emi", "savings", "other"] as (keyof Alloc)[])
+    .reduce((sum, k) => sum + amountFor(alloc[k]), 0);
+
+  const rows: { key: keyof Alloc; label: string; tip: string; max?: number; hi?: number }[] = [
+    { key: "rent", label: "Rent", tip: "Suggested range: up to 30%", hi: 30 },
+    { key: "food", label: "Food", tip: "Suggested range: 10–15%", hi: 15 },
+    { key: "travel", label: "Travel", tip: "Suggested range: 5–10%", hi: 10 },
+    { key: "emi", label: "EMI", tip: "Suggested range: up to 40%", hi: 40 },
     { key: "savings", label: "Savings", tip: "Recommended target: 20%+" },
     { key: "other", label: "Other / Personal", tip: "Use this for the rest of your salary", max: 100 },
   ];
@@ -607,11 +655,18 @@ function SalaryAllocation() {
             Auto Allocate
           </Button>
           {pendingSuggestion && (
-            <div className="flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/5 p-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-muted-foreground">Review this suggestion, adjust if needed, then save it.</p>
-              <Button type="button" size="sm" onClick={saveSuggestion} disabled={over} className="h-8 self-start sm:self-auto">
-                Save allocation
-              </Button>
+            <div className="mt-2 space-y-2 rounded-md border border-primary/20 bg-primary/5 p-2.5">
+              <p className="text-xs text-muted-foreground">
+                A suggested starting plan — not financial advice. Adjust the sliders if you like, then save it.
+              </p>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" onClick={saveSuggestion} disabled={over} className="h-8">
+                  Save allocation
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={cancelSuggestion} className="h-8">
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -620,7 +675,8 @@ function SalaryAllocation() {
       <div className="space-y-2.5">
         {rows.map((r) => {
           const pct = alloc[r.key];
-          const amt = (s.salary * pct) / 100;
+          const amt = amountFor(pct);
+          const aboveRange = r.hi != null && pct > r.hi;
           return (
             <Card key={r.key} className="shadow-soft">
               <CardContent className="space-y-2 p-3.5">
@@ -628,6 +684,7 @@ function SalaryAllocation() {
                   <div>
                     <p className="text-sm font-semibold">{r.label}</p>
                     <p className="text-[11px] text-muted-foreground">{r.tip}</p>
+                    {aboveRange && <p className="text-[11px] text-muted-foreground/80">Above suggested range</p>}
                   </div>
                   <div className="text-right">
                     {allocLoading ? (
@@ -686,7 +743,7 @@ function SalaryAllocation() {
             {over
               ? "You've allocated more than 100%. Reduce a category before it can be saved."
               : remainingPct === 0
-                ? "100% allocated — your full salary has a plan."
+                ? "Your salary is fully planned."
                 : `${remainingPct}% of your salary is still unassigned.`}
           </p>
         </CardContent>
@@ -695,13 +752,22 @@ function SalaryAllocation() {
       {/* Allocation Health Score */}
       {(() => {
         const insights: { tone: "ok" | "warn"; text: string }[] = [];
+        if (over) insights.push({ tone: "warn", text: `Over-allocated by ${totalPct - 100}%` });
+        else if (remainingPct === 0) insights.push({ tone: "ok", text: "Whole salary planned" });
+        else insights.push({ tone: "warn", text: `${remainingPct}% of your salary is still unassigned` });
         if (alloc.savings >= 20) insights.push({ tone: "ok", text: "Savings healthy" });
         else insights.push({ tone: "warn", text: `Savings low — recommended target 20% (now ${alloc.savings}%)` });
         if (alloc.food > 20) insights.push({ tone: "warn", text: "Food spending high" });
         if (alloc.travel > 15) insights.push({ tone: "warn", text: "Travel budget needs review" });
         if (alloc.rent > 35) insights.push({ tone: "warn", text: "Rent above 35% — heavy load" });
         if (alloc.emi > 40) insights.push({ tone: "warn", text: "EMI above 40% — debt stress" });
-        const penalty = insights.filter((i) => i.tone === "warn").length * 8 + (over ? 20 : 0);
+        if (!over && alloc.rent === 0 && alloc.food === 0)
+          insights.push({ tone: "warn", text: "Essentials like rent and food aren't funded yet" });
+        // Unassigned salary is itself an incomplete plan, so it always costs points.
+        const unassignedPenalty = over ? 25 : Math.min(45, Math.round(remainingPct * 0.9));
+        const penalty =
+          insights.filter((i) => i.tone === "warn" && !i.text.includes("unassigned") && !i.text.startsWith("Over-allocated")).length * 8 +
+          unassignedPenalty;
         const score = Math.max(0, Math.min(100, 100 - penalty));
         return (
           <Card className="shadow-soft">
