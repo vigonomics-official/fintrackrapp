@@ -655,11 +655,18 @@ function SalaryAllocation() {
             Auto Allocate
           </Button>
           {pendingSuggestion && (
-            <div className="flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/5 p-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-muted-foreground">Review this suggestion, adjust if needed, then save it.</p>
-              <Button type="button" size="sm" onClick={saveSuggestion} disabled={over} className="h-8 self-start sm:self-auto">
-                Save allocation
-              </Button>
+            <div className="mt-2 space-y-2 rounded-md border border-primary/20 bg-primary/5 p-2.5">
+              <p className="text-xs text-muted-foreground">
+                A suggested starting plan — not financial advice. Adjust the sliders if you like, then save it.
+              </p>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" onClick={saveSuggestion} disabled={over} className="h-8">
+                  Save allocation
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={cancelSuggestion} className="h-8">
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
