@@ -675,7 +675,8 @@ function SalaryAllocation() {
       <div className="space-y-2.5">
         {rows.map((r) => {
           const pct = alloc[r.key];
-          const amt = (s.salary * pct) / 100;
+          const amt = amountFor(pct);
+          const aboveRange = r.hi != null && pct > r.hi;
           return (
             <Card key={r.key} className="shadow-soft">
               <CardContent className="space-y-2 p-3.5">
@@ -683,6 +684,7 @@ function SalaryAllocation() {
                   <div>
                     <p className="text-sm font-semibold">{r.label}</p>
                     <p className="text-[11px] text-muted-foreground">{r.tip}</p>
+                    {aboveRange && <p className="text-[11px] text-muted-foreground/80">Above suggested range</p>}
                   </div>
                   <div className="text-right">
                     {allocLoading ? (
