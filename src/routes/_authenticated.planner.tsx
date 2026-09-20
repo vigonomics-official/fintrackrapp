@@ -672,6 +672,16 @@ function SalaryAllocation() {
         </CardContent>
       </Card>
 
+      {allocLoading || !allocLoaded ? (
+        <Card className="shadow-soft">
+          <CardContent className="space-y-3 p-4">
+            <p className="text-sm font-medium">Loading your saved allocation…</p>
+            <div className="h-2 w-full animate-pulse rounded-full bg-muted" />
+            <div className="h-2 w-4/5 animate-pulse rounded-full bg-muted" />
+          </CardContent>
+        </Card>
+      ) : (
+      <>
       <div className="space-y-2.5">
         {rows.map((r) => {
           const pct = alloc[r.key];
@@ -793,6 +803,8 @@ function SalaryAllocation() {
           </Card>
         );
       })()}
+      </>
+      )}
     </div>
   );
 }
