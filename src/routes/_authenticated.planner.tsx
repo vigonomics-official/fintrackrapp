@@ -749,7 +749,7 @@ function SalaryAllocation() {
         </CardContent>
       </Card>
 
-      {/* Allocation Health Score */}
+      {/* Plan Health Score */}
       {(() => {
         const insights: { tone: "ok" | "warn"; text: string }[] = [];
         if (over) insights.push({ tone: "warn", text: `Over-allocated by ${totalPct - 100}%` });
@@ -775,7 +775,7 @@ function SalaryAllocation() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Allocation Health</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Plan Health</p>
                 </div>
                 <p className="font-display text-xl font-bold tabular-nums">
                   {score}<span className="text-xs text-muted-foreground">/100</span>
