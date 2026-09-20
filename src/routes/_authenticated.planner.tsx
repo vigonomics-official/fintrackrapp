@@ -533,7 +533,7 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
 
 function SalaryAllocation() {
   const s = useSurvival();
-  const { alloc: savedAlloc, isLoading: allocLoading, isLoaded: allocLoaded, save: saveAlloc } = useAllocation();
+  const { alloc: savedAlloc, isLoading: allocLoading, isLoaded: allocLoaded, isError: allocError, save: saveAlloc } = useAllocation();
   const [draft, setDraft] = useState<Alloc | null>(null);
   const [pendingSuggestion, setPendingSuggestion] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -672,6 +672,22 @@ function SalaryAllocation() {
         </CardContent>
       </Card>
 
+      {allocError ? (
+        <Card className="border-destructive/30 shadow-soft">
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-destructive">Your saved allocation couldn’t be loaded. Try again shortly.</p>
+          </CardContent>
+        </Card>
+      ) : allocLoading || !allocLoaded ? (
+        <Card className="shadow-soft">
+          <CardContent className="space-y-3 p-4">
+            <p className="text-sm font-medium">Loading your saved allocation…</p>
+            <div className="h-2 w-full animate-pulse rounded-full bg-muted" />
+            <div className="h-2 w-4/5 animate-pulse rounded-full bg-muted" />
+          </CardContent>
+        </Card>
+      ) : (
+      <>
       <div className="space-y-2.5">
         {rows.map((r) => {
           const pct = alloc[r.key];
@@ -749,7 +765,7 @@ function SalaryAllocation() {
         </CardContent>
       </Card>
 
-      {/* Allocation Health Score */}
+      {/* Plan Health Score */}
       {(() => {
         const insights: { tone: "ok" | "warn"; text: string }[] = [];
         if (over) insights.push({ tone: "warn", text: `Over-allocated by ${totalPct - 100}%` });
@@ -775,7 +791,7 @@ function SalaryAllocation() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Allocation Health</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Plan Health</p>
                 </div>
                 <p className="font-display text-xl font-bold tabular-nums">
                   {score}<span className="text-xs text-muted-foreground">/100</span>
@@ -793,6 +809,8 @@ function SalaryAllocation() {
           </Card>
         );
       })()}
+      </>
+      )}
     </div>
   );
 }
