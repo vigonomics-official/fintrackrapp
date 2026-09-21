@@ -244,34 +244,40 @@ export function TransactionDialog({
 
           <div className="w-full" style={{ boxSizing: "border-box" }}>
             <Label>Category</Label>
-            <div
-              className="mt-2 w-full"
-              style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, boxSizing: "border-box" }}
-            >
-              {QUICK_CATS.map((q) => {
-                const id = findCategoryId(q);
-                const selected = selectedQuick === q.name;
-                return (
-                  <button
-                    type="button"
-                    key={q.name}
-                    onClick={() => {
-                      setSelectedQuick(q.name);
-                      form.setValue("category_id", id ?? undefined);
-                    }}
-                    style={{ width: "100%", minWidth: 0, boxSizing: "border-box" }}
-                    className={`flex h-16 flex-col items-center justify-center rounded-lg border p-1 text-[11px] font-medium opacity-100 transition ${
-                      selected
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-muted text-foreground hover:bg-muted/70"
-                    }`}
-                  >
-                    <span className="text-lg leading-none">{q.emoji}</span>
-                    <span className="mt-1 w-full truncate text-center">{q.name}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {watchType === "transfer" ? (
+              <p className="mt-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+                Transfers don't use spending categories.
+              </p>
+            ) : filteredCats.length === 0 ? (
+              <p className="mt-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+                No {watchType} categories yet. Add one on the Categories page.
+              </p>
+            ) : (
+              <div
+                className="mt-2 w-full"
+                style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, boxSizing: "border-box" }}
+              >
+                {filteredCats.map((c) => {
+                  const selected = selectedCatId === c.id;
+                  return (
+                    <button
+                      type="button"
+                      key={c.id}
+                      onClick={() => form.setValue("category_id", selected ? undefined : c.id)}
+                      style={{ width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                      className={`flex h-16 flex-col items-center justify-center rounded-lg border p-1 text-[11px] font-medium opacity-100 transition ${
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <Ico name={c.icon} className="h-5 w-5" />
+                      <span className="mt-1 w-full truncate text-center">{c.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="w-full" style={{ boxSizing: "border-box" }}>
