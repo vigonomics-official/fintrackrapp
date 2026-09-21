@@ -5,7 +5,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import * as Icons from "lucide-react";
+import { X, Tag } from "lucide-react";
 import { friendlyError } from "@/lib/error-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberMerchant } from "@/lib/categorization";
@@ -31,20 +32,10 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const QUICK_CATS: { emoji: string; name: string; match: string[] }[] = [
-  { emoji: "🍔", name: "Food", match: ["food", "dining", "restaurant"] },
-  { emoji: "🛒", name: "Grocery", match: ["grocery", "groceries"] },
-  { emoji: "🚗", name: "Transport", match: ["transport", "travel", "cab", "taxi"] },
-  { emoji: "⛽", name: "Fuel", match: ["fuel", "petrol", "gas"] },
-  { emoji: "🏠", name: "Rent", match: ["rent", "housing"] },
-  { emoji: "⚡", name: "Bills", match: ["bill", "utilities", "utility"] },
-  { emoji: "💳", name: "EMI", match: ["emi", "loan"] },
-  { emoji: "💊", name: "Health", match: ["health", "medical", "medicine", "pharmacy"] },
-  { emoji: "🛍️", name: "Shopping", match: ["shopping", "shop"] },
-  { emoji: "🎬", name: "Fun", match: ["fun", "entertainment", "movie"] },
-  { emoji: "👨‍👩‍👧", name: "Family", match: ["family", "kids"] },
-  { emoji: "📦", name: "Other", match: ["other", "misc", "miscellaneous"] },
-];
+function Ico({ name, className }: { name: string; className?: string }) {
+  const I = (Icons as any)[name] ?? Tag;
+  return <I className={className} />;
+}
 
 export function TransactionDialog({
   open, onOpenChange, edit,
