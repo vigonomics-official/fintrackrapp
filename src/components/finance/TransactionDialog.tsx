@@ -95,16 +95,18 @@ export function TransactionDialog({
     return () => { document.body.style.overflow = prev; };
   }, [open]);
 
-  const filteredCats = categories.filter((c) => watchType === "transfer" || c.type === watchType);
+  const filteredCats =
+    watchType === "transfer" ? [] : categories.filter((c) => c.type === watchType);
 
-  const findCategoryId = (quick: typeof QUICK_CATS[number]): string | undefined => {
-    const lower = quick.match;
-    const found = filteredCats.find((c) => {
-      const n = c.name.toLowerCase();
-      return lower.some((k) => n === k || n.includes(k));
-    });
-    return found?.id;
-  };
+  // Clear a category that isn't valid for the selected transaction type
+  const selectedCatId = form.watch("category_id");
+  useEffect(() => {
+    if (!open || !selectedCatId) return;
+    if (watchType === "transfer" || !filteredCats.some((c) => c.id === selectedCatId)) {
+      form.setValue("category_id", undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchType, selectedCatId, categories, open]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     if (!user) return;
