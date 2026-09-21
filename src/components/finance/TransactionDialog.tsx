@@ -5,7 +5,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import * as Icons from "lucide-react";
+import { X, Tag } from "lucide-react";
 import { friendlyError } from "@/lib/error-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { rememberMerchant } from "@/lib/categorization";
@@ -31,20 +32,10 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const QUICK_CATS: { emoji: string; name: string; match: string[] }[] = [
-  { emoji: "🍔", name: "Food", match: ["food", "dining", "restaurant"] },
-  { emoji: "🛒", name: "Grocery", match: ["grocery", "groceries"] },
-  { emoji: "🚗", name: "Transport", match: ["transport", "travel", "cab", "taxi"] },
-  { emoji: "⛽", name: "Fuel", match: ["fuel", "petrol", "gas"] },
-  { emoji: "🏠", name: "Rent", match: ["rent", "housing"] },
-  { emoji: "⚡", name: "Bills", match: ["bill", "utilities", "utility"] },
-  { emoji: "💳", name: "EMI", match: ["emi", "loan"] },
-  { emoji: "💊", name: "Health", match: ["health", "medical", "medicine", "pharmacy"] },
-  { emoji: "🛍️", name: "Shopping", match: ["shopping", "shop"] },
-  { emoji: "🎬", name: "Fun", match: ["fun", "entertainment", "movie"] },
-  { emoji: "👨‍👩‍👧", name: "Family", match: ["family", "kids"] },
-  { emoji: "📦", name: "Other", match: ["other", "misc", "miscellaneous"] },
-];
+function Ico({ name, className }: { name: string; className?: string }) {
+  const I = (Icons as any)[name] ?? Tag;
+  return <I className={className} />;
+}
 
 export function TransactionDialog({
   open, onOpenChange, edit,
@@ -55,7 +46,6 @@ export function TransactionDialog({
   const [submitting, setSubmitting] = useState(false);
   const amountRef = useRef<HTMLInputElement | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
-  const [selectedQuick, setSelectedQuick] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -81,7 +71,6 @@ export function TransactionDialog({
           transaction_date: edit.transaction_date,
           notes: edit.notes ?? "",
         });
-        setSelectedQuick(null);
       } else {
         form.reset({
           type: "expense",
@@ -90,7 +79,6 @@ export function TransactionDialog({
           transaction_date: new Date().toISOString().slice(0, 10),
           notes: "",
         });
-        setSelectedQuick(null);
       }
       setTimeout(() => amountRef.current?.focus(), 60);
     }
@@ -104,16 +92,18 @@ export function TransactionDialog({
     return () => { document.body.style.overflow = prev; };
   }, [open]);
 
-  const filteredCats = categories.filter((c) => watchType === "transfer" || c.type === watchType);
+  const filteredCats =
+    watchType === "transfer" ? [] : categories.filter((c) => c.type === watchType);
 
-  const findCategoryId = (quick: typeof QUICK_CATS[number]): string | undefined => {
-    const lower = quick.match;
-    const found = filteredCats.find((c) => {
-      const n = c.name.toLowerCase();
-      return lower.some((k) => n === k || n.includes(k));
-    });
-    return found?.id;
-  };
+  // Clear a category that isn't valid for the selected transaction type
+  const selectedCatId = form.watch("category_id");
+  useEffect(() => {
+    if (!open || !selectedCatId) return;
+    if (watchType === "transfer" || !filteredCats.some((c) => c.id === selectedCatId)) {
+      form.setValue("category_id", undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchType, selectedCatId, categories, open]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     if (!user) return;
@@ -251,34 +241,40 @@ export function TransactionDialog({
 
           <div className="w-full" style={{ boxSizing: "border-box" }}>
             <Label>Category</Label>
-            <div
-              className="mt-2 w-full"
-              style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, boxSizing: "border-box" }}
-            >
-              {QUICK_CATS.map((q) => {
-                const id = findCategoryId(q);
-                const selected = selectedQuick === q.name;
-                return (
-                  <button
-                    type="button"
-                    key={q.name}
-                    onClick={() => {
-                      setSelectedQuick(q.name);
-                      form.setValue("category_id", id ?? undefined);
-                    }}
-                    style={{ width: "100%", minWidth: 0, boxSizing: "border-box" }}
-                    className={`flex h-16 flex-col items-center justify-center rounded-lg border p-1 text-[11px] font-medium opacity-100 transition ${
-                      selected
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-muted text-foreground hover:bg-muted/70"
-                    }`}
-                  >
-                    <span className="text-lg leading-none">{q.emoji}</span>
-                    <span className="mt-1 w-full truncate text-center">{q.name}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {watchType === "transfer" ? (
+              <p className="mt-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+                Transfers don't use spending categories.
+              </p>
+            ) : filteredCats.length === 0 ? (
+              <p className="mt-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+                No {watchType} categories yet. Add one on the Categories page.
+              </p>
+            ) : (
+              <div
+                className="mt-2 w-full"
+                style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, boxSizing: "border-box" }}
+              >
+                {filteredCats.map((c) => {
+                  const selected = selectedCatId === c.id;
+                  return (
+                    <button
+                      type="button"
+                      key={c.id}
+                      onClick={() => form.setValue("category_id", selected ? undefined : c.id)}
+                      style={{ width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                      className={`flex h-16 flex-col items-center justify-center rounded-lg border p-1 text-[11px] font-medium opacity-100 transition ${
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <Ico name={c.icon} className="h-5 w-5" />
+                      <span className="mt-1 w-full truncate text-center">{c.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="w-full" style={{ boxSizing: "border-box" }}>
