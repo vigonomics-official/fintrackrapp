@@ -46,7 +46,6 @@ export function TransactionDialog({
   const [submitting, setSubmitting] = useState(false);
   const amountRef = useRef<HTMLInputElement | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
-  const [selectedQuick, setSelectedQuick] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -72,7 +71,6 @@ export function TransactionDialog({
           transaction_date: edit.transaction_date,
           notes: edit.notes ?? "",
         });
-        setSelectedQuick(null);
       } else {
         form.reset({
           type: "expense",
@@ -81,7 +79,6 @@ export function TransactionDialog({
           transaction_date: new Date().toISOString().slice(0, 10),
           notes: "",
         });
-        setSelectedQuick(null);
       }
       setTimeout(() => amountRef.current?.focus(), 60);
     }
