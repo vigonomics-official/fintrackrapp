@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { useTransactions, useCategories, useBudgets, monthKey, useProfile, useLoans } from "@/hooks/use-finance";
+import { useTransactions, useCategories, useBudgets, monthKey, useProfile, useLoans, useLoanPayments } from "@/hooks/use-finance";
+import { useBills } from "@/lib/bills";
+import { computeObligations } from "@/lib/safe-daily";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { daysLeftLabel } from "@/lib/salary-cycle";
@@ -117,6 +119,9 @@ function Dashboard() {
   const { data: budgets = [] } = useBudgets(month);
   const { data: loans = [] } = useLoans();
   const { settings: salarySettings } = useSalarySettings();
+  const { bills } = useBills();
+  const { data: loanPayments = [] } = useLoanPayments();
+  const [showCalc, setShowCalc] = useState(false);
   const currency = profile?.currency ?? "INR";
 
   const [fp, setFp] = useState(getFinancialProfile);
@@ -133,7 +138,20 @@ function Dashboard() {
 
 
   const survival = useMemo(() => {
-    const base = computeSurvival({ transactions, loans, salarySettings });
+    const pre = computeSurvival({ transactions, loans, salarySettings });
+    const savedAlloc = (profile as any)?.allocation;
+    const obligations = computeObligations({
+      transactions,
+      bills,
+      loans,
+      loanPayments,
+      emiCategoryIds: categories.filter((c) => c.type === "expense" && /emi|loan/i.test(c.name)).map((c) => c.id),
+      cycleStart: pre.lastSalaryDate,
+      nextSalary: pre.nextSalary,
+      salary: pre.salary,
+      savingsPct: savedAlloc && typeof savedAlloc.savings === "number" ? savedAlloc.savings : null,
+    });
+    const base = { ...computeSurvival({ transactions, loans, salarySettings, obligations }), obligations };
     const stretchDaily = base.safeDaily * 0.85;
     const remainingToday = Math.max(0, base.safeDaily - base.spentToday);
     const mood: "safe" | "careful" | "danger" =
@@ -151,7 +169,7 @@ function Dashboard() {
       })
       .sort((a, b) => a.due.getTime() - b.due.getTime())[0];
     return { ...base, stretchDaily, remainingToday, mood, upcoming };
-  }, [transactions, loans, salarySettings, now.getDate()]);
+  }, [transactions, loans, salarySettings, bills, loanPayments, categories, profile, now.getDate()]);
 
   // Per-category spending (this month vs last month) for risks + insights
   const catStats = useMemo(() => {
@@ -316,14 +334,46 @@ function Dashboard() {
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-90">Salary Left</p>
                     <p className="mt-2 font-display text-3xl font-bold leading-none md:text-4xl tabular-nums">{formatCurrency(survival.salaryLeft, currency)}</p>
-                    <p className="mt-2.5 text-sm font-semibold">
-                      Safe to spend {formatCurrency(survival.safeDaily, currency)}/day
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowCalc((v) => !v)}
+                      aria-expanded={showCalc}
+                      className="mt-2.5 block text-left text-sm font-semibold"
+                    >
+                      {survival.overLimit
+                        ? "You're currently over your safe spending limit."
+                        : <>Safe to spend {formatCurrency(Math.round(survival.safeDaily), currency)}/day</>}
+                      <span className="mt-0.5 block text-[11px] font-medium underline underline-offset-2 opacity-85">
+                        How is this calculated?
+                      </span>
+                    </button>
                   </div>
                   <span className="shrink-0 rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold backdrop-blur">
                     {moodMeta.dot} {moodMeta.label}
                   </span>
                 </div>
+
+                {showCalc && (
+                  <div className="mt-3 rounded-xl bg-white/15 p-3 text-[12px] backdrop-blur">
+                    <CalcRow label="Salary Left" value={formatCurrency(Math.round(survival.salary - survival.totalSpent), currency)} />
+                    {survival.obligations.bills > 0 && <CalcRow label={`Upcoming Bills (${survival.obligations.billItems.length})`} value={`−${formatCurrency(survival.obligations.bills, currency)}`} />}
+                    {survival.obligations.emis > 0 && <CalcRow label={`Upcoming EMIs (${survival.obligations.emiItems.length})`} value={`−${formatCurrency(survival.obligations.emis, currency)}`} />}
+                    {survival.obligations.savings > 0 && <CalcRow label="Planned Savings" value={`−${formatCurrency(survival.obligations.savings, currency)}`} />}
+                    <div className="my-1.5 h-px bg-white/30" />
+                    <CalcRow label="Available" value={formatCurrency(Math.round(survival.available), currency)} bold />
+                    <CalcRow label="Days Remaining" value={survival.isSalaryToday ? "Salary today" : String(survival.days)} />
+                    <div className="my-1.5 h-px bg-white/30" />
+                    <CalcRow
+                      label="Safe Daily Spend"
+                      value={survival.overLimit ? "Over limit" : `${formatCurrency(Math.round(survival.safeDaily), currency)}/day`}
+                      bold
+                    />
+                    <p className="mt-2 text-[10.5px] opacity-85">
+                      Only unpaid bills and EMIs due before your next salary are included. Bills or EMIs already logged as an expense this cycle aren't counted again.
+                      {survival.obligations.savings > 0 ? " Planned Savings comes from your Planner allocation." : ""}
+                    </p>
+                  </div>
+                )}
 
                 {(() => {
                   const day = now.getDate();
@@ -723,6 +773,15 @@ function BuyRow({ label, before, after }: { label: string; before: string; after
         <ArrowRight className="h-3 w-3 text-muted-foreground" />
         <span className="font-semibold">{after}</span>
       </span>
+    </div>
+  );
+}
+
+function CalcRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <div className={`flex items-center justify-between gap-3 py-0.5 tabular-nums ${bold ? "font-semibold" : "opacity-95"}`}>
+      <span className="min-w-0 truncate">{label}</span>
+      <span className="shrink-0">{value}</span>
     </div>
   );
 }

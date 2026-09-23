@@ -47,6 +47,10 @@ export type Survival = {
   totalSpent: number;
   /** Elapsed cycle days whose spend stayed at/below the even daily budget. */
   daysUnderBudget: number;
+  /** Salary left minus reserved obligations (may be negative). */
+  available: number;
+  reserved: number;
+  overLimit: boolean;
 };
 
 export function computeSurvival(opts: {
@@ -55,8 +59,10 @@ export function computeSurvival(opts: {
   salarySettings: SalarySettings;
   extraSpend?: number;
   now?: Date;
+  /** Upcoming bills / EMIs / planned savings reserved before daily spend. */
+  obligations?: { bills: number; emis: number; savings: number };
 }): Survival {
-  const { transactions, loans, salarySettings, extraSpend = 0, now = new Date() } = opts;
+  const { transactions, loans, salarySettings, extraSpend = 0, now = new Date(), obligations } = opts;
 
   // --- 1. Determine cycle start. Prefer the most recent INCOME transaction date
   // (real salary credit). Fall back to the payDay from Salary Settings, then to
@@ -117,7 +123,19 @@ export function computeSurvival(opts: {
   const salaryLeft = Math.max(0, salary - expensesSinceSalary);
 
   const prefs = getSurvivalPreferences();
-  const safeDaily = computeSafeDaily(salaryLeft, daysRemaining, now, prefs);
+  const reserved = obligations
+    ? Math.max(0, obligations.bills) + Math.max(0, obligations.emis) + Math.max(0, obligations.savings)
+    : 0;
+  // Unclamped so an overspent cycle can never produce a positive daily amount.
+  const available = salary - expensesSinceSalary - reserved;
+  const overLimit = salary > 0 && available < 0;
+  // On payday a new cycle begins, so spread over the full cycle ahead
+  // instead of treating the whole balance as spendable today.
+  const spendDays =
+    daysRemaining > 0 || payDay == null
+      ? daysRemaining
+      : cycleDaysUntilSalary(payDay, new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)) + 1;
+  const safeDaily = available > 0 ? computeSafeDaily(available, spendDays, now, prefs) : 0;
 
   const spentToday =
     cycleTxs
@@ -204,6 +222,9 @@ export function computeSurvival(opts: {
     daysElapsed,
     totalSpent: expensesSinceSalary,
     daysUnderBudget,
+    available,
+    reserved,
+    overLimit,
   };
 }
 
