@@ -129,7 +129,13 @@ export function computeSurvival(opts: {
   // Unclamped so an overspent cycle can never produce a positive daily amount.
   const available = salary - expensesSinceSalary - reserved;
   const overLimit = salary > 0 && available < 0;
-  const safeDaily = available > 0 ? computeSafeDaily(available, daysRemaining, now, prefs) : 0;
+  // On payday a new cycle begins, so spread over the full cycle ahead
+  // instead of treating the whole balance as spendable today.
+  const spendDays =
+    daysRemaining > 0 || payDay == null
+      ? daysRemaining
+      : cycleDaysUntilSalary(payDay, new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)) + 1;
+  const safeDaily = available > 0 ? computeSafeDaily(available, spendDays, now, prefs) : 0;
 
   const spentToday =
     cycleTxs
