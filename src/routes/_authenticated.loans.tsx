@@ -384,7 +384,7 @@ function LoansPage() {
       hasIncome: s.hasIncome,
       isSalaryToday: s.isSalaryToday,
     };
-  }, [txs, loans, salarySettings, totals]);
+  }, [txs, loans, salarySettings, totals, shared.safeDaily]);
 
   const quickMarkPaid = async (loan: Loan, e: React.MouseEvent) => {
     e.stopPropagation();
