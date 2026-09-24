@@ -20,6 +20,7 @@ import {
 import { buildSnowballPlan, type PayoffStrategy } from "@/lib/loan-snowball";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import {
@@ -115,18 +116,7 @@ function PlannerPage() {
 /* ============================ Shared survival math ============================ */
 
 function useSurvival(extraSpend = 0) {
-  const { data: profile } = useProfile();
-  const { data: transactions = [] } = useTransactions();
-  const { data: loans = [] } = useLoans();
-  const { settings: salarySettings } = useSalarySettings();
-  const currency = profile?.currency ?? "INR";
-
-  const data = useMemo(() => {
-    const s = computeSurvival({ transactions, loans, salarySettings, extraSpend });
-    return { currency, ...s };
-  }, [transactions, loans, extraSpend, currency, salarySettings]);
-
-  return data;
+  return useSafeDailySurvival(extraSpend);
 }
 
 /* ============================ Monthly Plan ============================ */

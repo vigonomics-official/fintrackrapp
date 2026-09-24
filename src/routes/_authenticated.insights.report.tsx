@@ -9,7 +9,7 @@ import {
   useTransactions, useCategories, useBudgets, useLoans, useProfile, monthKey,
 } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
-import { computeSurvival } from "@/lib/survival";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { formatCurrency } from "@/lib/currency";
 import {
   buildComparison, buildBiggestWin, buildHealthBreakdown, buildAiMonthlyReview,
@@ -62,10 +62,7 @@ function ReportPage() {
   const currency = profile?.currency ?? "INR";
 
   const now = useMemo(() => new Date(), []);
-  const survival = useMemo(
-    () => computeSurvival({ transactions: txs, loans, salarySettings: settings, now }),
-    [txs, loans, settings, now],
-  );
+  const survival = useSafeDailySurvival();
 
   // Insights (all Gemini-ready pure derivations)
   const insights = useMemo(() => {
