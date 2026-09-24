@@ -13,6 +13,8 @@ export type Obligations = {
   bills: number;
   emis: number;
   savings: number;
+  plannedSavings: number;
+  alreadySaved: number;
   billItems: ObligationItem[];
   emiItems: ObligationItem[];
 };
@@ -25,12 +27,22 @@ function dueInMonth(y: number, m: number, day: number) {
   return new Date(y, m, Math.min(Math.max(1, day || 1), last));
 }
 
-/** Next due date on/after today, or null if it lands on/after next salary. */
-function dueThisCycle(day: number, today: Date, nextSalary: Date): Date | null {
-  let d = dueInMonth(today.getFullYear(), today.getMonth(), day);
-  if (d < today) d = dueInMonth(today.getFullYear(), today.getMonth() + 1, day);
+/**
+ * Due date inside the current cycle (cycleStart → before next salary), or null.
+ * A due date already passed this cycle is still returned: bills have no paid
+ * flag, so a bill only counts as paid when a matching expense/payment exists.
+ */
+function dueThisCycle(day: number, cycleStart: Date, nextSalary: Date): Date | null {
+  let d = dueInMonth(cycleStart.getFullYear(), cycleStart.getMonth(), day);
+  if (d < cycleStart) d = dueInMonth(cycleStart.getFullYear(), cycleStart.getMonth() + 1, day);
   return d < nextSalary ? d : null;
 }
+
+type CatLike = { id: string; name: string; type: string };
+export const emiCategoryIds = (cats: CatLike[]) =>
+  cats.filter((c) => c.type === "expense" && /emi|loan/i.test(c.name)).map((c) => c.id);
+export const savingsCategoryIds = (cats: CatLike[]) =>
+  cats.filter((c) => c.type === "expense" && /saving|sip|deposit/i.test(c.name)).map((c) => c.id);
 
 export function computeObligations(opts: {
   transactions: Tx[];
@@ -38,6 +50,7 @@ export function computeObligations(opts: {
   loans: LoanLike[];
   loanPayments: PaymentLike[];
   emiCategoryIds?: string[];
+  savingsCategoryIds?: string[];
   cycleStart: Date;
   nextSalary: Date;
   salary: number;
@@ -46,6 +59,7 @@ export function computeObligations(opts: {
 }): Obligations {
   const now = opts.now ?? new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const cycleStartDay = new Date(opts.cycleStart.getFullYear(), opts.cycleStart.getMonth(), opts.cycleStart.getDate());
   const startKey = key(opts.cycleStart);
   const todayKey = key(today);
   const cycleExpenses = opts.transactions.filter((t) => {
@@ -62,7 +76,7 @@ export function computeObligations(opts: {
   for (const b of opts.bills) {
     const amt = Number(b.amount);
     if (!(amt > 0)) continue;
-    const due = dueThisCycle(Number(b.due_day), today, opts.nextSalary);
+    const due = dueThisCycle(Number(b.due_day), cycleStartDay, opts.nextSalary);
     if (!due || recorded(b.name)) continue;
     billItems.push({ label: b.name, amount: amt, due });
   }
@@ -73,7 +87,7 @@ export function computeObligations(opts: {
   for (const l of opts.loans) {
     const emi = Number(l.emi_amount);
     if (!(Number(l.remaining_balance) > 0) || !(emi > 0)) continue;
-    const due = dueThisCycle(Number(l.due_day), today, opts.nextSalary);
+    const due = dueThisCycle(Number(l.due_day), cycleStartDay, opts.nextSalary);
     if (!due) continue;
     const paidViaPayment = opts.loanPayments.some((p) => {
       const k = String(p.payment_date).slice(0, 10);
@@ -89,15 +103,24 @@ export function computeObligations(opts: {
     emiItems.push({ label: l.loan_name, amount: emi, due });
   }
 
-  const savings =
+  // Planned savings minus savings already recorded this cycle (those
+  // expenses already reduce Salary Left, so don't reserve them twice).
+  const planned =
     opts.savingsPct != null && opts.savingsPct > 0 && opts.salary > 0
       ? Math.round((opts.salary * opts.savingsPct) / 100)
       : 0;
+  const saveCats = new Set(opts.savingsCategoryIds ?? []);
+  const alreadySaved = cycleExpenses
+    .filter((t) => t.category_id && saveCats.has(t.category_id))
+    .reduce((s, t) => s + Number(t.amount), 0);
+  const savings = Math.max(0, planned - alreadySaved);
 
   return {
     bills: billItems.reduce((s, i) => s + i.amount, 0),
     emis: emiItems.reduce((s, i) => s + i.amount, 0),
     savings,
+    plannedSavings: planned,
+    alreadySaved,
     billItems,
     emiItems,
   };
