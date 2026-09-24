@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/finance/PageHeader";
 import { useTransactions, useCategories, useProfile } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { useLoans } from "@/hooks/use-finance";
-import { computeSurvival } from "@/lib/survival";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import {
@@ -77,10 +77,7 @@ function WeeklyReportPage() {
   const weekTxs = useMemo(() => txs.filter(t => t.type === "expense" && inRange(t, weekStart, weekEnd)), [txs, weekStart, weekEnd]);
   const prevTxs = useMemo(() => txs.filter(t => t.type === "expense" && inRange(t, prevStart, weekStart)), [txs, prevStart, weekStart]);
 
-  const survival = useMemo(
-    () => computeSurvival({ transactions: txs, loans, salarySettings: settings, now }),
-    [txs, loans, settings, now],
-  );
+  const survival = useSafeDailySurvival();
   const weekBudget = survival.safeDaily * 7;
   const spent = weekTxs.reduce((s, t) => s + t.amount, 0);
   const remaining = Math.max(0, weekBudget - spent);

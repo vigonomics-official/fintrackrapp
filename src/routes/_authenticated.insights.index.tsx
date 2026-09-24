@@ -7,7 +7,7 @@ import { PageShell, PageContainer } from "@/components/finance/PageContainer";
 import { cn } from "@/lib/utils";
 import { useTransactions, useCategories, useBudgets, useLoans, useProfile, monthKey } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
-import { computeSurvival } from "@/lib/survival";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { formatCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/insights/")({
@@ -45,10 +45,7 @@ function InsightsPage() {
   const now = useMemo(() => new Date(), []);
   const hasData = txs.length > 0;
 
-  const survival = useMemo(
-    () => computeSurvival({ transactions: txs, loans, salarySettings: settings, now }),
-    [txs, loans, settings, now],
-  );
+  const survival = useSafeDailySurvival();
 
   // Cycle progress
   const cycle = useMemo(() => {

@@ -13,6 +13,7 @@ import { useBills } from "@/lib/bills";
 import { computeObligations } from "@/lib/safe-daily";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { daysLeftLabel } from "@/lib/salary-cycle";
 import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
@@ -137,21 +138,9 @@ function Dashboard() {
   const now = new Date();
 
 
+  const shared = useSafeDailySurvival();
   const survival = useMemo(() => {
-    const pre = computeSurvival({ transactions, loans, salarySettings });
-    const savedAlloc = (profile as any)?.allocation;
-    const obligations = computeObligations({
-      transactions,
-      bills,
-      loans,
-      loanPayments,
-      emiCategoryIds: categories.filter((c) => c.type === "expense" && /emi|loan/i.test(c.name)).map((c) => c.id),
-      cycleStart: pre.lastSalaryDate,
-      nextSalary: pre.nextSalary,
-      salary: pre.salary,
-      savingsPct: savedAlloc && typeof savedAlloc.savings === "number" ? savedAlloc.savings : null,
-    });
-    const base = { ...computeSurvival({ transactions, loans, salarySettings, obligations }), obligations };
+    const base = shared;
     const stretchDaily = base.safeDaily * 0.85;
     const remainingToday = Math.max(0, base.safeDaily - base.spentToday);
     const mood: "safe" | "careful" | "danger" =

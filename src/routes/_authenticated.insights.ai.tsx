@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { useTransactions, useCategories, useBudgets, useLoans, useProfile, monthKey } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
-import { computeSurvival } from "@/lib/survival";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
@@ -81,10 +81,7 @@ function AIInsightsPage() {
     return { name: c?.name ?? "Uncategorized", icon: c?.icon ?? "💸", amount: amt, budget: budget?.monthly_limit ?? null };
   }, [monthExpenses, categories, budgets]);
 
-  const survival = useMemo(
-    () => computeSurvival({ transactions: txs, loans, salarySettings: settings, now }),
-    [txs, loans, settings, now],
-  );
+  const survival = useSafeDailySurvival();
 
   // Streak: consecutive days (ending today) where daily spend <= safeDaily.
   const streak = useMemo(() => {
