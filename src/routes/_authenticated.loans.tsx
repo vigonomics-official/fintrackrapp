@@ -36,6 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLoans, useLoanPayments, useTransactions, useProfile, type Loan, type LoanType } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { formatCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/loans")({
@@ -365,12 +366,12 @@ function LoansPage() {
   }, [loans, txs]);
 
   // Salary survival assistant computations (shared util)
+  const shared = useSafeDailySurvival();
   const survival = useMemo(() => {
     const s = computeSurvival({ transactions: txs, loans, salarySettings });
     // After-EMI view used on the loans screen
     const salaryLeft = Math.max(0, s.salaryLeft - totals.monthlyEmi);
-    const days = Math.max(1, s.daysRemaining);
-    const safeDaily = Math.max(0, Math.floor(salaryLeft / days));
+    const safeDaily = shared.safeDaily;
     let pressure: "safe" | "moderate" | "high" = "safe";
     if (totals.dti >= 50) pressure = "high";
     else if (totals.dti >= 30) pressure = "moderate";
