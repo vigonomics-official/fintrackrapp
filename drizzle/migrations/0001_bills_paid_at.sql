@@ -1,0 +1,2 @@
+ALTER TABLE public.bills ADD COLUMN IF NOT EXISTS paid_at timestamptz;
+COMMENT ON COLUMN public.bills.paid_at IS 'When the user marked this bill paid; paid for the current salary cycle if paid_at >= cycle start. NULL = unpaid.';
