@@ -31,7 +31,7 @@ import { enqueuePlannerTask } from "@/lib/coach-plan";
 import { onProfileUpdated } from "@/lib/financial-profile";
 import { PurchaseCheckPanel, type PurchasePrefill } from "@/components/finance/PurchaseCheckPanel";
 import { useAllocation, DEFAULT_ALLOC, type Alloc } from "@/lib/allocation";
-import { useBills, useBillMutations, type Bill } from "@/lib/bills";
+import { useBills, useBillMutations, isBillPaidThisCycle, type Bill } from "@/lib/bills";
 import { PurchaseListSection } from "@/components/finance/PurchaseListSection";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
@@ -1175,13 +1175,15 @@ function useLegacyBillsMigration(
 function BillsTab() {
   const s = useSurvival();
   const { bills, isLoading } = useBills();
-  const { create, remove } = useBillMutations();
+  const { create, remove, setPaid } = useBillMutations();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", dueDay: "5", recurring: true });
 
   useLegacyBillsMigration(!isLoading, bills.length > 0, create);
 
-  const totalBills = bills.reduce((acc, b) => acc + b.amount, 0);
+  const totalBills = bills
+    .filter((b) => !isBillPaidThisCycle(b.paid_at, s.lastSalaryDate))
+    .reduce((acc, b) => acc + b.amount, 0);
   const afterBills = Math.max(0, s.salaryLeft - totalBills);
 
   function add() {
@@ -1278,6 +1280,7 @@ function BillsTab() {
             const due = new Date(today.getFullYear(), today.getMonth(), b.due_day);
             if (due < today) due.setMonth(due.getMonth() + 1);
             const days = Math.ceil((due.getTime() - today.getTime()) / 86_400_000);
+            const paid = isBillPaidThisCycle(b.paid_at, s.lastSalaryDate);
             return (
               <Card key={b.id} className="shadow-soft">
                 <CardContent className="flex items-center gap-3 p-3.5">
@@ -1292,9 +1295,31 @@ function BillsTab() {
                   </div>
 
 
-                  <p className="shrink-0 font-display text-sm font-bold tabular-nums">
-                    {formatCurrency(b.amount, s.currency)}
-                  </p>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <p className={`font-display text-sm font-bold tabular-nums ${paid ? "text-muted-foreground line-through" : ""}`}>
+                      {formatCurrency(b.amount, s.currency)}
+                    </p>
+                    {paid ? (
+                      <button
+                        onClick={() => setPaid.mutate({ id: b.id, paid: false }, {
+                          onError: () => toast.error("Couldn't update this bill. Please try again."),
+                        })}
+                        className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                        aria-label={`Undo paid for ${b.name}`}
+                      >
+                        Paid · Undo
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setPaid.mutate({ id: b.id, paid: true }, {
+                          onError: () => toast.error("Couldn't update this bill. Please try again."),
+                        })}
+                        className="rounded-full border border-primary/40 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                      >
+                        Mark as Paid
+                      </button>
+                    )}
+                  </div>
                   <button
                     onClick={() => remove.mutate(b.id, {
                       onError: () => toast.error("Couldn't delete this bill. Please try again."),
