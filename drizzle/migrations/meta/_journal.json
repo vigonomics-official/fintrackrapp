@@ -8,6 +8,13 @@
       "when": 1790087037932,
       "tag": "0000_fix_default_category_icons",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790315131571,
+      "tag": "0001_bills_paid_at",
+      "breakpoints": true
     }
   ]
 }

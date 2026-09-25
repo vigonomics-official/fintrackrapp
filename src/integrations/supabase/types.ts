@@ -21,6 +21,7 @@ export type Database = {
           due_day: number
           id: string
           name: string
+          paid_at: string | null
           recurring: boolean
           updated_at: string
           user_id: string
@@ -31,6 +32,7 @@ export type Database = {
           due_day?: number
           id?: string
           name: string
+          paid_at?: string | null
           recurring?: boolean
           updated_at?: string
           user_id: string
@@ -41,6 +43,7 @@ export type Database = {
           due_day?: number
           id?: string
           name?: string
+          paid_at?: string | null
           recurring?: boolean
           updated_at?: string
           user_id?: string

@@ -12,6 +12,8 @@ export type Bill = {
   amount: number;
   due_day: number;
   recurring: boolean;
+  /** Set when the user marks the bill paid; counts as paid for the salary cycle it falls in. */
+  paid_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -88,5 +90,23 @@ export function useBillMutations() {
     onSuccess: invalidate,
   });
 
-  return { create, update, remove };
+  const setPaid = useMutation({
+    mutationFn: async ({ id, paid }: { id: string; paid: boolean }) => {
+      const { error } = await supabase
+        .from("bills" as any)
+        .update({ paid_at: paid ? new Date().toISOString() : null } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+
+  return { create, update, remove, setPaid };
+}
+
+/** Paid for the current cycle only when explicitly marked paid on/after cycle start. */
+export function isBillPaidThisCycle(paidAt: string | null | undefined, cycleStart: Date): boolean {
+  if (!paidAt) return false;
+  const start = new Date(cycleStart.getFullYear(), cycleStart.getMonth(), cycleStart.getDate());
+  return new Date(paidAt) >= start;
 }
