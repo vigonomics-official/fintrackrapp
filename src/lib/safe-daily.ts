@@ -4,7 +4,7 @@
 // as an expense or loan payment this cycle — so nothing is counted twice.
 
 type Tx = { type: string; amount: number | string; transaction_date: string; notes?: string | null; subcategory?: string | null; category_id?: string | null };
-type BillLike = { id: string; name: string; amount: number; due_day: number };
+type BillLike = { id: string; name: string; amount: number; due_day: number; paid_at?: string | null };
 type LoanLike = { id: string; loan_name: string; emi_amount: number | string; remaining_balance: number | string; due_day: number };
 type PaymentLike = { loan_id: string; payment_date: string; payment_status: string };
 
@@ -77,7 +77,9 @@ export function computeObligations(opts: {
     const amt = Number(b.amount);
     if (!(amt > 0)) continue;
     const due = dueThisCycle(Number(b.due_day), cycleStartDay, opts.nextSalary);
-    if (!due || recorded(b.name)) continue;
+    // Explicitly marked paid this cycle → not an obligation (and never double-counted).
+    const markedPaid = !!b.paid_at && new Date(b.paid_at) >= cycleStartDay;
+    if (!due || markedPaid || recorded(b.name)) continue;
     billItems.push({ label: b.name, amount: amt, due });
   }
 
