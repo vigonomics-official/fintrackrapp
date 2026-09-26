@@ -523,7 +523,7 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
 
 function SalaryAllocation() {
   const s = useSurvival();
-  const { alloc: savedAlloc, isLoading: allocLoading, isLoaded: allocLoaded, isError: allocError, save: saveAlloc } = useAllocation();
+  const { alloc: savedAlloc, isLoading: allocLoading, isLoaded: allocLoaded, isError: allocError, retry: retryAlloc, save: saveAlloc } = useAllocation();
   const [draft, setDraft] = useState<Alloc | null>(null);
   const [pendingSuggestion, setPendingSuggestion] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
