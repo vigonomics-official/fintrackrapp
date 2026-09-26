@@ -664,8 +664,11 @@ function SalaryAllocation() {
 
       {allocError ? (
         <Card className="border-destructive/30 shadow-soft">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-destructive">Your saved allocation couldn’t be loaded. Try again shortly.</p>
+          <CardContent className="space-y-2 p-4">
+            <p className="text-sm font-medium text-destructive">Your saved allocation couldn’t be loaded.</p>
+            <Button type="button" variant="secondary" size="sm" className="h-8" onClick={() => retryAlloc()}>
+              Try again
+            </Button>
           </CardContent>
         </Card>
       ) : allocLoading || !allocLoaded ? (
