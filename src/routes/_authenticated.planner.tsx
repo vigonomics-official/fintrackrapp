@@ -523,7 +523,7 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
 
 function SalaryAllocation() {
   const s = useSurvival();
-  const { alloc: savedAlloc, isLoading: allocLoading, isLoaded: allocLoaded, isError: allocError, save: saveAlloc } = useAllocation();
+  const { alloc: savedAlloc, isLoading: allocLoading, isLoaded: allocLoaded, isError: allocError, retry: retryAlloc, save: saveAlloc } = useAllocation();
   const [draft, setDraft] = useState<Alloc | null>(null);
   const [pendingSuggestion, setPendingSuggestion] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -664,8 +664,11 @@ function SalaryAllocation() {
 
       {allocError ? (
         <Card className="border-destructive/30 shadow-soft">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-destructive">Your saved allocation couldn’t be loaded. Try again shortly.</p>
+          <CardContent className="space-y-2 p-4">
+            <p className="text-sm font-medium text-destructive">Your saved allocation couldn’t be loaded.</p>
+            <Button type="button" variant="secondary" size="sm" className="h-8" onClick={() => retryAlloc()}>
+              Try again
+            </Button>
           </CardContent>
         </Card>
       ) : allocLoading || !allocLoaded ? (

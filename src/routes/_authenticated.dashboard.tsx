@@ -10,7 +10,6 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { useTransactions, useCategories, useBudgets, monthKey, useProfile, useLoans, useLoanPayments } from "@/hooks/use-finance";
 import { useBills } from "@/lib/bills";
-import { computeObligations } from "@/lib/safe-daily";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
 import { useSafeDailySurvival } from "@/hooks/use-safe-daily";

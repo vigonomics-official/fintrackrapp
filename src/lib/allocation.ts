@@ -98,6 +98,7 @@ export function useAllocation() {
     isLoading: authLoading || (!!user && query.isPending) || query.isLoading,
     isLoaded: !!user && query.isSuccess,
     isError: query.isError,
+    retry: () => query.refetch(),
     save: (next: Alloc) => {
       if (totalAllocation(next) > 100) return;
       qc.setQueryData([KEY, user?.id], next);
