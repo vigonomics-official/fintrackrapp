@@ -51,10 +51,16 @@ const snapshotSchema = z.object({
 
 const inputSchema = z.object({
   question: z.string().min(1).max(500),
-  systemPrompt: z.string().min(1).max(4000),
-  userPrompt: z.string().min(1).max(12000),
+  // Only user-level data is accepted. The system prompt and the full user prompt
+  // are built on the server — the client can never supply or override them.
+  intent: z.string().regex(/^[a-zA-Z]{1,40}$/).optional(),
+  draft: z.object({
+    shortAnswer: z.string().max(2000),
+    why: z.string().max(2000),
+    action: z.string().max(2000),
+  }),
   snapshot: snapshotSchema,
-});
+}).strict();
 
 export type CoachAiOk = { ok: true; shortAnswer: string; why: string; action: string };
 export type CoachAiErr = { ok: false; error: string };
@@ -95,6 +101,10 @@ export const askCoachAi = createServerFn({ method: "POST" })
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) return { ok: false, error: "ai_not_configured" };
 
+    const { COACH_SYSTEM_PROMPT } = await import("@/lib/coach-system-prompt.server");
+    const { buildCoachUserPrompt } = await import("@/lib/coach-prompt-builder");
+    const userPrompt = buildCoachUserPrompt(data.question, data.snapshot, data.draft as never, data.intent);
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), HARD_TIMEOUT_MS);
 
@@ -113,8 +123,8 @@ export const askCoachAi = createServerFn({ method: "POST" })
           max_tokens: 700,
           response_format: { type: "json_object" },
           messages: [
-            { role: "system", content: data.systemPrompt },
-            { role: "user", content: data.userPrompt },
+            { role: "system", content: COACH_SYSTEM_PROMPT },
+            { role: "user", content: userPrompt },
           ],
         }),
       });
