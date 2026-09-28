@@ -8,7 +8,7 @@
 import { askCoachAi } from "@/lib/coach-ai.functions";
 import { checkCoachReply } from "@/lib/coach-guardrails";
 import { classifyIntent } from "@/lib/coach-intent";
-import { buildCoachSnapshot, buildCoachUserPrompt, COACH_SYSTEM_PROMPT } from "@/lib/coach-prompt-builder";
+import { buildCoachSnapshot } from "@/lib/coach-prompt-builder";
 import { NOT_ENOUGH_DATA, type CoachResponse } from "@/lib/coach-prompts";
 import type { ChatContext, CoachProvider } from "@/lib/coach-provider";
 import { MockCoachProvider } from "@/lib/coach-provider";
@@ -36,8 +36,8 @@ export const GeminiCoachProvider: CoachProvider = {
       const result = await askCoachAi({
         data: {
           question: userText.slice(0, 500),
-          systemPrompt: COACH_SYSTEM_PROMPT,
-          userPrompt: buildCoachUserPrompt(userText, snapshot, draft, intent),
+          intent,
+          draft: { shortAnswer: draft.shortAnswer, why: draft.why, action: draft.action },
           snapshot,
         },
       });
