@@ -29,6 +29,9 @@ export const GeminiCoachProvider: CoachProvider = {
     if (draft.shortAnswer.startsWith(NOT_ENOUGH_DATA)) return draft;
 
     const intent = classifyIntent(userText);
+    // Plain fact questions stay deterministic so narration can't pad them
+    // with unrequested advice or impact figures.
+    if (intent === "factLookup") return draft;
 
 
     try {
@@ -50,6 +53,10 @@ export const GeminiCoachProvider: CoachProvider = {
         why: result.why.trim(),
         action: result.action.trim(),
       };
+
+      // FinTrackr has no bank/account linking — reject replies that suggest it.
+      const all = `${candidate.shortAnswer} ${candidate.why} ${candidate.action}`;
+      if (/\b(link|connect|sync)(ing)?\b[^.]{0,40}\b(bank|account|card)s?\b/i.test(all)) return draft;
 
       // Reject invented facts / numbers: fall back to the deterministic reply.
       const check = checkCoachReply(candidate, snapshot, draft);

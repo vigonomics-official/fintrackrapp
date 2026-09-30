@@ -17,6 +17,7 @@ import {
   replyCompare,
   replyEmergency,
   replyExplainMetric,
+  replyFactLookup,
   replyGeneric,
   replyGoal,
   replyGoalDelay,
@@ -80,6 +81,9 @@ export const MockCoachProvider: CoachProvider = {
     const intent = classify(userText);
     let reply: CoachResponse;
     switch (intent) {
+      case "factLookup":
+        reply = replyFactLookup(ctx.lang, ctx.input, ctx.analysis, userText);
+        break;
       case "monthStatus":
         reply = replyMonthStatus(ctx.lang, ctx.input, ctx.analysis);
         break;

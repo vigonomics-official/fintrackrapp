@@ -599,6 +599,55 @@ export function replyOverspend(
   });
 }
 
+/** Plain fact questions: answer only what was asked, no unrequested advice. */
+export function replyFactLookup(
+  lang: CoachLanguage,
+  input: CoachAnalysisInput,
+  analysis: CoachAnalysisResult,
+  userText: string,
+): CoachResponse {
+  const q = userText.toLowerCase();
+  const wantsSalary = /(salary|income|earn)/.test(q);
+  const wantsTop = /(most|highest|biggest|top)/.test(q);
+  const wantsTotal = /how much did i spend/.test(q) && !wantsTop;
+  const parts: string[] = [];
+  const why: string[] = [];
+  const calc: string[] = [];
+  if (wantsSalary) {
+    if (hasSalary(input)) {
+      parts.push(`Your monthly salary is ${inr(input.monthlySalary)}.`);
+      calc.push(`Salary = ${inr(input.monthlySalary)} (from your salary profile)`);
+    } else parts.push(`Your salary isn't set in FinTrackr yet, so I can't tell you that.`);
+  }
+  if (wantsTop || wantsTotal || (!wantsSalary && !wantsTop)) {
+    const top = analysis.breakdown[0];
+    if (!hasSpend(analysis) || !top) {
+      parts.push(`No spending is recorded yet, so I can't say where you spent the most.`);
+    } else {
+      if (wantsTotal) parts.push(`You've spent ${inr(analysis.totalExpenses)} in total.`);
+      else {
+        const pct = analysis.totalExpenses > 0 ? ` — ${Math.round(top.pct)}% of your spending` : "";
+        parts.push(`You spent the most on ${top.label}: ${inr(top.amount)}${pct}.`);
+        const second = analysis.breakdown[1];
+        if (second) why.push(`Next is ${second.label} at ${inr(second.amount)}.`);
+      }
+      calc.push(`Top category ${top.label} = ${inr(top.amount)} of ${inr(analysis.totalExpenses)} total spending`);
+    }
+  }
+  const missing = parts.some((p) => /can't|isn't set/.test(p));
+  return {
+    shortAnswer: parts.join(" "),
+    why: why.join(" ") || `Based on the figures recorded in FinTrackr.`,
+    action: missing
+      ? `Suggestion: add the missing details in FinTrackr and ask again.`
+      : `No action needed — ask me if you'd like tips on this.`,
+    confidence: missing ? "low" : "high",
+    dataUsed: baseDataUsed(lang, input),
+    calculation: calc.join("\n") || undefined,
+    followUps: ["Where am I spending too much?", "How much can I save?"],
+  };
+}
+
 /** "Can I buy something for ₹2,000?" */
 export function replyAffordAmount(
   lang: CoachLanguage,

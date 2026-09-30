@@ -24,6 +24,7 @@ export type CoachIntent =
   | "goal"
   | "budget"
   | "reduceFirst"
+  | "factLookup" // "What is my salary and where did I spend the most?"
   | "generic";
 
 /** Rupee amount mentioned in the question, if any. */
@@ -46,6 +47,9 @@ export function isInvestmentQuestion(text: string): boolean {
 
 export function classifyIntent(text: string): CoachIntent {
   const q = text.toLowerCase().trim();
+
+  // --- Plain fact questions (no advice requested) ---
+  if (isFactLookup(q)) return "factLookup";
 
   // --- Specific, high-value questions first ---
   if (/(how am i doing|how'?s my month|how is my month|this month.*(doing|going)|monthly (status|summary|update))/.test(q))
@@ -78,4 +82,17 @@ export function classifyIntent(text: string): CoachIntent {
   if (/budget|breakdown|where.*money|expense.*split/.test(q)) return "budget";
   if (/reduce|cut|which expense|save|first/.test(q)) return "reduceFirst";
   return "generic";
+}
+
+/** Asks for facts ("what is my salary", "where did I spend the most") without asking for advice. */
+export function isFactLookup(q: string): boolean {
+  const asksFact =
+    /(what('?s| is) my (monthly )?(salary|income)|how much (is my|do i earn|did i (spend|earn))|my salary\b|where did i spend (the )?most|(highest|biggest|top) (spending )?(category|expense)|spent the most|spend the most (on|this))/.test(q);
+  const asksAdvice = /(how (can|do|should) i|should i|reduce|cut|save|improve|tips?|advice|afford|what if|too much|overspend)/.test(q);
+  return asksFact && !asksAdvice;
+}
+
+/** Does the question actually ask for savings / impact figures? */
+export function wantsImpact(q: string): boolean {
+  return /(save|saving|impact|reduce|cut|trim|free up|what if|improve|lower)/i.test(q);
 }

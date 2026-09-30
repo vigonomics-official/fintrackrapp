@@ -10,7 +10,7 @@
 // calculated reliably, and attaches the investment-only contextual note.
 
 import type { CoachAnalysisInput, CoachAnalysisResult } from "@/lib/ai-coach-analysis";
-import { isInvestmentQuestion } from "@/lib/coach-intent";
+import { isInvestmentQuestion, wantsImpact } from "@/lib/coach-intent";
 import type { CoachConfidence, CoachResponse } from "@/lib/coach-prompts";
 
 export const INVESTMENT_NOTE =
@@ -118,6 +118,8 @@ export function finalizeResponse(
 
 
   if (!impactIsReliable(out.monthlyImpact, finalConfidence, avail)) delete out.monthlyImpact;
+  // Only show a savings impact when the user asked about saving / cutting / impact.
+  if (!wantsImpact(question)) delete out.monthlyImpact;
   if (isInvestmentQuestion(question)) out.note = INVESTMENT_NOTE;
   else delete out.note;
 
@@ -145,5 +147,6 @@ export const INTENT_DATA: Record<string, DataKey[]> = {
   goal: ["goal", "salary"],
   budget: ["budget", "salary", "spending"],
   reduceFirst: ["spending", "budget"],
+  factLookup: ["salary", "spending"],
   generic: ["salary", "spending"],
 };
