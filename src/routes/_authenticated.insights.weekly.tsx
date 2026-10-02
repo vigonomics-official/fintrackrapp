@@ -30,13 +30,13 @@ export const Route = createFileRoute("/_authenticated/insights/weekly")({
   component: WeeklyReportPage,
   head: () => ({
     meta: [
-      { title: "Weekly Survival Report — FinTrackr" },
+      { title: "Weekly Survival Report — FinSurvive" },
       { name: "description", content: "Your week in money: spending pace, risks and quick wins." },
-      { property: "og:title", content: "Weekly Survival Report — FinTrackr" },
+      { property: "og:title", content: "Weekly Survival Report — FinSurvive" },
       { property: "og:description", content: "Your week in money: spending pace, risks and quick wins." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Weekly Survival Report — FinTrackr" },
+      { name: "twitter:title", content: "Weekly Survival Report — FinSurvive" },
       { name: "twitter:description", content: "Your week in money: spending pace, risks and quick wins." },
     ],
   }),

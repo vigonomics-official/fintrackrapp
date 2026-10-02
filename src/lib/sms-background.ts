@@ -37,7 +37,7 @@ export function smsDebug(
   // eslint-disable-next-line no-console
   (console[level === "success" ? "log" : level] ?? console.log).call(
     console,
-    `[FinTrackr/${tag}] ${message}`,
+    `[FinSurvive/${tag}] ${message}`,
     meta ?? "",
   );
   if (typeof window !== "undefined") {
@@ -137,7 +137,7 @@ export async function enableBackgroundMode() {
   // Foreground service plugin (keeps process alive on Xiaomi/Realme)
   await callPlugin(["ForegroundService"], "start", {
     id: 7421,
-    title: "FinTrackr SMS Intelligence",
+    title: "FinSurvive SMS Intelligence",
     body: "Detecting transaction alerts in the background",
     icon: "ic_stat_icon",
     silent: true,
@@ -175,14 +175,14 @@ export function detectOem(): "xiaomi" | "oppo" | "vivo" | "realme" | "samsung" |
 export function oemAutostartHint(oem: ReturnType<typeof detectOem>): string | null {
   switch (oem) {
     case "xiaomi":
-      return "Xiaomi/MIUI: enable Autostart and lock FinTrackr in Recent Apps to keep SMS detection alive.";
+      return "Xiaomi/MIUI: enable Autostart and lock FinSurvive in Recent Apps to keep SMS detection alive.";
     case "oppo":
     case "realme":
-      return "Oppo/Realme ColorOS: turn ON 'Allow auto-launch' and 'Allow background activity' for FinTrackr.";
+      return "Oppo/Realme ColorOS: turn ON 'Allow auto-launch' and 'Allow background activity' for FinSurvive.";
     case "vivo":
-      return "Vivo FunTouch OS: enable 'High background power consumption' for FinTrackr.";
+      return "Vivo FunTouch OS: enable 'High background power consumption' for FinSurvive.";
     case "samsung":
-      return "Samsung One UI: add FinTrackr to 'Never sleeping apps' under Battery settings.";
+      return "Samsung One UI: add FinSurvive to 'Never sleeping apps' under Battery settings.";
     default:
       return null;
   }

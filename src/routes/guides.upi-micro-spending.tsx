@@ -21,7 +21,7 @@ export const Route = createFileRoute("/guides/upi-micro-spending")({
       { name: "twitter:card", content: "summary_large_image" },
       { name: "keywords", content: "UPI spending tracker, UPI micro-transactions, salary savings India, track small UPI spends" },
     ],
-    links: [{ rel: "canonical", href: "/guides/upi-micro-spending" }],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/guides/upi-micro-spending" }],
   }),
   component: UpiMicroSpendingGuide,
 });
@@ -43,8 +43,8 @@ function UpiMicroSpendingGuide() {
     description:
       "A practical guide for Indian salary earners to track ₹50–₹200 UPI micro-spends that silently drain monthly savings.",
     datePublished: publishedISO,
-    author: { "@type": "Organization", name: "FinTrackr" },
-    publisher: { "@type": "Organization", name: "FinTrackr" },
+    author: { "@type": "Organization", name: "FinSurvive" },
+    publisher: { "@type": "Organization", name: "FinSurvive" },
     mainEntityOfPage: "https://fintrackrapp.lovable.app/guides/upi-micro-spending",
   };
 
@@ -59,7 +59,7 @@ function UpiMicroSpendingGuide() {
       <header className="border-b border-border bg-card/50">
         <div className="mx-auto max-w-3xl px-5 py-10">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">
-            FinTrackr Guides · Salary Survival
+            FinSurvive Guides · Salary Survival
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl">
             UPI Spending Tracker: Managing the ₹50–₹200 Micro-Spends That Drain Your Salary
@@ -128,16 +128,16 @@ function UpiMicroSpendingGuide() {
       </Section>
 
       <Section>
-        <h2 className="text-2xl font-semibold">How FinTrackr helps</h2>
+        <h2 className="text-2xl font-semibold">How FinSurvive helps</h2>
         <p className="mt-3 text-muted-foreground">
-          FinTrackr auto-categorises UPI transactions from bank SMS, shows a live
+          FinSurvive auto-categorises UPI transactions from bank SMS, shows a live
           safe-daily-spend number tied to your salary cycle, and warns you when a category
           starts trending over budget — before it eats your savings.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Button asChild>
             <Link to="/signup">
-              Try FinTrackr free <ArrowRight className="ml-2 h-4 w-4" />
+              Try FinSurvive free <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Button asChild variant="outline">
@@ -171,7 +171,7 @@ function UpiMicroSpendingGuide() {
 
       <footer className="border-t border-border">
         <div className="mx-auto max-w-3xl px-5 py-6 text-xs text-muted-foreground">
-          <PieChart className="mr-1 inline h-3.5 w-3.5" /> FinTrackr · Built for Indian salary life.
+          <PieChart className="mr-1 inline h-3.5 w-3.5" /> FinSurvive · Built for Indian salary life.
         </div>
       </footer>
     </article>

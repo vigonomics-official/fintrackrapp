@@ -1,6 +1,6 @@
 // Builds a CONTROLLED financial snapshot + prompt for Gemini.
 //
-// Hard rule: FinTrackr's deterministic engine is the single source of truth for
+// Hard rule: FinSurvive's deterministic engine is the single source of truth for
 // every number. Gemini only receives already-computed values and is instructed
 // to explain them — never to recompute salary, salary left, safe daily spend,
 // survival score, month-end forecast, EMI or budget totals.
@@ -40,7 +40,7 @@ export type CoachSnapshot = {
   topCategories: { label: string; amount: number; pct: number }[];
   risks: { label: string; level: string }[];
   goalForecast: { goal: string; monthlyTarget: number; targetAmount: number; etaMonths: number; confidence: number };
-  /** What FinTrackr actually knows about this user. Anything false = unknown. */
+  /** What FinSurvive actually knows about this user. Anything false = unknown. */
   facts: {
     hasSalary: boolean;
     hasSpendData: boolean;
@@ -51,7 +51,7 @@ export type CoachSnapshot = {
     hasGoal: boolean;
     hasEmergencyFund: boolean;
   };
-  /** Things FinTrackr has NO data about — never assert these exist. */
+  /** Things FinSurvive has NO data about — never assert these exist. */
   unavailable: string[];
 };
 
@@ -146,7 +146,7 @@ const INTENT_FOCUS: Record<string, string> = {
   safeToday: "salary, fixed obligations (rent + EMI + bills), safe daily spend",
   beforeSalary: "current balance, days until salary, fixed outflows",
   emergencyGoal: "current savings, monthly expenses, emergency fund target",
-  biggestProblem: "risks flagged by FinTrackr and the largest spending category",
+  biggestProblem: "risks flagged by FinSurvive and the largest spending category",
   explainMetric: "the exact metric asked about and its calculation steps",
 };
 
@@ -180,7 +180,7 @@ export function buildCoachUserPrompt(
     "FINANCIAL SNAPSHOT (authoritative, already calculated — the ONLY facts you may use):",
     JSON.stringify(snapshot),
     "",
-    "FACTS FINTRACKR HAS NO DATA ABOUT (never assert these exist):",
+    "FACTS FINSURVIVE HAS NO DATA ABOUT (never assert these exist):",
     snapshot.unavailable.join(", "),
     "",
     snapshot.savingsRate == null

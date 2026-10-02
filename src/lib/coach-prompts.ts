@@ -29,7 +29,7 @@ function baseDataUsed(lang: CoachLanguage, input: CoachAnalysisInput | null): st
 
 /**
  * Zero-data guard (FIX 1).
- * When FinTrackr has no value for something, the coach must say so instead of
+ * When FinSurvive has no value for something, the coach must say so instead of
  * producing a calculated-looking estimate ("~60 months", "₹0 safe limit"…).
  */
 export const NOT_ENOUGH_DATA = "I don't have enough data to confirm that.";
@@ -42,7 +42,7 @@ export function replyInsufficient(
 ): CoachResponse {
   return {
     shortAnswer: NOT_ENOUGH_DATA,
-    why: `FinTrackr has no ${missing} on record, so I can't calculate this reliably.`,
+    why: `FinSurvive has no ${missing} on record, so I can't calculate this reliably.`,
     action,
     confidence: "low",
     dataUsed: input ? baseDataUsed(lang, input) : [],
@@ -50,7 +50,7 @@ export function replyInsufficient(
   };
 }
 
-/** True when FinTrackr knows enough to do salary-based math. */
+/** True when FinSurvive knows enough to do salary-based math. */
 function hasSalary(input: CoachAnalysisInput): boolean {
   return Number.isFinite(input.monthlySalary) && input.monthlySalary > 0;
 }
@@ -560,7 +560,7 @@ export function replyMonthStatus(
     calculation:
       `Salary ${inr(input.monthlySalary)} − Expenses ${inr(analysis.totalExpenses)} = Surplus ${inr(analysis.monthlySurplus)}\n` +
       `Savings rate = Surplus ÷ Salary = ${rate}%\n` +
-      `Survival Score (FinTrackr) = ${analysis.healthScore}/100`,
+      `Survival Score (FinSurvive) = ${analysis.healthScore}/100`,
   });
 }
 
@@ -574,7 +574,7 @@ export function replyOverspend(
   if (!top) {
     return withFollowUps({
       shortAnswer: `I don't have enough data to confirm that.`,
-      why: `No category spending is recorded yet in FinTrackr.`,
+      why: `No category spending is recorded yet in FinSurvive.`,
       action: `Add or import your expenses so I can point at a real category.`,
       confidence: "low",
       dataUsed: baseDataUsed(lang, input),
@@ -617,7 +617,7 @@ export function replyFactLookup(
     if (hasSalary(input)) {
       parts.push(`Your monthly salary is ${inr(input.monthlySalary)}.`);
       calc.push(`Salary = ${inr(input.monthlySalary)} (from your salary profile)`);
-    } else parts.push(`Your salary isn't set in FinTrackr yet, so I can't tell you that.`);
+    } else parts.push(`Your salary isn't set in FinSurvive yet, so I can't tell you that.`);
   }
   if (wantsTop || wantsTotal || (!wantsSalary && !wantsTop)) {
     const top = analysis.breakdown[0];
@@ -637,9 +637,9 @@ export function replyFactLookup(
   const missing = parts.some((p) => /can't|isn't set/.test(p));
   return {
     shortAnswer: parts.join(" "),
-    why: why.join(" ") || `Based on the figures recorded in FinTrackr.`,
+    why: why.join(" ") || `Based on the figures recorded in FinSurvive.`,
     action: missing
-      ? `Suggestion: add the missing details in FinTrackr and ask again.`
+      ? `Suggestion: add the missing details in FinSurvive and ask again.`
       : `No action needed — ask me if you'd like tips on this.`,
     confidence: missing ? "low" : "high",
     dataUsed: baseDataUsed(lang, input),
@@ -804,7 +804,7 @@ export function replyBiggestProblem(
     confidence: "high",
     dataUsed: baseDataUsed(lang, input),
     calculation:
-      `Risks (FinTrackr): ${analysis.risks.map((r) => `${r.label}=${r.level}`).join(", ") || "none"}\n` +
+      `Risks (FinSurvive): ${analysis.risks.map((r) => `${r.label}=${r.level}`).join(", ") || "none"}\n` +
       (top ? `Top category ${top.label} ${inr(top.amount)} (${Math.round(top.pct)}%)` : ""),
   });
 }

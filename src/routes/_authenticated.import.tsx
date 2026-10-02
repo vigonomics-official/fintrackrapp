@@ -35,12 +35,14 @@ export const Route = createFileRoute("/_authenticated/import")({
   component: ImportPage,
   head: () => ({
     meta: [
-      { title: "Import Transactions — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Import Transactions — FinSurvive" },
       { name: "description", content: "Import GPay, bank, and CSV statements with auto-categorization." },
-      { property: "og:title", content: "Import Transactions — FinTrackr" },
+      { property: "og:title", content: "Import Transactions — FinSurvive" },
       { property: "og:description", content: "Import GPay, bank, and CSV statements with auto-categorization." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/import" },
-      { name: "twitter:title", content: "Import Transactions — FinTrackr" },
+      { name: "twitter:title", content: "Import Transactions — FinSurvive" },
       { name: "twitter:description", content: "Import GPay, bank, and CSV statements with auto-categorization." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/import" }],

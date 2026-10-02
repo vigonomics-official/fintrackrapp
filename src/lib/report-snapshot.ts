@@ -2,7 +2,7 @@
  * AI Financial Report — deterministic snapshot layer.
  *
  * This module is the ONLY source of financial truth for the report engine.
- * It reuses FinTrackr's existing calculations (computeSurvival, salary-cycle,
+ * It reuses FinSurvive's existing calculations (computeSurvival, salary-cycle,
  * survival-preferences) and never invents a value: any field that cannot be
  * derived from real data stays `undefined`.
  */

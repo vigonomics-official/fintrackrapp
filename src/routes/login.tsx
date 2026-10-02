@@ -19,13 +19,15 @@ export const Route = createFileRoute("/login")({
   },
   head: () => ({
     meta: [
-      { title: "Sign in — FinTrackr" },
-      { name: "description", content: "Sign in to FinTrackr to track expenses, budgets and salary survival in one place." },
-      { property: "og:title", content: "Sign in — FinTrackr" },
-      { property: "og:description", content: "Sign in to FinTrackr to track expenses, budgets and salary survival in one place." },
-      { property: "og:url", content: "/login" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Sign in — FinSurvive" },
+      { name: "description", content: "Sign in to FinSurvive to track expenses, budgets and salary survival in one place." },
+      { property: "og:title", content: "Sign in — FinSurvive" },
+      { property: "og:description", content: "Sign in to FinSurvive to track expenses, budgets and salary survival in one place." },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/login" },
     ],
-    links: [{ rel: "canonical", href: "/login" }],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/login" }],
   }),
   component: LoginPage,
 });
@@ -102,7 +104,7 @@ function LoginPage() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
                 ₹
               </div>
-              FinTrackr
+              FinSurvive
             </Link>
             <p className="mt-1.5 text-xs font-medium text-muted-foreground">
               Your Salary Survival System
@@ -153,10 +155,10 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
         <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_30%_30%,white,transparent_40%),radial-gradient(circle_at_70%_70%,oklch(0.78_0.12_85),transparent_40%)]" />
         <Link to="/" className="relative flex items-center gap-2 font-display text-xl font-bold">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-gold-foreground">₣</div>
-          FinTrackr
+          FinSurvive
         </Link>
         <div className="relative">
-          <h2 className="font-display text-4xl font-bold leading-tight">"FinTrackr changed how I see my money."</h2>
+          <h2 className="font-display text-4xl font-bold leading-tight">"FinSurvive changed how I see my money."</h2>
           <p className="mt-3 text-primary-foreground/80">— Alex, designer</p>
         </div>
       </div>

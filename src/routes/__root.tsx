@@ -30,7 +30,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "FinTrackr" },
+      { property: "og:site_name", content: "FinSurvive" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "google-site-verification", content: "4w0uMo7IyfD9ewwY8C6n3Z_utxs52Q8DL6HTmPV_W5E" },
     ],

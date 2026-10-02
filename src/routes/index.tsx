@@ -30,28 +30,30 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "FinTrackr — Know exactly where your ₹ goes" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "FinSurvive — Know exactly where your ₹ goes" },
       {
         name: "description",
         content:
-          "FinTrackr is an intelligent money control center built for Indian salary life. Track UPI spends, set budgets, and beat month-end stress.",
+          "FinSurvive is an intelligent money control center built for Indian salary life. Track UPI spends, set budgets, and beat month-end stress.",
       },
-      { property: "og:title", content: "FinTrackr — Know exactly where your ₹ goes" },
+      { property: "og:title", content: "FinSurvive — Know exactly where your ₹ goes" },
       {
         property: "og:description",
         content:
-          "FinTrackr is an intelligent money control center built for Indian salary life. Track UPI spends, set budgets, and beat month-end stress.",
+          "FinSurvive is an intelligent money control center built for Indian salary life. Track UPI spends, set budgets, and beat month-end stress.",
       },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/" },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/" }],
     scripts: [
       {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "FinTrackr",
+          name: "FinSurvive",
           url: "https://fintrackrapp.lovable.app/",
         }),
       },
@@ -60,7 +62,7 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "FinTrackr",
+          name: "FinSurvive",
           url: "https://fintrackrapp.lovable.app/",
           logo: "https://fintrackrapp.lovable.app/favicon.ico",
         }),
@@ -87,7 +89,7 @@ function Logo() {
         ₹
       </div>
       <span className="font-display text-lg font-bold tracking-tight" >
-        FinTrackr
+        FinSurvive
       </span>
     </div>
   );
@@ -335,7 +337,7 @@ function SalaryLeftSection() {
           Know what you can actually spend.
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          FinTrackr turns your salary into three simple numbers — updated live as you spend.
+          FinSurvive turns your salary into three simple numbers — updated live as you spend.
         </p>
       </div>
       <div className="mt-7 grid gap-4 sm:grid-cols-3">
@@ -393,7 +395,7 @@ function AppScreens() {
       <div className="mx-auto max-w-6xl px-5">
         <div className="mx-auto max-w-xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
-            <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinTrackr
+            <Sparkles className="h-3 w-3" style={{ color: BRAND.primary }} /> Inside FinSurvive
           </span>
           <h2 className="mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
             Your salary, under control
@@ -604,7 +606,7 @@ function BuiltForSalary() {
           Built for your salary, not just your expenses
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          FinTrackr plans around your pay cycle — so your money lasts the full month.
+          FinSurvive plans around your pay cycle — so your money lasts the full month.
         </p>
       </div>
       <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -675,7 +677,7 @@ function HowItWorks() {
 
 function PrivacySection() {
   const items = [
-    { icon: Landmark, title: "No bank login required.", desc: "FinTrackr never connects to your bank — you add your own data." },
+    { icon: Landmark, title: "No bank login required.", desc: "FinSurvive never connects to your bank — you add your own data." },
     { icon: Lock, title: "No bank password required.", desc: "Nothing sensitive to hand over, nothing to leak." },
     { icon: ShieldCheck, title: "Your data belongs to you.", desc: "Stored privately in your own account. Export or delete it anytime." },
   ];
@@ -836,7 +838,7 @@ function Footer() {
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-5 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} FinTrackr
+            © {new Date().getFullYear()} FinSurvive
           </p>
           <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             Made with <Heart className="h-3 w-3 fill-red-500 text-red-500" /> in India

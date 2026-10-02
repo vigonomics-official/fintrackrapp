@@ -13,9 +13,11 @@ export const Route = createFileRoute("/_authenticated/insights/ai")({
   component: AIInsightsPage,
   head: () => ({
     meta: [
-      { title: "AI Insights — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "AI Insights — FinSurvive" },
       { name: "description", content: "Personalized AI insights on your top spending category, month-end savings forecast, budget streaks and upcoming EMI risks." },
-      { property: "og:title", content: "AI Insights — FinTrackr" },
+      { property: "og:title", content: "AI Insights — FinSurvive" },
       { property: "og:description", content: "Personalized AI insights on your top spending category, month-end savings forecast, budget streaks and upcoming EMI risks." },
     ],
   }),

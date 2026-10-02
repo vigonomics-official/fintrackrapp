@@ -17,6 +17,8 @@ export const Route = createFileRoute("/_authenticated/feedback")({
   component: FeedbackPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: TITLE },
       { name: "description", content: DESC },
       { property: "og:title", content: TITLE },

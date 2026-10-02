@@ -122,7 +122,7 @@ function AuthenticatedLayout() {
       <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <Link to="/dashboard" className="flex items-center gap-2 px-6 py-6 font-display text-xl font-bold">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-gold-foreground">₣</div>
-          FinTrackr
+          FinSurvive
         </Link>
         <nav className="flex-1 space-y-1 px-3">
           {NAV.map((item) => {

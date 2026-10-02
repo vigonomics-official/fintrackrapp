@@ -19,13 +19,13 @@ export const Route = createFileRoute("/_authenticated/insights/coach")({
   component: SalarySurvivalCoachPage,
   head: () => ({
     meta: [
-      { title: "Salary Survival Coach — FinTrackr" },
+      { title: "Salary Survival Coach — FinSurvive" },
       { name: "description", content: "Day-by-day survival score, spending pace and budget coaching to make your salary last the month." },
-      { property: "og:title", content: "Salary Survival Coach — FinTrackr" },
+      { property: "og:title", content: "Salary Survival Coach — FinSurvive" },
       { property: "og:description", content: "Day-by-day survival score, spending pace and budget coaching to make your salary last the month." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Salary Survival Coach — FinTrackr" },
+      { name: "twitter:title", content: "Salary Survival Coach — FinSurvive" },
       { name: "twitter:description", content: "Day-by-day survival score, spending pace and budget coaching to make your salary last the month." },
     ],
   }),

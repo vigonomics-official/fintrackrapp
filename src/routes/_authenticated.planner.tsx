@@ -45,12 +45,14 @@ export const Route = createFileRoute("/_authenticated/planner")({
   component: PlannerPage,
   head: () => ({
     meta: [
-      { title: "Planner — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Planner — FinSurvive" },
       { name: "description", content: "Salary-aware month-end forecast and safe daily spend planner." },
-      { property: "og:title", content: "Planner — FinTrackr" },
+      { property: "og:title", content: "Planner — FinSurvive" },
       { property: "og:description", content: "Salary-aware month-end forecast and safe daily spend planner." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/planner" },
-      { name: "twitter:title", content: "Planner — FinTrackr" },
+      { name: "twitter:title", content: "Planner — FinSurvive" },
       { name: "twitter:description", content: "Salary-aware month-end forecast and safe daily spend planner." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/planner" }],

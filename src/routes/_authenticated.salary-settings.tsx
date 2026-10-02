@@ -7,25 +7,25 @@ export const Route = createFileRoute("/_authenticated/salary-settings")({
   component: SalarySettingsPage,
   head: () => ({
     meta: [
-      { title: "Salary Survival Settings — FinTrackr" },
+      { title: "Salary Survival Settings — FinSurvive" },
       {
         name: "description",
         content:
-          "Set your salary, payday, emergency fund target and survival score weights in FinTrackr.",
+          "Set your salary, payday, emergency fund target and survival score weights in FinSurvive.",
       },
-      { property: "og:title", content: "Salary Survival Settings — FinTrackr" },
+      { property: "og:title", content: "Salary Survival Settings — FinSurvive" },
       {
         property: "og:description",
         content:
-          "Set your salary, payday, emergency fund target and survival score weights in FinTrackr.",
+          "Set your salary, payday, emergency fund target and survival score weights in FinSurvive.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Salary Survival Settings — FinTrackr" },
+      { name: "twitter:title", content: "Salary Survival Settings — FinSurvive" },
       {
         name: "twitter:description",
         content:
-          "Set your salary, payday, emergency fund target and survival score weights in FinTrackr.",
+          "Set your salary, payday, emergency fund target and survival score weights in FinSurvive.",
       },
     ],
   }),

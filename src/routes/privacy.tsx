@@ -11,6 +11,8 @@ export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: TITLE },
       { name: "description", content: DESC },
       { property: "og:title", content: TITLE },
@@ -37,7 +39,7 @@ const SECTIONS = [
     title: "SMS Intelligence (Optional)",
     body: [
       "SMS Intelligence is optional and only works on supported Android builds where you explicitly grant SMS permission. Permission is never requested automatically, on the web it is unavailable, and nothing is read unless you turn it on.",
-      "Messages are parsed on your device to detect the amount, merchant, bank and payment method, then discarded — the raw message text is not saved to your account, not stored in our database and not sent to any AI service. Only the resulting transaction details FinTrackr needs (amount, merchant, bank, reference, payment method, date and category) are stored.",
+      "Messages are parsed on your device to detect the amount, merchant, bank and payment method, then discarded — the raw message text is not saved to your account, not stored in our database and not sent to any AI service. Only the resulting transaction details FinSurvive needs (amount, merchant, bank, reference, payment method, date and category) are stored.",
 
     ],
   },

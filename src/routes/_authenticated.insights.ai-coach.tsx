@@ -29,13 +29,13 @@ export const Route = createFileRoute("/_authenticated/insights/ai-coach")({
   component: AiCoachRoute,
   head: () => ({
     meta: [
-      { title: "AI Salary Survival Coach — FinTrackr" },
+      { title: "AI Salary Survival Coach — FinSurvive" },
       { name: "description", content: "AI-powered advice to make your salary last the whole month." },
-      { property: "og:title", content: "AI Salary Survival Coach — FinTrackr" },
+      { property: "og:title", content: "AI Salary Survival Coach — FinSurvive" },
       { property: "og:description", content: "AI-powered advice to make your salary last the whole month." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "AI Salary Survival Coach — FinTrackr" },
+      { name: "twitter:title", content: "AI Salary Survival Coach — FinSurvive" },
       { name: "twitter:description", content: "AI-powered advice to make your salary last the whole month." },
     ],
   }),
@@ -335,7 +335,7 @@ function AnalyzeChoice({ onAuto, onManual }: { onAuto: () => void; onManual: () 
 
   const filledCount = autofill.filled.size;
 
-  // Empty state — no transactions in FinTrackr at all.
+  // Empty state — no transactions in FinSurvive at all.
   if (!hasAnyTransactions) {
     return (
       <Card className="p-5 shadow-soft">
@@ -384,7 +384,7 @@ function AnalyzeChoice({ onAuto, onManual }: { onAuto: () => void; onManual: () 
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 font-display text-sm font-semibold">
               <span aria-hidden>🟢</span>
-              Analyze Using My FinTrackr Data
+              Analyze Using My FinSurvive Data
             </p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               Automatically use your salary, expenses, bills, investments and spending history.

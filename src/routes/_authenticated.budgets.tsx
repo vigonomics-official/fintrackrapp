@@ -27,12 +27,14 @@ export const Route = createFileRoute("/_authenticated/budgets")({
   component: BudgetsPage,
   head: () => ({
     meta: [
-      { title: "Budgets — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Budgets — FinSurvive" },
       { name: "description", content: "Set monthly category budgets and track spending against safe limits." },
-      { property: "og:title", content: "Budgets — FinTrackr" },
+      { property: "og:title", content: "Budgets — FinSurvive" },
       { property: "og:description", content: "Set monthly category budgets and track spending against safe limits." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/budgets" },
-      { name: "twitter:title", content: "Budgets — FinTrackr" },
+      { name: "twitter:title", content: "Budgets — FinSurvive" },
       { name: "twitter:description", content: "Set monthly category budgets and track spending against safe limits." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/budgets" }],

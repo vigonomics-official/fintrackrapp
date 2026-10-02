@@ -226,7 +226,7 @@ export function buildReportInsights(s: ReportSnapshot, m: ReportMetrics): Report
         fact: `At your current pace the cycle ends at ${cur(s.forecastBalance)}.`,
         numbers: { forecastBalance: s.forecastBalance, safeDaily: s.safeDaily ?? 0, daysRemaining: s.daysRemaining ?? 0 },
         dataUsed: ["Month-end forecast", "Safe daily spend"],
-        context: "Forecast comes from FinTrackr's salary-cycle projection.",
+        context: "Forecast comes from FinSurvive's salary-cycle projection.",
         confidence: s.expenseCount >= 5 ? "high" : "medium",
         recommendation:
           s.safeDaily != null
@@ -242,7 +242,7 @@ export function buildReportInsights(s: ReportSnapshot, m: ReportMetrics): Report
         fact: `Survival Score is ${s.score} and the cycle is projected to end at ${cur(s.forecastBalance)}.`,
         numbers: { score: s.score, forecastBalance: s.forecastBalance },
         dataUsed: ["Survival Score", "Month-end forecast"],
-        context: "Score and forecast come straight from FinTrackr's survival engine.",
+        context: "Score and forecast come straight from FinSurvive's survival engine.",
         confidence: "high",
         impactText: "Your current pace is sustainable.",
       });

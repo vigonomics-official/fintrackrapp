@@ -311,7 +311,7 @@ export function analyzeMock(input: CoachAnalysisInput): CoachAnalysisResult {
 
   // ---------- Weekly plan ----------
   const weeklyPlan: WeeklyPlanDay[] = [
-    { day: "Monday", task: "Review last week's spending in FinTrackr for 5 minutes." },
+    { day: "Monday", task: "Review last week's spending in FinSurvive for 5 minutes." },
     { day: "Tuesday", task: "Move surplus cash to savings or investment account." },
     { day: "Wednesday", task: "Pack lunch or cook at home to cut food delivery." },
     { day: "Thursday", task: "Check one recurring bill or subscription you can cancel." },

@@ -13,12 +13,14 @@ export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
   head: () => ({
     meta: [
-      { title: "Reports & Insights — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Reports & Insights — FinSurvive" },
       { name: "description", content: "Monthly trends, category breakdowns, and savings rate." },
-      { property: "og:title", content: "Reports & Insights — FinTrackr" },
+      { property: "og:title", content: "Reports & Insights — FinSurvive" },
       { property: "og:description", content: "Monthly trends, category breakdowns, and savings rate." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/reports" },
-      { name: "twitter:title", content: "Reports & Insights — FinTrackr" },
+      { name: "twitter:title", content: "Reports & Insights — FinSurvive" },
       { name: "twitter:description", content: "Monthly trends, category breakdowns, and savings rate." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/reports" }],

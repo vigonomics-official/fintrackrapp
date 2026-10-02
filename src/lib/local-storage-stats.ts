@@ -1,5 +1,5 @@
 // Local storage accounting + destructive data actions for the Data & Privacy
-// section. Only touches FinTrackr's own localStorage keys.
+// section. Only touches FinSurvive's own localStorage keys.
 
 export const APP_VERSION = "1.4.0";
 
@@ -15,7 +15,7 @@ export function localKeys(): string[] {
   return keys;
 }
 
-/** Approximate bytes used by FinTrackr keys in localStorage. */
+/** Approximate bytes used by FinSurvive keys in localStorage. */
 export function localStorageBytes(): number {
   if (typeof window === "undefined") return 0;
   return localKeys().reduce((sum, k) => sum + k.length + (localStorage.getItem(k)?.length ?? 0), 0) * 2;
@@ -27,7 +27,7 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-/** Wipe every local FinTrackr key (profile, prefs, caches, goals, rules). */
+/** Wipe every local FinSurvive key (profile, prefs, caches, goals, rules). */
 export function clearLocalData(): number {
   const keys = localKeys();
   for (const k of keys) {

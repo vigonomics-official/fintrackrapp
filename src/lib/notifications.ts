@@ -1,4 +1,4 @@
-// Smart Notifications engine for FinTrackr.
+// Smart Notifications engine for FinSurvive.
 // Pure function over real user data — salary settings, transactions, and the
 // stored FinancialProfile (rent / bills / EMI). Nothing is hardcoded and no
 // values are invented; if a data point is missing the related notification is

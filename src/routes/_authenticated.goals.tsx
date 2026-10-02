@@ -24,12 +24,14 @@ export const Route = createFileRoute("/_authenticated/goals")({
   component: Goals,
   head: () => ({
     meta: [
-      { title: "Savings Goals — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Savings Goals — FinSurvive" },
       { name: "description", content: "Plan and track savings goals with progress and target dates." },
-      { property: "og:title", content: "Savings Goals — FinTrackr" },
+      { property: "og:title", content: "Savings Goals — FinSurvive" },
       { property: "og:description", content: "Plan and track savings goals with progress and target dates." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/goals" },
-      { name: "twitter:title", content: "Savings Goals — FinTrackr" },
+      { name: "twitter:title", content: "Savings Goals — FinSurvive" },
       { name: "twitter:description", content: "Plan and track savings goals with progress and target dates." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/goals" }],

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** Minimum length required for new FinTrackr account passwords. */
+/** Minimum length required for new FinSurvive account passwords. */
 export const MIN_PASSWORD_LENGTH = 12;
 
 export const PASSWORD_HINT =

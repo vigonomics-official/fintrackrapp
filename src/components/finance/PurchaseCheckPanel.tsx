@@ -94,7 +94,7 @@ export function PurchaseCheckPanel({
     const before = computeSurvival({ transactions, loans, salarySettings, extraSpend: 0 });
     const after = computeSurvival({ transactions, loans, salarySettings, extraSpend: valid.price });
     // FIX 1/2 — resolve the item's own category budget when (and only when)
-    // FinTrackr can determine the category reliably.
+    // FinSurvive can determine the category reliably.
     const resolved = detectPurchaseCategory(valid.itemName, categories);
     let category: PurchaseCategoryBudget | null = null;
     if (resolved) {

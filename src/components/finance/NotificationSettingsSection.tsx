@@ -147,14 +147,14 @@ export function NotificationSettingsSection() {
                     : "You're all caught up — no alerts pending.";
                 if (perm === "granted") {
                   try {
-                    new Notification("FinTrackr", { body });
+                    new Notification("FinSurvive", { body });
                     toast.success("Test notification sent");
                     return;
                   } catch {
                     /* fall through to in-app */
                   }
                 }
-                toast("FinTrackr", { description: body });
+                toast("FinSurvive", { description: body });
               }}
             >
               Send

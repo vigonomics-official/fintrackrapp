@@ -1,6 +1,6 @@
-# FinTrackr Screenshots
+# FinSurvive Screenshots
 
-This folder contains screenshots of the FinTrackr application.
+This folder contains screenshots of the FinSurvive application.
 
 - Dashboard
 - Expense Tracker

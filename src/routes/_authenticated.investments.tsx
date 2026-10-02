@@ -16,12 +16,14 @@ export const Route = createFileRoute("/_authenticated/investments")({
   component: Investments,
   head: () => ({
     meta: [
-      { title: "Investments — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Investments — FinSurvive" },
       { name: "description", content: "Track mutual funds, stocks, and SIPs in one place." },
-      { property: "og:title", content: "Investments — FinTrackr" },
+      { property: "og:title", content: "Investments — FinSurvive" },
       { property: "og:description", content: "Track mutual funds, stocks, and SIPs in one place." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/investments" },
-      { name: "twitter:title", content: "Investments — FinTrackr" },
+      { name: "twitter:title", content: "Investments — FinSurvive" },
       { name: "twitter:description", content: "Track mutual funds, stocks, and SIPs in one place." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/investments" }],

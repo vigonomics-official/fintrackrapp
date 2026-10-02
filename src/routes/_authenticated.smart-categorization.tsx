@@ -27,12 +27,14 @@ export const Route = createFileRoute("/_authenticated/smart-categorization")({
   component: SmartCategorizationPage,
   head: () => ({
     meta: [
-      { title: "Smart Categorization — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Smart Categorization — FinSurvive" },
       { name: "description", content: "Self-learning merchant rules that auto-tag your transactions." },
-      { property: "og:title", content: "Smart Categorization — FinTrackr" },
+      { property: "og:title", content: "Smart Categorization — FinSurvive" },
       { property: "og:description", content: "Self-learning merchant rules that auto-tag your transactions." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/smart-categorization" },
-      { name: "twitter:title", content: "Smart Categorization — FinTrackr" },
+      { name: "twitter:title", content: "Smart Categorization — FinSurvive" },
       { name: "twitter:description", content: "Self-learning merchant rules that auto-tag your transactions." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/smart-categorization" }],
@@ -165,7 +167,7 @@ function SmartCategorizationPage() {
                   <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">On-device</Badge>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  FinTrackr remembers your merchants and improves accuracy with every transaction. Rules and memory stay on this device.
+                  FinSurvive remembers your merchants and improves accuracy with every transaction. Rules and memory stay on this device.
                 </p>
               </div>
             </div>
@@ -367,7 +369,7 @@ function SmartCategorizationPage() {
         <SheetContent side="bottom" className="rounded-t-3xl border-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Smart actions</SheetTitle>
-            <SheetDescription>Teach FinTrackr how to categorize faster.</SheetDescription>
+            <SheetDescription>Teach FinSurvive how to categorize faster.</SheetDescription>
           </SheetHeader>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button
@@ -493,7 +495,7 @@ function buildInsights(merchants: MerchantMemory[]): { icon: typeof Sparkles; ti
   const top = merchants[0];
   if (top) out.push({ icon: Store, title: `${top.display || top.key} is your top merchant`, body: `${top.count} transactions · auto-categorized as ${top.category}.` });
   const learned = merchants.filter((m) => m.confirmed).length;
-  if (learned > 0) out.push({ icon: Brain, title: `Learned ${learned} merchant${learned === 1 ? "" : "s"}`, body: `FinTrackr remembers these and applies them automatically.` });
+  if (learned > 0) out.push({ icon: Brain, title: `Learned ${learned} merchant${learned === 1 ? "" : "s"}`, body: `FinSurvive remembers these and applies them automatically.` });
   const subs = merchants.find((m) => m.category.toLowerCase().includes("subscription"));
   if (subs) out.push({ icon: Lightbulb, title: "Subscription spending detected", body: `Review your recurring services to spot waste.` });
   return out;

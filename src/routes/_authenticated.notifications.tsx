@@ -27,20 +27,22 @@ export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
   head: () => ({
     meta: [
-      { title: "Notifications — FinTrackr" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Notifications — FinSurvive" },
       {
         name: "description",
         content:
           "Smart salary, budget and bill reminders based on your real financial activity.",
       },
-      { property: "og:title", content: "Notifications — FinTrackr" },
+      { property: "og:title", content: "Notifications — FinSurvive" },
       {
         property: "og:description",
         content:
           "Smart salary, budget and bill reminders based on your real financial activity.",
       },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/notifications" },
-      { name: "twitter:title", content: "Notifications — FinTrackr" },
+      { name: "twitter:title", content: "Notifications — FinSurvive" },
       {
         name: "twitter:description",
         content:

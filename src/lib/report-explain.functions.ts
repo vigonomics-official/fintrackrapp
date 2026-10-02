@@ -43,7 +43,7 @@ export type ReportExplainResult =
 const MODEL = "google/gemini-2.5-flash";
 const TIMEOUT_MS = 30_000;
 
-const SYSTEM_PROMPT = `You explain a financial report that FinTrackr has ALREADY calculated.
+const SYSTEM_PROMPT = `You explain a financial report that FinSurvive has ALREADY calculated.
 
 ABSOLUTE RULES
 - Never recalculate, adjust or question any number. Only reuse numbers that appear in the payload.

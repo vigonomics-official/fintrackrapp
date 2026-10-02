@@ -6,7 +6,7 @@ import type { PurchaseCheckResult } from "@/lib/purchase-affordability";
 
 export type PurchaseNarration = { why: string; suggestion: string; source: "ai" | "deterministic" };
 
-/** Claims FinTrackr cannot back up from this payload. */
+/** Claims FinSurvive cannot back up from this payload. */
 const FORBIDDEN: { re: RegExp; allowed: (r: PurchaseCheckResult) => boolean }[] = [
   { re: /\b(auto[-\s]?debit|standing instruction|e[-\s]?mandate|nach|subscription|credit score|net banking)\b/i, allowed: () => false },
   { re: /\byour (investment|investments|sip|mutual fund|stocks|portfolio)\b/i, allowed: () => false },

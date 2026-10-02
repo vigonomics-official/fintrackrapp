@@ -1,4 +1,4 @@
-# FinTrackr
+# FinSurvive
 
 AI-powered salary survival and financial planning platform for Indian salaried employees.
 
@@ -13,7 +13,7 @@ Millions of Indian salaried employees struggle with:
 
 ## Solution
 
-FinTrackr acts as a financial survival coach by helping users:
+FinSurvive acts as a financial survival coach by helping users:
 
 - Track expenses
 - Manage loans and EMIs

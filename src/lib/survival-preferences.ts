@@ -1,6 +1,6 @@
 /**
  * Survival Preferences — user-tunable knobs that drive every survival
- * calculation in FinTrackr (Dashboard, Planner, Insights, AI Coach,
+ * calculation in FinSurvive (Dashboard, Planner, Insights, AI Coach,
  * Weekly Report, Financial Freedom, Notifications).
  *
  * Stored in localStorage and broadcast through the same events the rest of
