@@ -42,12 +42,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
   head: () => ({
     meta: [
-      { title: "Dashboard — FinTrackr" },
+      { title: "Dashboard — FinSurvive" },
       { name: "description", content: "Your money at a glance — balances, recent activity, and AI insights." },
-      { property: "og:title", content: "Dashboard — FinTrackr" },
+      { property: "og:title", content: "Dashboard — FinSurvive" },
       { property: "og:description", content: "Your money at a glance — balances, recent activity, and AI insights." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/dashboard" },
-      { name: "twitter:title", content: "Dashboard — FinTrackr" },
+      { name: "twitter:title", content: "Dashboard — FinSurvive" },
       { name: "twitter:description", content: "Your money at a glance — balances, recent activity, and AI insights." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/dashboard" }],

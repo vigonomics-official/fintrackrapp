@@ -15,7 +15,7 @@ export type ReportNarration = {
 
 type Facts = ReportExplainPayload["facts"];
 
-/** Claims FinTrackr cannot back up from this report. */
+/** Claims FinSurvive cannot back up from this report. */
 const FORBIDDEN: { re: RegExp; allowed: (f: Facts) => boolean }[] = [
   { re: /\b(auto[-\s]?debits?|standing instructions?|e[-\s]?mandates?|nach|subscriptions?|credit scores?|net banking|taxe?s?|insurances?)\b/i, allowed: () => false },
   { re: /\byour (investments?|sips?|mutual funds?|stocks?|portfolios?)\b/i, allowed: () => false },

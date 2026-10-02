@@ -1,6 +1,6 @@
 // Gemini-backed CoachProvider.
 //
-// It never replaces FinTrackr's math: the deterministic MockCoachProvider
+// It never replaces FinSurvive's math: the deterministic MockCoachProvider
 // produces the answer (with all numbers, calculation trace, data-used labels
 // and follow-ups), and Gemini only rewrites the narrative fields.
 // Any failure -> the deterministic reply is returned unchanged.
@@ -54,7 +54,7 @@ export const GeminiCoachProvider: CoachProvider = {
         action: result.action.trim(),
       };
 
-      // FinTrackr has no bank/account linking — reject replies that suggest it.
+      // FinSurvive has no bank/account linking — reject replies that suggest it.
       const all = `${candidate.shortAnswer} ${candidate.why} ${candidate.action}`;
       if (/\b(link|connect|sync)(ing)?\b[^.]{0,40}\b(bank|account|card)s?\b/i.test(all)) return draft;
 

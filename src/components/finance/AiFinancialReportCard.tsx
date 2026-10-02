@@ -127,7 +127,7 @@ export function AiFinancialReportCard() {
                 Confidence: {report.confidence}
               </Badge>
               <Badge variant="outline" className="text-[11px]">
-                {narration?.source === "ai" ? "AI explained" : "FinTrackr calculated"}
+                {narration?.source === "ai" ? "AI explained" : "FinSurvive calculated"}
               </Badge>
               {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
             </div>
@@ -170,7 +170,7 @@ export function AiFinancialReportCard() {
               onClick={() => setOpenSections((v) => !v)}
               className="flex w-full items-center justify-between rounded-lg border border-border px-3 py-2 text-sm font-medium"
             >
-              <span>How FinTrackr calculated this</span>
+              <span>How FinSurvive calculated this</span>
               <ChevronDown className={`h-4 w-4 transition ${openSections ? "rotate-180" : ""}`} />
             </button>
 
@@ -196,7 +196,7 @@ export function AiFinancialReportCard() {
             <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Numbers are calculated by FinTrackr; AI only explains them.
+                Numbers are calculated by FinSurvive; AI only explains them.
               </p>
               <Button
                 size="sm"

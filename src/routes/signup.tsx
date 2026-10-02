@@ -15,10 +15,10 @@ import { passwordSchema, PASSWORD_HINT, MIN_PASSWORD_LENGTH } from "@/lib/passwo
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
-      { title: "Create your FinTrackr account" },
-      { name: "description", content: "Sign up for FinTrackr — track UPI spends, set monthly safe limits and beat month-end stress." },
-      { property: "og:title", content: "Create your FinTrackr account" },
-      { property: "og:description", content: "Sign up for FinTrackr — track UPI spends, set monthly safe limits and beat month-end stress." },
+      { title: "Create your FinSurvive account" },
+      { name: "description", content: "Sign up for FinSurvive — track UPI spends, set monthly safe limits and beat month-end stress." },
+      { property: "og:title", content: "Create your FinSurvive account" },
+      { property: "og:description", content: "Sign up for FinSurvive — track UPI spends, set monthly safe limits and beat month-end stress." },
       { property: "og:url", content: "/signup" },
     ],
     links: [{ rel: "canonical", href: "/signup" }],

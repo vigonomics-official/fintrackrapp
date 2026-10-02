@@ -1,7 +1,7 @@
 // Response structure, confidence and contextual-disclaimer rules.
 //
 // A coach reply is always shaped as:
-//   1. Summary (shortAnswer)  2. Why (verified FinTrackr facts only)
+//   1. Summary (shortAnswer)  2. Why (verified FinSurvive facts only)
 //   3. Recommended Action     4. Expected Impact (only when calculable)
 //   5. Confidence             6. Data Used
 //
@@ -14,9 +14,9 @@ import { isInvestmentQuestion, wantsImpact } from "@/lib/coach-intent";
 import type { CoachConfidence, CoachResponse } from "@/lib/coach-prompts";
 
 export const INVESTMENT_NOTE =
-  "General information based on your FinTrackr data, not personalized investment advice.";
+  "General information based on your FinSurvive data, not personalized investment advice.";
 
-/** FinTrackr data categories, used for the "Data Used" section. */
+/** FinSurvive data categories, used for the "Data Used" section. */
 export const DATA_LABELS = {
   salary: "Salary profile",
   spending: "Spending history",
@@ -31,7 +31,7 @@ export const DATA_LABELS = {
 
 export type DataKey = keyof typeof DATA_LABELS;
 
-/** Which of the requested categories FinTrackr actually has data for. */
+/** Which of the requested categories FinSurvive actually has data for. */
 export function availability(
   input: CoachAnalysisInput | null,
   analysis: CoachAnalysisResult | null,

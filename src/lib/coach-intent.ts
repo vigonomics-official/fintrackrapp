@@ -1,6 +1,6 @@
 // Intent detection for the AI Salary Survival Coach.
 //
-// The Coach must answer the QUESTION the user actually asked using FinTrackr
+// The Coach must answer the QUESTION the user actually asked using FinSurvive
 // data — never a generic financial lecture. Every intent below maps to a
 // deterministic reply builder that reads real numbers.
 

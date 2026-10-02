@@ -24,13 +24,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/guides/50-30-20-budget-calculator-india")({
   head: () => ({
     meta: [
-      { title: "50-30-20 Budget Calculator for India — FinTrackr" },
+      { title: "50-30-20 Budget Calculator for India — FinSurvive" },
       {
         name: "description",
         content:
           "Free 50-30-20 budget calculator tailored for Indian salary earners. Split your take-home salary into needs, wants and savings with INR formatting, salary-cycle tips and SIP/EMI guidance.",
       },
-      { property: "og:title", content: "50-30-20 Budget Calculator for India — FinTrackr" },
+      { property: "og:title", content: "50-30-20 Budget Calculator for India — FinSurvive" },
       {
         property: "og:description",
         content:
@@ -109,7 +109,7 @@ function BudgetCalculatorGuide() {
   };
 
   const copySummary = () => {
-    const text = `My 50-30-20 budget for ${formatInr(salary)}/month\nNeeds (50%): ${formatInr(needs)}\nWants (30%): ${formatInr(wants)}\nSavings (20%): ${formatInr(savings)}\nCalculated with FinTrackr`;
+    const text = `My 50-30-20 budget for ${formatInr(salary)}/month\nNeeds (50%): ${formatInr(needs)}\nWants (30%): ${formatInr(wants)}\nSavings (20%): ${formatInr(savings)}\nCalculated with FinSurvive`;
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -124,8 +124,8 @@ function BudgetCalculatorGuide() {
     description:
       "Interactive 50-30-20 budget calculator for India. Split monthly take-home salary into needs, wants and savings with INR formatting and Indian salary-cycle tips.",
     datePublished: publishedISO,
-    author: { "@type": "Organization", name: "FinTrackr" },
-    publisher: { "@type": "Organization", name: "FinTrackr" },
+    author: { "@type": "Organization", name: "FinSurvive" },
+    publisher: { "@type": "Organization", name: "FinSurvive" },
     mainEntityOfPage: "https://fintrackrapp.lovable.app/guides/50-30-20-budget-calculator-india",
   };
 
@@ -140,7 +140,7 @@ function BudgetCalculatorGuide() {
       <header className="border-b border-border bg-card/50">
         <div className="mx-auto max-w-3xl px-5 py-10">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">
-            FinTrackr Tools · Salary Survival
+            FinSurvive Tools · Salary Survival
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl">
             50-30-20 Budget Calculator for India
@@ -340,7 +340,7 @@ function BudgetCalculatorGuide() {
               </Button>
               <Button asChild size="sm">
                 <Link to="/signup">
-                  Track this in FinTrackr <ArrowRight className="ml-1 h-4 w-4" />
+                  Track this in FinSurvive <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -454,12 +454,12 @@ function BudgetCalculatorGuide() {
               <div>
                 <h3 className="font-semibold text-foreground">Want this budget to stick?</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  FinTrackr tracks your UPI spends, salary cycle and safe daily spend automatically.
+                  FinSurvive tracks your UPI spends, salary cycle and safe daily spend automatically.
                 </p>
               </div>
               <Button asChild>
                 <Link to="/signup">
-                  Try FinTrackr free <ArrowRight className="ml-2 h-4 w-4" />
+                  Try FinSurvive free <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -469,7 +469,7 @@ function BudgetCalculatorGuide() {
 
       <footer className="border-t border-border">
         <div className="mx-auto max-w-3xl px-5 py-6 text-xs text-muted-foreground">
-          <PieChart className="mr-1 inline h-3.5 w-3.5" /> FinTrackr · Built for Indian salary life.
+          <PieChart className="mr-1 inline h-3.5 w-3.5" /> FinSurvive · Built for Indian salary life.
         </div>
       </footer>
     </article>

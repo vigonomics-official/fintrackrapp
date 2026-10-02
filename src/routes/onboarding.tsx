@@ -48,14 +48,14 @@ export const Route = createFileRoute("/onboarding")({
   },
   head: () => ({
     meta: [
-      { title: "Set up your salary survival system — FinTrackr" },
-      { name: "description", content: "Personalize FinTrackr in 5 quick steps." },
-      { property: "og:title", content: "Set up your salary survival system — FinTrackr" },
-      { property: "og:description", content: "Personalize FinTrackr in 5 quick steps." },
+      { title: "Set up your salary survival system — FinSurvive" },
+      { name: "description", content: "Personalize FinSurvive in 5 quick steps." },
+      { property: "og:title", content: "Set up your salary survival system — FinSurvive" },
+      { property: "og:description", content: "Personalize FinSurvive in 5 quick steps." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Set up your salary survival system — FinTrackr" },
-      { name: "twitter:description", content: "Personalize FinTrackr in 5 quick steps." },
+      { name: "twitter:title", content: "Set up your salary survival system — FinSurvive" },
+      { name: "twitter:description", content: "Personalize FinSurvive in 5 quick steps." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -367,7 +367,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
         <div className="flex flex-col items-center text-center">
           <div className="flex items-center gap-2 text-2xl font-bold tracking-tight">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-card/15 text-white">₣</div>
-            FinTrackr
+            FinSurvive
           </div>
           <p className="mt-1 text-xs text-white/70">Your Salary Survival System</p>
         </div>
@@ -382,9 +382,9 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
           >
             👋
           </motion.div>
-          <h1 className="mt-6 text-[28px] font-bold leading-tight">Welcome to FinTrackr</h1>
+          <h1 className="mt-6 text-[28px] font-bold leading-tight">Welcome to FinSurvive</h1>
           <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-white/80">
-            Most salary earners struggle to make their salary last until payday. FinTrackr helps you survive, save and grow every month.
+            Most salary earners struggle to make their salary last until payday. FinSurvive helps you survive, save and grow every month.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
@@ -794,8 +794,8 @@ function computeSurvivalScore(s: {
 function scoreExplanation(score: number, situation: string): string {
   if (score >= 90) return "Excellent start. You have salary clarity, a goal and a payday plan — the core building blocks of salary survival.";
   if (score >= 75) return "Strong foundation. Knowing your salary, payday and expenses puts you ahead of most month-end strugglers.";
-  if (situation === "survive") return "Your score reflects honest awareness. Now FinTrackr can help you stretch your salary until payday.";
-  if (situation === "invest") return "You're already thinking ahead. FinTrackr will help you turn that intent into disciplined monthly growth.";
+  if (situation === "survive") return "Your score reflects honest awareness. Now FinSurvive can help you stretch your salary until payday.";
+  if (situation === "invest") return "You're already thinking ahead. FinSurvive will help you turn that intent into disciplined monthly growth.";
   return "You're building awareness — the first step to surviving the month and growing your money.";
 }
 

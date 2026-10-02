@@ -10,10 +10,10 @@ import { AuthShell } from "./login";
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
-      { title: "Reset your password — FinTrackr" },
-      { name: "description", content: "Forgot your FinTrackr password? Enter your email and we'll send a secure reset link." },
-      { property: "og:title", content: "Reset your password — FinTrackr" },
-      { property: "og:description", content: "Forgot your FinTrackr password? Enter your email and we'll send a secure reset link." },
+      { title: "Reset your password — FinSurvive" },
+      { name: "description", content: "Forgot your FinSurvive password? Enter your email and we'll send a secure reset link." },
+      { property: "og:title", content: "Reset your password — FinSurvive" },
+      { property: "og:description", content: "Forgot your FinSurvive password? Enter your email and we'll send a secure reset link." },
       { property: "og:url", content: "/forgot-password" },
     ],
     links: [{ rel: "canonical", href: "/forgot-password" }],

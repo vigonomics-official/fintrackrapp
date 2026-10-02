@@ -11,10 +11,10 @@ import { validatePassword, PASSWORD_HINT, MIN_PASSWORD_LENGTH } from "@/lib/pass
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Set a new password — FinTrackr" },
-      { name: "description", content: "Choose a new password for your FinTrackr account and get back to tracking your money." },
-      { property: "og:title", content: "Set a new password — FinTrackr" },
-      { property: "og:description", content: "Choose a new password for your FinTrackr account and get back to tracking your money." },
+      { title: "Set a new password — FinSurvive" },
+      { name: "description", content: "Choose a new password for your FinSurvive account and get back to tracking your money." },
+      { property: "og:title", content: "Set a new password — FinSurvive" },
+      { property: "og:description", content: "Choose a new password for your FinSurvive account and get back to tracking your money." },
       { property: "og:url", content: "/reset-password" },
     ],
     links: [{ rel: "canonical", href: "/reset-password" }],

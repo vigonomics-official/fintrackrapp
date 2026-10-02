@@ -2,7 +2,7 @@
 //
 // HARD RULE (FIX 2): never invent a category. A category is returned ONLY when
 // a high-confidence keyword matches AND the user actually has a matching
-// expense category in FinTrackr. Anything ambiguous resolves to null.
+// expense category in FinSurvive. Anything ambiguous resolves to null.
 
 export type ResolvedPurchaseCategory = {
   categoryId: string;
@@ -61,7 +61,7 @@ function hasKeyword(text: string, keyword: string): boolean {
 
 /**
  * Returns the user's own category for an item name, or null when the item is
- * ambiguous / no matching FinTrackr category exists.
+ * ambiguous / no matching FinSurvive category exists.
  */
 export function detectPurchaseCategory(
   itemName: string,

@@ -22,13 +22,13 @@ export const Route = createFileRoute("/_authenticated/insights/report")({
   component: ReportPage,
   head: () => ({
     meta: [
-      { title: "Monthly Report Card — FinTrackr" },
+      { title: "Monthly Report Card — FinSurvive" },
       { name: "description", content: "Your monthly money report: spending, savings and survival score." },
-      { property: "og:title", content: "Monthly Report Card — FinTrackr" },
+      { property: "og:title", content: "Monthly Report Card — FinSurvive" },
       { property: "og:description", content: "Your monthly money report: spending, savings and survival score." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Monthly Report Card — FinTrackr" },
+      { name: "twitter:title", content: "Monthly Report Card — FinSurvive" },
       { name: "twitter:description", content: "Your monthly money report: spending, savings and survival score." },
     ],
   }),
@@ -163,7 +163,7 @@ function ReportPage() {
   const [saving, setSaving] = useState(false);
   const [savingPdf, setSavingPdf] = useState(false);
 
-  const shareText = `I survived ${monthYearShort} with a Survival Score of ${survival.score}/100 (Grade ${insights.health.grade}) on FinTrackr! 💪 #FinTrackr #SalarySurvival`;
+  const shareText = `I survived ${monthYearShort} with a Survival Score of ${survival.score}/100 (Grade ${insights.health.grade}) on FinSurvive! 💪 #FinSurvive #SalarySurvival`;
 
   const onShare = async () => {
     try {
@@ -180,7 +180,7 @@ function ReportPage() {
       const dataUrl = await mod.toPng(shareRef.current, { pixelRatio: 2, backgroundColor: "#0d3d2a" });
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `FinTrackr-${monthName}-${now.getFullYear()}.png`;
+      a.download = `FinSurvive-${monthName}-${now.getFullYear()}.png`;
       a.click();
     } catch (e) {
       console.error(e);
@@ -197,7 +197,7 @@ function ReportPage() {
       const dataUrl = await mod.toJpeg(shareRef.current, { pixelRatio: 2, backgroundColor: "#0d3d2a", quality: 0.92 });
       const win = window.open("", "_blank");
       if (win) {
-        win.document.write(`<html><head><title>FinTrackr ${monthYearShort}</title>
+        win.document.write(`<html><head><title>FinSurvive ${monthYearShort}</title>
           <style>@page{margin:16mm}body{margin:0;display:flex;justify-content:center;padding:20px;background:#fff}img{max-width:100%;height:auto}</style>
           </head><body onload="window.print();"><img src="${dataUrl}" /></body></html>`);
         win.document.close();
@@ -416,7 +416,7 @@ function ReportPage() {
             style={{ background: "linear-gradient(180deg, #1a6b4a 0%, #0d3d2a 100%)", borderRadius: 16 }}
           >
             <div className="flex items-center justify-between">
-              <span className="font-display text-lg font-bold">FinTrackr</span>
+              <span className="font-display text-lg font-bold">FinSurvive</span>
               <span className="text-xl">🏆</span>
             </div>
             <p className="mt-0.5 text-xs text-white/80">{monthYearShort} · Report Card</p>
@@ -437,7 +437,7 @@ function ReportPage() {
             </ul>
             <div className="my-3 h-px bg-white/20" />
             <p className="text-center text-[11px] text-white/70">
-              Made with FinTrackr · Track your salary survival
+              Made with FinSurvive · Track your salary survival
             </p>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 print:hidden">

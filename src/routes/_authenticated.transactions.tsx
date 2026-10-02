@@ -33,12 +33,12 @@ export const Route = createFileRoute("/_authenticated/transactions")({
   component: TransactionsPage,
   head: () => ({
     meta: [
-      { title: "Transactions — FinTrackr" },
+      { title: "Transactions — FinSurvive" },
       { name: "description", content: "Search, filter, and categorize every expense and income entry." },
-      { property: "og:title", content: "Transactions — FinTrackr" },
+      { property: "og:title", content: "Transactions — FinSurvive" },
       { property: "og:description", content: "Search, filter, and categorize every expense and income entry." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/transactions" },
-      { name: "twitter:title", content: "Transactions — FinTrackr" },
+      { name: "twitter:title", content: "Transactions — FinSurvive" },
       { name: "twitter:description", content: "Search, filter, and categorize every expense and income entry." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/transactions" }],

@@ -1,10 +1,10 @@
 // Single source of truth for app identity, support contacts and changelog.
 import { APP_VERSION } from "./local-storage-stats";
 
-export const APP_NAME = "FinTrackr";
+export const APP_NAME = "FinSurvive";
 export const APP_TAGLINE = "Salary survival, made simple.";
 export const APP_DESCRIPTION =
-  "FinTrackr is a privacy-first salary survival tracker for India. It reads your spending, predicts how long your salary lasts, and coaches you with AI so you never run out before payday.";
+  "FinSurvive is a privacy-first salary survival tracker for India. It reads your spending, predicts how long your salary lasts, and coaches you with AI so you never run out before payday.";
 
 export { APP_VERSION };
 
@@ -14,7 +14,7 @@ export const BUILD_NUMBER = APP_VERSION.split(".")
   .join("");
 
 export const DEVELOPER = {
-  name: "FinTrackr Labs",
+  name: "FinSurvive Labs",
   location: "India",
   supportEmail: "support@fintrackrapp.com",
   feedbackEmail: "feedback@fintrackrapp.com",

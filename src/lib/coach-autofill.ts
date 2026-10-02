@@ -1,4 +1,4 @@
-// Derives AI Coach input values from the user's FinTrackr history.
+// Derives AI Coach input values from the user's FinSurvive history.
 // Uses ONLY the current calendar month, grouped by category totals.
 // Kept UI-agnostic and Gemini-ready — swap the source of `transactions` later
 // without changing consumers.
@@ -254,7 +254,7 @@ export function buildCoachAutofill(args: {
     if (profile.customGoalNote) values.customGoalNote = profile.customGoalNote;
   }
 
-  // ── Current Account Balance: last remembered value → FinTrackr net balance.
+  // ── Current Account Balance: last remembered value → FinSurvive net balance.
   const remembered = getRememberedBalance();
   if (remembered != null && remembered > 0) {
     values.currentAccountBalance = remembered;

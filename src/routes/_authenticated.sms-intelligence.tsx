@@ -26,12 +26,12 @@ export const Route = createFileRoute("/_authenticated/sms-intelligence")({
   component: SmsIntelligencePage,
   head: () => ({
     meta: [
-      { title: "SMS Intelligence — FinTrackr" },
+      { title: "SMS Intelligence — FinSurvive" },
       { name: "description", content: "Auto-detect UPI and bank SMS transactions into your ledger." },
-      { property: "og:title", content: "SMS Intelligence — FinTrackr" },
+      { property: "og:title", content: "SMS Intelligence — FinSurvive" },
       { property: "og:description", content: "Auto-detect UPI and bank SMS transactions into your ledger." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/sms-intelligence" },
-      { name: "twitter:title", content: "SMS Intelligence — FinTrackr" },
+      { name: "twitter:title", content: "SMS Intelligence — FinSurvive" },
       { name: "twitter:description", content: "Auto-detect UPI and bank SMS transactions into your ledger." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/sms-intelligence" }],
@@ -110,7 +110,7 @@ function useSmsListener(enabled: boolean, autoCat: boolean, onMessage: (raw: str
     if (!bridge) {
       setPermission("unsupported");
       smsDebug("permission", "warn", "No native SMS bridge available");
-      toast.info("SMS auto-detect needs the FinTrackr Android app.");
+      toast.info("SMS auto-detect needs the FinSurvive Android app.");
       return;
     }
     try {
@@ -485,7 +485,7 @@ function StatusBanner({ platform }: { platform: Platform; listening: boolean; la
         <Info className="h-4.5 w-4.5" />
       </span>
       <div className="text-sm text-blue-900">
-        <p className="font-semibold">📱 For automatic SMS detection, download the FinTrackr Android app.</p>
+        <p className="font-semibold">📱 For automatic SMS detection, download the FinSurvive Android app.</p>
         <p className="mt-1 text-blue-800/90">On web, you can review sample detected transactions below.</p>
       </div>
     </div>

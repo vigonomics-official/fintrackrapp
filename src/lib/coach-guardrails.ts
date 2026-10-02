@@ -1,14 +1,14 @@
 // Post-generation guardrails for the Gemini coach reply.
 //
-// FinTrackr's deterministic engine owns every financial fact. These checks run
+// FinSurvive's deterministic engine owns every financial fact. These checks run
 // on the model's narrative BEFORE it reaches the UI. Any violation means the
 // deterministic draft is used instead — the user never sees an invented fact.
 
 import type { CoachSnapshot } from "@/lib/coach-prompt-builder";
 
-/** Possessive / assertive claims about things FinTrackr may have no data on. */
+/** Possessive / assertive claims about things FinSurvive may have no data on. */
 const CLAIM_RULES: { re: RegExp; allowed: (s: CoachSnapshot) => boolean }[] = [
-  // FinTrackr never tracks these at all.
+  // FinSurvive never tracks these at all.
   { re: /\b(auto[-\s]?debit|standing instruction|e[-\s]?mandate|nach)\b/i, allowed: () => false },
   { re: /\byour (subscription|subscriptions)\b/i, allowed: () => false },
   { re: /\byou (have|hold) (a|an|your) [^.]{0,30}\b(subscription|credit card|bank account)\b/i, allowed: () => false },
@@ -61,7 +61,7 @@ export function checkCoachReply(
   }
   if (snapshot.savingsRate != null) {
     // Percentages already used by the deterministic draft (EMI share, "+5%
-    // bump", …) are FinTrackr's own numbers — only a rate the model attaches
+    // bump", …) are FinSurvive's own numbers — only a rate the model attaches
     // to the savings rate itself, and that differs from ours, is a violation.
     const draftText = [draft.shortAnswer, draft.why, draft.action].join("\n");
     const draftPcts = new Set(
@@ -78,7 +78,7 @@ export function checkCoachReply(
   }
 
 
-  // Numbers must come from FinTrackr, never from the model.
+  // Numbers must come from FinSurvive, never from the model.
   const allowed = allowedNumbers(snapshot, [draft.shortAnswer, draft.why, draft.action].join("\n"));
   for (const m of text.matchAll(/\d[\d,]*(?:\.\d+)?/g)) {
     const n = Math.round(Number(m[0].replace(/,/g, "")));

@@ -37,7 +37,7 @@ export type PurchaseExplainResult =
 const MODEL = "google/gemini-2.5-flash";
 const TIMEOUT_MS = 30_000;
 
-const SYSTEM_PROMPT = `You explain a purchase decision that has ALREADY been made by FinTrackr's deterministic financial engine.
+const SYSTEM_PROMPT = `You explain a purchase decision that has ALREADY been made by FinSurvive's deterministic financial engine.
 
 ABSOLUTE RULES
 - Never change, recompute, or question the decision (SAFE / BE CAREFUL / NOT SAFE RIGHT NOW).

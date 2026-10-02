@@ -26,12 +26,12 @@ export const Route = createFileRoute("/_authenticated/categories")({
   component: CategoriesPage,
   head: () => ({
     meta: [
-      { title: "Categories — FinTrackr" },
+      { title: "Categories — FinSurvive" },
       { name: "description", content: "Organize expenses with custom categories, icons, and colors." },
-      { property: "og:title", content: "Categories — FinTrackr" },
+      { property: "og:title", content: "Categories — FinSurvive" },
       { property: "og:description", content: "Organize expenses with custom categories, icons, and colors." },
       { property: "og:url", content: "https://fintrackrapp.lovable.app/categories" },
-      { name: "twitter:title", content: "Categories — FinTrackr" },
+      { name: "twitter:title", content: "Categories — FinSurvive" },
       { name: "twitter:description", content: "Organize expenses with custom categories, icons, and colors." },
     ],
     links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/categories" }],

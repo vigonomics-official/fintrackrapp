@@ -478,7 +478,7 @@ function buildActions(input: CoachAnalysisInput, a: CoachAnalysisResult): TopAct
     {
       id: "weekly-review",
       title: "Do a 10-minute weekly money review",
-      detail: "Every Sunday, review last week's spending in FinTrackr.",
+      detail: "Every Sunday, review last week's spending in FinSurvive.",
       reason: "Small habits compound faster than big overhauls.",
       whyMatters: ["Weekly reviews catch leaks before they grow."],
       dataUsed: ["Previous Transactions", "Monthly Spending"],

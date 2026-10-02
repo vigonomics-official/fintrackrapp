@@ -1,7 +1,7 @@
 // "Can I Buy This?" — deterministic affordability engine.
 //
 // HARD RULE: this module makes the decision. Gemini never does. Every number
-// shown to the user originates here, from FinTrackr's own survival math.
+// shown to the user originates here, from FinSurvive's own survival math.
 // Thresholds live in PURCHASE_THRESHOLDS so they can be tuned in one place.
 
 import type { Survival } from "@/lib/survival";
@@ -31,7 +31,7 @@ export type PurchaseReasonCode =
 
 /**
  * Canonical, transparent reason codes exposed to the UI and to Gemini.
- * Only emitted when actual FinTrackr data supports them.
+ * Only emitted when actual FinSurvive data supports them.
  */
 export type PurchaseSignalCode =
   | "CATEGORY_BUDGET_LOW"
@@ -116,7 +116,7 @@ export type PurchaseCheckInput = {
   /** Survival snapshot recomputed with the purchase as extra spend. */
   after: Survival;
   currency: string;
-  /** Remembered savings, null when FinTrackr has none on record. */
+  /** Remembered savings, null when FinSurvive has none on record. */
   savings: number | null;
   /** Emergency fund target from the user's survival preferences (0 when unknown). */
   emergencyTarget: number;
@@ -127,7 +127,7 @@ export type PurchaseCheckInput = {
    * null = category unavailable (never invented).
    */
   category?: PurchaseCategoryBudget | null;
-  /** Active risk labels detected elsewhere in FinTrackr (may be empty). */
+  /** Active risk labels detected elsewhere in FinSurvive (may be empty). */
   risks?: string[];
 };
 
@@ -233,7 +233,7 @@ export function checkPurchaseAffordability(input: PurchaseCheckInput): PurchaseC
       headline: DECISION_LABEL.INSUFFICIENT_DATA,
       why: NOT_ENOUGH_PURCHASE_DATA,
       suggestion:
-        "Add your salary in Salary Settings (and a few transactions) so FinTrackr can check purchases for you.",
+        "Add your salary in Salary Settings (and a few transactions) so FinSurvive can check purchases for you.",
       values: {},
       dataUsed: [],
       missing,

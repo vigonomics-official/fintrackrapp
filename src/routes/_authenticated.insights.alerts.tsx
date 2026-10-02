@@ -52,13 +52,13 @@ export const Route = createFileRoute("/_authenticated/insights/alerts")({
   component: AlertsPage,
   head: () => ({
     meta: [
-      { title: "Danger Alerts — FinTrackr" },
+      { title: "Danger Alerts — FinSurvive" },
       { name: "description", content: "Smart, prioritized financial risk alerts with AI reasoning and one-tap actions." },
-      { property: "og:title", content: "Danger Alerts — FinTrackr" },
+      { property: "og:title", content: "Danger Alerts — FinSurvive" },
       { property: "og:description", content: "Smart, prioritized financial risk alerts with AI reasoning and one-tap actions." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Danger Alerts — FinTrackr" },
+      { name: "twitter:title", content: "Danger Alerts — FinSurvive" },
       { name: "twitter:description", content: "Smart, prioritized financial risk alerts with AI reasoning and one-tap actions." },
     ],
   }),
