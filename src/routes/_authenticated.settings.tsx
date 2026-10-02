@@ -20,6 +20,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Settings — FinSurvive" },
       { name: "description", content: "Profile, salary cycle, currency, and FinSurvive preferences." },
       { property: "og:title", content: "Settings — FinSurvive" },

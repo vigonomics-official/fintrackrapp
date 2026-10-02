@@ -30,6 +30,8 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "FinSurvive — Know exactly where your ₹ goes" },
       {
         name: "description",
@@ -42,9 +44,9 @@ export const Route = createFileRoute("/")({
         content:
           "FinSurvive is an intelligent money control center built for Indian salary life. Track UPI spends, set budgets, and beat month-end stress.",
       },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/" },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/" }],
     scripts: [
       {
         type: "application/ld+json",

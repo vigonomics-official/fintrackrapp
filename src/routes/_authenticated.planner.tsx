@@ -45,6 +45,8 @@ export const Route = createFileRoute("/_authenticated/planner")({
   component: PlannerPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Planner — FinSurvive" },
       { name: "description", content: "Salary-aware month-end forecast and safe daily spend planner." },
       { property: "og:title", content: "Planner — FinSurvive" },

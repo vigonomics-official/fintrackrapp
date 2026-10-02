@@ -21,7 +21,7 @@ export const Route = createFileRoute("/guides/upi-micro-spending")({
       { name: "twitter:card", content: "summary_large_image" },
       { name: "keywords", content: "UPI spending tracker, UPI micro-transactions, salary savings India, track small UPI spends" },
     ],
-    links: [{ rel: "canonical", href: "/guides/upi-micro-spending" }],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/guides/upi-micro-spending" }],
   }),
   component: UpiMicroSpendingGuide,
 });

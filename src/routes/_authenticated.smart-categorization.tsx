@@ -27,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/smart-categorization")({
   component: SmartCategorizationPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Smart Categorization — FinSurvive" },
       { name: "description", content: "Self-learning merchant rules that auto-tag your transactions." },
       { property: "og:title", content: "Smart Categorization — FinSurvive" },

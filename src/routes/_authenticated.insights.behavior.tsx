@@ -20,6 +20,8 @@ export const Route = createFileRoute("/_authenticated/insights/behavior")({
   component: BehaviorPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Spending Behavior — FinSurvive" },
       { name: "description", content: "AI-powered spending personality, patterns, habits and predictions from your real transactions." },
       { property: "og:title", content: "Spending Behavior — FinSurvive" },

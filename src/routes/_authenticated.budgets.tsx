@@ -27,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/budgets")({
   component: BudgetsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Budgets — FinSurvive" },
       { name: "description", content: "Set monthly category budgets and track spending against safe limits." },
       { property: "og:title", content: "Budgets — FinSurvive" },

@@ -30,6 +30,8 @@ export const Route = createFileRoute("/_authenticated/split-settle")({
   component: SplitSettle,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Split & Settle — FinSurvive" },
       { name: "description", content: "Split bills with friends and track who owes what." },
       { property: "og:title", content: "Split & Settle — FinSurvive" },

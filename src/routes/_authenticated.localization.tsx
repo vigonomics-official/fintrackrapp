@@ -23,6 +23,8 @@ export const Route = createFileRoute("/_authenticated/localization")({
   component: LocalizationPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Currency & Localization — FinSurvive" },
       { name: "description", content: "Set your currency, date and number format, language and time zone in FinSurvive." },
       { property: "og:title", content: "Currency & Localization — FinSurvive" },

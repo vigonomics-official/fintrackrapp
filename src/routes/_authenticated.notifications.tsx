@@ -27,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Notifications — FinSurvive" },
       {
         name: "description",

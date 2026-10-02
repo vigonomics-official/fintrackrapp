@@ -13,6 +13,8 @@ export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Reports & Insights — FinSurvive" },
       { name: "description", content: "Monthly trends, category breakdowns, and savings rate." },
       { property: "og:title", content: "Reports & Insights — FinSurvive" },

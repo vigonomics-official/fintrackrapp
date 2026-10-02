@@ -26,6 +26,8 @@ export const Route = createFileRoute("/_authenticated/categories")({
   component: CategoriesPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Categories — FinSurvive" },
       { name: "description", content: "Organize expenses with custom categories, icons, and colors." },
       { property: "og:title", content: "Categories — FinSurvive" },

@@ -33,6 +33,8 @@ export const Route = createFileRoute("/_authenticated/transactions")({
   component: TransactionsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Transactions — FinSurvive" },
       { name: "description", content: "Search, filter, and categorize every expense and income entry." },
       { property: "og:title", content: "Transactions — FinSurvive" },

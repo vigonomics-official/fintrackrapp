@@ -44,7 +44,7 @@ export const Route = createFileRoute("/guides/50-30-20-budget-calculator-india")
           "50 30 20 budget calculator India, salary budget India, monthly budget planner India, 50 30 20 rule Indian salary, SIP budget calculator",
       },
     ],
-    links: [{ rel: "canonical", href: "/guides/50-30-20-budget-calculator-india" }],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/guides/50-30-20-budget-calculator-india" }],
   }),
   component: BudgetCalculatorGuide,
 });

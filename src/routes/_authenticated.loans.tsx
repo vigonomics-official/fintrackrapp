@@ -43,6 +43,8 @@ export const Route = createFileRoute("/_authenticated/loans")({
   component: LoansPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Loans & EMIs — FinSurvive" },
       { name: "description", content: "Manage loans, EMIs, and prepayment plans without month-end stress." },
       { property: "og:title", content: "Loans & EMIs — FinSurvive" },

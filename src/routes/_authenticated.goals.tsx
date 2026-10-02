@@ -24,6 +24,8 @@ export const Route = createFileRoute("/_authenticated/goals")({
   component: Goals,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Savings Goals — FinSurvive" },
       { name: "description", content: "Plan and track savings goals with progress and target dates." },
       { property: "og:title", content: "Savings Goals — FinSurvive" },

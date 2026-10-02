@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/insights/")({
   component: InsightsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Insights — FinSurvive" },
       { name: "description", content: "Smart spending insights, danger alerts, and weekly survival reports." },
       { property: "og:title", content: "Insights — FinSurvive" },

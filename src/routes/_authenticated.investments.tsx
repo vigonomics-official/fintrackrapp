@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/investments")({
   component: Investments,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Investments — FinSurvive" },
       { name: "description", content: "Track mutual funds, stocks, and SIPs in one place." },
       { property: "og:title", content: "Investments — FinSurvive" },

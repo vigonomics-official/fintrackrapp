@@ -42,6 +42,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Dashboard — FinSurvive" },
       { name: "description", content: "Your money at a glance — balances, recent activity, and AI insights." },
       { property: "og:title", content: "Dashboard — FinSurvive" },

@@ -35,6 +35,8 @@ export const Route = createFileRoute("/_authenticated/import")({
   component: ImportPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Import Transactions — FinSurvive" },
       { name: "description", content: "Import GPay, bank, and CSV statements with auto-categorization." },
       { property: "og:title", content: "Import Transactions — FinSurvive" },

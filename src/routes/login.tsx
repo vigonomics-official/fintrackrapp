@@ -19,13 +19,15 @@ export const Route = createFileRoute("/login")({
   },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Sign in — FinSurvive" },
       { name: "description", content: "Sign in to FinSurvive to track expenses, budgets and salary survival in one place." },
       { property: "og:title", content: "Sign in — FinSurvive" },
       { property: "og:description", content: "Sign in to FinSurvive to track expenses, budgets and salary survival in one place." },
-      { property: "og:url", content: "/login" },
+      { property: "og:url", content: "https://fintrackrapp.lovable.app/login" },
     ],
-    links: [{ rel: "canonical", href: "/login" }],
+    links: [{ rel: "canonical", href: "https://fintrackrapp.lovable.app/login" }],
   }),
   component: LoginPage,
 });

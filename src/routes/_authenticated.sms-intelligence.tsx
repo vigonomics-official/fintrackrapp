@@ -26,6 +26,8 @@ export const Route = createFileRoute("/_authenticated/sms-intelligence")({
   component: SmsIntelligencePage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "SMS Intelligence — FinSurvive" },
       { name: "description", content: "Auto-detect UPI and bank SMS transactions into your ledger." },
       { property: "og:title", content: "SMS Intelligence — FinSurvive" },
