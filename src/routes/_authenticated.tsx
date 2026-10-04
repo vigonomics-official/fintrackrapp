@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { TransactionDialog } from "@/components/finance/TransactionDialog";
 import { CanIBuyThisDialog } from "@/components/finance/CanIBuyThisDialog";
 import { CreateGoalDialog } from "@/components/finance/CreateGoalDialog";
+import { AppBrand, AppMark } from "@/components/finance/AppBrand";
 import { TXN_EVENT } from "@/lib/sms-background";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -91,7 +92,11 @@ function AuthenticatedLayout() {
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="flex flex-col items-center gap-4" role="status" aria-label="Loading FinSurvive">
+          <AppMark size="lg" />
+          <span className="font-display text-xl font-bold">FinSurvive</span>
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
       </div>
     );
   }
@@ -121,8 +126,7 @@ function AuthenticatedLayout() {
       {/* Sidebar (desktop) */}
       <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
         <Link to="/dashboard" className="flex items-center gap-2 px-6 py-6 font-display text-xl font-bold">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-gold-foreground">₣</div>
-          FinSurvive
+          <AppBrand size="sm" className="text-sidebar-foreground" />
         </Link>
         <nav className="flex-1 space-y-1 px-3">
           {NAV.map((item) => {

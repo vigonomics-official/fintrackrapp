@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FinSurvive">
+  <defs>
+    <linearGradient id="fin-survive" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#145B50"/>
+      <stop offset="1" stop-color="#20A985"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="17" fill="url(#fin-survive)"/>
+  <path fill="#fff" d="M19 15h29v6H37.7c2.5 1.7 4.3 4.2 5 7H48v6h-5.3C41.1 41 35.5 45 27.6 45h-.5l15.2 14H32.2L16 43.5V39h11.6c4.1 0 7-1.7 8.3-5H19v-6h16.9c-1.5-3.3-4.5-5-8.8-5H19v-8Z"/>
+</svg>

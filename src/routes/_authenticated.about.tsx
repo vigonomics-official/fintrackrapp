@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Wallet, Mail, Sparkles, Building2 } from "lucide-react";
+import { Mail, Sparkles, Building2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/finance/PageHeader";
+import { AppMark } from "@/components/finance/AppBrand";
 import {
   APP_NAME, APP_TAGLINE, APP_DESCRIPTION, APP_VERSION, BUILD_NUMBER,
   DEVELOPER, CHANGELOG, SITE_URL,
@@ -36,9 +37,7 @@ function AboutPage() {
       <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5 sm:space-y-6 sm:px-6 sm:py-6 md:px-10">
         <Card className="shadow-soft">
           <CardContent className="flex items-center gap-4 p-4 sm:p-6">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-primary text-primary-foreground">
-              <Wallet className="h-7 w-7" />
-            </div>
+            <AppMark size="lg" />
             <div className="min-w-0">
               <h2 className="font-display text-lg font-bold">{APP_NAME}</h2>
               <p className="text-xs text-muted-foreground">{APP_TAGLINE}</p>

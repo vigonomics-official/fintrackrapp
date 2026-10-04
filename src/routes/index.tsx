@@ -20,6 +20,7 @@ import {
   Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppBrand } from "@/components/finance/AppBrand";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
@@ -64,7 +65,7 @@ export const Route = createFileRoute("/")({
           "@type": "Organization",
           name: "FinSurvive",
           url: "https://fintrackrapp.lovable.app/",
-          logo: "https://fintrackrapp.lovable.app/favicon.ico",
+          logo: "https://fintrackrapp.lovable.app/favicon.svg",
         }),
       },
     ],
@@ -81,17 +82,7 @@ const BRAND = {
 
 function Logo() {
   return (
-    <div className="flex items-center gap-2">
-      <div
-        className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-bold shadow-sm"
-        style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
-      >
-        ₹
-      </div>
-      <span className="font-display text-lg font-bold tracking-tight" >
-        FinSurvive
-      </span>
-    </div>
+    <AppBrand size="sm" />
   );
 }
 
