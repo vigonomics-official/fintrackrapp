@@ -164,6 +164,9 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
         className="flex items-center justify-center px-6 py-12"
       >
         <div className="w-full max-w-sm">
+          <Link to="/" className="mb-6 inline-flex lg:hidden">
+            <AppBrand size="sm" />
+          </Link>
           <h1 className="font-display text-3xl font-bold">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
           <div className="mt-8">{children}</div>
