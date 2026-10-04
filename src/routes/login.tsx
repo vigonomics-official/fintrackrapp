@@ -10,6 +10,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AppBrand } from "@/components/finance/AppBrand";
 
 export const Route = createFileRoute("/login")({
   beforeLoad: async () => {
@@ -101,10 +102,7 @@ function LoginPage() {
         <div className="flex flex-1 flex-col justify-center">
           <div className="mb-4 flex flex-col items-center text-center">
             <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
-                ₹
-              </div>
-              FinSurvive
+              <AppBrand size="sm" />
             </Link>
             <p className="mt-1.5 text-xs font-medium text-muted-foreground">
               Your Salary Survival System
@@ -154,8 +152,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
       <div className="relative hidden overflow-hidden bg-gradient-hero text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_30%_30%,white,transparent_40%),radial-gradient(circle_at_70%_70%,oklch(0.78_0.12_85),transparent_40%)]" />
         <Link to="/" className="relative flex items-center gap-2 font-display text-xl font-bold">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-gold-foreground">₣</div>
-          FinSurvive
+          <AppBrand size="sm" className="text-primary-foreground" />
         </Link>
         <div className="relative">
           <h2 className="font-display text-4xl font-bold leading-tight">"FinSurvive changed how I see my money."</h2>
