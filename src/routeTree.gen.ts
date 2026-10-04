@@ -9,84 +9,58 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as GuidesUpiMicroSpendingRouteImport } from './routes/guides.upi-micro-spending'
-import { Route as Guides503020BudgetCalculatorIndiaRouteImport } from './routes/guides.50-30-20-budget-calculator-india'
-import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
-import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
-import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
-import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_authenticated.smart-categorization'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
-import { Route as AuthenticatedSalarySettingsRouteImport } from './routes/_authenticated.salary-settings'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
-import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated.planner'
-import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
-import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated.notification-settings'
-import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
-import { Route as AuthenticatedLocalizationRouteImport } from './routes/_authenticated.localization'
-import { Route as AuthenticatedLoansRouteImport } from './routes/_authenticated.loans'
-import { Route as AuthenticatedInvestmentsRouteImport } from './routes/_authenticated.investments'
-import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated.insights'
-import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated.import'
-import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated.goals'
-import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated.feedback'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
-import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
-import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
-import { Route as AuthenticatedAppearanceRouteImport } from './routes/_authenticated.appearance'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAboutRouteImport } from './routes/_authenticated.about'
+import { Route as AuthenticatedAppearanceRouteImport } from './routes/_authenticated.appearance'
+import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
+import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated.categories'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated.feedback'
+import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated.goals'
+import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated.import'
+import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated.insights'
+import { Route as AuthenticatedInvestmentsRouteImport } from './routes/_authenticated.investments'
+import { Route as AuthenticatedLoansRouteImport } from './routes/_authenticated.loans'
+import { Route as AuthenticatedLocalizationRouteImport } from './routes/_authenticated.localization'
+import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated.menu'
+import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated.notification-settings'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
+import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated.planner'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated.reports'
+import { Route as AuthenticatedSalarySettingsRouteImport } from './routes/_authenticated.salary-settings'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated.settings'
+import { Route as AuthenticatedSmartCategorizationRouteImport } from './routes/_authenticated.smart-categorization'
+import { Route as AuthenticatedSmsIntelligenceRouteImport } from './routes/_authenticated.sms-intelligence'
+import { Route as AuthenticatedSplitSettleRouteImport } from './routes/_authenticated.split-settle'
+import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated.transactions'
+import { Route as Guides503020BudgetCalculatorIndiaRouteImport } from './routes/guides.50-30-20-budget-calculator-india'
+import { Route as GuidesUpiMicroSpendingRouteImport } from './routes/guides.upi-micro-spending'
 import { Route as AuthenticatedInsightsIndexRouteImport } from './routes/_authenticated.insights.index'
-import { Route as AuthenticatedInsightsWeeklyRouteImport } from './routes/_authenticated.insights.weekly'
-import { Route as AuthenticatedInsightsReportRouteImport } from './routes/_authenticated.insights.report'
-import { Route as AuthenticatedInsightsCoachRouteImport } from './routes/_authenticated.insights.coach'
-import { Route as AuthenticatedInsightsBehaviorRouteImport } from './routes/_authenticated.insights.behavior'
-import { Route as AuthenticatedInsightsAlertsRouteImport } from './routes/_authenticated.insights.alerts'
-import { Route as AuthenticatedInsightsAiCoachRouteImport } from './routes/_authenticated.insights.ai-coach'
 import { Route as AuthenticatedInsightsAiRouteImport } from './routes/_authenticated.insights.ai'
+import { Route as AuthenticatedInsightsAiCoachRouteImport } from './routes/_authenticated.insights.ai-coach'
+import { Route as AuthenticatedInsightsAlertsRouteImport } from './routes/_authenticated.insights.alerts'
+import { Route as AuthenticatedInsightsBehaviorRouteImport } from './routes/_authenticated.insights.behavior'
+import { Route as AuthenticatedInsightsCoachRouteImport } from './routes/_authenticated.insights.coach'
+import { Route as AuthenticatedInsightsReportRouteImport } from './routes/_authenticated.insights.report'
+import { Route as AuthenticatedInsightsWeeklyRouteImport } from './routes/_authenticated.insights.weekly'
 import { Route as AuthenticatedInsightsAiCoachResultsRouteImport } from './routes/_authenticated.insights.ai-coach.results'
 
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -94,97 +68,84 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GuidesUpiMicroSpendingRoute = GuidesUpiMicroSpendingRouteImport.update({
-  id: '/guides/upi-micro-spending',
-  path: '/guides/upi-micro-spending',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Guides503020BudgetCalculatorIndiaRoute =
-  Guides503020BudgetCalculatorIndiaRouteImport.update({
-    id: '/guides/50-30-20-budget-calculator-india',
-    path: '/guides/50-30-20-budget-calculator-india',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthenticatedTransactionsRoute =
-  AuthenticatedTransactionsRouteImport.update({
-    id: '/transactions',
-    path: '/transactions',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedSplitSettleRoute =
-  AuthenticatedSplitSettleRouteImport.update({
-    id: '/split-settle',
-    path: '/split-settle',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedSmsIntelligenceRoute =
-  AuthenticatedSmsIntelligenceRouteImport.update({
-    id: '/sms-intelligence',
-    path: '/sms-intelligence',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedSmartCategorizationRoute =
-  AuthenticatedSmartCategorizationRouteImport.update({
-    id: '/smart-categorization',
-    path: '/smart-categorization',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAboutRoute = AuthenticatedAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedSalarySettingsRoute =
-  AuthenticatedSalarySettingsRouteImport.update({
-    id: '/salary-settings',
-    path: '/salary-settings',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
+const AuthenticatedAppearanceRoute = AuthenticatedAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedPlannerRoute = AuthenticatedPlannerRouteImport.update({
-  id: '/planner',
-  path: '/planner',
+const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
+  id: '/budgets',
+  path: '/budgets',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedNotificationsRoute =
-  AuthenticatedNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedNotificationSettingsRoute =
-  AuthenticatedNotificationSettingsRouteImport.update({
-    id: '/notification-settings',
-    path: '/notification-settings',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedMenuRoute = AuthenticatedMenuRouteImport.update({
-  id: '/menu',
-  path: '/menu',
+const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedLocalizationRoute =
-  AuthenticatedLocalizationRouteImport.update({
-    id: '/localization',
-    path: '/localization',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedLoansRoute = AuthenticatedLoansRouteImport.update({
-  id: '/loans',
-  path: '/loans',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedFeedbackRoute = AuthenticatedFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedInvestmentsRoute =
@@ -193,50 +154,89 @@ const AuthenticatedInvestmentsRoute =
     path: '/investments',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
+const AuthenticatedLoansRoute = AuthenticatedLoansRouteImport.update({
+  id: '/loans',
+  path: '/loans',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
-  id: '/import',
-  path: '/import',
+const AuthenticatedLocalizationRoute =
+  AuthenticatedLocalizationRouteImport.update({
+    id: '/localization',
+    path: '/localization',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMenuRoute = AuthenticatedMenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
-  id: '/goals',
-  path: '/goals',
+const AuthenticatedNotificationSettingsRoute =
+  AuthenticatedNotificationSettingsRouteImport.update({
+    id: '/notification-settings',
+    path: '/notification-settings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPlannerRoute = AuthenticatedPlannerRouteImport.update({
+  id: '/planner',
+  path: '/planner',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedFeedbackRoute = AuthenticatedFeedbackRouteImport.update({
-  id: '/feedback',
-  path: '/feedback',
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedSalarySettingsRoute =
+  AuthenticatedSalarySettingsRouteImport.update({
+    id: '/salary-settings',
+    path: '/salary-settings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
-  id: '/categories',
-  path: '/categories',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
-  id: '/budgets',
-  path: '/budgets',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedAppearanceRoute = AuthenticatedAppearanceRouteImport.update({
-  id: '/appearance',
-  path: '/appearance',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedAboutRoute = AuthenticatedAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => AuthenticatedRoute,
+const AuthenticatedSmartCategorizationRoute =
+  AuthenticatedSmartCategorizationRouteImport.update({
+    id: '/smart-categorization',
+    path: '/smart-categorization',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSmsIntelligenceRoute =
+  AuthenticatedSmsIntelligenceRouteImport.update({
+    id: '/sms-intelligence',
+    path: '/sms-intelligence',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSplitSettleRoute =
+  AuthenticatedSplitSettleRouteImport.update({
+    id: '/split-settle',
+    path: '/split-settle',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTransactionsRoute =
+  AuthenticatedTransactionsRouteImport.update({
+    id: '/transactions',
+    path: '/transactions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const Guides503020BudgetCalculatorIndiaRoute =
+  Guides503020BudgetCalculatorIndiaRouteImport.update({
+    id: '/guides/50-30-20-budget-calculator-india',
+    path: '/guides/50-30-20-budget-calculator-india',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const GuidesUpiMicroSpendingRoute = GuidesUpiMicroSpendingRouteImport.update({
+  id: '/guides/upi-micro-spending',
+  path: '/guides/upi-micro-spending',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedInsightsIndexRoute =
   AuthenticatedInsightsIndexRouteImport.update({
@@ -244,28 +244,15 @@ const AuthenticatedInsightsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedInsightsRoute,
   } as any)
-const AuthenticatedInsightsWeeklyRoute =
-  AuthenticatedInsightsWeeklyRouteImport.update({
-    id: '/weekly',
-    path: '/weekly',
-    getParentRoute: () => AuthenticatedInsightsRoute,
-  } as any)
-const AuthenticatedInsightsReportRoute =
-  AuthenticatedInsightsReportRouteImport.update({
-    id: '/report',
-    path: '/report',
-    getParentRoute: () => AuthenticatedInsightsRoute,
-  } as any)
-const AuthenticatedInsightsCoachRoute =
-  AuthenticatedInsightsCoachRouteImport.update({
-    id: '/coach',
-    path: '/coach',
-    getParentRoute: () => AuthenticatedInsightsRoute,
-  } as any)
-const AuthenticatedInsightsBehaviorRoute =
-  AuthenticatedInsightsBehaviorRouteImport.update({
-    id: '/behavior',
-    path: '/behavior',
+const AuthenticatedInsightsAiRoute = AuthenticatedInsightsAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AuthenticatedInsightsRoute,
+} as any)
+const AuthenticatedInsightsAiCoachRoute =
+  AuthenticatedInsightsAiCoachRouteImport.update({
+    id: '/ai-coach',
+    path: '/ai-coach',
     getParentRoute: () => AuthenticatedInsightsRoute,
   } as any)
 const AuthenticatedInsightsAlertsRoute =
@@ -274,17 +261,30 @@ const AuthenticatedInsightsAlertsRoute =
     path: '/alerts',
     getParentRoute: () => AuthenticatedInsightsRoute,
   } as any)
-const AuthenticatedInsightsAiCoachRoute =
-  AuthenticatedInsightsAiCoachRouteImport.update({
-    id: '/ai-coach',
-    path: '/ai-coach',
+const AuthenticatedInsightsBehaviorRoute =
+  AuthenticatedInsightsBehaviorRouteImport.update({
+    id: '/behavior',
+    path: '/behavior',
     getParentRoute: () => AuthenticatedInsightsRoute,
   } as any)
-const AuthenticatedInsightsAiRoute = AuthenticatedInsightsAiRouteImport.update({
-  id: '/ai',
-  path: '/ai',
-  getParentRoute: () => AuthenticatedInsightsRoute,
-} as any)
+const AuthenticatedInsightsCoachRoute =
+  AuthenticatedInsightsCoachRouteImport.update({
+    id: '/coach',
+    path: '/coach',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
+const AuthenticatedInsightsReportRoute =
+  AuthenticatedInsightsReportRouteImport.update({
+    id: '/report',
+    path: '/report',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
+const AuthenticatedInsightsWeeklyRoute =
+  AuthenticatedInsightsWeeklyRouteImport.update({
+    id: '/weekly',
+    path: '/weekly',
+    getParentRoute: () => AuthenticatedInsightsRoute,
+  } as any)
 const AuthenticatedInsightsAiCoachResultsRoute =
   AuthenticatedInsightsAiCoachResultsRouteImport.update({
     id: '/results',
@@ -583,60 +583,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -646,172 +597,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/guides/upi-micro-spending': {
-      id: '/guides/upi-micro-spending'
-      path: '/guides/upi-micro-spending'
-      fullPath: '/guides/upi-micro-spending'
-      preLoaderRoute: typeof GuidesUpiMicroSpendingRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/guides/50-30-20-budget-calculator-india': {
-      id: '/guides/50-30-20-budget-calculator-india'
-      path: '/guides/50-30-20-budget-calculator-india'
-      fullPath: '/guides/50-30-20-budget-calculator-india'
-      preLoaderRoute: typeof Guides503020BudgetCalculatorIndiaRouteImport
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/transactions': {
-      id: '/_authenticated/transactions'
-      path: '/transactions'
-      fullPath: '/transactions'
-      preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/split-settle': {
-      id: '/_authenticated/split-settle'
-      path: '/split-settle'
-      fullPath: '/split-settle'
-      preLoaderRoute: typeof AuthenticatedSplitSettleRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/sms-intelligence': {
-      id: '/_authenticated/sms-intelligence'
-      path: '/sms-intelligence'
-      fullPath: '/sms-intelligence'
-      preLoaderRoute: typeof AuthenticatedSmsIntelligenceRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/smart-categorization': {
-      id: '/_authenticated/smart-categorization'
-      path: '/smart-categorization'
-      fullPath: '/smart-categorization'
-      preLoaderRoute: typeof AuthenticatedSmartCategorizationRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/salary-settings': {
-      id: '/_authenticated/salary-settings'
-      path: '/salary-settings'
-      fullPath: '/salary-settings'
-      preLoaderRoute: typeof AuthenticatedSalarySettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/planner': {
-      id: '/_authenticated/planner'
-      path: '/planner'
-      fullPath: '/planner'
-      preLoaderRoute: typeof AuthenticatedPlannerRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/notifications': {
-      id: '/_authenticated/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/notification-settings': {
-      id: '/_authenticated/notification-settings'
-      path: '/notification-settings'
-      fullPath: '/notification-settings'
-      preLoaderRoute: typeof AuthenticatedNotificationSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/menu': {
-      id: '/_authenticated/menu'
-      path: '/menu'
-      fullPath: '/menu'
-      preLoaderRoute: typeof AuthenticatedMenuRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/localization': {
-      id: '/_authenticated/localization'
-      path: '/localization'
-      fullPath: '/localization'
-      preLoaderRoute: typeof AuthenticatedLocalizationRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/loans': {
-      id: '/_authenticated/loans'
-      path: '/loans'
-      fullPath: '/loans'
-      preLoaderRoute: typeof AuthenticatedLoansRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/investments': {
-      id: '/_authenticated/investments'
-      path: '/investments'
-      fullPath: '/investments'
-      preLoaderRoute: typeof AuthenticatedInvestmentsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/insights': {
-      id: '/_authenticated/insights'
-      path: '/insights'
-      fullPath: '/insights'
-      preLoaderRoute: typeof AuthenticatedInsightsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/import': {
-      id: '/_authenticated/import'
-      path: '/import'
-      fullPath: '/import'
-      preLoaderRoute: typeof AuthenticatedImportRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/goals': {
-      id: '/_authenticated/goals'
-      path: '/goals'
-      fullPath: '/goals'
-      preLoaderRoute: typeof AuthenticatedGoalsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/feedback': {
-      id: '/_authenticated/feedback'
-      path: '/feedback'
-      fullPath: '/feedback'
-      preLoaderRoute: typeof AuthenticatedFeedbackRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/categories': {
-      id: '/_authenticated/categories'
-      path: '/categories'
-      fullPath: '/categories'
-      preLoaderRoute: typeof AuthenticatedCategoriesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/budgets': {
-      id: '/_authenticated/budgets'
-      path: '/budgets'
-      fullPath: '/budgets'
-      preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
+    '/_authenticated/about': {
+      id: '/_authenticated/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AuthenticatedAboutRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/appearance': {
@@ -821,12 +667,166 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppearanceRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/about': {
-      id: '/_authenticated/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AuthenticatedAboutRouteImport
+    '/_authenticated/budgets': {
+      id: '/_authenticated/budgets'
+      path: '/budgets'
+      fullPath: '/budgets'
+      preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/categories': {
+      id: '/_authenticated/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof AuthenticatedCategoriesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/feedback': {
+      id: '/_authenticated/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof AuthenticatedFeedbackRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/goals': {
+      id: '/_authenticated/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof AuthenticatedGoalsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/import': {
+      id: '/_authenticated/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof AuthenticatedImportRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/insights': {
+      id: '/_authenticated/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AuthenticatedInsightsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/investments': {
+      id: '/_authenticated/investments'
+      path: '/investments'
+      fullPath: '/investments'
+      preLoaderRoute: typeof AuthenticatedInvestmentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/loans': {
+      id: '/_authenticated/loans'
+      path: '/loans'
+      fullPath: '/loans'
+      preLoaderRoute: typeof AuthenticatedLoansRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/localization': {
+      id: '/_authenticated/localization'
+      path: '/localization'
+      fullPath: '/localization'
+      preLoaderRoute: typeof AuthenticatedLocalizationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/menu': {
+      id: '/_authenticated/menu'
+      path: '/menu'
+      fullPath: '/menu'
+      preLoaderRoute: typeof AuthenticatedMenuRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notification-settings': {
+      id: '/_authenticated/notification-settings'
+      path: '/notification-settings'
+      fullPath: '/notification-settings'
+      preLoaderRoute: typeof AuthenticatedNotificationSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/planner': {
+      id: '/_authenticated/planner'
+      path: '/planner'
+      fullPath: '/planner'
+      preLoaderRoute: typeof AuthenticatedPlannerRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/salary-settings': {
+      id: '/_authenticated/salary-settings'
+      path: '/salary-settings'
+      fullPath: '/salary-settings'
+      preLoaderRoute: typeof AuthenticatedSalarySettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/smart-categorization': {
+      id: '/_authenticated/smart-categorization'
+      path: '/smart-categorization'
+      fullPath: '/smart-categorization'
+      preLoaderRoute: typeof AuthenticatedSmartCategorizationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/sms-intelligence': {
+      id: '/_authenticated/sms-intelligence'
+      path: '/sms-intelligence'
+      fullPath: '/sms-intelligence'
+      preLoaderRoute: typeof AuthenticatedSmsIntelligenceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/split-settle': {
+      id: '/_authenticated/split-settle'
+      path: '/split-settle'
+      fullPath: '/split-settle'
+      preLoaderRoute: typeof AuthenticatedSplitSettleRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/transactions': {
+      id: '/_authenticated/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/guides/50-30-20-budget-calculator-india': {
+      id: '/guides/50-30-20-budget-calculator-india'
+      path: '/guides/50-30-20-budget-calculator-india'
+      fullPath: '/guides/50-30-20-budget-calculator-india'
+      preLoaderRoute: typeof Guides503020BudgetCalculatorIndiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/upi-micro-spending': {
+      id: '/guides/upi-micro-spending'
+      path: '/guides/upi-micro-spending'
+      fullPath: '/guides/upi-micro-spending'
+      preLoaderRoute: typeof GuidesUpiMicroSpendingRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/insights/': {
       id: '/_authenticated/insights/'
@@ -835,39 +835,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInsightsIndexRouteImport
       parentRoute: typeof AuthenticatedInsightsRoute
     }
-    '/_authenticated/insights/weekly': {
-      id: '/_authenticated/insights/weekly'
-      path: '/weekly'
-      fullPath: '/insights/weekly'
-      preLoaderRoute: typeof AuthenticatedInsightsWeeklyRouteImport
-      parentRoute: typeof AuthenticatedInsightsRoute
-    }
-    '/_authenticated/insights/report': {
-      id: '/_authenticated/insights/report'
-      path: '/report'
-      fullPath: '/insights/report'
-      preLoaderRoute: typeof AuthenticatedInsightsReportRouteImport
-      parentRoute: typeof AuthenticatedInsightsRoute
-    }
-    '/_authenticated/insights/coach': {
-      id: '/_authenticated/insights/coach'
-      path: '/coach'
-      fullPath: '/insights/coach'
-      preLoaderRoute: typeof AuthenticatedInsightsCoachRouteImport
-      parentRoute: typeof AuthenticatedInsightsRoute
-    }
-    '/_authenticated/insights/behavior': {
-      id: '/_authenticated/insights/behavior'
-      path: '/behavior'
-      fullPath: '/insights/behavior'
-      preLoaderRoute: typeof AuthenticatedInsightsBehaviorRouteImport
-      parentRoute: typeof AuthenticatedInsightsRoute
-    }
-    '/_authenticated/insights/alerts': {
-      id: '/_authenticated/insights/alerts'
-      path: '/alerts'
-      fullPath: '/insights/alerts'
-      preLoaderRoute: typeof AuthenticatedInsightsAlertsRouteImport
+    '/_authenticated/insights/ai': {
+      id: '/_authenticated/insights/ai'
+      path: '/ai'
+      fullPath: '/insights/ai'
+      preLoaderRoute: typeof AuthenticatedInsightsAiRouteImport
       parentRoute: typeof AuthenticatedInsightsRoute
     }
     '/_authenticated/insights/ai-coach': {
@@ -877,11 +849,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInsightsAiCoachRouteImport
       parentRoute: typeof AuthenticatedInsightsRoute
     }
-    '/_authenticated/insights/ai': {
-      id: '/_authenticated/insights/ai'
-      path: '/ai'
-      fullPath: '/insights/ai'
-      preLoaderRoute: typeof AuthenticatedInsightsAiRouteImport
+    '/_authenticated/insights/alerts': {
+      id: '/_authenticated/insights/alerts'
+      path: '/alerts'
+      fullPath: '/insights/alerts'
+      preLoaderRoute: typeof AuthenticatedInsightsAlertsRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
+    '/_authenticated/insights/behavior': {
+      id: '/_authenticated/insights/behavior'
+      path: '/behavior'
+      fullPath: '/insights/behavior'
+      preLoaderRoute: typeof AuthenticatedInsightsBehaviorRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
+    '/_authenticated/insights/coach': {
+      id: '/_authenticated/insights/coach'
+      path: '/coach'
+      fullPath: '/insights/coach'
+      preLoaderRoute: typeof AuthenticatedInsightsCoachRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
+    '/_authenticated/insights/report': {
+      id: '/_authenticated/insights/report'
+      path: '/report'
+      fullPath: '/insights/report'
+      preLoaderRoute: typeof AuthenticatedInsightsReportRouteImport
+      parentRoute: typeof AuthenticatedInsightsRoute
+    }
+    '/_authenticated/insights/weekly': {
+      id: '/_authenticated/insights/weekly'
+      path: '/weekly'
+      fullPath: '/insights/weekly'
+      preLoaderRoute: typeof AuthenticatedInsightsWeeklyRouteImport
       parentRoute: typeof AuthenticatedInsightsRoute
     }
     '/_authenticated/insights/ai-coach/results': {
