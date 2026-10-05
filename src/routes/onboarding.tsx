@@ -369,7 +369,7 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-card/15 text-white">₣</div>
             FinSurvive
           </div>
-          <p className="mt-1 text-xs text-white/70">Your Salary Survival System</p>
+          <p className="mt-1 text-xs text-white/70">Survive &amp; Thrive</p>
         </div>
 
         {/* Center */}
