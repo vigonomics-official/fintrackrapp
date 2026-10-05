@@ -105,7 +105,7 @@ function LoginPage() {
               <AppBrand size="sm" />
             </Link>
             <p className="mt-1.5 text-xs font-medium text-muted-foreground">
-              Your Salary Survival System
+              Survive &amp; Thrive
             </p>
             <h1 className="mt-3 font-display text-xl font-bold">Welcome back</h1>
           </div>
