@@ -2,7 +2,7 @@
 import { APP_VERSION } from "./local-storage-stats";
 
 export const APP_NAME = "FinSurvive";
-export const APP_TAGLINE = "Salary survival, made simple.";
+export const APP_TAGLINE = "Survive & Thrive";
 export const APP_DESCRIPTION =
   "FinSurvive is a privacy-first salary survival tracker for India. It reads your spending, predicts how long your salary lasts, and coaches you with AI so you never run out before payday.";
 
