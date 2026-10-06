@@ -251,8 +251,8 @@ export function SpendingOverview({ range, currency, rangeTxs, prevRangeTxs, allT
               </p>
             </div>
             <ul className="space-y-1.5">
-              {comparisons.map((c) => (
-                <li key={c.name} className="flex items-center justify-between text-[13px]">
+              {comparisons.map((c, i) => (
+                <li key={`${c.name}-${i}`} className="flex items-center justify-between text-[13px]">
                   <span className="font-medium">{c.name}</span>
                   <span className={`flex items-center gap-1 font-medium tabular-nums ${c.up ? "text-destructive" : "text-success"}`}>
                     {c.up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
