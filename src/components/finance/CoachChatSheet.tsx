@@ -1,3 +1,4 @@
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MessageCircle,
@@ -83,7 +84,19 @@ export function CoachChatSheet({ analysisInput, provider = defaultCoachProvider,
   }, []);
 
   const ctx = useMemo(() => buildContext(analysisInput, lang), [analysisInput, lang]);
-  const snapshot = useMemo(() => computeSnapshot(ctx.input, ctx.analysis), [ctx.input, ctx.analysis]);
+  // Header figures use the shared Safe Daily Spend calculation so the Coach
+  // never contradicts Home/Planner; balance is shown only when the user gave one.
+  const shared = useSafeDailySurvival();
+  const snapshot = useMemo(() => {
+    const base = computeSnapshot(ctx.input, ctx.analysis);
+    if (!ctx.input) return base;
+    return {
+      ...base,
+      safeDailySpend: Math.round(shared.safeDaily),
+      daysUntilSalary: shared.daysRemaining,
+      currentBalance: ctx.input.currentAccountBalance ?? null,
+    };
+  }, [ctx.input, ctx.analysis, shared.safeDaily, shared.daysRemaining]);
   const greeting = useMemo(() => personalizedGreeting(lang, snapshot), [lang, snapshot]);
   const smartSuggestions = useMemo(
     () => buildSmartSuggestions(ctx.input, ctx.analysis),
