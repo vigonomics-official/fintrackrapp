@@ -484,18 +484,24 @@ export function computeFutureActions(opts: {
   transactions: Tx[];
   loans: Loan[];
   goals: FutureGoal[];
+  metrics?: FinancialMetrics;
 }): FutureAction[] {
-  const { survival, transactions, loans, goals } = opts;
+  const { survival, transactions, loans, goals, metrics } = opts;
   const rememberedSavings = getRememberedSavings();
   const savingsGoalCurrent = goals
     .filter((g) => g.kind === "savings" || g.kind === "emergency" || g.kind === "investment")
     .reduce((s, g) => s + Number(g.current || 0), 0);
-  const totalSavings = (rememberedSavings ?? 0) + savingsGoalCurrent;
-  const avgExp = avgMonthlyExpenses(transactions);
+  // Emergency Fund counts only money in Emergency Fund goals when shared metrics exist.
+  const totalSavings = metrics ? metrics.emergency.saved : (rememberedSavings ?? 0) + savingsGoalCurrent;
+  const avgExp = metrics ? metrics.avgMonthlyExpenses : avgMonthlyExpenses(transactions);
+  const plannedSavings = metrics?.savings.target ?? 0;
   const outstanding = loans.reduce((s, l) => s + Number(l.remaining_balance || 0), 0);
   const monthlyEmi = survival.monthlyEmi;
   const salaryLeft = survival.hasIncome ? Math.max(0, survival.salaryLeft) : 0;
-  const savingsRate = survival.hasIncome ? salaryLeft / Math.max(1, survival.salary) : 0;
+  // Savings rate = money actually recorded as savings this cycle (not unspent salary).
+  const savingsRate = metrics
+    ? (metrics.savings.rate ?? 0) / 100
+    : survival.hasIncome ? salaryLeft / Math.max(1, survival.salary) : 0;
   const hasInvestmentGoal = goals.some((g) => g.kind === "investment");
 
   const candidates: (FutureAction & { rank: number })[] = [];
@@ -506,7 +512,9 @@ export function computeFutureActions(opts: {
     if (months < 6) {
       const target = avgExp * 6;
       const gap = Math.max(0, target - totalSavings);
-      const monthly = Math.max(500, Math.round(Math.min(gap / 12, salaryLeft > 0 ? salaryLeft * 0.4 : gap / 12)));
+      const monthly = plannedSavings > 0
+        ? plannedSavings
+        : Math.max(500, Math.round(Math.min(gap / 12, salaryLeft > 0 ? salaryLeft * 0.4 : gap / 12)));
       const monthsToDone = Math.ceil(gap / Math.max(1, monthly));
       candidates.push({
         id: "emergency",
@@ -546,21 +554,24 @@ export function computeFutureActions(opts: {
   }
 
   // 3. Increase Monthly Savings
-  if (survival.hasIncome && savingsRate < 0.2) {
-    const target = Math.round(survival.salary * 0.2);
-    const gap = Math.max(500, target - salaryLeft);
+  const targetRate = plannedSavings > 0 && survival.salary > 0 ? plannedSavings / survival.salary : 0.2;
+  if (survival.hasIncome && savingsRate < targetRate) {
+    // One savings recommendation: the Planner → Allocate Savings amount.
+    const target = plannedSavings > 0 ? plannedSavings : Math.round(survival.salary * 0.2);
+    const saved = metrics ? metrics.savings.actual : salaryLeft;
+    const gap = Math.max(0, target - saved);
     candidates.push({
       id: "savings",
       priority: savingsRate < 0.05 ? "High" : "Medium",
       title: "Increase Monthly Savings",
-      why: `You're saving ~${Math.round(savingsRate * 100)}% of salary. Reaching 20% (${inr(target)}/mo) accelerates every future milestone.`,
+      why: `You've saved ~${Math.round(savingsRate * 100)}% of salary this cycle. Your plan is ${inr(target)}/mo${plannedSavings > 0 ? " (Planner → Allocate)" : " (20% of salary)"}.`,
       impactAmount: gap,
       impactLabel: `+${inr(gap)}/mo saved`,
       timeSaved: `+${inr(gap * 12)}/yr`,
       plannerTitle: "Raise monthly savings",
-      plannerDetail: `Target ${inr(target)}/mo (20% of salary)`,
+      plannerDetail: `Target ${inr(target)}/mo${plannedSavings > 0 ? "" : " (20% of salary)"}`,
       coachPrompt: "Where can I cut spend to save more each month?",
-      rank: (0.2 - savingsRate) * 100,
+      rank: (targetRate - savingsRate) * 100,
     });
   }
 

@@ -1543,7 +1543,7 @@ function FutureTab() {
     [s, transactions, loans, goals],
   );
   const actions = useMemo(
-    () => computeFutureActions({ survival: s, transactions, loans, goals }),
+    () => computeFutureActions({ survival: s, transactions, loans, goals, metrics: s.metrics }),
     [s, transactions, loans, goals],
   );
   const netWorth = useMemo(
