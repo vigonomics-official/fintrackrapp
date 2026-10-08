@@ -229,7 +229,7 @@ function MonthlyPlan() {
       {/* Smart Next Actions — personalized from real data */}
       {s.hasIncome && <SmartNextActions s={s} outstanding={outstanding} />}
 
-      {/* Financial Health Score */}
+      {/* Financial Score */}
       {s.hasIncome && <HealthScoreCard s={s} outstanding={outstanding} />}
 
       <Link
@@ -468,25 +468,25 @@ function survivalSubScore(s: ReturnType<typeof useSurvival>): number {
   return Math.min(30, stepDays + stepForecast + stepRate);
 }
 
-function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
-  const savings = s.salary > 0 ? Math.min(25, Math.max(0, (s.salaryLeft / s.salary) * 25)) : 0;
-  const debt = s.salary > 0 ? Math.max(0, 25 - (s.monthlyEmi / s.salary) * 50) : 25;
-  const bills = 20; // assume on-track until billing data integrated
-  const survival = survivalSubScore(s);
-  const total = Math.round(savings + debt + bills + survival);
+function HealthScoreCard({ s }: { s: ReturnType<typeof useSurvival>; outstanding: number }) {
+  // One shared Financial Score (src/lib/financial-metrics.ts) — never recomputed here.
+  const c = s.metrics.score.components;
+  const total = s.score;
+  const target = s.metrics.savings.target;
   const tip =
     total >= 80
       ? "You're financially healthy — keep saving consistently."
       : total >= 60
-        ? `Boost savings to ${formatCurrency(Math.round(s.salary * 0.2), s.currency)}/mo and reduce EMI load to reach 80+.`
+        ? target > 0
+          ? `Save your planned ${formatCurrency(target, s.currency)} this cycle and keep EMIs low to reach 80+.`
+          : "Set a Savings amount in Allocate and keep EMIs low to reach 80+."
         : "Cut a high-interest loan or trim discretionary spend to climb above 60.";
 
-  const bars: { label: string; val: number; max: number }[] = [
-    { label: "Savings", val: Math.round(savings), max: 25 },
-    { label: "Debt", val: Math.round(debt), max: 25 },
-    { label: "Bills", val: bills, max: 20 },
-    { label: "Survival", val: Math.round(survival), max: 30 },
-  ];
+  const bars: { label: string; val: number; max: number }[] = [c.emergency, c.savings, c.debt, c.discipline].map((x) => ({
+    label: x.label,
+    val: x.value ?? 0,
+    max: 25,
+  }));
 
   const updatedLabel = new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
@@ -497,7 +497,7 @@ function HealthScoreCard({ s, outstanding }: { s: ReturnType<typeof useSurvival>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-3.5 w-3.5 text-teal" />
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-teal">Financial Health</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-teal">Financial Score</p>
             </div>
             <p className="mt-1 text-[10.5px] font-medium text-muted-foreground">Last updated · Today, {updatedLabel}</p>
           </div>
@@ -760,7 +760,7 @@ function SalaryAllocation() {
         </CardContent>
       </Card>
 
-      {/* Plan Health Score */}
+      {/* Plan check (guidance only; no competing score) */}
       {(() => {
         const insights: { tone: "ok" | "warn"; text: string }[] = [];
         if (over) insights.push({ tone: "warn", text: `Over-allocated by ${totalPct - 100}%` });
@@ -774,23 +774,14 @@ function SalaryAllocation() {
         if (alloc.emi > 40) insights.push({ tone: "warn", text: "EMI above 40% — debt stress" });
         if (!over && alloc.rent === 0 && alloc.food === 0)
           insights.push({ tone: "warn", text: "Essentials like rent and food aren't funded yet" });
-        // Unassigned salary is itself an incomplete plan, so it always costs points.
-        const unassignedPenalty = over ? 25 : Math.min(45, Math.round(remainingPct * 0.9));
-        const penalty =
-          insights.filter((i) => i.tone === "warn" && !i.text.includes("unassigned") && !i.text.startsWith("Over-allocated")).length * 8 +
-          unassignedPenalty;
-        const score = Math.max(0, Math.min(100, 100 - penalty));
         return (
           <Card className="shadow-soft">
             <CardContent className="space-y-2 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Plan Health</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Plan Check</p>
                 </div>
-                <p className="font-display text-xl font-bold tabular-nums">
-                  {score}<span className="text-xs text-muted-foreground">/100</span>
-                </p>
               </div>
               <ul className="space-y-1">
                 {insights.map((i, idx) => (
