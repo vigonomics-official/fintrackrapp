@@ -622,7 +622,7 @@ export function computeNotifications({
     });
   }
 
-  // 5e. Survival Score improved (compared against the stored previous score).
+  // 5e. Financial Score improved (compared against the stored previous score).
   const prev = readScoreSnapshot();
   if (prev && prev.dateKey !== todayKey) {
     const delta = survival.score - prev.score;
@@ -630,7 +630,7 @@ export function computeNotifications({
       items.push({
         id: `ai-score-up-${todayKey}`,
         kind: "ai",
-        title: "Your Survival Score improved 🎉",
+        title: "Your Financial Score improved 🎉",
         message: `Up ${delta} points to ${survival.score}/100 since ${prev.dateKey}. Keep the same pace.`,
         priority: "Low",
         group: "Today",
@@ -642,7 +642,7 @@ export function computeNotifications({
       items.push({
         id: `risk-score-drop-${todayKey}`,
         kind: "risk",
-        title: `Survival Score dropped ${Math.abs(delta)} points`,
+        title: `Financial Score dropped ${Math.abs(delta)} points`,
         message: `Now ${survival.score}/100 (was ${prev.score}). Spending pace or buffer weakened.`,
         priority: "High",
         group: "Today",

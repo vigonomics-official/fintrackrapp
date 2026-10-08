@@ -24,7 +24,7 @@ export function FinancialSnapshotCard() {
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Metric label="Survival Score" value={`${s.score}/100`} />
+        <Metric label="Financial Score" value={`${s.score}/100`} />
         <Metric label="Salary Left" value={formatCurrency(Math.round(s.salaryLeft), currency)} />
         <Metric
           label="Days Until Payday"

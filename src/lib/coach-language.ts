@@ -24,7 +24,7 @@ const EN: Dict = {
   quickActions: "Quick actions",
   proactiveTip: "Insight for you",
   snapshotTitle: "Today's Financial Snapshot",
-  survivalScore: "Survival Score",
+  survivalScore: "Financial Score",
   safeDailySpend: "Safe Daily Spend",
   currentBalance: "Balance",
   daysUntilSalary: "Days to Salary",

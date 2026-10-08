@@ -337,7 +337,7 @@ export function buildBiggestWin(
   if (cmp.score.abs >= 5) {
     candidates.push({
       icon: "⭐",
-      headline: `Survival Score improved by ${cmp.score.abs} points`,
+      headline: `Financial Score improved by ${cmp.score.abs} points`,
       detail: `From ${prev.score} to ${cur.score}`,
       impact: cmp.score.abs * 50,
     });
@@ -522,7 +522,7 @@ export function buildAiMonthlyReview(
       "Previous cycle comparison",
     ],
     lastUpdated: new Date().toISOString(),
-    why: `Rating is derived from your Survival Score (${cur.score}/100), savings rate (${cur.income > 0 ? Math.round((cur.savings / cur.income) * 100) : 0}%) and budget discipline (${cur.daysUnderBudget}/${cur.totalDays} days).`,
+    why: `Rating is derived from your Financial Score (${cur.score}/100), savings rate (${cur.income > 0 ? Math.round((cur.savings / cur.income) * 100) : 0}%) and budget discipline (${cur.daysUnderBudget}/${cur.totalDays} days).`,
   };
 }
 

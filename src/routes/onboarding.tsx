@@ -728,7 +728,7 @@ function LoadingScreen({
     list.push("Preparing your AI Salary Coach...");
     list.push(goal
       ? `Aligning plan with your ${goal.toLowerCase()} goal...`
-      : "Building your Survival Score...");
+      : "Building your Financial Score...");
     list.push(firstName
       ? `Finalizing ${firstName}'s dashboard...`
       : "Finalizing your dashboard...");
@@ -830,7 +830,7 @@ function ReadyScreen({
             <p>📅 Payday: <span className="font-bold">{payDate || "—"} monthly</span></p>
             <p>🎯 Daily limit: <span className="font-bold tabular-nums">₹{fmt(dailyLimit)}/day</span></p>
             <p>🛡️ Goal: <span className="font-bold">{goalTitle}</span></p>
-            <p>📊 Survival Score: <span className="font-bold">{score}/100</span></p>
+            <p>📊 Financial Score: <span className="font-bold">{score}/100</span></p>
           </div>
 
           <div className="mt-4 rounded-xl bg-emerald-50 p-3">

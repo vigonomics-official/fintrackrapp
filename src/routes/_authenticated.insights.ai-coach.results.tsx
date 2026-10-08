@@ -141,7 +141,7 @@ function ResultsPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <p className="text-xs text-muted-foreground">Financial Health Score</p>
-                  <ExplainBtn prompt="Explain my Survival Score" label="Explain this number" />
+                  <ExplainBtn prompt="Explain my Financial Score" label="Explain this number" />
                 </div>
                 <p className={`font-display text-3xl font-bold ${scoreTone}`}>
                   {result.healthScore}

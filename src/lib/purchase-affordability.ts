@@ -374,7 +374,7 @@ export function checkPurchaseAffordability(input: PurchaseCheckInput): PurchaseC
   const dataUsed = ["Salary left", "Safe daily spend"];
   if (hasCycle) dataUsed.push("Days remaining");
   if (hasSpendData) dataUsed.push("Spending this cycle", "Month-end forecast");
-  dataUsed.push("Survival Score");
+  dataUsed.push("Financial Score");
   if (before.monthlyEmi > 0) dataUsed.push("EMI pressure");
   if (cat) dataUsed.push(`${cat.categoryName} budget remaining`);
   else if (input.budgetRemaining != null) dataUsed.push("Budget remaining");
@@ -451,7 +451,7 @@ function buildWhy(
   }
   if (has("over_budget_remaining")) parts.push("It is above the budget you have left.");
   if (has("score_drop_large") || has("score_drop_moderate")) {
-    parts.push(`Your Survival Score would fall by ${Math.round(v.scoreDrop)} points.`);
+    parts.push(`Your Financial Score would fall by ${Math.round(v.scoreDrop)} points.`);
   }
   if (has("high_emi_pressure")) parts.push("Your EMI load is already heavy this month.");
   if (has("weak_emergency_fund")) parts.push("Your savings are still below your emergency fund target.");

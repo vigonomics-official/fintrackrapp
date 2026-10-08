@@ -23,13 +23,13 @@ export const Route = createFileRoute("/_authenticated/insights/report")({
   head: () => ({
     meta: [
       { title: "Monthly Report Card — FinSurvive" },
-      { name: "description", content: "Your monthly money report: spending, savings and survival score." },
+      { name: "description", content: "Your monthly money report: spending, savings and Financial Score." },
       { property: "og:title", content: "Monthly Report Card — FinSurvive" },
-      { property: "og:description", content: "Your monthly money report: spending, savings and survival score." },
+      { property: "og:description", content: "Your monthly money report: spending, savings and Financial Score." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Monthly Report Card — FinSurvive" },
-      { name: "twitter:description", content: "Your monthly money report: spending, savings and survival score." },
+      { name: "twitter:description", content: "Your monthly money report: spending, savings and Financial Score." },
     ],
   }),
 });
@@ -164,7 +164,7 @@ function ReportPage() {
   const [saving, setSaving] = useState(false);
   const [savingPdf, setSavingPdf] = useState(false);
 
-  const shareText = `I survived ${monthYearShort} with a Survival Score of ${survival.score}/100 (Grade ${insights.health.grade}) on FinSurvive! 💪 #FinSurvive #SalarySurvival`;
+  const shareText = `I survived ${monthYearShort} with a Financial Score of ${survival.score}/100 (Grade ${insights.health.grade}) on FinSurvive! 💪 #FinSurvive #SalarySurvival`;
 
   const onShare = async () => {
     try {
@@ -227,7 +227,7 @@ function ReportPage() {
   }
 
   const spendingTarget = Math.round(totalSpent * 0.95);
-  const savingsTarget = Math.round(survival.salary * 0.1);
+  const savingsTarget = survival.metrics.savings.target > 0 ? survival.metrics.savings.target : Math.round(survival.salary * 0.1);
 
   return (
     <div className="w-full overflow-x-hidden bg-background">
@@ -426,7 +426,7 @@ function ReportPage() {
               <p className="font-display text-5xl font-extrabold">
                 {survival.hasIncome ? survival.score : "—"}<span className="text-2xl text-white/70">/100</span>
               </p>
-              <p className="mt-1 text-sm text-white/85">Survival Score · Grade {insights.health.grade}</p>
+              <p className="mt-1 text-sm text-white/85">Financial Score · Grade {insights.health.grade}</p>
               <p className="mt-1 text-sm font-semibold">{status.label}</p>
             </div>
             <div className="my-3 h-px bg-white/20" />
@@ -644,7 +644,6 @@ function ComparisonCard({
     neutralSame?: boolean;
   };
   const rows: Row[] = [
-    { label: "Survival Score", d: cmp.score },
     {
       label: "Income",
       d: cmp.income,
@@ -786,7 +785,7 @@ function PredictionCard({
       </h2>
       <Card className="p-4 shadow-soft" style={{ borderRadius: 12 }}>
         <div className="grid grid-cols-2 gap-3">
-          <PredStat label="Survival Score" value={`${prediction.score}/100`} />
+          <PredStat label="Projected Financial Score" value={`${prediction.score}/100`} />
           <PredStat label="Expected Savings" value={fmt(prediction.expectedSavings, currency)} />
           <PredStat label="Risk Level" value={prediction.riskLevel} valueClass={riskColor} />
           <PredStat label="Goal Completion" value={`${prediction.goalCompletionChance}%`} />

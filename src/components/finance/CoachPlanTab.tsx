@@ -158,7 +158,7 @@ function PlanBody({ plan, input, onRegen }: { plan: MonthlyPlan; input: CoachAna
         <SummaryCard icon={<Wallet className="h-4 w-4" />} label="Safe Daily Spend" value={formatCurrency(plan.summary.safeDailySpend)} tone="primary" />
         <SummaryCard icon={<TargetIcon className="h-4 w-4" />} label="Savings Target" value={formatCurrency(plan.summary.monthlySavingsTarget)} tone="success" />
         <SummaryCard icon={<TrendingUp className="h-4 w-4" />} label="Month-End Balance" value={formatCurrency(plan.summary.expectedMonthEndBalance)} tone="gold" />
-        <SummaryCard icon={<ShieldCheck className="h-4 w-4" />} label="Survival Score" value={`${plan.summary.survivalScore}%`} tone="primary" />
+        <SummaryCard icon={<ShieldCheck className="h-4 w-4" />} label="Financial Score" value={`${plan.summary.survivalScore}%`} tone="primary" />
       </div>
 
       {/* Today's Priority — expanded */}
@@ -492,7 +492,7 @@ function ImpactPreviewBlock({ preview }: { preview: ImpactPreview }) {
       <p className="font-display text-[11px] font-semibold uppercase tracking-wide text-success">If you follow this</p>
       <div className="mt-2 space-y-2 text-[11px]">
         <ImpactRow
-          label="Survival Score"
+          label="Financial Score"
           current={`${preview.survivalScore.current}`}
           projected={`${preview.survivalScore.projected}`}
           up={scoreUp}
@@ -756,7 +756,7 @@ function BuyCheckCard({ plan, input }: { plan: MonthlyPlan; input: CoachAnalysis
           <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
             <MiniStat label="Current Balance" value={formatCurrency(result.currentBalance)} />
             <MiniStat label="Balance After" value={formatCurrency(result.balanceAfter)} />
-            <MiniStat label="New Survival Score" value={`${result.newSurvivalScore}% (${result.scoreImpact})`} />
+            <MiniStat label="New Financial Score" value={`${result.newSurvivalScore}% (${result.scoreImpact})`} />
             <MiniStat label="New Safe Daily" value={formatCurrency(result.newSafeDailySpend)} />
             <MiniStat label="Goal Delay" value={result.goalDelayDays === 0 ? "None" : `${result.goalDelayDays} days`} />
             <MiniStat label="Monthly Budget Impact" value={`${result.monthlyBudgetImpactPct}%`} />

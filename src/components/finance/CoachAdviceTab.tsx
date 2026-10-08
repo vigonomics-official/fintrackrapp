@@ -422,7 +422,7 @@ function AdviceImpactBlock({ preview }: { preview: AdviceImpactPreview }) {
     <div className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3">
       <p className="font-display text-[11px] font-semibold uppercase tracking-wide text-success">If you follow this</p>
       <div className="mt-2 space-y-2 text-[11px]">
-        <ImpactRow label="Survival Score" current={`${preview.score.current}`} projected={`${preview.score.projected}`} up={scoreUp} />
+        <ImpactRow label="Financial Score" current={`${preview.score.current}`} projected={`${preview.score.projected}`} up={scoreUp} />
         <ImpactRow label="Monthly Savings" current={formatCurrency(preview.savings.current)} projected={formatCurrency(preview.savings.projected)} up={savingsUp} />
         <ImpactRow
           label="Goal Completion"

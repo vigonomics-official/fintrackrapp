@@ -156,7 +156,7 @@ export function PurchaseCheckPanel({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="pcp-price" className="text-xs">Price ({currency})</Label>
-            <Input id="pcp-price" type="number" inputMode="decimal" placeholder="2000" value={priceStr}
+            <Input id="pcp-price" type="number" inputMode="decimal" placeholder="Enter price" value={priceStr}
               onChange={(e) => { setPriceStr(e.target.value); setError(null); }} />
           </div>
           {error && <p className="text-xs font-medium text-destructive">{error}</p>}
@@ -213,7 +213,7 @@ export function PurchaseCheckPanel({
                     after={v.forecastAfter != null ? formatCurrency(v.forecastAfter, currency) : undefined} />
                 )}
                 {v.survivalScore != null && (
-                  <Line label="Survival Score" value={`${v.survivalScore}/100`}
+                  <Line label="Financial Score" value={`${v.survivalScore}/100`}
                     after={v.survivalScoreAfter != null ? `${v.survivalScoreAfter}/100` : undefined} />
                 )}
                 {v.categoryBudgetRemaining != null ? (

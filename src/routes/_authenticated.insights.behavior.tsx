@@ -294,7 +294,7 @@ function PredictionCard({
         <Stat label="Predicted Spend" value={formatCurrency(p.nextMonthSpend, currency)} />
         <Stat label="Expected Savings" value={formatCurrency(p.expectedSavings, currency)} />
         <Stat label="Top Category" value={p.highestCategory ?? "—"} />
-        <Stat label="Survival Score" value={`${p.expectedSurvivalScore}/100`} />
+        <Stat label="Projected Financial Score" value={`${p.expectedSurvivalScore}/100`} />
       </div>
       <p className={cn("mt-2 text-xs font-medium", riskTone)}>
         Overspending risk: {p.overspendRisk}

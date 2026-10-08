@@ -106,7 +106,7 @@ export const QUICK_ACTIONS: string[] = [
   "Can I Buy This?",
   "Compare purchases",
   "What if I save ₹1000 more?",
-  "Explain my Survival Score",
+  "Explain my Financial Score",
   "Reduce Expenses",
   "Increase Savings",
   "Emergency Fund",

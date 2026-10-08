@@ -328,7 +328,7 @@ function SalarySurvivalCoachPage() {
             <div className="min-w-0">
               <p className="font-display text-base font-semibold">
                 {survival.hasIncome
-                  ? `Survival Score: ${survival.score}/100`
+                  ? `Financial Score: ${survival.score}/100`
                   : "Let's get you set up"}
               </p>
               <p className="mt-0.5 text-xs text-white/85">
