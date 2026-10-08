@@ -133,7 +133,7 @@ function InsightsPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">Survival Score</p>
+              <p className="text-xs text-muted-foreground">Financial Score</p>
               <p className="mt-0.5 font-display text-2xl font-bold text-foreground">
                 {survival.hasIncome ? `${survival.score}` : "—"}
                 {survival.hasIncome && <span className="text-sm font-medium text-muted-foreground">/100</span>}

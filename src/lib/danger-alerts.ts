@@ -63,7 +63,7 @@ export type AlertAction =
 export interface AlertImpactMetrics {
   /** Change to Safe Daily Spend (₹/day). Negative = reduced. */
   safeDailyDelta?: number;
-  /** Survival Score change (points). Negative = drops. */
+  /** Financial Score change (points). Negative = drops. */
   scoreDelta?: number;
   /** Current score, when scoreDelta is present. */
   scoreCurrent?: number;
@@ -807,7 +807,7 @@ export function detectAlerts(ctx: AlertContext): DangerAlert[] {
         id: "predictive-score",
         kind: "predictive-score",
         priority,
-        title: "Survival Score at Risk",
+        title: "Financial Score at Risk",
         problem: `Score could drop from ${survival.score} → ${Math.max(0, survival.score - projectedDrop)} at today's pace.`,
         oneLineReason: `Sustained overshoot for ${survival.daysRemaining} days.`,
         why: `Overshooting safe daily consistently reduces the buffer and pace components.`,
@@ -857,7 +857,7 @@ export function detectAlerts(ctx: AlertContext): DangerAlert[] {
   //   2. Nearest deadline (urgency.sortDays ascending)
   //   3. Highest urgency emoji tier
   //   4. Highest confidence
-  //   5. Highest impact on Survival Score (|scoreDelta|)
+  //   5. Highest impact on Financial Score (|scoreDelta|)
   // Priority label is only a tie-breaker, not a dominant factor.
   unique.sort((a, b) => compositeScore(b) - compositeScore(a));
 

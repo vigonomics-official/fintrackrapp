@@ -90,7 +90,7 @@ export function SurvivalPreferenceRows() {
           </li>
 
           <li className="px-3 py-3 sm:px-4">
-            <RowHead icon="📊" label="Survival Score Preferences" hint="Choose what counts towards your score" />
+            <RowHead icon="📊" label="Financial Score Preferences" hint="Choose what counts towards your score" />
             <div className="mt-2 space-y-2.5">
               {(
                 [

@@ -1,3 +1,4 @@
+import { getSharedMetrics } from "@/lib/financial-metrics";
 // Shared types + mock analyzer for the AI Salary Survival Coach.
 // Kept provider-agnostic so a Gemini call can slot in later without UI changes.
 
@@ -286,7 +287,12 @@ export function analyzeMock(input: CoachAnalysisInput): CoachAnalysisResult {
     "Custom Goal": 50_000,
   };
   const target = goalTargets[financialGoal];
-  const monthlyTarget = Math.max(500, round(Math.max(monthlySurplus, monthlySalary * 0.1) * 0.6));
+  const shared = getSharedMetrics();
+  // One savings recommendation: the Planner → Allocate savings amount when set.
+  const monthlyTarget =
+    shared && shared.savingsTarget > 0
+      ? shared.savingsTarget
+      : Math.max(500, round(Math.max(monthlySurplus, monthlySalary * 0.1) * 0.6));
   const etaMonths = monthlyTarget > 0 ? Math.ceil(target / monthlyTarget) : 0;
   const completion = new Date();
   completion.setMonth(completion.getMonth() + etaMonths);
@@ -354,10 +360,11 @@ export function analyzeMock(input: CoachAnalysisInput): CoachAnalysisResult {
   const recommendations = priorities.map((p) => p.title);
 
   return {
-    healthScore,
+    // Shared Financial Score / recorded-savings rate win over form estimates.
+    healthScore: shared?.score ?? healthScore,
     totalExpenses,
     monthlySurplus,
-    savingsRate,
+    savingsRate: shared?.savingsRate ?? savingsRate,
     emiRatio,
     breakdown,
     summary,

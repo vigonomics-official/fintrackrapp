@@ -13,6 +13,7 @@ import { CanIBuyThisDialog } from "@/components/finance/CanIBuyThisDialog";
 import { CreateGoalDialog } from "@/components/finance/CreateGoalDialog";
 import { AppBrand, AppMark } from "@/components/finance/AppBrand";
 import { TXN_EVENT } from "@/lib/sms-background";
+import { SharedMetricsPublisher } from "@/components/finance/SharedMetricsPublisher";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
@@ -153,6 +154,7 @@ function AuthenticatedLayout() {
       </aside>
 
       <main className="w-full min-w-0 max-w-full flex-1 overflow-x-hidden pb-24 md:pb-0">
+        <SharedMetricsPublisher />
         <Outlet />
       </main>
 

@@ -86,6 +86,9 @@ export function useAllocation() {
     },
     onSuccess: (next) => {
       qc.setQueryData([KEY, user?.id], next);
+      // Planned savings (Safe Daily, Financial Score, recommendations) read the
+      // split from the profile row, so refresh it too.
+      qc.invalidateQueries({ queryKey: ["profile", user?.id] });
     },
     onError: () => {
       toast.error("Couldn't save your allocation. Please try again.");

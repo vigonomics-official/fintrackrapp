@@ -310,11 +310,11 @@ function WeeklyReportPage() {
       <PageHeader title="Weekly Survival Report" subtitle={`Week of ${fmtRange}`} />
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5 sm:px-6 md:px-10">
 
-        {/* Weekly Survival Score */}
+        {/* Weekly Spending Score */}
         <Card className="p-4 shadow-soft">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">Weekly Survival Score</p>
+              <p className="text-xs text-muted-foreground">Weekly Spending Score</p>
               <p className="mt-1 font-display text-3xl font-bold">{weekly.score}<span className="text-base text-muted-foreground">/100</span></p>
               <span className={cn("mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium", toneClass(weekly.status.tone))}>
                 {weekly.status.emoji} {weekly.status.label}

@@ -398,7 +398,7 @@ function Dashboard() {
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                   <SurvivalStat label="Days left" value={survival.isSalaryToday ? "Today 🎉" : String(survival.days)} />
                   <SurvivalStat label="EMI pressure" value={`${emiTone} ${survival.emiLevel}`} />
-                  <SurvivalStat label="Survival Score" value={`${survival.score}/100`} />
+                  <SurvivalStat label="Financial Score" value={`${survival.score}/100`} />
                 </div>
                 <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
                   <div className="h-full bg-gold transition-all" style={{ width: `${Math.min(100, Math.max(0, survival.score))}%` }} />
@@ -729,7 +729,7 @@ function Dashboard() {
                   </div>
                   <BuyRow label="Salary Left" before={formatCurrency(survival.salaryLeft, currency)} after={formatCurrency(afterBuy.newLeft, currency)} />
                   <BuyRow label="Safe Daily Spend" before={`${formatCurrency(survival.safeDaily, currency)}/day`} after={`${formatCurrency(afterBuy.newDaily, currency)}/day`} />
-                  <BuyRow label="Survival Score" before={`${survival.score}`} after={`${afterBuy.newScore}`} />
+                  <BuyRow label="Financial Score" before={`${survival.score}`} after={`${afterBuy.newScore}`} />
                 </div>
               );
             })()}

@@ -1,3 +1,4 @@
+import { getSharedMetrics } from "@/lib/financial-metrics";
 // Structured coach response — used by the provider and rendered by the
 // chat UI. Keeping this separate makes swapping Mock → Gemini a
 // data-shape mapping, not a UI change.
@@ -121,7 +122,7 @@ export function replyImproveScore(
   if (!hasSalary(input)) return replyInsufficient(lang, input, "salary", "Add your monthly salary in Analyze and ask me again.");
   const top = analysis.priorities.slice(0, 3).map((p, i) => `${i + 1}. ${p.title}`).join(" • ");
   return {
-    shortAnswer: `Your Survival Score is ${analysis.healthScore}/100. Focus on 2–3 levers.`,
+    shortAnswer: `Your Financial Score is ${analysis.healthScore}/100. Focus on 2–3 levers.`,
     why: top || "A balanced plan is already in place.",
     action: analysis.priorities[0]?.detail ?? "Maintain your current rhythm.",
     monthlyImpact: `+5 to +12 points expected within 2 months.`,
@@ -297,19 +298,14 @@ export function replyExplainMetric(
   }
   switch (metric) {
     case "survivalScore": {
-      const buffer = Math.max(-50, Math.min(50, analysis.savingsRate));
-      const emiPart = Math.max(0, 30 - analysis.emiRatio * 0.5);
       return withFollowUps({
-        shortAnswer: `Your Survival Score is ${analysis.healthScore}/100.`,
-        why: `It blends your savings rate (${Math.round(analysis.savingsRate)}%) with EMI pressure (${Math.round(analysis.emiRatio)}%).`,
-        action: `Push savings rate above 20% and keep EMIs under 30% of salary.`,
-        monthlyImpact: `A 5% savings-rate bump lifts the score by ~2 points.`,
+        shortAnswer: `Your Financial Score is ${analysis.healthScore}/100.`,
+        why: `It adds four parts worth up to 25 points each: Emergency Fund, Savings (money actually saved this cycle), Debt (EMI pressure) and Spending Discipline.`,
+        action: `Open Planner → Future to see the points for each part.`,
         confidence: "high",
         dataUsed: baseDataUsed(lang, input),
         calculation:
-          `Step 1 · Buffer = clamp(savingsRate ${Math.round(analysis.savingsRate)}%, -50, 50) = ${Math.round(buffer)}\n` +
-          `Step 2 · EMI score = clamp(30 − EMI% × 0.5, 0, 30) = ${Math.round(emiPart)}\n` +
-          `Step 3 · Score = 50 + Buffer × 0.4 + EMIscore × 0.6 = ${analysis.healthScore}`,
+          `Financial Score = Emergency Fund (0–25) + Savings (0–25) + Debt (0–25) + Spending Discipline (0–25) = ${analysis.healthScore}`,
       });
     }
     case "safeDailySpend": {
@@ -342,10 +338,11 @@ export function replyExplainMetric(
       });
     }
     case "savingsTarget": {
-      const target = Math.max(500, Math.round((input.monthlySalary * 0.2) / 100) * 100);
+      const planned = getSharedMetrics()?.savingsTarget ?? 0;
+      const target = planned > 0 ? planned : Math.max(500, Math.round((input.monthlySalary * 0.2) / 100) * 100);
       return withFollowUps({
         shortAnswer: `Aim to save ${inr(target)}/month.`,
-        why: `A 20% savings rate is a widely-recommended floor.`,
+        why: `${planned > 0 ? "This is the Savings amount in your Planner → Allocate plan." : "A 20% savings rate is a widely-recommended floor."}`,
         action: `Auto-transfer ${inr(target)} on salary day.`,
         monthlyImpact: `${inr(target * 12)} banked in 12 months.`,
         confidence: "high",
@@ -544,7 +541,7 @@ export function replyMonthStatus(
   const days = daysUntilNextSalary(input.salaryDate);
   return withFollowUps({
     shortAnswer: `This month looks ${verdict}: ${inr(analysis.monthlySurplus)} surplus on ${inr(input.monthlySalary)} salary.`,
-    why: `Total outflow is ${inr(analysis.totalExpenses)} against a salary of ${inr(input.monthlySalary)}, a ${rate}% savings rate, and your Survival Score is ${analysis.healthScore}/100.${
+    why: `Total outflow is ${inr(analysis.totalExpenses)} against a salary of ${inr(input.monthlySalary)}, a ${rate}% savings rate, and your Financial Score is ${analysis.healthScore}/100.${
       days !== null ? ` ${days} day(s) remain before your next salary.` : ""
     }`,
     action:
@@ -560,7 +557,7 @@ export function replyMonthStatus(
     calculation:
       `Salary ${inr(input.monthlySalary)} − Expenses ${inr(analysis.totalExpenses)} = Surplus ${inr(analysis.monthlySurplus)}\n` +
       `Savings rate = Surplus ÷ Salary = ${rate}%\n` +
-      `Survival Score (FinSurvive) = ${analysis.healthScore}/100`,
+      `Financial Score (FinSurvive) = ${analysis.healthScore}/100`,
   });
 }
 

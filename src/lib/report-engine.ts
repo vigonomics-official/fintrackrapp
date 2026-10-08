@@ -239,9 +239,9 @@ export function buildReportInsights(s: ReportSnapshot, m: ReportMetrics): Report
       out.push({
         code: "STRONG_FINANCIAL_DISCIPLINE",
         severity: "positive",
-        fact: `Survival Score is ${s.score} and the cycle is projected to end at ${cur(s.forecastBalance)}.`,
+        fact: `Financial Score is ${s.score} and the cycle is projected to end at ${cur(s.forecastBalance)}.`,
         numbers: { score: s.score, forecastBalance: s.forecastBalance },
-        dataUsed: ["Survival Score", "Month-end forecast"],
+        dataUsed: ["Financial Score", "Month-end forecast"],
         context: "Score and forecast come straight from FinSurvive's survival engine.",
         confidence: "high",
         impactText: "Your current pace is sustainable.",
@@ -369,7 +369,7 @@ export function buildDeterministicReport(s: ReportSnapshot): ReportResult {
   push("executiveSummary", "Executive summary", [
     `${s.period.label}: ${cur(s.totalSpent)} spent across ${s.expenseCount} expense${s.expenseCount === 1 ? "" : "s"}.`,
     s.salary != null ? `Salary ${cur(s.salary)}, ${cur(s.salaryLeft ?? 0)} left.` : null,
-    s.score != null ? `Survival Score ${s.score}.` : null,
+    s.score != null ? `Financial Score ${s.score}.` : null,
     s.forecastBalance != null ? `Month-end forecast ${cur(s.forecastBalance)}.` : null,
   ]);
 

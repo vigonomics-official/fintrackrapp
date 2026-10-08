@@ -26,7 +26,7 @@ export const DATA_LABELS = {
   goal: "Goal progress",
   emi: "Loans & EMIs",
   cycle: "Salary cycle",
-  score: "Survival Score",
+  score: "Financial Score",
 } as const;
 
 export type DataKey = keyof typeof DATA_LABELS;

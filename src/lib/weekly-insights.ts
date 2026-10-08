@@ -208,7 +208,7 @@ export function buildComparison(opts: {
     : "";
 
   const scoreBit = prevWeeklyScore > 0
-    ? ` Survival Score ${scoreDelta >= 0 ? "improved" : "dropped"} by ${Math.abs(scoreDelta)} pts.`
+    ? ` Weekly spending score ${scoreDelta >= 0 ? "improved" : "dropped"} by ${Math.abs(scoreDelta)} pts.`
     : "";
 
   const safeBit = prevSafeDaily > 0
@@ -398,7 +398,7 @@ export function buildWeeklyAchievements(opts: {
     out.push({
       id: "excellent-score",
       emoji: "🌟",
-      title: "Excellent Survival Score",
+      title: "Excellent spending week",
       detail: `Scored ${weeklyScore}/100 this week.`,
     });
   } else if (prevWeeklyScore > 0 && weeklyScore - prevWeeklyScore >= 10) {
