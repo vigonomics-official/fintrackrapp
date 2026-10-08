@@ -1539,7 +1539,7 @@ function FutureTab() {
     [s, transactions, loans, goals],
   );
   const milestones = useMemo(
-    () => computeMilestones({ survival: s, transactions, loans, goals }),
+    () => computeMilestones({ survival: s, transactions, loans, goals, metrics: s.metrics }),
     [s, transactions, loans, goals],
   );
   const actions = useMemo(

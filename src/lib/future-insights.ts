@@ -242,6 +242,7 @@ export function computeMilestones(opts: {
   transactions: Tx[];
   loans: Loan[];
   goals: FutureGoal[];
+  metrics?: FinancialMetrics;
 }): Milestone[] {
   const { survival, transactions, loans, goals } = opts;
   const profile = getFinancialProfile();
