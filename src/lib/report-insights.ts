@@ -9,6 +9,7 @@
 import type { Transaction, Budget, Category, Loan } from "@/hooks/use-finance";
 import type { SalarySettings } from "@/hooks/use-salary-settings";
 import { computeSurvival } from "@/lib/survival";
+import { savingsCategoryIds } from "@/lib/safe-daily";
 
 export type Grade = "A+" | "A" | "B" | "C" | "D";
 export type HealthLevel = "Excellent" | "Good" | "Average" | "Needs Attention";
@@ -135,6 +136,8 @@ const sumInvestments = (txs: Transaction[], cats: Category[]) => {
 // ---------- public API ----------
 
 export interface ReportContext {
+  /** Shared Financial Score + Emergency Fund progress (use-safe-daily). */
+  shared?: { score: number; emergencyPct: number };
   transactions: Transaction[];
   categories: Category[];
   budgets: Budget[];

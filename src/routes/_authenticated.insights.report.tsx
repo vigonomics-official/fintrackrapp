@@ -66,7 +66,8 @@ function ReportPage() {
 
   // Insights (all Gemini-ready pure derivations)
   const insights = useMemo(() => {
-    const ctx = { transactions: txs, categories, budgets, loans, salarySettings: settings, now };
+    const ctx = { transactions: txs, categories, budgets, loans, salarySettings: settings, now,
+      shared: { score: survival.score, emergencyPct: survival.metrics.emergency.pct } };
     const { current, previous, cmp, salaryCredited, cycleMature } = buildComparison(ctx);
     const win = buildBiggestWin(ctx, current, previous, cmp);
     const health = buildHealthBreakdown(ctx, current);
@@ -75,7 +76,7 @@ function ReportPage() {
     const prediction = buildPrediction(current, previous, health);
     const challenge = buildChallenge(current, previous, health, ctx);
     return { current, previous, cmp, win, health, review, badges, prediction, challenge, salaryCredited, cycleMature };
-  }, [txs, categories, budgets, loans, settings, now]);
+  }, [txs, categories, budgets, loans, settings, now, survival.score, survival.metrics.emergency.pct]);
 
   const cycleStart = survival.lastSalaryDate;
   const cycleTxs = useMemo(() => {
