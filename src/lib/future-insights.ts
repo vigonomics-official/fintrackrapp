@@ -1,3 +1,4 @@
+import type { FinancialMetrics } from "@/lib/financial-metrics";
 // Future tab insights — reuses existing calculations from Planner (survival),
 // Goals (localStorage), Loans, Financial Profile, and Transactions.
 // No new business logic; pure aggregation for the "Future" tab.
@@ -76,8 +77,25 @@ export function computeFutureScore(opts: {
   transactions: Tx[];
   loans: Loan[];
   goals: FutureGoal[];
+  metrics?: FinancialMetrics;
 }): FutureScore {
   const { survival, transactions, loans, goals } = opts;
+  if (opts.metrics) {
+    // The one shared Financial Score — never a second version.
+    const m = opts.metrics.score;
+    const total = m.total;
+    return {
+      total,
+      grade: total == null ? null : gradeOf(total),
+      headline:
+        total == null ? "Complete your Salary Profile to see your Financial Score."
+        : total >= 80 ? "You're on a strong path to financial freedom."
+        : total >= 60 ? "Solid foundation — small tweaks will accelerate you."
+        : total >= 40 ? "Focus on savings and reducing EMI load."
+        : "Rebuild your buffer before taking on new commitments.",
+      components: m.components,
+    };
+  }
   const rememberedSavings = getRememberedSavings();
   const savingsGoalTotal = goals
     .filter((g) => g.kind === "savings" || g.kind === "emergency" || g.kind === "investment")
@@ -612,8 +630,15 @@ export function computeNetWorth(opts: {
   transactions: Tx[];
   loans: Loan[];
   goals: FutureGoal[];
+  metrics?: FinancialMetrics;
 }): NetWorth {
   const { survival, transactions, loans, goals } = opts;
+  if (opts.metrics) {
+    const n = opts.metrics.netWorth;
+    const avg = opts.metrics.avgMonthlyExpenses;
+    const futureFundGoal = avg && avg > 0 ? Math.round(avg * 12 * 25) : 500_000;
+    return { ...n, futureFundGoal, progressPct: Math.max(0, Math.min(100, (n.netWorth / futureFundGoal) * 100)), hasSignal: n.hasSignal || survival.hasIncome };
+  }
   const rememberedSavings = getRememberedSavings() ?? 0;
   const investments = goals
     .filter((g) => g.kind === "investment")

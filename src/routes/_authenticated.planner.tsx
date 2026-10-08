@@ -1535,7 +1535,7 @@ function FutureTab() {
   }, []);
 
   const score = useMemo(
-    () => computeFutureScore({ survival: s, transactions, loans, goals }),
+    () => computeFutureScore({ survival: s, transactions, loans, goals, metrics: s.metrics }),
     [s, transactions, loans, goals],
   );
   const milestones = useMemo(
@@ -1547,7 +1547,7 @@ function FutureTab() {
     [s, transactions, loans, goals],
   );
   const netWorth = useMemo(
-    () => computeNetWorth({ survival: s, transactions, loans, goals }),
+    () => computeNetWorth({ survival: s, transactions, loans, goals, metrics: s.metrics }),
     [s, transactions, loans, goals],
   );
 
@@ -1766,7 +1766,7 @@ function FutureScoreCard({ score }: { score: ReturnType<typeof computeFutureScor
         <div>
           <div className="flex items-center gap-2">
             <Rocket className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Financial Future Score</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Financial Score</p>
           </div>
           <p className="mt-0.5 text-[11px] text-muted-foreground">Based on your real financial data</p>
         </div>
