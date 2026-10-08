@@ -47,6 +47,8 @@ export type Survival = {
   totalSpent: number;
   /** Elapsed cycle days whose spend stayed at/below the even daily budget. */
   daysUnderBudget: number;
+  /** Cycle days counted for daysUnderBudget (includes today, min 1). */
+  cycleDaysElapsed: number;
   /** Salary left minus reserved obligations (may be negative). */
   available: number;
   reserved: number;
@@ -222,6 +224,7 @@ export function computeSurvival(opts: {
     daysElapsed,
     totalSpent: expensesSinceSalary,
     daysUnderBudget,
+    cycleDaysElapsed: elapsedDayCount,
     available,
     reserved,
     overLimit,
