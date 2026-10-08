@@ -1,20 +1,14 @@
-import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
-import { useProfile, useTransactions, useLoans } from "@/hooks/use-finance";
+import { useProfile } from "@/hooks/use-finance";
 import { useSalarySettings } from "@/hooks/use-salary-settings";
-import { computeSurvival } from "@/lib/survival";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { formatCurrency } from "@/lib/currency";
 
 export function FinancialSnapshotCard() {
   const { data: profile } = useProfile();
   const currency = profile?.currency ?? "INR";
   const { settings } = useSalarySettings();
-  const { data: transactions = [] } = useTransactions();
-  const { data: loans = [] } = useLoans();
-  const s = useMemo(
-    () => computeSurvival({ transactions, loans, salarySettings: settings }),
-    [transactions, loans, settings],
-  );
+  const s = useSafeDailySurvival();
 
   return (
     <Card id="section-snapshot" className="space-y-3 p-3 shadow-soft sm:p-4">
