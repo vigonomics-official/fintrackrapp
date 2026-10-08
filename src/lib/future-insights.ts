@@ -270,8 +270,27 @@ export function computeMilestones(opts: {
 
   const out: Milestone[] = [];
 
-  // 1. Emergency Fund — 6 months of expenses
-  if (avgExp != null && avgExp > 0) {
+  // 1. Emergency Fund — 6 months of expenses; only Emergency Fund goal money counts.
+  const m = opts.metrics;
+  if (m && m.emergency.target > 0 && m.emergency.basis !== "none") {
+    const e = m.emergency;
+    const save = m.savings.target > 0 ? m.savings.target : monthlySave;
+    const remaining = Math.max(0, e.target - e.saved);
+    const months = save > 0 ? remaining / save : null;
+    out.push({
+      key: "emergency",
+      title: "Emergency Fund (6 months)",
+      current: e.saved,
+      target: e.target,
+      monthsToGo: e.achieved ? 0 : months,
+      eta: e.achieved ? null : eta(months),
+      status: e.achieved ? "achieved" : months != null && months <= 24 ? "on-track" : "behind",
+      progressPct: e.pct,
+      detail: e.achieved
+        ? "Emergency Fund target reached"
+        : `${(e.monthsDisplay ?? 0).toFixed(1)} of ${Number(e.targetMonths.toFixed(1))} months covered · ${e.status}`,
+    });
+  } else if (!m && avgExp != null && avgExp > 0) {
     const target = Math.round(avgExp * 6);
     const current = savingsKnown ? totalSavings : 0;
     const remaining = Math.max(0, target - current);
