@@ -155,6 +155,8 @@ interface CycleStats {
   score: number;
   safeDaily: number;
   salary: number;
+  /** Money actually recorded to Savings/SIP/Deposit categories this cycle. */
+  actualSavings: number;
 }
 
 function computeCycleStats(ctx: ReportContext, when: Date): CycleStats {
@@ -170,6 +172,10 @@ function computeCycleStats(ctx: ReportContext, when: Date): CycleStats {
   const income = sumBy(inCycle, "income");
   const expenses = sumBy(inCycle, "expense");
   const investments = sumInvestments(inCycle, ctx.categories);
+  const saveCats = new Set(savingsCategoryIds(ctx.categories as any));
+  const actualSavings = inCycle
+    .filter((t: any) => t.type === "expense" && t.category_id && saveCats.has(t.category_id))
+    .reduce((a: number, t: any) => a + Number(t.amount), 0);
   const totalDays =
     Math.floor((when.getTime() - s.lastSalaryDate.getTime()) / 86_400_000) + 1;
   return {
@@ -184,6 +190,7 @@ function computeCycleStats(ctx: ReportContext, when: Date): CycleStats {
     score: s.score,
     safeDaily: s.safeDaily,
     salary: s.salary,
+    actualSavings,
   };
 }
 
@@ -196,10 +203,14 @@ export function buildComparison(ctx: ReportContext): {
 } {
   const now = ctx.now ?? new Date();
   const current = computeCycleStats(ctx, now);
+  // The one Financial Score comes from the shared calculation; past cycles
+  // can't be re-scored on the same basis, so the score delta stays neutral.
+  if (ctx.shared) current.score = ctx.shared.score;
 
   const prevWhen = new Date(current.startKey);
   prevWhen.setDate(prevWhen.getDate() - 1);
   const previous = computeCycleStats(ctx, prevWhen);
+  if (ctx.shared) previous.score = ctx.shared.score;
 
   // Salary is considered credited only when an income transaction has landed
   // in the current cycle. Salary Settings alone do not count.
@@ -376,13 +387,12 @@ export function buildHealthBreakdown(
   ctx: ReportContext,
   cur: CycleStats,
 ): HealthBreakdown {
-  const savingsRate = cur.income > 0 ? (cur.savings / cur.income) * 100 : 0;
+  const savingsRate = cur.income > 0 ? (cur.actualSavings / cur.income) * 100 : 0;
   const budgetPct = cur.totalDays > 0 ? (cur.daysUnderBudget / cur.totalDays) * 100 : 0;
   const investRate = cur.income > 0 ? (cur.investments / cur.income) * 100 : 0;
 
   // Emergency fund proxy: 3× monthly expenses as target, use current savings as buffer.
-  const target = Math.max(1, cur.expenses * 3);
-  const emergencyPct = Math.min(100, (cur.savings / target) * 100);
+  const emergencyPct = ctx.shared ? ctx.shared.emergencyPct : 0;
 
   // Bills: EMIs paid vs due (assume paid if not marked otherwise — loans exist w/ balance).
   const activeLoans = ctx.loans.filter((l) => Number(l.remaining_balance) > 0).length;
