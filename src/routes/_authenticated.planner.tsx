@@ -1191,9 +1191,10 @@ function BillsTab() {
 
   useLegacyBillsMigration(!isLoading, bills.length > 0, create);
 
-  const totalBills = bills
-    .filter((b) => !isBillPaidThisCycle(b.paid_at, s.lastSalaryDate))
-    .reduce((acc, b) => acc + b.amount, 0);
+  const { data: loans = [] } = useLoans();
+  const { data: purchases = [] } = usePurchaseList();
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
+  const totalBills = s.obligations.bills + s.obligations.emis;
   const afterBills = Math.max(0, s.salaryLeft - totalBills);
 
   function add() {
@@ -1214,18 +1215,21 @@ function BillsTab() {
 
 
   const today = new Date();
-  const sorted = [...bills].sort((a, b) => {
-    const da = new Date(today.getFullYear(), today.getMonth(), a.due_day);
-    if (da < today) da.setMonth(da.getMonth() + 1);
-    const db = new Date(today.getFullYear(), today.getMonth(), b.due_day);
-    if (db < today) db.setMonth(db.getMonth() + 1);
-    return da.getTime() - db.getTime();
-  });
+  const billDue = (day: number) => {
+    const due = new Date(today.getFullYear(), today.getMonth(), day);
+    if (due < today) due.setMonth(due.getMonth() + 1);
+    return due;
+  };
+  const sorted = [
+    ...bills.map((bill) => ({ key: `bill-${bill.id}`, due: billDue(bill.due_day), bill, loan: null, purchase: null })),
+    ...loans.filter((loan) => Number(loan.remaining_balance) > 0).map((loan) => ({ key: `emi-${loan.id}`, due: nextLoanDueDate(loan.due_day), bill: null, loan, purchase: null })),
+    ...purchases.filter((purchase) => purchase.status !== "purchased").map((purchase) => ({ key: `purchase-${purchase.id}`, due: purchase.target_date ? new Date(purchase.target_date) : null, bill: null, loan: null, purchase })),
+  ].sort((a, b) => (a.due?.getTime() ?? Infinity) - (b.due?.getTime() ?? Infinity));
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2.5">
-        <Stat label="Upcoming Bills" value={formatCurrency(totalBills, s.currency)} />
+        <Stat label="Total due before next salary" value={formatCurrency(totalBills, s.currency)} />
         <Stat
           label="Left After Bills"
           value={s.hasIncome ? formatCurrency(afterBills, s.currency) : "—"}
@@ -1286,21 +1290,38 @@ function BillsTab() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {sorted.map((b) => {
-            const due = new Date(today.getFullYear(), today.getMonth(), b.due_day);
-            if (due < today) due.setMonth(due.getMonth() + 1);
-            const days = Math.ceil((due.getTime() - today.getTime()) / 86_400_000);
+          {sorted.map((entry) => {
+            const { bill: b, loan, purchase, due } = entry;
+            if (!b) return (
+              <Card key={entry.key} className="shadow-soft">
+                <CardContent className="space-y-2 p-3.5">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{loan?.loan_name ?? purchase?.item_name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {loan ? "EMI · Monthly" : `Planned purchase · ${purchase?.category} · ${purchase?.priority}`}
+                        {due ? ` · Due ${due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}` : " · No target date"}
+                      </p>
+                    </div>
+                    <p className="shrink-0 font-display text-sm font-bold tabular-nums">{formatCurrency(Number(loan?.emi_amount ?? purchase?.estimated_price ?? 0), s.currency)}</p>
+                  </div>
+                  {purchase?.notes && <p className="text-[11px] text-muted-foreground">{purchase.notes}</p>}
+                  {loan && <Button size="sm" variant="outline" onClick={() => setSelectedLoan(loan)}>View / Manage</Button>}
+                </CardContent>
+              </Card>
+            );
+            const days = due ? Math.ceil((due.getTime() - today.getTime()) / 86_400_000) : 0;
             const paid = isBillPaidThisCycle(b.paid_at, s.lastSalaryDate);
             return (
               <Card key={b.id} className="shadow-soft">
-                <CardContent className="flex items-center gap-3 p-3.5">
+                <CardContent className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 p-3.5">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <BellRing className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{b.name}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {b.recurring ? "Recurring" : "One-time"} · Due {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {days === 0 ? "Today" : `in ${days}d`}
+                      Bill / Subscription · {b.recurring ? "Recurring" : "One-time"} · Due {due?.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {days === 0 ? "Today" : `in ${days}d`}
                     </p>
                   </div>
 
@@ -1310,41 +1331,42 @@ function BillsTab() {
                       {formatCurrency(b.amount, s.currency)}
                     </p>
                     {paid ? (
-                      <button
+                      <Button size="sm" variant="ghost"
                         onClick={() => setPaid.mutate({ id: b.id, paid: false }, {
                           onError: () => toast.error("Couldn't update this bill. Please try again."),
                         })}
-                        className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                        className="h-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"
                         aria-label={`Undo paid for ${b.name}`}
                       >
                         Paid · Undo
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button size="sm" variant="ghost"
                         onClick={() => setPaid.mutate({ id: b.id, paid: true }, {
                           onError: () => toast.error("Couldn't update this bill. Please try again."),
                         })}
-                        className="rounded-full border border-primary/40 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                        className="h-auto rounded-full border border-primary/40 px-2 py-0.5 text-[10px] font-semibold text-primary"
                       >
                         Mark as Paid
-                      </button>
+                      </Button>
                     )}
                   </div>
-                  <button
+                  <Button size="icon" variant="ghost"
                     onClick={() => remove.mutate(b.id, {
                       onError: () => toast.error("Couldn't delete this bill. Please try again."),
                     })}
-                    className="text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                     aria-label="Remove"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+      {selectedLoan && <LoanDetailSheet loan={loans.find((l) => l.id === selectedLoan.id) ?? selectedLoan} currency={s.currency} open onOpenChange={(open) => { if (!open) setSelectedLoan(null); }} />}
     </div>
   );
 }
