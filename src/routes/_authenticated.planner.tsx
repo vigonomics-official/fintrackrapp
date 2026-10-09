@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight, Sparkles, Plus, Trash2, TrendingDown, BellRing,
   CheckCircle2, Flame, Target as TargetIcon, ShieldCheck, Rocket, Lock, CheckCircle,
-  Wallet, MessageSquare, TrendingUp,
+  Wallet, MessageSquare, TrendingUp, Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { FinancialJourney } from "@/components/finance/FinancialJourney";
-import { useTransactions, useLoans, useProfile, useCategories, type Loan } from "@/hooks/use-finance";
+import { useTransactions, useLoans, useProfile, useCategories, useBudgets, monthKey, type Loan } from "@/hooks/use-finance";
 import {
   LoanFormSheet, LoanDetailSheet, loanTypeMeta, nextLoanDueDate,
 } from "@/components/finance/LoanSheets";
@@ -32,6 +32,8 @@ import { onProfileUpdated } from "@/lib/financial-profile";
 import { PurchaseCheckPanel, type PurchasePrefill } from "@/components/finance/PurchaseCheckPanel";
 import { useAllocation, DEFAULT_ALLOC, type Alloc } from "@/lib/allocation";
 import { useBills, useBillMutations, isBillPaidThisCycle, type Bill } from "@/lib/bills";
+import { usePurchaseList } from "@/lib/purchase-list";
+import { buildComparison } from "@/lib/report-insights";
 import { PurchaseListSection } from "@/components/finance/PurchaseListSection";
 import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets";
 import {
@@ -59,58 +61,112 @@ export const Route = createFileRoute("/_authenticated/planner")({
   }),
 });
 
-type TabKey = "monthly" | "allocation" | "loans" | "bills" | "goals" | "cibt" | "future";
+type TabKey = "last" | "this" | "next" | "future";
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: "monthly", label: "Plan" },
-  { key: "allocation", label: "Allocate" },
-  { key: "loans", label: "Loans" },
-  { key: "bills", label: "Bills" },
-  { key: "goals", label: "Goals" },
-  { key: "cibt", label: "Buy" },
+  { key: "last", label: "Last Cycle" },
+  { key: "this", label: "This Cycle" },
+  { key: "next", label: "Next Cycle" },
   { key: "future", label: "Future" },
 ];
 
 function PlannerPage() {
-  const [tab, setTab] = useState<TabKey>("monthly");
-
+  const [tab, setTab] = useState<TabKey>("this");
+  // Mount each visited panel once: switching tabs must not discard unsaved forms.
+  const [visited, setVisited] = useState<TabKey[]>(["this"]);
+  const selectTab = (next: TabKey) => {
+    setVisited((prev) => prev.includes(next) ? prev : [...prev, next]);
+    setTab(next);
+  };
   return (
     <div className="w-full overflow-x-hidden pb-10">
       <PageHeader title="Planner" subtitle="Plan • Save • Survive" />
-
-      {/* Tab strip */}
       <div className="sticky top-0 z-10 border-b bg-card/80 backdrop-blur">
-        <div className="no-scrollbar mx-auto flex max-w-3xl gap-1 overflow-x-auto px-3 py-1.5 sm:px-6 md:px-10">
-          {TABS.map((t) => {
-            const active = tab === t.key;
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setTab(t.key)}
-                className={cn(
-                  "shrink-0 rounded-full px-3 py-1 text-[12px] font-medium transition-colors",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-soft"
-                    : "text-muted-foreground hover:bg-muted/60"
-                )}
-              >
-                <span className="whitespace-nowrap">{t.label}</span>
-              </button>
-            );
-          })}
+        <div role="tablist" aria-label="Planner salary cycles" className="mx-auto grid w-full max-w-3xl grid-cols-4 gap-1 px-3 py-1.5">
+          {TABS.map((t) => (
+            <Button key={t.key} type="button" role="tab" id={`planner-tab-${t.key}`} tabIndex={tab === t.key ? 0 : -1}
+              aria-selected={tab === t.key} aria-controls={`planner-panel-${t.key}`}
+              onKeyDown={(event) => {
+                const index = TABS.findIndex((item) => item.key === t.key);
+                const nextIndex = event.key === "ArrowRight" ? (index + 1) % TABS.length
+                  : event.key === "ArrowLeft" ? (index + TABS.length - 1) % TABS.length
+                  : event.key === "Home" ? 0 : event.key === "End" ? TABS.length - 1 : null;
+                if (nextIndex == null) return;
+                event.preventDefault();
+                const next = TABS[nextIndex];
+                if (!next) return;
+                selectTab(next.key);
+                document.getElementById(`planner-tab-${next.key}`)?.focus();
+              }}
+              variant="ghost" onClick={() => selectTab(t.key)}
+              className={cn("h-8 min-w-0 rounded-full px-1 py-1 text-[12px] font-medium transition-colors",
+                tab === t.key ? "bg-primary text-primary-foreground shadow-soft hover:bg-primary/90" : "text-muted-foreground hover:bg-muted/60")}>
+              {t.label}
+            </Button>
+          ))}
         </div>
       </div>
-
-      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5 sm:px-6 md:px-10">
-        {tab === "monthly" && <MonthlyPlan />}
-        {tab === "allocation" && <SalaryAllocation />}
-        {tab === "loans" && <LoansTab />}
-        {tab === "bills" && <BillsTab />}
-        {tab === "goals" && <GoalsTab />}
-        {tab === "cibt" && <CanIBuyThisTab />}
-        {tab === "future" && <FutureTab />}
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5">
+        {TABS.filter((t) => visited.includes(t.key)).map((t) => (
+          <div key={t.key} role="tabpanel" id={`planner-panel-${t.key}`} aria-labelledby={`planner-tab-${t.key}`} hidden={tab !== t.key}>
+            {t.key === "last" && <LastCycleTab />}
+            {t.key === "this" && <MonthlyPlan />}
+            {t.key === "next" && <div className="space-y-4"><BillsTab /><CanIBuyThisTab /></div>}
+            {t.key === "future" && <FutureTab />}
+          </div>
+        ))}
       </div>
+    </div>
+  );
+}
+
+function LastCycleTab() {
+  const s = useSurvival();
+  const { data: transactions = [], isLoading } = useTransactions();
+  const { data: categories = [] } = useCategories();
+  const { data: loans = [] } = useLoans();
+  const { settings } = useSalarySettings();
+  const previousEnd = new Date(s.lastSalaryDate);
+  previousEnd.setDate(previousEnd.getDate() - 1);
+  const { data: budgets = [] } = useBudgets(monthKey(previousEnd));
+  // Never substitute today's salary amount or allocation for a historical record.
+  const previous = buildComparison({ transactions, categories, budgets, loans,
+    salarySettings: { ...settings, amount: null } }).previous;
+  const exists = previous.income > 0;
+  const plannedSpending = budgets.length ? budgets.reduce((sum, b) => sum + b.monthly_limit, 0) : null;
+  const shareText = `FinSurvive · ${previous.startKey}–${previous.endKey}: Salary ${formatCurrency(previous.income, s.currency)}, spent ${formatCurrency(previous.expenses, s.currency)}, saved ${formatCurrency(previous.actualSavings, s.currency)}.`;
+  const share = async () => {
+    try {
+      if (navigator.share) await navigator.share({ text: shareText });
+      else await navigator.clipboard.writeText(shareText);
+    } catch {}
+  };
+  return (
+    <div className="space-y-4">
+      {isLoading ? <p className="text-sm text-muted-foreground">Loading your previous cycle…</p> : !exists ? (
+        <Card className="shadow-soft"><CardContent className="p-5 text-center text-sm text-muted-foreground">
+          Your first report card appears after your first salary cycle ends.
+        </CardContent></Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-2.5">
+            <Stat label="Previous cycle salary" value={formatCurrency(previous.income, s.currency)} />
+            <Stat label="Total spent" value={formatCurrency(previous.expenses, s.currency)} />
+            <Stat label="Total saved" value={formatCurrency(previous.actualSavings, s.currency)} />
+          </div>
+          <Card className="shadow-soft"><CardContent className="space-y-3 p-4">
+            <h2 className="font-display text-base font-bold">Monthly Report Card</h2>
+            <p className="text-xs text-muted-foreground">{previous.startKey} – {previous.endKey}</p>
+            <p className="text-sm">Planned spending: {plannedSpending == null ? "Not recorded" : formatCurrency(plannedSpending, s.currency)} · Actual: {formatCurrency(previous.expenses, s.currency)}</p>
+            <p className="text-sm">Planned savings: Not recorded · Actual: {formatCurrency(previous.actualSavings, s.currency)}</p>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={share}><Share2 className="h-4 w-4" />Share</Button>
+              <Button size="sm" variant="outline" asChild><Link to="/insights/report">Open Monthly Report</Link></Button>
+            </div>
+          </CardContent></Card>
+        </>
+      )}
+      <LoansTab closedOnly />
     </div>
   );
 }
@@ -136,26 +192,6 @@ function MonthlyPlan() {
   const s = useSurvival();
   const { data: loans = [] } = useLoans();
   const outstanding = loans.reduce((a, l) => a + Number(l.remaining_balance || 0), 0);
-  const forecast = s.forecastBalance;
-  // GREEN if positive; ORANGE if 0 to -2000; RED if < -2000
-  const forecastTone =
-    forecast > 0
-      ? "text-success"
-      : forecast >= -2000
-        ? "text-gold-foreground"
-        : "text-destructive";
-  const forecastBorder =
-    forecast > 0
-      ? "border-success/30 bg-success/5"
-      : forecast >= -2000
-        ? "border-gold/30 bg-gold/10"
-        : "border-destructive/30 bg-destructive/5";
-  const forecastLabel =
-    forecast > 0
-      ? `You may save ${formatCurrency(forecast, s.currency)} this month 🎯`
-      : forecast >= -2000
-        ? "Slight overspend risk ⚠️"
-        : "Reduce daily spend to recover";
   
   const zone =
     s.score >= 70
@@ -192,45 +228,13 @@ function MonthlyPlan() {
         </CardContent>
       </Card>
 
-      <FinancialJourney
-        monthlyEmi={s.monthlyEmi}
-        salary={s.salary}
-        outstanding={outstanding}
-        currency={s.currency}
-      />
-
-      <div className="grid grid-cols-2 gap-2.5">
-        <Stat label="Days Left" value={s.hasIncome ? (s.isSalaryToday ? "Today 🎉" : `${s.days}`) : "—"} />
-        <Stat label="Financial Score" value={`${s.score}/100`} />
-        <Stat label="Monthly EMI" value={formatCurrency(s.monthlyEmi, s.currency)} />
-        <Stat
-          label="EMI Pressure"
-          value={s.emiLevel}
-          tone={s.emiLevel === "High" ? "text-destructive" : s.emiLevel === "Medium" ? "text-gold-foreground" : "text-success"}
-        />
-      </div>
-
-      {/* Month-End Forecast */}
-      <Card className={cn("border shadow-soft", forecastBorder)}>
-        <CardContent className="space-y-1 p-4">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
-          <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? forecastTone : "")}>
-            {s.hasIncome ? formatCurrency(forecast, s.currency) : "—"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {!s.hasIncome ? "Add salary to forecast your month-end balance." : forecastLabel}
-          </p>
-        </CardContent>
-      </Card>
+      <SalaryAllocation />
 
       {/* Weekly budget tracker */}
       {s.hasIncome && <WeeklyBudget salary={s.salary} currency={s.currency} cycleStart={s.lastSalaryDate} />}
 
       {/* Smart Next Actions — personalized from real data */}
       {s.hasIncome && <SmartNextActions s={s} outstanding={outstanding} />}
-
-      {/* Financial Score */}
-      {s.hasIncome && <HealthScoreCard s={s} outstanding={outstanding} />}
 
       <Link
         to="/insights/coach"
@@ -803,7 +807,7 @@ function SalaryAllocation() {
 
 /* ============================ Loans & EMI ============================ */
 
-function LoansTab() {
+function LoansTab({ closedOnly = false }: { closedOnly?: boolean }) {
   const { data: profile } = useProfile();
   const { data: loans = [] } = useLoans();
   const { data: txs = [] } = useTransactions();
@@ -813,7 +817,7 @@ function LoansTab() {
   const [selected, setSelected] = useState<Loan | null>(null);
   const [extra, setExtra] = useState("");
   const [strategy, setStrategy] = useState<PayoffStrategy>("snowball");
-  const [showClosed, setShowClosed] = useState(false);
+  const [showClosed, setShowClosed] = useState(true);
   const extraAmt = Math.max(0, Number(extra) || 0);
 
   const active = useMemo(
@@ -854,6 +858,7 @@ function LoansTab() {
 
   return (
     <div className="space-y-4">
+      {!closedOnly && <>
       {/* 1 — Current debt situation */}
       <div className="grid grid-cols-2 gap-2.5">
         <Stat label="Total Loans" value={`${active.length}`} />
@@ -1088,15 +1093,16 @@ function LoansTab() {
         </>
       )}
 
+      </>}
       {/* 5 — Closed loans (kept as history) */}
-      {closed.length > 0 && (
+      {closedOnly && closed.length > 0 && (
         <div className="space-y-2">
           <button
             type="button"
             onClick={() => setShowClosed((v) => !v)}
             className="flex w-full items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
           >
-            <span>Closed Loans ({closed.length})</span>
+            <span>Cleared ({closed.length})</span>
             <span>{showClosed ? "Hide" : "Show"}</span>
           </button>
           {showClosed && closed.map((l) => (
@@ -1105,7 +1111,7 @@ function LoansTab() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{l.loan_name}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    Paid off · Borrowed {formatCurrency(l.total_amount, currency)}
+                    Cleared · Borrowed {formatCurrency(l.total_amount, currency)}
                   </p>
                 </div>
                 <Button
@@ -1120,7 +1126,7 @@ function LoansTab() {
         </div>
       )}
 
-      <LoanFormSheet open={addOpen} onOpenChange={setAddOpen} />
+      {!closedOnly && <LoanFormSheet open={addOpen} onOpenChange={setAddOpen} />}
       {selected && (
         <LoanDetailSheet
           key={selected.id}
@@ -1177,9 +1183,10 @@ function BillsTab() {
 
   useLegacyBillsMigration(!isLoading, bills.length > 0, create);
 
-  const totalBills = bills
-    .filter((b) => !isBillPaidThisCycle(b.paid_at, s.lastSalaryDate))
-    .reduce((acc, b) => acc + b.amount, 0);
+  const { data: loans = [] } = useLoans();
+  const { data: purchases = [] } = usePurchaseList();
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
+  const totalBills = s.obligations.bills + s.obligations.emis;
   const afterBills = Math.max(0, s.salaryLeft - totalBills);
 
   function add() {
@@ -1200,18 +1207,22 @@ function BillsTab() {
 
 
   const today = new Date();
-  const sorted = [...bills].sort((a, b) => {
-    const da = new Date(today.getFullYear(), today.getMonth(), a.due_day);
-    if (da < today) da.setMonth(da.getMonth() + 1);
-    const db = new Date(today.getFullYear(), today.getMonth(), b.due_day);
-    if (db < today) db.setMonth(db.getMonth() + 1);
-    return da.getTime() - db.getTime();
-  });
+  today.setHours(0, 0, 0, 0);
+  const billDue = (day: number) => {
+    const due = new Date(today.getFullYear(), today.getMonth(), day);
+    if (due < today) due.setMonth(due.getMonth() + 1);
+    return due;
+  };
+  const sorted = [
+    ...bills.map((bill) => ({ key: `bill-${bill.id}`, due: billDue(bill.due_day), bill, loan: null, purchase: null })),
+    ...loans.filter((loan) => Number(loan.remaining_balance) > 0).map((loan) => ({ key: `emi-${loan.id}`, due: billDue(Math.min(loan.due_day, 28)), bill: null, loan, purchase: null })),
+    ...purchases.filter((purchase) => purchase.status !== "purchased").map((purchase) => ({ key: `purchase-${purchase.id}`, due: purchase.target_date ? new Date(purchase.target_date) : null, bill: null, loan: null, purchase })),
+  ].sort((a, b) => (a.due?.getTime() ?? Infinity) - (b.due?.getTime() ?? Infinity));
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2.5">
-        <Stat label="Upcoming Bills" value={formatCurrency(totalBills, s.currency)} />
+        <Stat label="Total due before next salary" value={formatCurrency(totalBills, s.currency)} />
         <Stat
           label="Left After Bills"
           value={s.hasIncome ? formatCurrency(afterBills, s.currency) : "—"}
@@ -1272,21 +1283,38 @@ function BillsTab() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {sorted.map((b) => {
-            const due = new Date(today.getFullYear(), today.getMonth(), b.due_day);
-            if (due < today) due.setMonth(due.getMonth() + 1);
-            const days = Math.ceil((due.getTime() - today.getTime()) / 86_400_000);
+          {sorted.map((entry) => {
+            const { bill: b, loan, purchase, due } = entry;
+            if (!b) return (
+              <Card key={entry.key} className="shadow-soft">
+                <CardContent className="space-y-2 p-3.5">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{loan?.loan_name ?? purchase?.item_name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {loan ? "EMI · Monthly" : `Planned purchase · ${purchase?.category} · ${purchase?.priority}`}
+                        {due ? ` · Due ${due.toLocaleDateString(undefined, { day: "numeric", month: "short" })}` : " · No target date"}
+                      </p>
+                    </div>
+                    <p className="shrink-0 font-display text-sm font-bold tabular-nums">{formatCurrency(Number(loan?.emi_amount ?? purchase?.estimated_price ?? 0), s.currency)}</p>
+                  </div>
+                  {purchase?.notes && <p className="text-[11px] text-muted-foreground">{purchase.notes}</p>}
+                  {loan && <Button size="sm" variant="outline" onClick={() => setSelectedLoan(loan)}>View / Manage</Button>}
+                </CardContent>
+              </Card>
+            );
+            const days = due ? Math.ceil((due.getTime() - today.getTime()) / 86_400_000) : 0;
             const paid = isBillPaidThisCycle(b.paid_at, s.lastSalaryDate);
             return (
               <Card key={b.id} className="shadow-soft">
-                <CardContent className="flex items-center gap-3 p-3.5">
+                <CardContent className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 p-3.5">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <BellRing className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{b.name}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {b.recurring ? "Recurring" : "One-time"} · Due {due.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {days === 0 ? "Today" : `in ${days}d`}
+                      Bill / Subscription · {b.recurring ? "Recurring" : "One-time"} · Due {due?.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · {days === 0 ? "Today" : `in ${days}d`}
                     </p>
                   </div>
 
@@ -1296,41 +1324,42 @@ function BillsTab() {
                       {formatCurrency(b.amount, s.currency)}
                     </p>
                     {paid ? (
-                      <button
+                      <Button size="sm" variant="ghost"
                         onClick={() => setPaid.mutate({ id: b.id, paid: false }, {
                           onError: () => toast.error("Couldn't update this bill. Please try again."),
                         })}
-                        className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                        className="h-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"
                         aria-label={`Undo paid for ${b.name}`}
                       >
                         Paid · Undo
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button size="sm" variant="ghost"
                         onClick={() => setPaid.mutate({ id: b.id, paid: true }, {
                           onError: () => toast.error("Couldn't update this bill. Please try again."),
                         })}
-                        className="rounded-full border border-primary/40 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                        className="h-auto rounded-full border border-primary/40 px-2 py-0.5 text-[10px] font-semibold text-primary"
                       >
                         Mark as Paid
-                      </button>
+                      </Button>
                     )}
                   </div>
-                  <button
+                  <Button size="icon" variant="ghost"
                     onClick={() => remove.mutate(b.id, {
                       onError: () => toast.error("Couldn't delete this bill. Please try again."),
                     })}
-                    className="text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                     aria-label="Remove"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+      {selectedLoan && <LoanDetailSheet loan={loans.find((l) => l.id === selectedLoan.id) ?? selectedLoan} currency={s.currency} open onOpenChange={(open) => { if (!open) setSelectedLoan(null); }} />}
     </div>
   );
 }
@@ -1550,13 +1579,29 @@ function FutureTab() {
     () => computeNetWorth({ survival: s, transactions, loans, goals, metrics: s.metrics }),
     [s, transactions, loans, goals],
   );
+  const forecast = s.forecastBalance;
+  const forecastTone = forecast > 0 ? "text-success" : forecast >= -2000 ? "text-gold-foreground" : "text-destructive";
+  const forecastBorder = forecast > 0 ? "border-success/30 bg-success/5" : forecast >= -2000 ? "border-gold/30 bg-gold/10" : "border-destructive/30 bg-destructive/5";
+  const forecastLabel = forecast > 0 ? `You may save ${formatCurrency(forecast, s.currency)} this month 🎯` : forecast >= -2000 ? "Slight overspend risk ⚠️" : "Reduce daily spend to recover";
 
   return (
     <div className="space-y-4">
-      <FutureScoreCard score={score} />
+      <GoalsTab />
+      <FinancialJourney monthlyEmi={s.monthlyEmi} salary={s.salary} outstanding={netWorth.liabilities} currency={s.currency} />
+      <Card className={cn("border shadow-soft", forecastBorder)}>
+        <CardContent className="space-y-1 p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
+          <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? forecastTone : "")}>
+            {s.hasIncome ? formatCurrency(forecast, s.currency) : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">{!s.hasIncome ? "Add salary to forecast your month-end balance." : forecastLabel}</p>
+        </CardContent>
+      </Card>
       <FutureActionsCard actions={actions} />
       <NetWorthCard nw={netWorth} currency={s.currency} />
       <FutureMilestonesCard milestones={milestones} currency={s.currency} />
+      <LoansTab />
+      <HealthScoreCard s={s} outstanding={netWorth.liabilities} />
     </div>
   );
 }
