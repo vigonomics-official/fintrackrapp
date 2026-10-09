@@ -82,7 +82,7 @@ function PlannerPage() {
     <div className="w-full overflow-x-hidden pb-10">
       <PageHeader title="Planner" subtitle="Plan • Save • Survive" />
       <div className="sticky top-0 z-10 border-b bg-card/80 backdrop-blur">
-        <div role="tablist" aria-label="Planner salary cycles" className="mx-auto grid max-w-3xl grid-cols-4 gap-1 px-3 py-1.5 sm:px-6 md:px-10">
+        <div role="tablist" aria-label="Planner salary cycles" className="mx-auto grid w-full max-w-3xl grid-cols-4 gap-1 px-3 py-1.5">
           {TABS.map((t) => (
             <Button key={t.key} type="button" role="tab" id={`planner-tab-${t.key}`} tabIndex={tab === t.key ? 0 : -1}
               aria-selected={tab === t.key} aria-controls={`planner-panel-${t.key}`}
@@ -106,7 +106,7 @@ function PlannerPage() {
           ))}
         </div>
       </div>
-      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5 sm:px-6 md:px-10">
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5">
         {TABS.filter((t) => visited.includes(t.key)).map((t) => (
           <div key={t.key} role="tabpanel" id={`planner-panel-${t.key}`} aria-labelledby={`planner-tab-${t.key}`} hidden={tab !== t.key}>
             {t.key === "last" && <LastCycleTab />}
@@ -1207,6 +1207,7 @@ function BillsTab() {
 
 
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const billDue = (day: number) => {
     const due = new Date(today.getFullYear(), today.getMonth(), day);
     if (due < today) due.setMonth(due.getMonth() + 1);
@@ -1214,7 +1215,7 @@ function BillsTab() {
   };
   const sorted = [
     ...bills.map((bill) => ({ key: `bill-${bill.id}`, due: billDue(bill.due_day), bill, loan: null, purchase: null })),
-    ...loans.filter((loan) => Number(loan.remaining_balance) > 0).map((loan) => ({ key: `emi-${loan.id}`, due: nextLoanDueDate(loan.due_day), bill: null, loan, purchase: null })),
+    ...loans.filter((loan) => Number(loan.remaining_balance) > 0).map((loan) => ({ key: `emi-${loan.id}`, due: billDue(Math.min(loan.due_day, 28)), bill: null, loan, purchase: null })),
     ...purchases.filter((purchase) => purchase.status !== "purchased").map((purchase) => ({ key: `purchase-${purchase.id}`, due: purchase.target_date ? new Date(purchase.target_date) : null, bill: null, loan: null, purchase })),
   ].sort((a, b) => (a.due?.getTime() ?? Infinity) - (b.due?.getTime() ?? Infinity));
 
