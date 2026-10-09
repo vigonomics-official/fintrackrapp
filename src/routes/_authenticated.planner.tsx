@@ -84,8 +84,20 @@ function PlannerPage() {
       <div className="sticky top-0 z-10 border-b bg-card/80 backdrop-blur">
         <div role="tablist" aria-label="Planner salary cycles" className="mx-auto grid max-w-3xl grid-cols-4 gap-1 px-3 py-1.5 sm:px-6 md:px-10">
           {TABS.map((t) => (
-            <Button key={t.key} type="button" role="tab" id={`planner-tab-${t.key}`}
+            <Button key={t.key} type="button" role="tab" id={`planner-tab-${t.key}`} tabIndex={tab === t.key ? 0 : -1}
               aria-selected={tab === t.key} aria-controls={`planner-panel-${t.key}`}
+              onKeyDown={(event) => {
+                const index = TABS.findIndex((item) => item.key === t.key);
+                const nextIndex = event.key === "ArrowRight" ? (index + 1) % TABS.length
+                  : event.key === "ArrowLeft" ? (index + TABS.length - 1) % TABS.length
+                  : event.key === "Home" ? 0 : event.key === "End" ? TABS.length - 1 : null;
+                if (nextIndex == null) return;
+                event.preventDefault();
+                const next = TABS[nextIndex];
+                if (!next) return;
+                selectTab(next.key);
+                document.getElementById(`planner-tab-${next.key}`)?.focus();
+              }}
               variant="ghost" onClick={() => selectTab(t.key)}
               className={cn("h-8 min-w-0 rounded-full px-1 py-1 text-[12px] font-medium transition-colors",
                 tab === t.key ? "bg-primary text-primary-foreground shadow-soft hover:bg-primary/90" : "text-muted-foreground hover:bg-muted/60")}>
@@ -180,26 +192,6 @@ function MonthlyPlan() {
   const s = useSurvival();
   const { data: loans = [] } = useLoans();
   const outstanding = loans.reduce((a, l) => a + Number(l.remaining_balance || 0), 0);
-  const forecast = s.forecastBalance;
-  // GREEN if positive; ORANGE if 0 to -2000; RED if < -2000
-  const forecastTone =
-    forecast > 0
-      ? "text-success"
-      : forecast >= -2000
-        ? "text-gold-foreground"
-        : "text-destructive";
-  const forecastBorder =
-    forecast > 0
-      ? "border-success/30 bg-success/5"
-      : forecast >= -2000
-        ? "border-gold/30 bg-gold/10"
-        : "border-destructive/30 bg-destructive/5";
-  const forecastLabel =
-    forecast > 0
-      ? `You may save ${formatCurrency(forecast, s.currency)} this month 🎯`
-      : forecast >= -2000
-        ? "Slight overspend risk ⚠️"
-        : "Reduce daily spend to recover";
   
   const zone =
     s.score >= 70
@@ -1586,11 +1578,24 @@ function FutureTab() {
     () => computeNetWorth({ survival: s, transactions, loans, goals, metrics: s.metrics }),
     [s, transactions, loans, goals],
   );
+  const forecast = s.forecastBalance;
+  const forecastTone = forecast > 0 ? "text-success" : forecast >= -2000 ? "text-gold-foreground" : "text-destructive";
+  const forecastBorder = forecast > 0 ? "border-success/30 bg-success/5" : forecast >= -2000 ? "border-gold/30 bg-gold/10" : "border-destructive/30 bg-destructive/5";
+  const forecastLabel = forecast > 0 ? `You may save ${formatCurrency(forecast, s.currency)} this month 🎯` : forecast >= -2000 ? "Slight overspend risk ⚠️" : "Reduce daily spend to recover";
 
   return (
     <div className="space-y-4">
       <GoalsTab />
       <FinancialJourney monthlyEmi={s.monthlyEmi} salary={s.salary} outstanding={netWorth.liabilities} currency={s.currency} />
+      <Card className={cn("border shadow-soft", forecastBorder)}>
+        <CardContent className="space-y-1 p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
+          <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? forecastTone : "")}>
+            {s.hasIncome ? formatCurrency(forecast, s.currency) : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">{!s.hasIncome ? "Add salary to forecast your month-end balance." : forecastLabel}</p>
+        </CardContent>
+      </Card>
       <FutureActionsCard actions={actions} />
       <NetWorthCard nw={netWorth} currency={s.currency} />
       <FutureMilestonesCard milestones={milestones} currency={s.currency} />
