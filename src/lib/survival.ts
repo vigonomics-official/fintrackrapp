@@ -84,8 +84,12 @@ export function computeSurvival(opts: {
       ? cycleNextSalaryDate(payDay, now)
       : new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
+  // Only a salary-sized credit starts a new cycle: small freelance/interest
+  // income must not shift the cycle start away from the real payday.
+  const minSalaryCredit =
+    salarySettings.amount != null && salarySettings.amount > 0 ? salarySettings.amount * 0.5 : 0;
   const incomeKeys = transactions
-    .filter((t) => t.type === "income")
+    .filter((t) => t.type === "income" && Number(t.amount) >= minSalaryCredit)
     .map((t) => String(t.transaction_date).slice(0, 10))
     .filter((k) => k <= todayKey)
     .sort();

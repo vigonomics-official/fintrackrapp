@@ -158,6 +158,8 @@ interface CycleStats {
   score: number;
   safeDaily: number;
   salary: number;
+  /** Income recorded in Salary-named income categories this cycle. */
+  salaryIncome: number;
   /** Money actually recorded to Savings/SIP/Deposit categories this cycle. */
   actualSavings: number;
 }
@@ -179,6 +181,12 @@ function computeCycleStats(ctx: ReportContext, when: Date): CycleStats {
   const actualSavings = inCycle
     .filter((t: any) => t.type === "expense" && t.category_id && saveCats.has(t.category_id))
     .reduce((a: number, t: any) => a + Number(t.amount), 0);
+  const salaryCats = new Set(
+    (ctx.categories as any[]).filter((c) => c.type === "income" && /salary/i.test(String(c.name))).map((c) => c.id),
+  );
+  const salaryIncome = inCycle
+    .filter((t: any) => t.type === "income" && t.category_id && salaryCats.has(t.category_id))
+    .reduce((a: number, t: any) => a + Number(t.amount), 0);
   const totalDays =
     Math.floor((when.getTime() - s.lastSalaryDate.getTime()) / 86_400_000) + 1;
   return {
@@ -194,6 +202,7 @@ function computeCycleStats(ctx: ReportContext, when: Date): CycleStats {
     safeDaily: s.safeDaily,
     salary: s.salary,
     actualSavings,
+    salaryIncome,
   };
 }
 

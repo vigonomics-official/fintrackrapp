@@ -126,15 +126,17 @@ function LastCycleTab() {
   const { data: categories = [] } = useCategories();
   const { data: loans = [] } = useLoans();
   const { settings } = useSalarySettings();
-  const previousEnd = new Date(s.lastSalaryDate);
-  previousEnd.setDate(previousEnd.getDate() - 1);
-  const { data: budgets = [] } = useBudgets(monthKey(previousEnd));
-  // Never substitute today's salary amount or allocation for a historical record.
-  const previous = buildComparison({ transactions, categories, budgets, loans,
-    salarySettings: { ...settings, amount: null } }).previous;
-  const exists = previous.income > 0;
-  const plannedSpending = budgets.length ? budgets.reduce((sum, b) => sum + b.monthly_limit, 0) : null;
-  const shareText = `FinSurvive · ${previous.startKey}–${previous.endKey}: Salary ${formatCurrency(previous.income, s.currency)}, spent ${formatCurrency(previous.expenses, s.currency)}, saved ${formatCurrency(previous.actualSavings, s.currency)}.`;
+  // Historical figures come only from transactions recorded in that cycle.
+  // Budgets are per calendar month and allocation has no history, so the
+  // planned figures for a past salary cycle are not recorded.
+  const previous = buildComparison({ transactions, categories, budgets: [], loans, salarySettings: settings }).previous;
+  const prevTxCount = transactions.filter((t) => {
+    const k = String(t.transaction_date).slice(0, 10);
+    return k >= previous.startKey && k <= previous.endKey;
+  }).length;
+  const exists = prevTxCount > 0;
+  const money = (n: number) => (n > 0 ? formatCurrency(n, s.currency) : "Not recorded");
+  const shareText = `FinSurvive · ${previous.startKey}–${previous.endKey}: Salary ${money(previous.salaryIncome)}, spent ${formatCurrency(previous.expenses, s.currency)}, saved ${money(previous.actualSavings)}.`;
   const share = async () => {
     try {
       if (navigator.share) await navigator.share({ text: shareText });
@@ -150,15 +152,15 @@ function LastCycleTab() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2.5">
-            <Stat label="Previous cycle salary" value={formatCurrency(previous.income, s.currency)} />
+            <Stat label="Previous cycle salary" value={money(previous.salaryIncome)} />
             <Stat label="Total spent" value={formatCurrency(previous.expenses, s.currency)} />
-            <Stat label="Total saved" value={formatCurrency(previous.actualSavings, s.currency)} />
+            <Stat label="Total saved" value={money(previous.actualSavings)} />
           </div>
           <Card className="shadow-soft"><CardContent className="space-y-3 p-4">
             <h2 className="font-display text-base font-bold">Monthly Report Card</h2>
             <p className="text-xs text-muted-foreground">{previous.startKey} – {previous.endKey}</p>
-            <p className="text-sm">Planned spending: {plannedSpending == null ? "Not recorded" : formatCurrency(plannedSpending, s.currency)} · Actual: {formatCurrency(previous.expenses, s.currency)}</p>
-            <p className="text-sm">Planned savings: Not recorded · Actual: {formatCurrency(previous.actualSavings, s.currency)}</p>
+            <p className="text-sm">Planned spending: Not recorded · Actual: {formatCurrency(previous.expenses, s.currency)}</p>
+            <p className="text-sm">Planned savings: Not recorded · Actual: {money(previous.actualSavings)}</p>
             <div className="flex gap-2">
               <Button size="sm" onClick={share}><Share2 className="h-4 w-4" />Share</Button>
               <Button size="sm" variant="outline" asChild><Link to="/insights/report">Open Monthly Report</Link></Button>
