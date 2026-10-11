@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { FinancialJourney } from "@/components/finance/FinancialJourney";
-import { useTransactions, useLoans, useProfile, useCategories, useBudgets, monthKey, type Loan } from "@/hooks/use-finance";
+import { useTransactions, useLoans, useLoanPayments, useProfile, useCategories, useBudgets, monthKey, type Loan } from "@/hooks/use-finance";
 import {
   LoanFormSheet, LoanDetailSheet, loanTypeMeta, nextLoanDueDate,
 } from "@/components/finance/LoanSheets";
@@ -74,10 +74,20 @@ function PlannerPage() {
   const [tab, setTab] = useState<TabKey>("this");
   // Mount each visited panel once: switching tabs must not discard unsaved forms.
   const [visited, setVisited] = useState<TabKey[]>(["this"]);
+  const [loanNavigation, setLoanNavigation] = useState(0);
   const selectTab = (next: TabKey) => {
     setVisited((prev) => prev.includes(next) ? prev : [...prev, next]);
     setTab(next);
   };
+  const manageLoans = () => {
+    selectTab("future");
+    setLoanNavigation((value) => value + 1);
+  };
+  useEffect(() => {
+    if (tab !== "future" || loanNavigation === 0) return;
+    document.getElementById("planner-loans")?.scrollIntoView({ block: "start" });
+    document.getElementById("planner-loans-title")?.focus({ preventScroll: true });
+  }, [tab, loanNavigation]);
   return (
     <div className="w-full overflow-x-hidden pb-10">
       <PageHeader title="Planner" subtitle="Plan • Save • Survive" />
@@ -110,8 +120,8 @@ function PlannerPage() {
         {TABS.filter((t) => visited.includes(t.key)).map((t) => (
           <div key={t.key} role="tabpanel" id={`planner-panel-${t.key}`} aria-labelledby={`planner-tab-${t.key}`} hidden={tab !== t.key}>
             {t.key === "last" && <LastCycleTab />}
-            {t.key === "this" && <MonthlyPlan />}
-            {t.key === "next" && <div className="space-y-4"><BillsTab /><CanIBuyThisTab /></div>}
+            {t.key === "this" && <MonthlyPlan onManageLoans={manageLoans} />}
+            {t.key === "next" && <div className="space-y-4"><BillsTab onManageLoans={manageLoans} /><CanIBuyThisTab /></div>}
             {t.key === "future" && <FutureTab />}
           </div>
         ))}
@@ -190,9 +200,9 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
   );
 }
 
-function MonthlyPlan() {
+function MonthlyPlan({ onManageLoans }: { onManageLoans: () => void }) {
   const s = useSurvival();
-  const { data: loans = [] } = useLoans();
+  const { data: loans = [], isPending: loansPending, isError: loansError } = useLoans();
   const outstanding = loans.reduce((a, l) => a + Number(l.remaining_balance || 0), 0);
   
   const zone =
@@ -227,6 +237,20 @@ function MonthlyPlan() {
               {zone.dot} {zone.label}
             </span>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-soft">
+        <CardContent className="flex items-center justify-between gap-3 p-3.5">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Monthly EMI</p>
+            <p className="font-display text-lg font-bold tabular-nums">
+              {loansPending || loansError ? "—" : formatCurrency(s.monthlyEmi, s.currency)}
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={onManageLoans}>
+            Manage Loans <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
         </CardContent>
       </Card>
 
@@ -810,6 +834,7 @@ function SalaryAllocation() {
 /* ============================ Loans & EMI ============================ */
 
 function LoansTab({ closedOnly = false }: { closedOnly?: boolean }) {
+  const s = useSurvival();
   const { data: profile } = useProfile();
   const { data: loans = [] } = useLoans();
   const { data: txs = [] } = useTransactions();
@@ -834,8 +859,7 @@ function LoansTab({ closedOnly = false }: { closedOnly?: boolean }) {
   // Keep the existing summary calculation logic untouched in behaviour.
   const totals = useMemo(() => {
     const outstanding = loans.reduce((s, l) => s + l.remaining_balance, 0);
-    const monthlyEmi = loans.reduce(
-      (s, l) => s + (l.remaining_balance > 0 ? l.emi_amount : 0), 0);
+    const monthlyEmi = s.monthlyEmi;
     const now = new Date();
     const monthIncome = txs
       .filter((t) => {
@@ -850,7 +874,7 @@ function LoansTab({ closedOnly = false }: { closedOnly?: boolean }) {
       ? new Date(now.getFullYear(), now.getMonth() + monthsToFree)
       : null;
     return { outstanding, monthlyEmi, pressure, debtFree, monthsToFree };
-  }, [loans, txs]);
+  }, [loans, txs, s.monthlyEmi]);
 
   // Read-only snowball projection — never writes to any loan or transaction.
   const plan = useMemo(
@@ -1176,7 +1200,7 @@ function useLegacyBillsMigration(
   }, [ready, hasCloudBills, create]);
 }
 
-function BillsTab() {
+function BillsTab({ onManageLoans }: { onManageLoans: () => void }) {
   const s = useSurvival();
   const { bills, isLoading } = useBills();
   const { create, remove, setPaid } = useBillMutations();
@@ -1186,8 +1210,8 @@ function BillsTab() {
   useLegacyBillsMigration(!isLoading, bills.length > 0, create);
 
   const { data: loans = [] } = useLoans();
+  const { data: loanPayments = [] } = useLoanPayments();
   const { data: purchases = [] } = usePurchaseList();
-  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const totalBills = s.obligations.bills + s.obligations.emis;
   const afterBills = Math.max(0, s.salaryLeft - totalBills);
 
@@ -1217,7 +1241,7 @@ function BillsTab() {
   };
   const sorted = [
     ...bills.map((bill) => ({ key: `bill-${bill.id}`, due: billDue(bill.due_day), bill, loan: null, purchase: null })),
-    ...loans.filter((loan) => Number(loan.remaining_balance) > 0).map((loan) => ({ key: `emi-${loan.id}`, due: billDue(Math.min(loan.due_day, 28)), bill: null, loan, purchase: null })),
+    ...loans.filter((loan) => Number(loan.remaining_balance) > 0).map((loan) => ({ key: `emi-${loan.id}`, due: nextLoanDueDate(loan.due_day), bill: null, loan, purchase: null })),
     ...purchases.filter((purchase) => purchase.status !== "purchased").map((purchase) => ({ key: `purchase-${purchase.id}`, due: purchase.target_date ? new Date(purchase.target_date) : null, bill: null, loan: null, purchase })),
   ].sort((a, b) => (a.due?.getTime() ?? Infinity) - (b.due?.getTime() ?? Infinity));
 
@@ -1287,6 +1311,7 @@ function BillsTab() {
         <div className="space-y-2">
           {sorted.map((entry) => {
             const { bill: b, loan, purchase, due } = entry;
+            const lastPayment = loan ? loanPayments.find((payment) => payment.loan_id === loan.id) : null;
             if (!b) return (
               <Card key={entry.key} className="shadow-soft">
                 <CardContent className="space-y-2 p-3.5">
@@ -1301,7 +1326,10 @@ function BillsTab() {
                     <p className="shrink-0 font-display text-sm font-bold tabular-nums">{formatCurrency(Number(loan?.emi_amount ?? purchase?.estimated_price ?? 0), s.currency)}</p>
                   </div>
                   {purchase?.notes && <p className="text-[11px] text-muted-foreground">{purchase.notes}</p>}
-                  {loan && <Button size="sm" variant="outline" onClick={() => setSelectedLoan(loan)}>View / Manage</Button>}
+                  {lastPayment && <p className="text-[11px] text-muted-foreground">
+                    Last recorded payment · {lastPayment.payment_date} · {lastPayment.payment_status}
+                  </p>}
+                  {loan && <Button size="sm" variant="outline" onClick={onManageLoans}>Manage Loans</Button>}
                 </CardContent>
               </Card>
             );
@@ -1361,7 +1389,6 @@ function BillsTab() {
           })}
         </div>
       )}
-      {selectedLoan && <LoanDetailSheet loan={loans.find((l) => l.id === selectedLoan.id) ?? selectedLoan} currency={s.currency} open onOpenChange={(open) => { if (!open) setSelectedLoan(null); }} />}
     </div>
   );
 }
@@ -1602,7 +1629,10 @@ function FutureTab() {
       <FutureActionsCard actions={actions} />
       <NetWorthCard nw={netWorth} currency={s.currency} />
       <FutureMilestonesCard milestones={milestones} currency={s.currency} />
-      <LoansTab />
+      <section id="planner-loans" aria-labelledby="planner-loans-title" className="scroll-mt-16 space-y-3">
+        <h2 id="planner-loans-title" tabIndex={-1} className="text-sm font-semibold">Loans &amp; EMI</h2>
+        <LoansTab />
+      </section>
       <HealthScoreCard s={s} outstanding={netWorth.liabilities} />
     </div>
   );
