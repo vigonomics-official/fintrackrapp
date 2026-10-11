@@ -1,3 +1,8 @@
+# Loans & EMI navigation
+- [ ] Connect This Cycle EMI summary to the existing Future loan dashboard.
+- [ ] Reuse upcoming loan records, due dates, and recorded payment information without adding payments or expenses.
+- [ ] Verify existing forms, persistence, bill/purchase actions, and available build diagnostics; report limitations.
+
 # Planner reorganization
 - [x] Move existing Planner content into four salary-cycle tabs without changing calculations or stored data.
 - [x] Verify mobile tabs, default selection, shared metrics, and existing actions.
