@@ -1,7 +1,9 @@
 # Loans & EMI navigation
-- [ ] Connect This Cycle EMI summary to the existing Future loan dashboard.
-- [ ] Reuse upcoming loan records, due dates, and recorded payment information without adding payments or expenses.
-- [ ] Verify existing forms, persistence, bill/purchase actions, and available build diagnostics; report limitations.
+- [x] Connect This Cycle EMI summary to the existing Future loan dashboard.
+- [x] Reuse upcoming loan records, due dates, and recorded payment information without adding payments or expenses.
+- [x] Verify existing forms, persistence, bill/purchase actions, and available build diagnostics; report limitations.
+
+Verification: This Cycle shortcut selects Future and focuses Loans & EMI; Next Cycle shortcut also selects Future. Existing Add Loan created one temporary loan, Monthly EMI matched its amount after refresh, upcoming EMI matched its saved due day, and existing Delete removed the temporary loan. No active loans remain from testing. Zero-loan summary shows ₹0 after loading. Mobile widths 360/390/412 have no horizontal overflow. Latest harness build diagnostics show build OK. Typecheck and standalone production-build results are not separately available. Bill/purchase mutations, loan payment recording, edit, sign-out/sign-in, and second-account checks were not repeated. Existing payment workflow is non-atomic, so no new quick-pay action was enabled; existing formulas and storage are unchanged.
 
 # Planner reorganization
 - [x] Move existing Planner content into four salary-cycle tabs without changing calculations or stored data.
