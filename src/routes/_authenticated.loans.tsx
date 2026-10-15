@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/error-utils";
+import { recordLoanPayment, newRequestId } from "@/lib/loan-payments";
 import {
   Plus, Trash2, CheckCircle2, Calendar, TrendingDown,
   Wallet, AlertTriangle, Sparkles, ArrowLeft, Home, Car,
@@ -203,21 +204,16 @@ function LoanDetailDialog({ loan, currency, onClose }: { loan: Loan; currency: s
     ];
   }, [payments, loan]);
 
+  const markPaidBusy = useRef(false);
   const markPaid = async () => {
-    if (!user) return;
-    const newBal = Math.max(0, loan.remaining_balance - loan.emi_amount);
-    const { error: e1 } = await supabase.from("loan_payments" as any).insert({
-      loan_id: loan.id,
-      user_id: user.id,
-      payment_date: new Date().toISOString().slice(0, 10),
-      payment_amount: Math.min(loan.emi_amount, loan.remaining_balance),
-      remaining_balance: newBal,
-      payment_status: "paid",
+    if (!user || markPaidBusy.current) return;
+    if (!confirm(`Record one EMI for ${loan.loan_name}?`)) return;
+    markPaidBusy.current = true;
+    const { error } = await recordLoanPayment({
+      loanId: loan.id, amount: loan.emi_amount, kind: "emi", requestId: newRequestId(),
     });
-    if (e1) return toast.error(friendlyError(e1));
-    const { error: e2 } = await supabase.from("loans" as any)
-      .update({ remaining_balance: newBal }).eq("id", loan.id);
-    if (e2) return toast.error(friendlyError(e2));
+    markPaidBusy.current = false;
+    if (error) return toast.error(friendlyError(error));
     toast.success("EMI marked as paid");
     qc.invalidateQueries({ queryKey: ["loans"] });
     qc.invalidateQueries({ queryKey: ["loan_payments"] });
@@ -388,21 +384,17 @@ function LoansPage() {
     };
   }, [txs, loans, salarySettings, totals, shared.safeDaily]);
 
+  const quickPending = useRef<Set<string>>(new Set());
   const quickMarkPaid = async (loan: Loan, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!user) return;
-    const newBal = Math.max(0, loan.remaining_balance - loan.emi_amount);
-    const { error: e1 } = await supabase.from("loan_payments" as any).insert({
-      loan_id: loan.id,
-      user_id: user.id,
-      payment_date: new Date().toISOString().slice(0, 10),
-      payment_amount: Math.min(loan.emi_amount, loan.remaining_balance),
-      remaining_balance: newBal,
-      payment_status: "paid",
+    if (!user || quickPending.current.has(loan.id)) return;
+    if (!confirm(`Record one EMI of ${loan.emi_amount} for ${loan.loan_name}?`)) return;
+    quickPending.current.add(loan.id);
+    const { error } = await recordLoanPayment({
+      loanId: loan.id, amount: loan.emi_amount, kind: "emi", requestId: newRequestId(),
     });
-    if (e1) return toast.error(friendlyError(e1));
-    const { error: e2 } = await supabase.from("loans" as any).update({ remaining_balance: newBal }).eq("id", loan.id);
-    if (e2) return toast.error(friendlyError(e2));
+    quickPending.current.delete(loan.id);
+    if (error) return toast.error(friendlyError(error));
     toast.success("EMI marked as paid");
     qc.invalidateQueries({ queryKey: ["loans"] });
     qc.invalidateQueries({ queryKey: ["loan_payments"] });

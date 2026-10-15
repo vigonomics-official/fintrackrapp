@@ -88,6 +88,9 @@ export type LoanPayment = {
   id: string; loan_id: string; user_id: string;
   payment_date: string; payment_amount: number; remaining_balance: number;
   payment_status: "paid" | "pending" | "missed"; created_at: string;
+  kind?: "emi" | "extra" | "payoff" | "reversal" | null;
+  emi_period?: string | null; reversed_at?: string | null;
+  reverses_payment_id?: string | null; request_id?: string | null;
 };
 
 export function useLoans() {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { useLoanPayments, type Loan, type LoanType } from "@/hooks/use-finance";
+import { useLoanPayments, type Loan, type LoanType, type LoanPayment } from "@/hooks/use-finance";
+import { recordLoanPayment, reverseLoanPayment, newRequestId, isActivePayment, type LoanPaymentKind } from "@/lib/loan-payments";
 import { formatCurrency } from "@/lib/currency";
 import { friendlyError } from "@/lib/error-utils";
 
@@ -199,7 +200,6 @@ export function LoanDetailSheet({
   const qc = useQueryClient();
   const { data: payments = [] } = useLoanPayments(loan.id);
   const [editOpen, setEditOpen] = useState(false);
-  const [confirmPaidOff, setConfirmPaidOff] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [payAmount, setPayAmount] = useState("");
   const [busy, setBusy] = useState(false);
@@ -231,62 +231,56 @@ export function LoanDetailSheet({
   const Icon = loanTypeMeta(loan.loan_type).icon;
 
   const lastPayment = useMemo(
-    () => [...payments].sort((a, b) => b.payment_date.localeCompare(a.payment_date))[0] ?? null,
+    () => [...payments].filter(isActivePayment)
+      .sort((a, b) => b.payment_date.localeCompare(a.payment_date))[0] ?? null,
     [payments],
   );
 
-  const recordPayment = async () => {
-    if (!user || busy) return;
+  // One request id per confirmation: retries of the same confirmed payment are deduplicated server-side.
+  const [confirmPay, setConfirmPay] = useState<{ amount: number; kind: LoanPaymentKind; requestId: string } | null>(null);
+  const [confirmReverse, setConfirmReverse] = useState<{ payment: LoanPayment; requestId: string } | null>(null);
+  const inFlight = useRef(false);
+
+  const refresh = () => Promise.all([
+    qc.invalidateQueries({ queryKey: ["loans"] }),
+    qc.invalidateQueries({ queryKey: ["loan_payments"] }),
+  ]);
+
+  const askRecordPayment = () => {
     const amt = Number(payAmount) || loan.emi_amount;
-    if (amt <= 0) return toast.error("Enter a payment amount");
-    setBusy(true);
-    const newBal = Math.max(0, loan.remaining_balance - amt);
-    const { error: e1 } = await supabase.from("loan_payments" as any).insert({
-      loan_id: loan.id,
-      user_id: user.id,
-      payment_date: new Date().toISOString().slice(0, 10),
-      payment_amount: Math.min(amt, loan.remaining_balance),
-      remaining_balance: newBal,
-      payment_status: "paid",
-    });
-    if (e1) { setBusy(false); return toast.error(friendlyError(e1)); }
-    const { error: e2 } = await supabase.from("loans" as any)
-      .update({ remaining_balance: newBal }).eq("id", loan.id);
-    setBusy(false);
-    if (e2) return toast.error(friendlyError(e2));
-    toast.success("Payment recorded");
-    setPayAmount("");
-    await Promise.all([
-      qc.invalidateQueries({ queryKey: ["loans"] }),
-      qc.invalidateQueries({ queryKey: ["loan_payments"] }),
-    ]);
+    if (!(amt > 0)) return toast.error("Enter a payment amount");
+    const kind: LoanPaymentKind = !payAmount || amt === loan.emi_amount ? "emi" : "extra";
+    setConfirmPay({ amount: Math.min(amt, loan.remaining_balance), kind, requestId: newRequestId() });
   };
 
-  const markPaidOff = async () => {
-    if (!user || busy) return;
-    setBusy(true);
-    if (loan.remaining_balance > 0) {
-      const { error: e1 } = await supabase.from("loan_payments" as any).insert({
-        loan_id: loan.id,
-        user_id: user.id,
-        payment_date: new Date().toISOString().slice(0, 10),
-        payment_amount: loan.remaining_balance,
-        remaining_balance: 0,
-        payment_status: "paid",
-      });
-      if (e1) { setBusy(false); return toast.error(friendlyError(e1)); }
-    }
-    const { error: e2 } = await supabase.from("loans" as any)
-      .update({ remaining_balance: 0 }).eq("id", loan.id);
-    setBusy(false);
-    if (e2) return toast.error(friendlyError(e2));
-    toast.success("Loan marked as paid off — history kept");
-    setConfirmPaidOff(false);
-    await Promise.all([
-      qc.invalidateQueries({ queryKey: ["loans"] }),
-      qc.invalidateQueries({ queryKey: ["loan_payments"] }),
-    ]);
-    onOpenChange(false);
+  const submitPayment = async () => {
+    if (!user || !confirmPay || inFlight.current) return;
+    inFlight.current = true; setBusy(true);
+    const { error } = await recordLoanPayment({
+      loanId: loan.id, amount: confirmPay.amount, kind: confirmPay.kind, requestId: confirmPay.requestId,
+    });
+    inFlight.current = false; setBusy(false);
+    if (error) { await refresh(); return toast.error(friendlyError(error)); }
+    const wasPayoff = confirmPay.kind === "payoff";
+    toast.success(wasPayoff ? "Loan marked as paid off — history kept" : "Payment recorded");
+    setConfirmPay(null); setPayAmount("");
+    await refresh();
+    if (wasPayoff) onOpenChange(false);
+  };
+
+  const markPaidOff = () => {
+    setConfirmPay({ amount: loan.remaining_balance, kind: "payoff", requestId: newRequestId() });
+  };
+
+  const submitReverse = async () => {
+    if (!confirmReverse || inFlight.current) return;
+    inFlight.current = true; setBusy(true);
+    const { error } = await reverseLoanPayment(confirmReverse.payment.id, confirmReverse.requestId);
+    inFlight.current = false; setBusy(false);
+    if (error) { await refresh(); return toast.error(friendlyError(error)); }
+    toast.success("Payment reversed — balance restored");
+    setConfirmReverse(null);
+    await refresh();
   };
 
   return (
@@ -362,7 +356,7 @@ export function LoanDetailSheet({
                       EMI + extra
                     </Button>
                   </div>
-                  <Button className="w-full bg-gradient-primary" disabled={busy} onClick={recordPayment}>
+                  <Button className="w-full bg-gradient-primary" disabled={busy} onClick={askRecordPayment}>
                     <CheckCircle2 className="mr-1.5 h-4 w-4" />
                     Record payment
                   </Button>
@@ -381,17 +375,35 @@ export function LoanDetailSheet({
                 <p className="text-xs text-muted-foreground">No payments recorded yet.</p>
               ) : (
                 <ul className="divide-y rounded-lg border">
-                  {payments.slice(0, 8).map((p) => (
-                    <li key={p.id} className="flex items-center justify-between px-3 py-2 text-xs">
+                  {payments.slice(0, 8).map((p) => {
+                    const reversal = p.kind === "reversal";
+                    const reversed = !!p.reversed_at;
+                    return (
+                    <li key={p.id} className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
                       <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                        <CheckCircle2 className={`h-3.5 w-3.5 ${reversal || reversed ? "text-muted-foreground" : "text-success"}`} />
                         {new Date(p.payment_date).toLocaleDateString()}
+                        {reversal && <span className="text-muted-foreground">· Reversal</span>}
+                        {reversed && <span className="text-muted-foreground">· Reversed</span>}
                       </span>
-                      <span className="font-semibold tabular-nums">
-                        {formatCurrency(p.payment_amount, currency)}
+                      <span className="flex items-center gap-2">
+                        <span className={`font-semibold tabular-nums ${reversed ? "line-through text-muted-foreground" : ""}`}>
+                          {reversal ? "+" : ""}{formatCurrency(p.payment_amount, currency)}
+                        </span>
+                        {!reversal && !reversed && (
+                          <button
+                            type="button"
+                            className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:underline disabled:opacity-50"
+                            disabled={busy}
+                            onClick={() => setConfirmReverse({ payment: p, requestId: newRequestId() })}
+                          >
+                            Reverse
+                          </button>
+                        )}
                       </span>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -405,7 +417,7 @@ export function LoanDetailSheet({
                 Edit loan details
               </Button>
               {!isClosed && (
-                <Button variant="outline" className="w-full text-success" onClick={() => setConfirmPaidOff(true)}>
+                <Button variant="outline" className="w-full text-success" disabled={busy} onClick={markPaidOff}>
                   <ShieldCheck className="mr-1.5 h-4 w-4" />
                   Mark as Paid Off
                 </Button>
@@ -425,19 +437,41 @@ export function LoanDetailSheet({
 
       <LoanFormSheet open={editOpen} onOpenChange={setEditOpen} initial={loan} />
 
-      <AlertDialog open={confirmPaidOff} onOpenChange={setConfirmPaidOff}>
+      <AlertDialog open={!!confirmPay} onOpenChange={(v) => { if (!v && !busy) setConfirmPay(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Mark this loan as paid off?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {confirmPay?.kind === "payoff" ? "Mark this loan as paid off?" : "Record this payment?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {loan.loan_name}'s outstanding balance will be set to zero and it will move to
-              Closed Loans. The loan record and its payment history are kept — nothing is deleted.
+              {confirmPay?.kind === "payoff"
+                ? `${loan.loan_name}'s outstanding balance will be set to zero and it will move to Closed Loans. The loan record and its payment history are kept — nothing is deleted.`
+                : `${formatCurrency(confirmPay?.amount ?? 0, currency)} will be recorded for ${loan.loan_name}${confirmPay?.kind === "emi" ? " as this month's EMI" : " as an extra payment"}. The outstanding balance becomes ${formatCurrency(Math.max(0, loan.remaining_balance - (confirmPay?.amount ?? 0)), currency)}.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); markPaidOff(); }}>
-              Yes, mark paid off
+            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); submitPayment(); }}>
+              {busy ? "Saving…" : confirmPay?.kind === "payoff" ? "Yes, mark paid off" : "Yes, record payment"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!confirmReverse} onOpenChange={(v) => { if (!v && !busy) setConfirmReverse(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reverse this payment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {formatCurrency(confirmReverse?.payment.payment_amount ?? 0, currency)} will be added back to
+              the outstanding balance. The original payment stays in history marked as reversed, with a
+              separate reversal entry.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); submitReverse(); }}>
+              {busy ? "Saving…" : "Yes, reverse payment"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

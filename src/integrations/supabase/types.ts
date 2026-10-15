@@ -260,32 +260,47 @@ export type Database = {
       loan_payments: {
         Row: {
           created_at: string
+          emi_period: string | null
           id: string
+          kind: string
           loan_id: string
           payment_amount: number
           payment_date: string
           payment_status: Database["public"]["Enums"]["loan_payment_status"]
           remaining_balance: number
+          request_id: string | null
+          reversed_at: string | null
+          reverses_payment_id: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
+          emi_period?: string | null
           id?: string
+          kind?: string
           loan_id: string
           payment_amount: number
           payment_date?: string
           payment_status?: Database["public"]["Enums"]["loan_payment_status"]
           remaining_balance: number
+          request_id?: string | null
+          reversed_at?: string | null
+          reverses_payment_id?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
+          emi_period?: string | null
           id?: string
+          kind?: string
           loan_id?: string
           payment_amount?: number
           payment_date?: string
           payment_status?: Database["public"]["Enums"]["loan_payment_status"]
           remaining_balance?: number
+          request_id?: string | null
+          reversed_at?: string | null
+          reverses_payment_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -294,6 +309,13 @@ export type Database = {
             columns: ["loan_id"]
             isOneToOne: false
             referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_payments_reverses_payment_id_fkey"
+            columns: ["reverses_payment_id"]
+            isOneToOne: false
+            referencedRelation: "loan_payments"
             referencedColumns: ["id"]
           },
         ]
@@ -521,7 +543,60 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      record_loan_payment: {
+        Args: {
+          _amount: number
+          _kind: string
+          _loan_id: string
+          _period: string
+          _request_id: string
+        }
+        Returns: {
+          created_at: string
+          emi_period: string | null
+          id: string
+          kind: string
+          loan_id: string
+          payment_amount: number
+          payment_date: string
+          payment_status: Database["public"]["Enums"]["loan_payment_status"]
+          remaining_balance: number
+          request_id: string | null
+          reversed_at: string | null
+          reverses_payment_id: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "loan_payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      reverse_loan_payment: {
+        Args: { _payment_id: string; _request_id: string }
+        Returns: {
+          created_at: string
+          emi_period: string | null
+          id: string
+          kind: string
+          loan_id: string
+          payment_amount: number
+          payment_date: string
+          payment_status: Database["public"]["Enums"]["loan_payment_status"]
+          remaining_balance: number
+          request_id: string | null
+          reversed_at: string | null
+          reverses_payment_id: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "loan_payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       category_type: "income" | "expense"
