@@ -6,7 +6,10 @@
 type Tx = { type: string; amount: number | string; transaction_date: string; notes?: string | null; subcategory?: string | null; category_id?: string | null };
 type BillLike = { id: string; name: string; amount: number; due_day: number; paid_at?: string | null };
 type LoanLike = { id: string; loan_name: string; emi_amount: number | string; remaining_balance: number | string; due_day: number };
-type PaymentLike = { loan_id: string; payment_date: string; payment_status: string };
+type PaymentLike = {
+  loan_id: string; payment_date: string; payment_status: string;
+  kind?: string | null; reversed_at?: string | null;
+};
 
 export type ObligationItem = { label: string; amount: number; due: Date };
 export type Obligations = {
@@ -93,6 +96,7 @@ export function computeObligations(opts: {
     if (!due) continue;
     const paidViaPayment = opts.loanPayments.some((p) => {
       const k = String(p.payment_date).slice(0, 10);
+      if (p.kind === "reversal" || p.reversed_at) return false;
       return p.loan_id === l.id && p.payment_status === "paid" && k >= startKey && k <= todayKey;
     });
     if (paidViaPayment || recorded(l.loan_name)) continue;

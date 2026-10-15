@@ -15,6 +15,13 @@
       "when": 1790315131571,
       "tag": "0001_bills_paid_at",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792074144331,
+      "tag": "0002_atomic_loan_payments",
+      "breakpoints": true
     }
   ]
 }

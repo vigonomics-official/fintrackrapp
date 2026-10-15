@@ -1311,7 +1311,7 @@ function BillsTab({ onManageLoans }: { onManageLoans: () => void }) {
         <div className="space-y-2">
           {sorted.map((entry) => {
             const { bill: b, loan, purchase, due } = entry;
-            const lastPayment = loan ? loanPayments.find((payment) => payment.loan_id === loan.id) : null;
+            const lastPayment = loan ? loanPayments.find((payment) => payment.loan_id === loan.id && payment.kind !== "reversal" && !payment.reversed_at) : null;
             if (!b) return (
               <Card key={entry.key} className="shadow-soft">
                 <CardContent className="space-y-2 p-3.5">
