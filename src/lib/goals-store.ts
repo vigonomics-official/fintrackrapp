@@ -72,7 +72,7 @@ function normalize(raw: any): Goal | null {
   return {
     id: String(raw.id),
     name: String(raw.name ?? "Goal"),
-    kind: (raw.kind ?? "savings") as GoalKind,
+    kind: normalizeKind(raw.kind),
     target,
     current,
     monthly: Number(raw.monthly) || 0,
