@@ -18,7 +18,7 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import {
   GOAL_KINDS, GOAL_STATUS_LABEL, computeGoalPlan, goalKindLabel,
-  stampCompletion, type Goal, type GoalKind,
+  loadGoals, stampCompletion, type Goal, type GoalKind,
 } from "@/lib/goals-store";
 
 /* ------------------------------- Add / Edit -------------------------------- */
@@ -42,6 +42,10 @@ function GoalFields({
   });
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
+
+  // Only ONE Emergency goal is allowed; hide the option when one already exists.
+  const existingEmergency = loadGoals().find((g) => g.kind === "emergency" && g.id !== initial?.id);
+  const kindOptions = existingEmergency ? GOAL_KINDS.filter((k) => k.value !== "emergency") : GOAL_KINDS;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
