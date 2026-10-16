@@ -18,7 +18,7 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import {
   GOAL_KINDS, GOAL_STATUS_LABEL, computeGoalPlan, goalKindLabel,
-  stampCompletion, type Goal, type GoalKind,
+  loadGoals, stampCompletion, type Goal, type GoalKind,
 } from "@/lib/goals-store";
 
 /* ------------------------------- Add / Edit -------------------------------- */
@@ -43,11 +43,19 @@ function GoalFields({
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
 
+  // Only ONE Emergency goal is allowed; hide the option when one already exists.
+  const existingEmergency = loadGoals().find((g) => g.kind === "emergency" && g.id !== initial?.id);
+  const kindOptions = existingEmergency ? GOAL_KINDS.filter((k) => k.value !== "emergency") : GOAL_KINDS;
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const target = Number(form.target);
     if (!form.name.trim() || !target || target <= 0) {
       toast.error("Add a goal name and target amount");
+      return;
+    }
+    if (form.kind === "emergency" && existingEmergency) {
+      toast.error("You already have an Emergency goal — edit that one instead.");
       return;
     }
     const current = Math.max(0, Number(form.current) || 0);
@@ -77,9 +85,14 @@ function GoalFields({
         <Select value={form.kind} onValueChange={(v) => set("kind", v as GoalKind)}>
           <SelectTrigger id="goal-kind"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {GOAL_KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
+            {kindOptions.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        {existingEmergency && (
+          <p className="text-[11px] text-muted-foreground">
+            You already have an Emergency goal (“{existingEmergency.name}”) — only one is allowed.
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-2.5">
         <div className="space-y-1.5">

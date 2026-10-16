@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX goals_one_emergency_per_user ON public.goals (user_id) WHERE kind = 'emergency';

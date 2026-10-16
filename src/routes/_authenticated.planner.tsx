@@ -240,6 +240,8 @@ function MonthlyPlan({ onManageLoans }: { onManageLoans: () => void }) {
         </CardContent>
       </Card>
 
+      <MonthEndForecastCard s={s} />
+
       <Card className="shadow-soft">
         <CardContent className="flex items-center justify-between gap-3 p-3.5">
           <div className="min-w-0">
@@ -351,11 +353,12 @@ function SmartNextActions({ s, outstanding }: { s: ReturnType<typeof useSurvival
       });
     }
 
-    // 10% savings nudge always (fills slot)
-    if (s.salary > 0) {
+    // Savings nudge uses the Planner → Allocate Savings amount (one source of truth).
+    const plannedSave = s.metrics.savings.target;
+    if (plannedSave > 0) {
       out.push({
         icon: "💰",
-        text: `Save ${formatCurrency(Math.round(s.salary * 0.1), s.currency)} this month (10% rule).`,
+        text: `Save ${formatCurrency(Math.round(plannedSave), s.currency)} this month — your Allocate plan.`,
       });
     }
 
@@ -1511,6 +1514,9 @@ function GoalsTab() {
 
 function GoalCard({ goal, currency, onOpen }: { goal: Goal; currency: string; onOpen: () => void }) {
   const plan = computeGoalPlan(goal);
+  const s = useSurvival();
+  const em = s.metrics.emergency;
+  const isEmergency = goal.kind === "emergency";
   const tone =
     plan.status === "completed" ? "bg-success/15 text-success"
       : plan.status === "behind" ? "bg-destructive/15 text-destructive"
@@ -1537,9 +1543,21 @@ function GoalCard({ goal, currency, onOpen }: { goal: Goal; currency: string; on
           <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
             <span>{plan.progressPct.toFixed(0)}% · {formatCurrency(plan.remaining, currency)} left</span>
             {plan.requiredMonthly != null && (
-              <span>Need {formatCurrency(plan.requiredMonthly, currency)}/mo</span>
+              <span>
+                Needed per month to reach goal by {new Date(goal.deadline!).toLocaleDateString(undefined, { month: "short", year: "numeric" })}: {formatCurrency(plan.requiredMonthly, currency)}
+              </span>
             )}
           </div>
+          {isEmergency && em.essentialMonthly != null && em.essentialMonthly > 0 && (
+            <div className="mt-1.5 space-y-0.5 rounded-lg border border-primary/20 bg-primary/5 p-2 text-[11px]">
+              <p className="text-muted-foreground">
+                Recommended target: <span className="font-semibold text-foreground">{formatCurrency(em.recommendedTarget, currency)}</span> (6 months of essential expenses)
+              </p>
+              <p className="text-muted-foreground">
+                Months covered: <span className="font-semibold text-foreground">{(em.monthsCovered ?? 0).toFixed(1)} of 6</span>
+              </p>
+            </div>
+          )}
           {goal.monthly > 0 && (
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               Your plan: {formatCurrency(goal.monthly, currency)}/month
@@ -1608,24 +1626,11 @@ function FutureTab() {
     () => computeNetWorth({ survival: s, transactions, loans, goals, metrics: s.metrics }),
     [s, transactions, loans, goals],
   );
-  const forecast = s.forecastBalance;
-  const forecastTone = forecast > 0 ? "text-success" : forecast >= -2000 ? "text-gold-foreground" : "text-destructive";
-  const forecastBorder = forecast > 0 ? "border-success/30 bg-success/5" : forecast >= -2000 ? "border-gold/30 bg-gold/10" : "border-destructive/30 bg-destructive/5";
-  const forecastLabel = forecast > 0 ? `You may save ${formatCurrency(forecast, s.currency)} this month 🎯` : forecast >= -2000 ? "Slight overspend risk ⚠️" : "Reduce daily spend to recover";
 
   return (
     <div className="space-y-4">
       <GoalsTab />
       <FinancialJourney monthlyEmi={s.monthlyEmi} salary={s.salary} outstanding={netWorth.liabilities} currency={s.currency} />
-      <Card className={cn("border shadow-soft", forecastBorder)}>
-        <CardContent className="space-y-1 p-4">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
-          <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? forecastTone : "")}>
-            {s.hasIncome ? formatCurrency(forecast, s.currency) : "—"}
-          </p>
-          <p className="text-xs text-muted-foreground">{!s.hasIncome ? "Add salary to forecast your month-end balance." : forecastLabel}</p>
-        </CardContent>
-      </Card>
       <FutureActionsCard actions={actions} />
       <NetWorthCard nw={netWorth} currency={s.currency} />
       <FutureMilestonesCard milestones={milestones} currency={s.currency} />
@@ -1635,6 +1640,25 @@ function FutureTab() {
       </section>
       <HealthScoreCard s={s} outstanding={netWorth.liabilities} />
     </div>
+  );
+}
+
+/** Month-End Forecast — shown at the top of This Cycle, below Salary Left. */
+function MonthEndForecastCard({ s }: { s: ReturnType<typeof useSurvival> }) {
+  const forecast = s.forecastBalance;
+  const forecastTone = forecast > 0 ? "text-success" : forecast >= -2000 ? "text-gold-foreground" : "text-destructive";
+  const forecastBorder = forecast > 0 ? "border-success/30 bg-success/5" : forecast >= -2000 ? "border-gold/30 bg-gold/10" : "border-destructive/30 bg-destructive/5";
+  const forecastLabel = forecast > 0 ? `You may save ${formatCurrency(forecast, s.currency)} this month 🎯` : forecast >= -2000 ? "Slight overspend risk ⚠️" : "Reduce daily spend to recover";
+  return (
+    <Card className={cn("border shadow-soft", forecastBorder)}>
+      <CardContent className="space-y-1 p-4">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
+        <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? forecastTone : "")}>
+          {s.hasIncome ? formatCurrency(forecast, s.currency) : "—"}
+        </p>
+        <p className="text-xs text-muted-foreground">{!s.hasIncome ? "Add salary to forecast your month-end balance." : forecastLabel}</p>
+      </CardContent>
+    </Card>
   );
 }
 

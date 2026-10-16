@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/hooks/use-finance";
 import { toast } from "sonner";
-import { GOAL_KINDS, saveGoal, type Goal, type GoalKind } from "@/lib/goals-store";
+import { GOAL_KINDS, loadGoals, saveGoal, type Goal, type GoalKind } from "@/lib/goals-store";
 import { friendlyError } from "@/lib/error-utils";
 
 export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
@@ -21,6 +21,10 @@ export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpen
   const [deadline, setDeadline] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Only ONE Emergency goal is allowed; hide the option when one already exists.
+  const existingEmergency = loadGoals().find((g) => g.kind === "emergency");
+  const kindOptions = existingEmergency ? GOAL_KINDS.filter((k) => k.value !== "emergency") : GOAL_KINDS;
+
   function reset() {
     setName(""); setKind("savings"); setTarget(""); setMonthly(""); setDeadline("");
   }
@@ -29,6 +33,10 @@ export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpen
     if (saving) return;
     if (!name || !Number(target)) {
       toast.error("Add a name and target amount");
+      return;
+    }
+    if (kind === "emergency" && existingEmergency) {
+      toast.error("You already have an Emergency goal — edit that one instead.");
       return;
     }
     const goal: Goal = {
@@ -68,7 +76,7 @@ export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpen
             <Select value={kind} onValueChange={(v) => setKind(v as GoalKind)}>
               <SelectTrigger id="cg-kind"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {GOAL_KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
+                {kindOptions.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

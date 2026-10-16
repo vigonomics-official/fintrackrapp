@@ -46,6 +46,11 @@ export const emiCategoryIds = (cats: CatLike[]) =>
   cats.filter((c) => c.type === "expense" && /emi|loan/i.test(c.name)).map((c) => c.id);
 export const savingsCategoryIds = (cats: CatLike[]) =>
   cats.filter((c) => c.type === "expense" && /saving|sip|deposit/i.test(c.name)).map((c) => c.id);
+/** Essential living costs tracked as transactions: rent + food + travel.
+ *  EMI and bills are NOT matched here — they come from the loans/bills
+ *  records so nothing is counted twice. */
+export const essentialCategoryIds = (cats: CatLike[]) =>
+  cats.filter((c) => c.type === "expense" && /rent|food|grocer|dining|eat|travel|transport|fuel|commute/i.test(c.name)).map((c) => c.id);
 
 export function computeObligations(opts: {
   transactions: Tx[];

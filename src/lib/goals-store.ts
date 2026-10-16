@@ -12,8 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
  */
 
 export type GoalKind =
-  | "savings" | "emergency" | "fire" | "debt"
-  | "investment" | "travel" | "gadget" | "custom";
+  | "savings" | "emergency" | "investment" | "purchase"
+  // Legacy kinds kept so older saved goals still load; they normalize below.
+  | "fire" | "debt" | "travel" | "gadget" | "custom";
 
 export interface Goal {
   id: string;
@@ -36,15 +37,30 @@ export const GOALS_KEY = "fintrackr_goals_v1";
 export const GOALS_EVENT = "fintrackr:goals-updated";
 
 export const GOAL_KINDS: { value: GoalKind; label: string }[] = [
+  { value: "emergency", label: "Emergency" },
   { value: "savings", label: "Savings" },
-  { value: "emergency", label: "Emergency Fund" },
-  { value: "fire", label: "Financial Freedom" },
-  { value: "debt", label: "Debt Payoff" },
   { value: "investment", label: "Investment" },
-  { value: "travel", label: "Travel" },
-  { value: "gadget", label: "Gadget" },
-  { value: "custom", label: "Custom" },
+  { value: "purchase", label: "Purchase" },
 ];
+
+/** Legacy goal kinds fold into the four current types. */
+const LEGACY_KIND_MAP: Record<string, GoalKind> = {
+  fire: "savings",
+  debt: "savings",
+  custom: "savings",
+  travel: "purchase",
+  gadget: "purchase",
+};
+
+export function normalizeKind(kind: string | undefined | null): GoalKind {
+  const k = (kind ?? "savings") as GoalKind;
+  return LEGACY_KIND_MAP[k] ?? k;
+}
+
+/** The single Emergency goal for this device cache, if one exists. */
+export function emergencyGoal(goals: Goal[]): Goal | undefined {
+  return goals.find((g) => g.kind === "emergency");
+}
 
 export const goalKindLabel = (k: GoalKind) =>
   GOAL_KINDS.find((x) => x.value === k)?.label ?? "Custom";
@@ -56,7 +72,7 @@ function normalize(raw: any): Goal | null {
   return {
     id: String(raw.id),
     name: String(raw.name ?? "Goal"),
-    kind: (raw.kind ?? "savings") as GoalKind,
+    kind: normalizeKind(raw.kind),
     target,
     current,
     monthly: Number(raw.monthly) || 0,

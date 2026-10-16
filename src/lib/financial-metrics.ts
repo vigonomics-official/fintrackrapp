@@ -20,6 +20,10 @@ export type FinancialMetrics = {
     saved: number;
     target: number;
     targetMonths: number;
+    /** Monthly essential expenses (rent + food + travel + EMI + bills); null when unknown. */
+    essentialMonthly: number | null;
+    /** 6 × essentialMonthly — shown as the "Recommended target". */
+    recommendedTarget: number;
     /** Months of expenses covered by money actually in Emergency Fund goals. */
     monthsCovered: number | null;
     /** monthsCovered capped at targetMonths, for display. */
@@ -27,7 +31,7 @@ export type FinancialMetrics = {
     pct: number;
     achieved: boolean;
     status: "Achieved" | "In Progress" | "Not Started" | "Set a target";
-    basis: "expenses" | "salary" | "custom" | "none";
+    basis: "essentials" | "expenses" | "salary" | "custom" | "none";
   };
   savings: {
     /** Recorded savings transactions this salary cycle (counted once). */
@@ -77,6 +81,49 @@ export function averageMonthlyExpenses(transactions: Tx[], excludeCategoryIds: s
   return (total / spanDays) * 30;
 }
 
+/**
+ * Monthly essential expenses = trailing-90-day average of rent/food/travel
+ * transactions + active-loan EMIs + recurring bills. EMI and bill categories
+ * are deliberately excluded from the transaction part so nothing is counted
+ * twice. Null when there is no signal at all.
+ */
+export function monthlyEssentialExpenses(opts: {
+  transactions: Tx[];
+  essentialCategoryIds: string[];
+  loans: { remaining_balance: number | string; emi_amount: number | string }[];
+  bills: { amount: number | string; recurring?: boolean }[];
+  now?: Date;
+}): number | null {
+  const keep = new Set(opts.essentialCategoryIds);
+  const now = opts.now ?? new Date();
+  const cutoff = now.getTime() - 90 * 86_400_000;
+  const recent = opts.transactions.filter(
+    (t) =>
+      t.type === "expense" &&
+      t.category_id != null &&
+      keep.has(t.category_id) &&
+      new Date(t.transaction_date).getTime() >= cutoff &&
+      new Date(t.transaction_date).getTime() <= now.getTime(),
+  );
+  let txPart: number | null = null;
+  if (recent.length > 0) {
+    const total = recent.reduce((s, t) => s + Number(t.amount), 0);
+    const firstTs = Math.min(...recent.map((t) => new Date(t.transaction_date).getTime()));
+    const spanDays = Math.max(1, Math.round((now.getTime() - firstTs) / 86_400_000));
+    if (spanDays >= 30) txPart = (total / spanDays) * 30;
+  }
+  const emi = opts.loans.reduce(
+    (s, l) => s + (Number(l.remaining_balance) > 0 ? Math.max(0, Number(l.emi_amount) || 0) : 0),
+    0,
+  );
+  const bills = opts.bills.reduce(
+    (s, b) => s + (b.recurring === false ? 0 : Math.max(0, Number(b.amount) || 0)),
+    0,
+  );
+  if (txPart == null && emi === 0 && bills === 0) return null;
+  return (txPart ?? 0) + emi + bills;
+}
+
 export function computeFinancialMetrics(opts: {
   survival: Survival;
   obligations: Obligations;
@@ -87,6 +134,8 @@ export function computeFinancialMetrics(opts: {
   savingsPct: number | null;
   rememberedSavings: number | null;
   prefs: SurvivalPreferences;
+  /** Monthly essential expenses (rent + food + travel + EMI + bills), if known. */
+  essentialMonthly?: number | null;
   now?: Date;
 }): FinancialMetrics {
   const { survival: s, obligations, transactions, loans, goals, savingsCategoryIds, savingsPct, rememberedSavings, prefs } = opts;
@@ -94,8 +143,10 @@ export function computeFinancialMetrics(opts: {
   // ---- Emergency Fund: only money in Emergency Fund goals counts.
   const avgExp = averageMonthlyExpenses(transactions, savingsCategoryIds, opts.now);
   const efSaved = goals.filter((g) => g.kind === "emergency").reduce((a, g) => a + Math.max(0, Number(g.current) || 0), 0);
-  const monthlyBase = avgExp != null && avgExp > 0 ? avgExp : s.salary > 0 ? s.salary : 0;
-  let basis: FinancialMetrics["emergency"]["basis"] = avgExp != null && avgExp > 0 ? "expenses" : s.salary > 0 ? "salary" : "none";
+  const essential = opts.essentialMonthly != null && opts.essentialMonthly > 0 ? opts.essentialMonthly : null;
+  const monthlyBase = essential ?? (avgExp != null && avgExp > 0 ? avgExp : s.salary > 0 ? s.salary : 0);
+  let basis: FinancialMetrics["emergency"]["basis"] =
+    essential != null ? "essentials" : avgExp != null && avgExp > 0 ? "expenses" : s.salary > 0 ? "salary" : "none";
   let targetMonths = prefs.emergencyFundMode === "3m" ? 3 : 6;
   let efTarget = Math.round(monthlyBase * targetMonths);
   if (prefs.emergencyFundMode === "custom" && (prefs.emergencyFundCustom ?? 0) > 0) {
@@ -110,6 +161,8 @@ export function computeFinancialMetrics(opts: {
     saved: efSaved,
     target: efTarget,
     targetMonths,
+    essentialMonthly: essential,
+    recommendedTarget: Math.round(monthlyBase * 6),
     monthsCovered,
     monthsDisplay: monthsCovered == null ? null : Math.min(targetMonths, monthsCovered),
     pct: efPct,

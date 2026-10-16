@@ -46,22 +46,18 @@ import { GoalFormSheet, GoalDetailSheet } from "@/components/finance/GoalSheets"
 import { friendlyError } from "@/lib/error-utils";
 
 const KINDS: { value: GoalKind; label: string; icon: typeof Target; tone: string }[] = [
+  { value: "emergency", label: "Emergency", icon: ShieldCheck, tone: "bg-primary/15 text-primary" },
   { value: "savings", label: "Savings", icon: PiggyBank, tone: "bg-success/15 text-success" },
-  { value: "emergency", label: "Emergency Fund", icon: ShieldCheck, tone: "bg-primary/15 text-primary" },
-  { value: "fire", label: "Financial Freedom", icon: Flag, tone: "bg-gold/15 text-gold-foreground" },
-  { value: "debt", label: "Debt Payoff", icon: Trophy, tone: "bg-destructive/15 text-destructive" },
   { value: "investment", label: "Investment", icon: Sparkles, tone: "bg-primary/15 text-primary" },
-  { value: "travel", label: "Travel", icon: Plane, tone: "bg-info/15 text-info" },
-  { value: "gadget", label: "Gadget", icon: Laptop, tone: "bg-secondary text-secondary-foreground" },
-  { value: "custom", label: "Custom", icon: Target, tone: "bg-muted text-muted-foreground" },
+  { value: "purchase", label: "Purchase", icon: Laptop, tone: "bg-secondary text-secondary-foreground" },
 ];
 
 
 const SUGGESTIONS: { name: string; kind: GoalKind; target: number; icon: typeof Target }[] = [
   { name: "Emergency Fund (6 months)", kind: "emergency", target: 300000, icon: ShieldCheck },
-  { name: "Europe Trip", kind: "travel", target: 250000, icon: Plane },
-  { name: "New Bike", kind: "gadget", target: 150000, icon: Bike },
-  { name: "Financial Freedom", kind: "fire", target: 10000000, icon: Flag },
+  { name: "Europe Trip", kind: "purchase", target: 250000, icon: Plane },
+  { name: "New Bike", kind: "purchase", target: 150000, icon: Bike },
+  { name: "Financial Freedom", kind: "savings", target: 10000000, icon: Flag },
   { name: "Higher Education", kind: "savings", target: 500000, icon: GraduationCap },
   { name: "Down Payment", kind: "savings", target: 1500000, icon: HomeIcon },
 ];
@@ -363,6 +359,10 @@ function NewGoalDialog({ onCreate, currency }: { onCreate: (g: Omit<Goal, "id" |
   const [monthly, setMonthly] = useState("");
   const [deadline, setDeadline] = useState("");
 
+  // Only ONE Emergency goal is allowed; hide the option when one already exists.
+  const hasEmergency = loadGoals().some((g) => g.kind === "emergency");
+  const kindOptions = hasEmergency ? KINDS.filter((k) => k.value !== "emergency") : KINDS;
+
   return (
     <DialogContent>
       <DialogHeader><DialogTitle>Create new goal</DialogTitle></DialogHeader>
@@ -376,7 +376,7 @@ function NewGoalDialog({ onCreate, currency }: { onCreate: (g: Omit<Goal, "id" |
           <Select value={kind} onValueChange={(v) => setKind(v as GoalKind)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
+              {kindOptions.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
