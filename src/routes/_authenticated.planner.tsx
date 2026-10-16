@@ -1643,6 +1643,25 @@ function FutureTab() {
   );
 }
 
+/** Month-End Forecast — shown at the top of This Cycle, below Salary Left. */
+function MonthEndForecastCard({ s }: { s: ReturnType<typeof useSurvival> }) {
+  const forecast = s.forecastBalance;
+  const forecastTone = forecast > 0 ? "text-success" : forecast >= -2000 ? "text-gold-foreground" : "text-destructive";
+  const forecastBorder = forecast > 0 ? "border-success/30 bg-success/5" : forecast >= -2000 ? "border-gold/30 bg-gold/10" : "border-destructive/30 bg-destructive/5";
+  const forecastLabel = forecast > 0 ? `You may save ${formatCurrency(forecast, s.currency)} this month 🎯` : forecast >= -2000 ? "Slight overspend risk ⚠️" : "Reduce daily spend to recover";
+  return (
+    <Card className={cn("border shadow-soft", forecastBorder)}>
+      <CardContent className="space-y-1 p-4">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Month-End Forecast</p>
+        <p className={cn("font-display text-2xl font-bold tabular-nums", s.hasIncome ? forecastTone : "")}>
+          {s.hasIncome ? formatCurrency(forecast, s.currency) : "—"}
+        </p>
+        <p className="text-xs text-muted-foreground">{!s.hasIncome ? "Add salary to forecast your month-end balance." : forecastLabel}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function FutureActionsCard({ actions }: { actions: FutureAction[] }) {
   if (actions.length === 0) {
     return (
