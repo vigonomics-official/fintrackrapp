@@ -376,7 +376,7 @@ function NewGoalDialog({ onCreate, currency }: { onCreate: (g: Omit<Goal, "id" |
           <Select value={kind} onValueChange={(v) => setKind(v as GoalKind)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
+              {kindOptions.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
