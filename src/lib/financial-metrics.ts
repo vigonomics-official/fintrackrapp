@@ -81,6 +81,49 @@ export function averageMonthlyExpenses(transactions: Tx[], excludeCategoryIds: s
   return (total / spanDays) * 30;
 }
 
+/**
+ * Monthly essential expenses = trailing-90-day average of rent/food/travel
+ * transactions + active-loan EMIs + recurring bills. EMI and bill categories
+ * are deliberately excluded from the transaction part so nothing is counted
+ * twice. Null when there is no signal at all.
+ */
+export function monthlyEssentialExpenses(opts: {
+  transactions: Tx[];
+  essentialCategoryIds: string[];
+  loans: { remaining_balance: number | string; emi_amount: number | string }[];
+  bills: { amount: number | string; recurring?: boolean }[];
+  now?: Date;
+}): number | null {
+  const keep = new Set(opts.essentialCategoryIds);
+  const now = opts.now ?? new Date();
+  const cutoff = now.getTime() - 90 * 86_400_000;
+  const recent = opts.transactions.filter(
+    (t) =>
+      t.type === "expense" &&
+      t.category_id != null &&
+      keep.has(t.category_id) &&
+      new Date(t.transaction_date).getTime() >= cutoff &&
+      new Date(t.transaction_date).getTime() <= now.getTime(),
+  );
+  let txPart: number | null = null;
+  if (recent.length > 0) {
+    const total = recent.reduce((s, t) => s + Number(t.amount), 0);
+    const firstTs = Math.min(...recent.map((t) => new Date(t.transaction_date).getTime()));
+    const spanDays = Math.max(1, Math.round((now.getTime() - firstTs) / 86_400_000));
+    if (spanDays >= 30) txPart = (total / spanDays) * 30;
+  }
+  const emi = opts.loans.reduce(
+    (s, l) => s + (Number(l.remaining_balance) > 0 ? Math.max(0, Number(l.emi_amount) || 0) : 0),
+    0,
+  );
+  const bills = opts.bills.reduce(
+    (s, b) => s + (b.recurring === false ? 0 : Math.max(0, Number(b.amount) || 0)),
+    0,
+  );
+  if (txPart == null && emi === 0 && bills === 0) return null;
+  return (txPart ?? 0) + emi + bills;
+}
+
 export function computeFinancialMetrics(opts: {
   survival: Survival;
   obligations: Obligations;
