@@ -161,6 +161,8 @@ export function computeFinancialMetrics(opts: {
     saved: efSaved,
     target: efTarget,
     targetMonths,
+    essentialMonthly: essential,
+    recommendedTarget: Math.round(monthlyBase * 6),
     monthsCovered,
     monthsDisplay: monthsCovered == null ? null : Math.min(targetMonths, monthsCovered),
     pct: efPct,
