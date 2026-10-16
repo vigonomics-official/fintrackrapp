@@ -1511,6 +1511,9 @@ function GoalsTab() {
 
 function GoalCard({ goal, currency, onOpen }: { goal: Goal; currency: string; onOpen: () => void }) {
   const plan = computeGoalPlan(goal);
+  const s = useSurvival();
+  const em = s.metrics.emergency;
+  const isEmergency = goal.kind === "emergency";
   const tone =
     plan.status === "completed" ? "bg-success/15 text-success"
       : plan.status === "behind" ? "bg-destructive/15 text-destructive"
@@ -1537,9 +1540,21 @@ function GoalCard({ goal, currency, onOpen }: { goal: Goal; currency: string; on
           <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
             <span>{plan.progressPct.toFixed(0)}% · {formatCurrency(plan.remaining, currency)} left</span>
             {plan.requiredMonthly != null && (
-              <span>Need {formatCurrency(plan.requiredMonthly, currency)}/mo</span>
+              <span>
+                Needed per month to reach goal by {new Date(goal.deadline!).toLocaleDateString(undefined, { month: "short", year: "numeric" })}: {formatCurrency(plan.requiredMonthly, currency)}
+              </span>
             )}
           </div>
+          {isEmergency && em.essentialMonthly != null && em.essentialMonthly > 0 && (
+            <div className="mt-1.5 space-y-0.5 rounded-lg border border-primary/20 bg-primary/5 p-2 text-[11px]">
+              <p className="text-muted-foreground">
+                Recommended target: <span className="font-semibold text-foreground">{formatCurrency(em.recommendedTarget, currency)}</span> (6 months of essential expenses)
+              </p>
+              <p className="text-muted-foreground">
+                Months covered: <span className="font-semibold text-foreground">{(em.monthsCovered ?? 0).toFixed(1)} of 6</span>
+              </p>
+            </div>
+          )}
           {goal.monthly > 0 && (
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               Your plan: {formatCurrency(goal.monthly, currency)}/month
