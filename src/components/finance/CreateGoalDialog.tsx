@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/hooks/use-finance";
 import { toast } from "sonner";
-import { GOAL_KINDS, saveGoal, type Goal, type GoalKind } from "@/lib/goals-store";
+import { GOAL_KINDS, loadGoals, saveGoal, type Goal, type GoalKind } from "@/lib/goals-store";
 import { friendlyError } from "@/lib/error-utils";
 
 export function CreateGoalDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {

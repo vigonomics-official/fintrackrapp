@@ -54,6 +54,10 @@ function GoalFields({
       toast.error("Add a goal name and target amount");
       return;
     }
+    if (form.kind === "emergency" && existingEmergency) {
+      toast.error("You already have an Emergency goal — edit that one instead.");
+      return;
+    }
     const current = Math.max(0, Number(form.current) || 0);
     const goal: Goal = stampCompletion({
       id: initial?.id ?? crypto.randomUUID(),
@@ -81,9 +85,14 @@ function GoalFields({
         <Select value={form.kind} onValueChange={(v) => set("kind", v as GoalKind)}>
           <SelectTrigger id="goal-kind"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {GOAL_KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
+            {kindOptions.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        {existingEmergency && (
+          <p className="text-[11px] text-muted-foreground">
+            You already have an Emergency goal (“{existingEmergency.name}”) — only one is allowed.
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-2.5">
         <div className="space-y-1.5">
