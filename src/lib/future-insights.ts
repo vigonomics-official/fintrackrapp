@@ -526,12 +526,15 @@ export function computeFutureActions(opts: {
 
   const candidates: (FutureAction & { rank: number })[] = [];
 
-  // 1. Emergency Fund
-  if (avgExp != null && avgExp > 0) {
-    const months = totalSavings / avgExp;
+  // 1. Emergency Fund — same shared numbers as the Emergency goal card:
+  // saved = the one Emergency goal, target = 6 × essential expenses.
+  const efBase = metrics?.emergency.essentialMonthly ?? avgExp;
+  const efSaved = metrics ? metrics.emergency.saved : totalSavings;
+  if (efBase != null && efBase > 0) {
+    const months = efSaved / efBase;
     if (months < 6) {
-      const target = avgExp * 6;
-      const gap = Math.max(0, target - totalSavings);
+      const target = metrics ? metrics.emergency.recommendedTarget : efBase * 6;
+      const gap = Math.max(0, target - efSaved);
       const monthly = plannedSavings > 0
         ? plannedSavings
         : Math.max(500, Math.round(Math.min(gap / 12, salaryLeft > 0 ? salaryLeft * 0.4 : gap / 12)));
