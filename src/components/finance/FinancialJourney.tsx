@@ -232,6 +232,10 @@ export function FinancialJourney({
   if (completed === null) return null;
   if (completed && (!answers || !info) && !setupOpen) return null;
 
+  // The "Emergency Fund Builder" stage duplicates the Emergency goal card,
+  // which now carries the recommended target and months covered — hide it.
+  if (info?.stage === "Emergency Fund Builder" && !setupOpen) return null;
+
   if (setupOpen || !answers || !info) {
 
     const q = QUESTIONS[step];

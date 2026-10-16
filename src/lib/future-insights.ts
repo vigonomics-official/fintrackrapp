@@ -595,8 +595,13 @@ export function computeFutureActions(opts: {
     });
   }
 
-  // 4. Start SIP
-  if (!hasInvestmentGoal && salaryLeft > 500) {
+  // 4. Start SIP — only once the Emergency Fund covers at least 3 months.
+  const efMonths = metrics
+    ? (metrics.emergency.monthsCovered ?? 0)
+    : avgExp != null && avgExp > 0
+      ? totalSavings / avgExp
+      : 0;
+  if (!hasInvestmentGoal && salaryLeft > 500 && efMonths >= 3) {
     const sip = Math.max(500, Math.round(Math.min(salaryLeft * 0.15, survival.salary * 0.1)));
     candidates.push({
       id: "sip",
