@@ -359,6 +359,10 @@ function NewGoalDialog({ onCreate, currency }: { onCreate: (g: Omit<Goal, "id" |
   const [monthly, setMonthly] = useState("");
   const [deadline, setDeadline] = useState("");
 
+  // Only ONE Emergency goal is allowed; hide the option when one already exists.
+  const hasEmergency = loadGoals().some((g) => g.kind === "emergency");
+  const kindOptions = hasEmergency ? KINDS.filter((k) => k.value !== "emergency") : KINDS;
+
   return (
     <DialogContent>
       <DialogHeader><DialogTitle>Create new goal</DialogTitle></DialogHeader>
