@@ -240,6 +240,8 @@ function MonthlyPlan({ onManageLoans }: { onManageLoans: () => void }) {
         </CardContent>
       </Card>
 
+      <MonthEndForecastCard s={s} />
+
       <Card className="shadow-soft">
         <CardContent className="flex items-center justify-between gap-3 p-3.5">
           <div className="min-w-0">
