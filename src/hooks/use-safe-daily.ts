@@ -6,10 +6,10 @@ import { useTransactions, useCategories, useProfile, useLoans, useLoanPayments }
 import { useSalarySettings } from "@/hooks/use-salary-settings";
 import { useSurvivalPreferences } from "@/hooks/use-survival-preferences";
 import { useBills } from "@/lib/bills";
-import { computeObligations, savingsCategoryIds, emiCategoryIds } from "@/lib/safe-daily";
+import { computeObligations, savingsCategoryIds, emiCategoryIds, essentialCategoryIds } from "@/lib/safe-daily";
 import { computeSurvival } from "@/lib/survival";
 import { payDayInMonth } from "@/lib/salary-cycle";
-import { computeFinancialMetrics } from "@/lib/financial-metrics";
+import { computeFinancialMetrics, monthlyEssentialExpenses } from "@/lib/financial-metrics";
 import { loadGoals, GOALS_EVENT, type Goal } from "@/lib/goals-store";
 import { getRememberedSavings, onProfileUpdated } from "@/lib/financial-profile";
 
@@ -72,6 +72,12 @@ export function useSafeDailySurvival(extraSpend = 0) {
       savingsPct,
     });
     const s = computeSurvival({ transactions, loans, salarySettings, obligations, extraSpend });
+    const essentialMonthly = monthlyEssentialExpenses({
+      transactions,
+      essentialCategoryIds: essentialCategoryIds(categories),
+      loans,
+      bills,
+    });
     const metrics = computeFinancialMetrics({
       survival: s,
       obligations,
@@ -82,6 +88,7 @@ export function useSafeDailySurvival(extraSpend = 0) {
       savingsPct,
       rememberedSavings: local.saved,
       prefs,
+      essentialMonthly,
     });
     // `score` is the one user-facing Financial Score everywhere.
     return { currency, ...s, score: metrics.score.total ?? 0, obligations, metrics };
