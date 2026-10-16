@@ -214,7 +214,6 @@ function MonthlyPlan({ onManageLoans }: { onManageLoans: () => void }) {
 
   return (
     <div className="space-y-4">
-      <MonthEndForecastCard s={s} />
       <Card className="overflow-hidden border-none bg-gradient-primary text-primary-foreground shadow-elegant">
         <CardContent className="space-y-2 p-4">
           <div>
