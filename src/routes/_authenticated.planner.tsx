@@ -214,6 +214,7 @@ function MonthlyPlan({ onManageLoans }: { onManageLoans: () => void }) {
 
   return (
     <div className="space-y-4">
+      <MonthEndForecastCard s={s} />
       <Card className="overflow-hidden border-none bg-gradient-primary text-primary-foreground shadow-elegant">
         <CardContent className="space-y-2 p-4">
           <div>
@@ -351,11 +352,12 @@ function SmartNextActions({ s, outstanding }: { s: ReturnType<typeof useSurvival
       });
     }
 
-    // 10% savings nudge always (fills slot)
-    if (s.salary > 0) {
+    // Savings nudge uses the Planner → Allocate Savings amount (one source of truth).
+    const plannedSave = s.metrics.savings.target;
+    if (plannedSave > 0) {
       out.push({
         icon: "💰",
-        text: `Save ${formatCurrency(Math.round(s.salary * 0.1), s.currency)} this month (10% rule).`,
+        text: `Save ${formatCurrency(Math.round(plannedSave), s.currency)} this month — your Allocate plan.`,
       });
     }
 
