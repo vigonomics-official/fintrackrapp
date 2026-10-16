@@ -20,6 +20,10 @@ export type FinancialMetrics = {
     saved: number;
     target: number;
     targetMonths: number;
+    /** Monthly essential expenses (rent + food + travel + EMI + bills); null when unknown. */
+    essentialMonthly: number | null;
+    /** 6 × essentialMonthly — shown as the "Recommended target". */
+    recommendedTarget: number;
     /** Months of expenses covered by money actually in Emergency Fund goals. */
     monthsCovered: number | null;
     /** monthsCovered capped at targetMonths, for display. */
@@ -27,7 +31,7 @@ export type FinancialMetrics = {
     pct: number;
     achieved: boolean;
     status: "Achieved" | "In Progress" | "Not Started" | "Set a target";
-    basis: "expenses" | "salary" | "custom" | "none";
+    basis: "essentials" | "expenses" | "salary" | "custom" | "none";
   };
   savings: {
     /** Recorded savings transactions this salary cycle (counted once). */
