@@ -176,7 +176,7 @@ function OnboardingPage() {
       ? {
           id: crypto.randomUUID(),
           name: goalDef.title,
-          kind: s.goal === "emergency" ? "emergency" : s.goal === "debt" ? "debt" : s.goal === "travel" ? "travel" : s.goal === "gadget" ? "gadget" : "custom",
+          kind: s.goal === "emergency" ? "emergency" : s.goal === "travel" || s.goal === "gadget" ? "purchase" : "savings",
           target: Number(s.goalAmount) || 0,
           current: 0,
           monthly: 0,
