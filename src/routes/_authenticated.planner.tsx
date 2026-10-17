@@ -1606,8 +1606,9 @@ function FutureTab() {
   useEffect(() => {
     const refresh = () => setGoals(loadFutureGoals());
     const off = onProfileUpdated(refresh);
+    window.addEventListener(GOALS_EVENT, refresh);
     window.addEventListener("focus", refresh);
-    return () => { off(); window.removeEventListener("focus", refresh); };
+    return () => { off(); window.removeEventListener("focus", refresh); window.removeEventListener(GOALS_EVENT, refresh); };
   }, []);
 
   const score = useMemo(
