@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { clearSalarySettingsCache } from "@/hooks/use-salary-settings";
+import { activateGoalAccount } from "@/lib/goals-store";
 
 interface AuthCtx {
   user: User | null;
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((e, s) => {
+      activateGoalAccount(s?.user?.id ?? null);
       setSession(s);
       setLoading(false);
       // Drop any cached account data so the next sign-in never shows the
@@ -30,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
     supabase.auth.getSession().then(({ data }) => {
+      activateGoalAccount(data.session?.user?.id ?? null);
       setSession(data.session);
       setLoading(false);
     });

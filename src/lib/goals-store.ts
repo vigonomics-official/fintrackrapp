@@ -36,6 +36,31 @@ export interface Goal {
 export const GOALS_KEY = "fintrackr_goals_v1";
 export const GOALS_EVENT = "fintrackr:goals-updated";
 
+const GOALS_OWNER_KEY = `${GOALS_KEY}:owner`;
+let activeGoalUser: string | null = null;
+let accountVersion = 0;
+
+/** Keep the compatibility cache readable only for the current account. */
+export function activateGoalAccount(userId: string | null) {
+  if (typeof window === "undefined" || activeGoalUser === userId) return;
+  const previousOwner = localStorage.getItem(GOALS_OWNER_KEY);
+  const previous = localStorage.getItem(GOALS_KEY);
+  if (previous) {
+    // Unowned legacy copies are preserved, but never assigned to a new user.
+    localStorage.setItem(`${GOALS_KEY}:account:${previousOwner ?? "unassigned"}`, previous);
+  }
+  activeGoalUser = userId;
+  accountVersion += 1;
+  localStorage.removeItem(GOALS_KEY);
+  localStorage.removeItem(GOALS_OWNER_KEY);
+  if (userId) {
+    localStorage.setItem(GOALS_OWNER_KEY, userId);
+    const own = localStorage.getItem(`${GOALS_KEY}:account:${userId}`);
+    if (own) localStorage.setItem(GOALS_KEY, own);
+  }
+  window.dispatchEvent(new Event(GOALS_EVENT));
+}
+
 export const GOAL_KINDS: { value: GoalKind; label: string }[] = [
   { value: "emergency", label: "Emergency" },
   { value: "savings", label: "Savings" },
@@ -85,7 +110,7 @@ function normalize(raw: any): Goal | null {
 }
 
 export function loadGoals(): Goal[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined" || !activeGoalUser || localStorage.getItem(GOALS_OWNER_KEY) !== activeGoalUser) return [];
   try {
     const raw = JSON.parse(localStorage.getItem(GOALS_KEY) || "[]");
     return Array.isArray(raw) ? (raw.map(normalize).filter(Boolean) as Goal[]) : [];
@@ -95,9 +120,11 @@ export function loadGoals(): Goal[] {
 }
 
 export function saveGoals(goals: Goal[]) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !activeGoalUser) return;
   try {
+    localStorage.setItem(GOALS_OWNER_KEY, activeGoalUser);
     localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+    localStorage.setItem(`${GOALS_KEY}:account:${activeGoalUser}`, JSON.stringify(goals));
     window.dispatchEvent(new Event(GOALS_EVENT));
   } catch {
     /* storage unavailable — keep in-memory state */
@@ -213,7 +240,7 @@ type GoalRow = {
 };
 
 function fromRow(r: GoalRow): Goal {
-  return normalize({
+  const goal = normalize({
     id: r.id,
     name: r.name,
     kind: r.kind,
@@ -223,7 +250,9 @@ function fromRow(r: GoalRow): Goal {
     deadline: r.deadline ?? undefined,
     createdAt: r.created_at,
     completedAt: r.completed_at ?? undefined,
-  })!;
+  });
+  if (!goal) throw new Error("Invalid saved goal");
+  return goal;
 }
 
 function toRow(g: Goal, userId: string) {
@@ -251,28 +280,34 @@ async function currentUserId(): Promise<string | null> {
  * once (never overwriting newer cloud rows, never deleting local data before
  * the cloud write succeeds). Returns the merged list and refreshes the cache.
  */
-let syncInFlight: Promise<Goal[]> | null = null;
+let syncInFlight: { userId: string; promise: Promise<Goal[]> } | null = null;
 
 export function syncGoalsFromCloud(): Promise<Goal[]> {
   // Single-flight: concurrent mounts (StrictMode, two tabs of the same view)
   // must not each migrate the same local-only goal and create duplicates.
-  if (!syncInFlight) {
-    syncInFlight = runSync().finally(() => { syncInFlight = null; });
-  }
-  return syncInFlight;
+  const userId = activeGoalUser;
+  if (!userId) return Promise.resolve([]);
+  if (syncInFlight?.userId === userId) return syncInFlight.promise;
+  const promise = runSync(userId, accountVersion).finally(() => {
+    if (syncInFlight?.promise === promise) syncInFlight = null;
+  });
+  syncInFlight = { userId, promise };
+  return promise;
 }
 
-async function runSync(): Promise<Goal[]> {
-  const userId = await currentUserId();
+async function runSync(userId: string, version: number): Promise<Goal[]> {
+  const sessionUser = await currentUserId();
   // No session yet: keep whatever the cache holds, never treat this as an error
   // and never write an empty list over cloud data.
-  if (!userId) return loadGoals();
+  if (sessionUser !== userId || activeGoalUser !== userId || version !== accountVersion) return [];
 
   const { data, error } = await supabase
     .from("goals")
     .select("id,name,kind,target,current,monthly,deadline,completed_at,created_at")
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
+  if (activeGoalUser !== userId || version !== accountVersion) return [];
 
   const cloud = (data ?? []).map((r) => fromRow(r as GoalRow));
   const cloudIds = new Set(cloud.map((g) => g.id));
@@ -284,13 +319,9 @@ async function runSync(): Promise<Goal[]> {
   const migrated: Goal[] = [];
   const pending: Goal[] = [];
   for (const g of localOnly) {
-    let candidate = g;
-    let { error: insertError } = await supabase.from("goals").insert(toRow(candidate, userId));
-    if (insertError && (insertError as any).code === "23505") {
-      candidate = { ...g, id: crypto.randomUUID() };
-      ({ error: insertError } = await supabase.from("goals").insert(toRow(candidate, userId)));
-    }
-    if (!insertError) migrated.push(candidate);
+    if (activeGoalUser !== userId || version !== accountVersion) return [];
+    const { error: insertError } = await supabase.from("goals").insert(toRow(g, userId));
+    if (!insertError) migrated.push(g);
     else {
       // Upload failed: keep the device copy so the goal is never lost. It stays
       // in the list and will be retried on the next sync.
@@ -302,6 +333,7 @@ async function runSync(): Promise<Goal[]> {
   const byId = new Map<string, Goal>();
   for (const g of [...migrated, ...pending, ...cloud]) byId.set(g.id, g);
   const merged = [...byId.values()];
+  if (activeGoalUser !== userId || version !== accountVersion) return [];
   saveGoals(merged);
   return merged;
 }
@@ -310,7 +342,7 @@ async function runSync(): Promise<Goal[]> {
 /** Writes a single goal to the cloud (insert or update by id). */
 export async function persistGoal(goal: Goal): Promise<void> {
   const userId = await currentUserId();
-  if (!userId) return;
+  if (!userId || userId !== activeGoalUser) throw new Error("Sign in to save your goal");
   const { error } = await supabase.from("goals").upsert(toRow(goal, userId));
   if (error) throw error;
 }
@@ -318,7 +350,7 @@ export async function persistGoal(goal: Goal): Promise<void> {
 /** Removes a goal from the cloud. */
 export async function deleteGoalRemote(id: string): Promise<void> {
   const userId = await currentUserId();
-  if (!userId) return;
+  if (!userId || userId !== activeGoalUser) throw new Error("Sign in to delete your goal");
   const { error } = await supabase.from("goals").delete().eq("id", id);
   if (error) throw error;
 }
@@ -328,14 +360,16 @@ export async function deleteGoalRemote(id: string): Promise<void> {
  * device cache is refreshed. Signed-out users fall back to the cache only.
  */
 export async function saveGoal(goal: Goal): Promise<Goal> {
+  const version = accountVersion;
   const stamped = stampCompletion(goal);
   await persistGoal(stamped);
-  upsertGoal(stamped);
+  if (version === accountVersion) upsertGoal(stamped);
   return stamped;
 }
 
 /** Cloud-first delete: removes the cloud row first, then the cached copy. */
 export async function removeGoal(id: string): Promise<void> {
+  const version = accountVersion;
   await deleteGoalRemote(id);
-  saveGoals(loadGoals().filter((g) => g.id !== id));
+  if (version === accountVersion) saveGoals(loadGoals().filter((g) => g.id !== id));
 }

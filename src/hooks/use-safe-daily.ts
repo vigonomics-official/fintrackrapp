@@ -10,15 +10,18 @@ import { computeObligations, savingsCategoryIds, emiCategoryIds, essentialCatego
 import { computeSurvival } from "@/lib/survival";
 import { payDayInMonth } from "@/lib/salary-cycle";
 import { computeFinancialMetrics, monthlyEssentialExpenses } from "@/lib/financial-metrics";
-import { loadGoals, GOALS_EVENT, type Goal } from "@/lib/goals-store";
+import { loadGoals, syncGoalsFromCloud, GOALS_EVENT, type Goal } from "@/lib/goals-store";
 import { getRememberedSavings, onProfileUpdated } from "@/lib/financial-profile";
+import { useAuth } from "@/lib/auth-context";
 
 /** Goals + remembered savings from device storage, read after hydration. */
 function useLocalFinance() {
+  const { user } = useAuth();
   const [state, setState] = useState<{ goals: Goal[]; saved: number | null }>({ goals: [], saved: null });
   useEffect(() => {
     const read = () => setState({ goals: loadGoals(), saved: getRememberedSavings() });
     read();
+    if (user) void syncGoalsFromCloud().catch(() => { /* existing goal views provide retry */ });
     window.addEventListener(GOALS_EVENT, read);
     window.addEventListener("focus", read);
     const off = onProfileUpdated(read);
@@ -27,7 +30,7 @@ function useLocalFinance() {
       window.removeEventListener("focus", read);
       off();
     };
-  }, []);
+  }, [user?.id]);
   return state;
 }
 

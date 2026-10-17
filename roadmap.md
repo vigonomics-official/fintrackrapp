@@ -17,3 +17,9 @@ Verification: bill create/paid/undo/delete and purchase create/edit/purchased/un
 - [x] Savings advice uses the Allocate amount; SIP card only after 3 months covered; Month-End Forecast moved to This Cycle.
 
 Verification: signed-in preview showed the Emergency card, milestones, score and actions all using ₹29,000 saved / ₹33,943 recommended target / 5.1 months; forecast sits below Salary Left; Add Goal hides Emergency once synced; typecheck and production build passed. SIP gating below 3 months and the second Emergency account were not tested live.
+
+# Emergency Fund verification
+- [ ] Verify SIP below/at 3 months using isolated test inputs.
+- [ ] Verify Emergency form options and database uniqueness without altering real goals.
+- [ ] Verify refresh/sync values and account isolation; fix confirmed goal-cache bugs only.
+- [ ] Report actual Planner values, completed checks and remaining limitations.
