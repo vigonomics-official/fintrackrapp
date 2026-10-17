@@ -19,7 +19,9 @@ Verification: bill create/paid/undo/delete and purchase create/edit/purchased/un
 Verification: signed-in preview showed the Emergency card, milestones, score and actions all using ₹29,000 saved / ₹33,943 recommended target / 5.1 months; forecast sits below Salary Left; Add Goal hides Emergency once synced; typecheck and production build passed. SIP gating below 3 months and the second Emergency account were not tested live.
 
 # Emergency Fund verification
-- [ ] Verify SIP below/at 3 months using isolated test inputs.
-- [ ] Verify Emergency form options and database uniqueness without altering real goals.
-- [ ] Verify refresh/sync values and account isolation; fix confirmed goal-cache bugs only.
-- [ ] Report actual Planner values, completed checks and remaining limitations.
+- [x] Verify SIP below/at 3 months using isolated test inputs.
+- [x] Verify Emergency form options and database uniqueness without altering real goals.
+- [x] Verify refresh/sync values and account isolation; fix confirmed goal-cache bugs only.
+- [x] Report actual Planner values, completed checks and remaining limitations.
+
+Verification: seven automated checks passed. Browser-only responses with ₹10,000 essentials showed SIP hidden at ₹29,999 saved, visible at ₹30,000 and ₹31,000. Planner and Goals-page forms hide Emergency when one exists; a rolled-back duplicate insert was rejected. Signed-in account A could neither read, update nor delete a temporary B goal; its unchanged amount was checked and the temporary goal removed. Real goals remained identical before/after: ₹29,000 saved, ₹60,000 user target; refreshed Planner recommended ₹33,188, 5.2 months, Allocate ₹5,824. Goal cache account-switch tests and live sign-out clearing passed. Fixed account-unowned cache migration and missing Future goal-event refresh; no schema, design or financial-formula changes. Latest harness build OK. Two real accounts signing in through the UI and two-device testing NOT TESTED; unowned legacy local copies are preserved separately, not silently assigned or uploaded.
