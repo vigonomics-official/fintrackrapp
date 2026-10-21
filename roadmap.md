@@ -1,8 +1,11 @@
-# Loans & EMI navigation
 # Monitoring calculation fixes
-- [ ] Include recorded essentials during the first month without changing established-history averaging.
-- [ ] Use the shared Financial Score for both purchase checkers and hypothetical purchases.
-- [ ] Run regression tests and signed-in purchase checks; resolve verified findings.
+- [x] Include recorded essentials during the first month without changing established-history averaging.
+- [x] Use the shared Financial Score for both purchase checkers and hypothetical purchases.
+- [x] Run regression tests and signed-in purchase checks; resolve verified findings.
+
+Verification: 15 automated tests passed. First-month example now includes ₹30,000 living costs + ₹10,000 EMI + ₹2,000 bills (₹42,000/month, ₹252,000 six-month target). Signed-in Home and Planner purchase previews both showed 71 → 69 for ₹5,000. Refreshed Emergency saved ₹29,000, recommended ₹31,795, coverage 5.5 and Allocate advice ₹5,824 remained unchanged. Automatic app build OK; no financial records edited. New-account live onboarding was not tested.
+
+# Loans & EMI navigation
 
 - [x] Connect This Cycle EMI summary to the existing Future loan dashboard.
 - [x] Reuse upcoming loan records, due dates, and recorded payment information without adding payments or expenses.
