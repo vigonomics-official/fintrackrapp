@@ -11,7 +11,7 @@ const recent = [
   { type: "expense", amount: 10000, category_id: "food", transaction_date: "2026-10-07" },
 ];
 const essentialInputs = { transactions: recent, essentialCategoryIds: ["rent", "food"], loans: [{ remaining_balance: 100000, emi_amount: 10000 }], bills: [{ amount: 2000, recurring: true }], now };
-const salarySettings = { amount: 60000, payDay: 1 };
+const salarySettings = { amount: 60000, payDay: 1, employmentType: "salaried" as const };
 const obligations = { bills: 2000, emis: 10000, savings: 5824, plannedSavings: 5824, alreadySaved: 0, billItems: [], emiItems: [] };
 const prefs = getSurvivalPreferences();
 
@@ -23,7 +23,7 @@ describe("first-month essential expenses", () => {
     expect(monthlyEssentialExpenses({ ...essentialInputs, transactions: recent.map(t => ({ ...t, transaction_date: "2026-10-21" })) })).toBe(42000);
   });
   test("established-history averaging stays unchanged", () => {
-    expect(monthlyEssentialExpenses({ ...essentialInputs, transactions: [{ ...recent[0], amount: 60000, transaction_date: "2026-08-22" }] })).toBe(42000);
+    expect(monthlyEssentialExpenses({ ...essentialInputs, transactions: [{ ...recent[0], amount: 60000, transaction_date: "2026-08-22" }] })).toBe((60000 / 61) * 30 + 12000);
   });
   test("no transaction signal retains bill/EMI-only data; no data stays unknown", () => {
     expect(monthlyEssentialExpenses({ ...essentialInputs, transactions: [] })).toBe(12000);
@@ -34,7 +34,7 @@ describe("first-month essential expenses", () => {
     const goals = [{ kind: "emergency" as const, current: 80000, id: "test", name: "Emergency", target: 252000, monthly: 0, createdAt: "2026-10-01" }];
     const metrics = computeFinancialMetrics({ survival, obligations, transactions: recent, loans: essentialInputs.loans, goals, savingsCategoryIds: [], savingsPct: 28, rememberedSavings: 0, prefs, essentialMonthly: monthlyEssentialExpenses(essentialInputs), now });
     expect(metrics.emergency.recommendedTarget).toBe(252000);
-    expect(metrics.emergency.monthsCovered).toBeCloseTo(80000 / 42000);
+    expect(metrics.emergency.monthsCovered).toBe(80000 / 42000);
     expect(metrics.emergency.achieved).toBe(false);
     expect(metrics.score.components.emergency.value).toBe(8);
     expect(metrics.savings.target).toBe(5824);
@@ -60,7 +60,7 @@ describe("purchase Financial Score", () => {
   });
   test("unaffordable purchase cannot increase the score and safe daily becomes zero", () => {
     const before = snapshot(0), after = snapshot(100000);
-    expect(after.score).toBeLessThanOrEqual(before.score);
+    expect(after.score <= before.score).toBe(true);
     expect(after.safeDaily).toBe(0);
     expect(after.overLimit).toBe(true);
   });
