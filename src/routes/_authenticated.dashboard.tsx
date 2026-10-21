@@ -159,7 +159,7 @@ function Dashboard() {
       })
       .sort((a, b) => a.due.getTime() - b.due.getTime())[0];
     return { ...base, stretchDaily, remainingToday, mood, upcoming };
-  }, [transactions, loans, salarySettings, bills, loanPayments, categories, profile, now.getDate()]);
+  }, [shared, loans, now.getDate()]);
 
   // Per-category spending (this month vs last month) for risks + insights
   const catStats = useMemo(() => {
@@ -285,13 +285,9 @@ function Dashboard() {
   const [priceStr, setPriceStr] = useState("");
   const price = Number(priceStr) || 0;
   const afterBuy = useMemo(() => {
-    const newLeft = Math.max(0, survival.salaryLeft - price);
-    const newDaily = newLeft / Math.max(1, survival.days);
-    const buffer = survival.salary > 0 ? Math.min(50, (newLeft / survival.salary) * 50) : 25;
-    const emiScore = Math.max(0, 30 - survival.emiRatio * 0.5);
-    const newScore = Math.round(buffer + emiScore + 20);
-    return { newLeft, newDaily, newScore };
-  }, [price, survival]);
+    const preview = shared.previewPurchase(price);
+    return { newLeft: preview.salaryLeft, newDaily: preview.safeDaily, newScore: preview.score };
+  }, [price, shared]);
 
   return (
     <div>

@@ -85,7 +85,8 @@ export function averageMonthlyExpenses(transactions: Tx[], excludeCategoryIds: s
  * Monthly essential expenses = trailing-90-day average of rent/food/travel
  * transactions + active-loan EMIs + recurring bills. EMI and bill categories
  * are deliberately excluded from the transaction part so nothing is counted
- * twice. Null when there is no signal at all.
+ * twice. During the first month, recorded essentials form a provisional
+ * monthly baseline rather than being silently omitted. Null with no signal.
  */
 export function monthlyEssentialExpenses(opts: {
   transactions: Tx[];
@@ -110,7 +111,7 @@ export function monthlyEssentialExpenses(opts: {
     const total = recent.reduce((s, t) => s + Number(t.amount), 0);
     const firstTs = Math.min(...recent.map((t) => new Date(t.transaction_date).getTime()));
     const spanDays = Math.max(1, Math.round((now.getTime() - firstTs) / 86_400_000));
-    if (spanDays >= 30) txPart = (total / spanDays) * 30;
+    txPart = (total / Math.max(30, spanDays)) * 30;
   }
   const emi = opts.loans.reduce(
     (s, l) => s + (Number(l.remaining_balance) > 0 ? Math.max(0, Number(l.emi_amount) || 0) : 0),

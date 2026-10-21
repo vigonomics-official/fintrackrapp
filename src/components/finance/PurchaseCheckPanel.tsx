@@ -4,9 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingBag, Sparkles, Loader2, ShieldCheck, AlertTriangle, XCircle, HelpCircle } from "lucide-react";
-import { useTransactions, useLoans, useProfile, useBudgets, useCategories, monthKey } from "@/hooks/use-finance";
-import { useSalarySettings } from "@/hooks/use-salary-settings";
-import { computeSurvival } from "@/lib/survival";
+import { useTransactions, useProfile, useBudgets, useCategories, monthKey } from "@/hooks/use-finance";
+import { useSafeDailySurvival } from "@/hooks/use-safe-daily";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { getRememberedSavings } from "@/lib/financial-profile";
@@ -45,10 +44,9 @@ export function PurchaseCheckPanel({
 }) {
   const { data: profile } = useProfile();
   const { data: transactions = [] } = useTransactions();
-  const { data: loans = [] } = useLoans();
   const { data: budgets = [] } = useBudgets(monthKey());
   const { data: categories = [] } = useCategories();
-  const { settings: salarySettings } = useSalarySettings();
+  const shared = useSafeDailySurvival();
   const currency = profile?.currency ?? "INR";
 
   const [item, setItem] = useState("");
@@ -91,8 +89,8 @@ export function PurchaseCheckPanel({
     }
     setError(null);
 
-    const before = computeSurvival({ transactions, loans, salarySettings, extraSpend: 0 });
-    const after = computeSurvival({ transactions, loans, salarySettings, extraSpend: valid.price });
+    const before = shared;
+    const after = shared.previewPurchase(valid.price);
     // FIX 1/2 — resolve the item's own category budget when (and only when)
     // FinSurvive can determine the category reliably.
     const resolved = detectPurchaseCategory(valid.itemName, categories);

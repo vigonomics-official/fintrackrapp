@@ -1,4 +1,9 @@
 # Loans & EMI navigation
+# Monitoring calculation fixes
+- [ ] Include recorded essentials during the first month without changing established-history averaging.
+- [ ] Use the shared Financial Score for both purchase checkers and hypothetical purchases.
+- [ ] Run regression tests and signed-in purchase checks; resolve verified findings.
+
 - [x] Connect This Cycle EMI summary to the existing Future loan dashboard.
 - [x] Reuse upcoming loan records, due dates, and recorded payment information without adding payments or expenses.
 - [x] Verify existing forms, persistence, bill/purchase actions, and available build diagnostics; report limitations.
