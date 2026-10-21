@@ -189,6 +189,9 @@ export function computeSurvival(opts: {
     const k = String(t.transaction_date).slice(0, 10);
     perDay.set(k, (perDay.get(k) ?? 0) + Number(t.amount));
   }
+  // A purchase preview is today's hypothetical expense, not a saved record.
+  // Include it in discipline so both Financial Score snapshots use one scale.
+  if (extraSpend > 0) perDay.set(todayKey, (perDay.get(todayKey) ?? 0) + extraSpend);
   const elapsedDayCount = daysElapsedForBudget(last, now);
   let daysUnderBudget = 0;
   for (let i = 0; i < elapsedDayCount; i++) {

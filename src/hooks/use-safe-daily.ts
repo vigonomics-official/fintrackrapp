@@ -81,8 +81,7 @@ export function useSafeDailySurvival(extraSpend = 0) {
       loans,
       bills,
     });
-    const metrics = computeFinancialMetrics({
-      survival: s,
+    const metricInputs = {
       obligations,
       transactions,
       loans,
@@ -92,9 +91,15 @@ export function useSafeDailySurvival(extraSpend = 0) {
       rememberedSavings: local.saved,
       prefs,
       essentialMonthly,
-    });
+    };
+    const metrics = computeFinancialMetrics({ ...metricInputs, survival: s });
+    const previewPurchase = (price: number) => {
+      const preview = computeSurvival({ transactions, loans, salarySettings, obligations, extraSpend: Math.max(0, price) });
+      const previewMetrics = computeFinancialMetrics({ ...metricInputs, survival: preview });
+      return { ...preview, score: previewMetrics.score.total ?? 0, metrics: previewMetrics };
+    };
     // `score` is the one user-facing Financial Score everywhere.
-    return { currency, ...s, score: metrics.score.total ?? 0, obligations, metrics };
+    return { currency, ...s, score: metrics.score.total ?? 0, obligations, metrics, previewPurchase };
   }, [transactions, loans, loanPayments, bills, categories, salarySettings, savingsPct, extraSpend, currency, local, prefs]);
 }
 
