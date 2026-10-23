@@ -298,7 +298,7 @@ function Dashboard() {
       />
 
 
-      <div className="space-y-3 px-4 py-4 md:space-y-4 md:px-10 md:py-6">
+      <div className="space-y-3 px-4 pt-4 pb-24 md:space-y-4 md:px-10 md:pt-6 md:pb-24">
         {!hasExpenses && (
           <GettingStartedChecklist
             hasSalary={(salarySettings.amount ?? fp.monthlySalary ?? 0) > 0}
@@ -312,7 +312,7 @@ function Dashboard() {
         <h2 className="sr-only">Salary Snapshot</h2>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="overflow-hidden border-0 bg-gradient-hero text-primary-foreground shadow-elegant">
+          <Card className="overflow-hidden border-0 bg-hero-emerald text-white shadow-elegant">
             <CardContent className="relative p-5 md:p-7">
               <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gold/20 blur-3xl" />
               <div className="relative">
@@ -329,7 +329,7 @@ function Dashboard() {
                       {survival.overLimit
                         ? "You're currently over your safe spending limit."
                         : <>Safe to spend {formatCurrency(Math.round(survival.safeDaily), currency)}/day</>}
-                      <span className="mt-0.5 block text-[11px] font-medium underline underline-offset-2 opacity-85">
+                      <span className="mt-0.5 block text-[11px] font-medium underline underline-offset-2 text-white/75">
                         How is this calculated?
                       </span>
                     </button>
@@ -375,16 +375,16 @@ function Dashboard() {
                   const onTrack = spendProgress <= monthProgress;
                   return (
                     <div className="mt-3.5">
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-white/25">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-emerald-200/35">
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
                             width: `${Math.min(100, Math.max(0, monthProgress * 100))}%`,
-                            background: onTrack ? "var(--success)" : "var(--warning)",
+                            background: onTrack ? "#FFFFFF" : "var(--warning)",
                           }}
                         />
                       </div>
-                      <p className="mt-1.5 text-[11px] font-medium opacity-90">
+                      <p className="mt-1.5 text-[11px] font-medium text-white/75">
                         Day {day} of {totalDays} • {Math.round(monthProgress * 100)}% of month gone
                       </p>
                     </div>
@@ -396,10 +396,10 @@ function Dashboard() {
                   <SurvivalStat label="EMI pressure" value={`${emiTone} ${survival.emiLevel}`} />
                   <SurvivalStat label="Financial Score" value={`${survival.score}/100`} />
                 </div>
-                <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
-                  <div className="h-full bg-gold transition-all" style={{ width: `${Math.min(100, Math.max(0, survival.score))}%` }} />
+                <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-emerald-200/35">
+                  <div className="h-full bg-white transition-all" style={{ width: `${Math.min(100, Math.max(0, survival.score))}%` }} />
                 </div>
-                <p className="mt-2 text-[11px] font-medium opacity-85">
+                <p className="mt-2 text-[11px] font-medium text-white/75">
                   Based on Salary Left · Days Until Salary · EMI Pressure · Spending Speed
                 </p>
               </div>
@@ -732,7 +732,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Link to="/transactions" className="flex items-center justify-center gap-2 rounded-xl border bg-card p-3.5 text-sm font-semibold text-primary shadow-soft transition-colors hover:bg-accent">
+        <Link to="/transactions" className="flex items-center justify-center gap-2 rounded-xl border bg-card p-3.5 text-sm font-semibold text-primary shadow-soft transition-colors hover:bg-accent dark:text-success">
           View all <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
@@ -743,8 +743,8 @@ function Dashboard() {
 
 function SurvivalStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-white/10 px-2 py-2 backdrop-blur">
-      <p className="text-[10px] font-semibold uppercase tracking-wider opacity-90">{label}</p>
+    <div className="rounded-xl bg-white/12 px-2 py-2 text-white backdrop-blur">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-white">{label}</p>
       <p className="mt-0.5 font-display text-sm font-semibold tabular-nums">{value}</p>
     </div>
   );

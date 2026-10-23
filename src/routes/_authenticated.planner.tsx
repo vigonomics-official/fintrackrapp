@@ -214,14 +214,14 @@ function MonthlyPlan({ onManageLoans }: { onManageLoans: () => void }) {
 
   return (
     <div className="space-y-4">
-      <Card className="overflow-hidden border-none bg-gradient-primary text-primary-foreground shadow-elegant">
+      <Card className="overflow-hidden border-none bg-hero-emerald text-white shadow-elegant">
         <CardContent className="space-y-2 p-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-90">Salary Left</p>
             <p className="mt-1 font-display text-[28px] font-bold leading-none">
               {s.hasIncome ? formatCurrency(s.salaryLeft, s.currency) : "—"}
             </p>
-            <p className="mt-1.5 text-xs font-medium opacity-95">
+            <p className="mt-1.5 text-xs font-medium text-white/75">
               {s.hasIncome
                 ? s.isSalaryToday
                   ? `Salary Today 🎉 · ${formatCurrency(s.safeDaily, s.currency)} safe today`
