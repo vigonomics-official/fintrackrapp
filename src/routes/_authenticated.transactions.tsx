@@ -547,7 +547,7 @@ function TransactionsPage() {
                               >
                                 <span
                                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold bg-[color-mix(in_oklab,var(--av)_16%,transparent)] text-[var(--av)] dark:bg-[color-mix(in_oklab,var(--av)_25%,transparent)] dark:text-[color-mix(in_oklab,var(--av)_55%,white)]"
-                                  style={{ ["--av" as string]: avatarColor } as React.CSSProperties}
+                                  style={{ ["--av" as string]: avatarColor } as import("react").CSSProperties}
                                 >
                                   {fullTitle.charAt(0).toUpperCase()}
                                 </span>
