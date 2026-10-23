@@ -172,7 +172,7 @@ function InsightsPage() {
           <Link to="/insights/ai-coach" preload="intent">
             <Card
               className="relative flex items-center gap-3 overflow-hidden border-0 p-4 text-white shadow-soft transition-transform active:scale-[0.99]"
-              style={{ background: "linear-gradient(135deg, oklch(0.55 0.13 165) 0%, oklch(0.42 0.12 170) 100%)" }}
+              style={{ background: "linear-gradient(135deg, #065F46 0%, #047857 100%)" }}
             >
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
                 <Sparkles className="h-5 w-5" strokeWidth={2} />
@@ -182,7 +182,7 @@ function InsightsPage() {
                   <p className="truncate font-display text-sm font-semibold">AI Salary Survival Coach</p>
                   <span className="rounded-full bg-white/25 px-1.5 py-0.5 text-[10px] font-bold tracking-wide">NEW</span>
                 </div>
-                <p className="mt-0.5 truncate text-xs text-white/85">
+                <p className="mt-0.5 truncate text-xs text-white/75">
                   Personalized money advice based on your spending.
                 </p>
               </div>

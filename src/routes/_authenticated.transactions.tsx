@@ -524,8 +524,7 @@ function TransactionsPage() {
                           
                           const pmLabel = t.payment_method.replace("_", " ").toUpperCase();
                           const isUncategorized = !c && t.type !== "transfer";
-                          const iconBg = isUncategorized ? "color-mix(in oklab, var(--warning) 16%, transparent)" : "color-mix(in oklab, " + (c?.color ?? "var(--muted-foreground)") + " 16%, transparent)";
-                          const iconColor = isUncategorized ? "var(--warning)" : (c?.color ?? "var(--muted-foreground)");
+                          const avatarColor = isUncategorized ? "var(--warning)" : (c?.color ?? "var(--muted-foreground)");
                           const isChecked = selected.has(t.id);
                           return (
                             <li key={t.id} className="group flex items-center gap-3 px-4 py-4 transition-colors hover:bg-muted/40">
@@ -547,8 +546,8 @@ function TransactionsPage() {
                                 title={fullTitle}
                               >
                                 <span
-                                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-                                  style={{ background: iconBg, color: iconColor }}
+                                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold bg-[color-mix(in_oklab,var(--av)_16%,transparent)] text-[var(--av)] dark:bg-[color-mix(in_oklab,var(--av)_25%,transparent)] dark:text-[color-mix(in_oklab,var(--av)_55%,white)]"
+                                  style={{ ["--av" as string]: avatarColor } as import("react").CSSProperties}
                                 >
                                   {fullTitle.charAt(0).toUpperCase()}
                                 </span>

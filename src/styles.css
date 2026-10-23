@@ -257,6 +257,7 @@
   .bg-gradient-primary { background-image: var(--gradient-primary); }
   .bg-gradient-gold { background-image: var(--gradient-gold); }
   .bg-gradient-hero { background-image: var(--gradient-hero); }
+  .bg-hero-emerald { background-image: linear-gradient(135deg, #065F46, #047857); }
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
