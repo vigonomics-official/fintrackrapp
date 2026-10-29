@@ -3,7 +3,6 @@ import { useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/finance/PageHeader";
-import { AiFinancialReportCard } from "@/components/finance/AiFinancialReportCard";
 
 import {
   useTransactions, useCategories, useBudgets, useLoans, useProfile, monthKey,
@@ -233,10 +232,6 @@ function ReportPage() {
     <div className="w-full overflow-x-hidden bg-background">
       <PageHeader title={`${monthYearShort} · Report Card`} subtitle="Your salary survival story" />
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5">
-
-        <AiFinancialReportCard />
-
-
         {/* HERO */}
         <div
           className="rounded-2xl p-6 text-center text-white shadow-soft"
