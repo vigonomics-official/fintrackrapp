@@ -16,7 +16,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useBudgets, useCategories, useTransactions, monthKey, useProfile } from "@/hooks/use-finance";
+import { useBudgetTransactions } from "@/hooks/use-budget-transactions";
+import { useBudgets, useCategories, monthKey, useProfile } from "@/hooks/use-finance";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/currency";
@@ -57,7 +58,7 @@ function BudgetsPage() {
   const { data: budgets = [], isLoading: budgetsLoading } = useBudgets(month);
   const { data: prevBudgets = [] } = useBudgets(shiftMonth(month, -1));
   const { data: categories = [] } = useCategories();
-  const { data: txs = [] } = useTransactions();
+  const { data: txs = [], isLoading: txLoading } = useBudgetTransactions(month);
   const { data: profile } = useProfile();
   const currency = profile?.currency ?? "INR";
   const income = Number((profile as any)?.monthly_salary) || null;
@@ -93,6 +94,7 @@ function BudgetsPage() {
   /** Returns an expense category id for a name, reusing an existing one (case-insensitive) before creating. */
   const ensureCategory = async (name: string): Promise<string> => {
     const clean = name.trim();
+    if (isNonSpendingCategory(clean)) throw new Error("non-spending");
     const existing = categories.find(c => c.type === "expense" && c.name.trim().toLowerCase() === clean.toLowerCase())
       ?? matchStandard(categories, clean);
     if (existing) return existing.id;
@@ -123,7 +125,7 @@ function BudgetsPage() {
       qc.invalidateQueries({ queryKey: ["budgets"] });
       qc.invalidateQueries({ queryKey: ["categories"] });
     } catch (err) {
-      toast.error(friendlyError(err as any));
+      toast.error((err as Error)?.message === "non-spending" ? "Transfers, repayments and investments can't have spending limits" : friendlyError(err as any));
     } finally { setSaving(false); }
   };
 
@@ -289,7 +291,7 @@ function BudgetsPage() {
                 <p className={cn("font-display text-sm font-bold tabular-nums", planned - totalSpent < 0 && "text-destructive")}>{formatCurrency(planned - totalSpent, currency)}</p></div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={startSuggest} disabled={budgetsLoading}><Sparkles className="mr-1 h-3.5 w-3.5" />Auto-suggest</Button>
+              <Button size="sm" variant="outline" onClick={startSuggest} disabled={budgetsLoading || txLoading}><Sparkles className="mr-1 h-3.5 w-3.5" />Auto-suggest</Button>
               <Button size="sm" variant="outline" onClick={startCopy} disabled={budgetsLoading}><Copy className="mr-1 h-3.5 w-3.5" />Copy last month</Button>
               <Button size="sm" variant="ghost" asChild><Link to="/categories">Manage categories</Link></Button>
             </div>
@@ -316,6 +318,7 @@ function BudgetsPage() {
             warning:  { dot: "bg-gold",        text: "text-gold",        label: "Slow down" },
             critical: { dot: "bg-destructive", text: "text-destructive", label: row.over ? "Over limit" : "Limit reached" },
           }[status];
+          if (b.monthly_limit === 0 && !row.over) tone.label = "No limit set";
           return (
             <Card key={b.id} className="shadow-soft">
               <CardContent className="p-4">

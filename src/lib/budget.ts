@@ -24,7 +24,7 @@ const norm = (s: string) => s.trim().toLowerCase();
 
 /** Investment allocations and card repayments move money rather than spend it; never budget them. */
 export function isNonSpendingCategory(name: string): boolean {
-  return /\b(sip|mutual fund|investment|invest|savings|deposit|fd|rd|credit card (bill|repayment|payment)|card repayment|transfer)\b/i.test(name);
+  return /\b(sip|mutual fund|investment|invest|savings|deposit|fd|rd|credit card (bills?|repayments?|payments?)|card repayments?|transfers?)\b/i.test(name);
 }
 
 /** Find the user's existing category for a standard name (exact name or known alias). */
@@ -83,17 +83,20 @@ export function suggestBudget(
     }
   }
   const items: Suggestion[] = [];
+  let eligibleHistory = false;
   for (const [cid, t] of totals) {
     const c = cats.find((x) => x.id === cid);
     if (!c || c.type !== "expense" || isNonSpendingCategory(c.name)) continue;
+    eligibleHistory = true;
     const amount = Math.round(t.sum / t.months / 100) * 100;
     if (amount > 0) items.push({ categoryId: cid, name: c.name, amount, basis: "history" });
   }
-  if (items.length > 0) return { items: items.sort((a, b) => b.amount - a.amount), hasHistory: true };
+  if (eligibleHistory) return { items: items.sort((a, b) => b.amount - a.amount), hasHistory: true };
   if (!income || income <= 0) return { items: [], hasHistory: false };
   for (const s of STANDARD_BUDGET_CATEGORIES) {
     if (s.starterPct <= 0) continue;
     const existing = matchStandard(cats, s.name);
+    if (existing && isNonSpendingCategory(existing.name)) continue;
     items.push({
       categoryId: existing?.id ?? null, name: existing?.name ?? s.name,
       amount: Math.round((income * s.starterPct) / 100 / 100) * 100, basis: "starter",
