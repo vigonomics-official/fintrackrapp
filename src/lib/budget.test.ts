@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { budgetRow, spentByCategory, suggestBudget, shiftMonth, matchStandard, isNonSpendingCategory } from "./budget";
+import { budgetIncome, budgetRow, spentByCategory, suggestBudget, shiftMonth, matchStandard, isNonSpendingCategory } from "./budget";
 
 const cats = [
   { id: "food", name: "Food", type: "expense" },
@@ -51,5 +51,32 @@ describe("budget rules", () => {
     expect(matchStandard(cats, "Housing & Rent")?.id).toBe("rent");
     expect(isNonSpendingCategory("Credit card bill")).toBe(true);
     expect(isNonSpendingCategory("Groceries")).toBe(false);
+  });
+  test("excludes investment and repayment expenses but includes card purchases", () => {
+    const categories = [...cats, { id: "card", name: "Credit card repayments", type: "expense" }];
+    const txs = [
+      { type: "expense", amount: 300, category_id: "food", transaction_date: "2026-10-01" },
+      { type: "expense", amount: 600, category_id: "sip", transaction_date: "2026-10-01" },
+      { type: "expense", amount: 900, category_id: "card", transaction_date: "2026-10-01" },
+    ];
+    expect([...spentByCategory(txs, "2026-10-01", categories)]).toEqual([["food", 300]]);
+  });
+  test("edited and deleted transactions recalculate without a stored spending total", () => {
+    const tx = { type: "expense", amount: 100, category_id: "food", transaction_date: "2026-10-01" };
+    expect(spentByCategory([{ ...tx, amount: 250 }], "2026-10-01").get("food")).toBe(250);
+    expect(spentByCategory([], "2026-10-01").size).toBe(0);
+  });
+  test("tiny real spending does not become invented salary history", () => {
+    const r = suggestBudget([{ type: "expense", amount: 5, category_id: "food", transaction_date: "2026-09-01" }], cats, "2026-10-01", 40000);
+    expect(r.hasHistory).toBe(true);
+    expect(r.items).toEqual([]);
+  });
+  test("suggestion income prefers actual monthly income and never counts transfers", () => {
+    const txs = [
+      { type: "income", amount: 30000, category_id: null, transaction_date: "2026-10-01" },
+      { type: "transfer", amount: 80000, category_id: null, transaction_date: "2026-10-01" },
+    ];
+    expect(budgetIncome(txs, "2026-10-01", 50000)).toBe(30000);
+    expect(budgetIncome([], "2026-10-01", null)).toBe(null);
   });
 });
