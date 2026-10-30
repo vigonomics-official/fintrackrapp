@@ -1,3 +1,11 @@
+# Monthly budget improvements
+- [x] Preserve Budget styling and navigation while adding calendar month selection, totals, custom/standard categories and limit editing.
+- [x] Add reviewable suggestions and previous-month copy without overwriting saved plans.
+- [x] Use complete month-window transaction reads, exclusions and safe zero/overspend/loading calculations.
+- [x] Verify signed-in persistence, transactions, copying, themes and automated checks; remove temporary records.
+
+Verification: budget add/edit/delete, refresh, review/edit/copy from January to February, month separation, custom category with zero limit, duplicate-option exclusion, suggestion edit/save and saved-category exclusion passed. Transaction-form add refreshed spending immediately; isolated custom-range transaction edit showed 70% and ₹300 remaining on a ₹1,000 limit; a ₹2,000 expense showed 133%/₹500 overspend against ₹1,500. Transfers excluded. Temporary 2031–2033 budgets, transactions and custom category removed. Mobile 360/390/412 both themes showed no horizontal overflow; screenshots inspected. 28 Bun tests passed; current automatic build OK. Initial Vitest run incompatible with existing Bun tests (two suites failed to load); rerun using native suite succeeded. Authenticated second-account and two-device checks, transaction deletion via UI and offline/save-failure checks were not run; unchanged owner RLS inspected. Repayment/investment exclusions depend on transaction type and category, not inferred notes.
+
 # Monitoring calculation fixes
 - [x] Include recorded essentials during the first month without changing established-history averaging.
 - [x] Use the shared Financial Score for both purchase checkers and hypothetical purchases.
