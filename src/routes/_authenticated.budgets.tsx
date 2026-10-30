@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/error-utils";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Sparkles, Copy, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,14 @@ import { formatCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/finance/PageHeader";
 import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
 import { cn } from "@/lib/utils";
+import {
+  STANDARD_BUDGET_CATEGORIES, budgetRow, isNonSpendingCategory, matchStandard,
+  shiftMonth, spentByCategory, suggestBudget,
+} from "@/lib/budget";
+
+type DraftRow = { key: string; categoryId: string | null; name: string; amount: string };
+const monthLabel = (m: string) =>
+  new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
 export const Route = createFileRoute("/_authenticated/budgets")({
   component: BudgetsPage,
@@ -44,39 +53,78 @@ export const Route = createFileRoute("/_authenticated/budgets")({
 function BudgetsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const month = monthKey();
-  const { data: budgets = [] } = useBudgets(month);
+  const [month, setMonth] = useState(monthKey());
+  const { data: budgets = [], isLoading: budgetsLoading } = useBudgets(month);
+  const { data: prevBudgets = [] } = useBudgets(shiftMonth(month, -1));
   const { data: categories = [] } = useCategories();
   const { data: txs = [] } = useTransactions();
   const { data: profile } = useProfile();
   const currency = profile?.currency ?? "INR";
+  const income = Number((profile as any)?.monthly_salary) || null;
 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState("");
+  const [customName, setCustomName] = useState("");
   const [limit, setLimit] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const expenseCats = categories.filter(c => c.type === "expense");
+  const [draftOpen, setDraftOpen] = useState(false);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftNote, setDraftNote] = useState("");
+  const [draft, setDraft] = useState<DraftRow[]>([]);
+
+  const expenseCats = categories.filter(c => c.type === "expense" && !isNonSpendingCategory(c.name));
+  const budgetedIds = new Set(budgets.map(b => b.category_id));
+  const spent = spentByCategory(txs, month);
+  const planned = budgets.reduce((s, b) => s + b.monthly_limit, 0);
+  const totalSpent = budgets.reduce((s, b) => s + (spent.get(b.category_id ?? "") ?? 0), 0);
+
+  const availableCats = expenseCats.filter(c => !budgetedIds.has(c.id));
+  const missingStandard = STANDARD_BUDGET_CATEGORIES.filter(s => !matchStandard(categories, s.name));
 
   const openNew = () => {
-    setEditingId(null); setCategoryId(""); setLimit(""); setOpen(true);
+    setEditingId(null); setCategoryId(""); setCustomName(""); setLimit(""); setOpen(true);
   };
   const openEdit = (id: string, catId: string, currentLimit: number) => {
     setEditingId(id); setCategoryId(catId); setLimit(String(currentLimit)); setOpen(true);
   };
 
+  /** Returns an expense category id for a name, reusing an existing one (case-insensitive) before creating. */
+  const ensureCategory = async (name: string): Promise<string> => {
+    const clean = name.trim();
+    const existing = categories.find(c => c.type === "expense" && c.name.trim().toLowerCase() === clean.toLowerCase())
+      ?? matchStandard(categories, clean);
+    if (existing) return existing.id;
+    const { data, error } = await supabase.from("categories")
+      .insert({ user_id: user!.id, name: clean, type: "expense", icon: "Tag" }).select("id").single();
+    if (error) throw error;
+    return data.id;
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || saving) return;
     const num = Number(limit);
-    if (!categoryId || !num) return toast.error("Pick a category and amount");
-    const { error } = await supabase.from("budgets").upsert({
-      user_id: user.id, category_id: categoryId, monthly_limit: num, month,
-    }, { onConflict: "user_id,category_id,month" });
-    if (error) return toast.error(friendlyError(error));
-    toast.success(editingId ? "Limit updated" : "Safe limit set");
-    setOpen(false); setLimit(""); setCategoryId(""); setEditingId(null);
-    qc.invalidateQueries({ queryKey: ["budgets"] });
+    if (!categoryId || limit === "" || !Number.isFinite(num) || num < 0) return toast.error("Pick a category and amount");
+    if (categoryId === "custom" && !customName.trim()) return toast.error("Enter a category name");
+    setSaving(true);
+    try {
+      let catId = categoryId;
+      if (categoryId === "custom") catId = await ensureCategory(customName);
+      else if (categoryId.startsWith("std:")) catId = await ensureCategory(categoryId.slice(4));
+      if (!editingId && budgetedIds.has(catId)) { toast.error("This category already has a limit this month"); return; }
+      const { error } = await supabase.from("budgets").upsert({
+        user_id: user.id, category_id: catId, monthly_limit: num, month,
+      }, { onConflict: "user_id,category_id,month" });
+      if (error) throw error;
+      toast.success(editingId ? "Limit updated" : "Safe limit set");
+      setOpen(false); setLimit(""); setCategoryId(""); setCustomName(""); setEditingId(null);
+      qc.invalidateQueries({ queryKey: ["budgets"] });
+      qc.invalidateQueries({ queryKey: ["categories"] });
+    } catch (err) {
+      toast.error(friendlyError(err as any));
+    } finally { setSaving(false); }
   };
 
   const remove = async (id: string) => {
@@ -84,6 +132,68 @@ function BudgetsPage() {
     if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries({ queryKey: ["budgets"] });
   };
+
+  const openDraft = (title: string, note: string, rows: DraftRow[]) => {
+    setDraftTitle(title); setDraftNote(note); setDraft(rows); setDraftOpen(true);
+  };
+
+  const startSuggest = () => {
+    const { items, hasHistory } = suggestBudget(txs, categories, month, income);
+    const rows = items.filter(i => !i.categoryId || !budgetedIds.has(i.categoryId))
+      .map(i => ({ key: i.categoryId ?? `new:${i.name}`, categoryId: i.categoryId, name: i.name, amount: String(i.amount) }));
+    if (items.length === 0) {
+      return toast.info("Not enough spending history yet. Add your salary in settings or set limits manually.");
+    }
+    if (rows.length === 0) return toast.info("Every suggested category already has a limit this month.");
+    openDraft(
+      "Suggested budget",
+      hasHistory
+        ? "Based on your average spending over the last 3 months. Edit before saving. Existing limits are kept."
+        : "Starter amounts from your monthly salary (no spending history yet). Edit before saving. Existing limits are kept.",
+      rows,
+    );
+  };
+
+  const startCopy = () => {
+    const rows = prevBudgets.filter(b => b.category_id && !budgetedIds.has(b.category_id)).map(b => ({
+      key: b.category_id!, categoryId: b.category_id,
+      name: categories.find(c => c.id === b.category_id)?.name ?? "Category", amount: String(b.monthly_limit),
+    }));
+    if (prevBudgets.length === 0) return toast.info(`No limits were set in ${monthLabel(shiftMonth(month, -1))}.`);
+    if (rows.length === 0) return toast.info("All of last month's categories already have limits this month.");
+    openDraft(`Copy from ${monthLabel(shiftMonth(month, -1))}`, "Review and edit the amounts before saving. Existing limits are kept.", rows);
+  };
+
+  const saveDraft = async () => {
+    if (!user || saving) return;
+    const valid = draft.filter(r => r.amount !== "" && Number.isFinite(Number(r.amount)) && Number(r.amount) >= 0);
+    if (valid.length === 0) return toast.error("Add at least one amount");
+    setSaving(true);
+    try {
+      const seen = new Set<string>();
+      const rows: { user_id: string; category_id: string; monthly_limit: number; month: string }[] = [];
+      for (const r of valid) {
+        const catId = r.categoryId ?? await ensureCategory(r.name);
+        if (seen.has(catId) || budgetedIds.has(catId)) continue;
+        seen.add(catId);
+        rows.push({ user_id: user.id, category_id: catId, monthly_limit: Number(r.amount), month });
+      }
+      if (rows.length) {
+        // ignoreDuplicates: never overwrite a limit that was saved meanwhile.
+        const { error } = await supabase.from("budgets")
+          .upsert(rows, { onConflict: "user_id,category_id,month", ignoreDuplicates: true });
+        if (error) throw error;
+      }
+      toast.success(`${rows.length} limit${rows.length === 1 ? "" : "s"} saved`);
+      setDraftOpen(false);
+      qc.invalidateQueries({ queryKey: ["budgets"] });
+      qc.invalidateQueries({ queryKey: ["categories"] });
+    } catch (err) {
+      toast.error(friendlyError(err as any));
+    } finally { setSaving(false); }
+  };
+
+  const draftTotal = draft.reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
   return (
     <div>
@@ -100,7 +210,7 @@ function BudgetsPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingId ? "Edit safe limit" : "Set monthly safe limit"}</DialogTitle>
+                <DialogTitle>{editingId ? "Edit safe limit" : `Set safe limit · ${monthLabel(month)}`}</DialogTitle>
               </DialogHeader>
               <form onSubmit={submit} className="space-y-4">
                 <div>
@@ -108,43 +218,104 @@ function BudgetsPage() {
                   <Select value={categoryId} onValueChange={setCategoryId} disabled={!!editingId}>
                     <SelectTrigger><SelectValue placeholder="Pick category" /></SelectTrigger>
                     <SelectContent>
-                      {expenseCats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {(editingId ? expenseCats.filter(c => c.id === categoryId) : availableCats).map(c =>
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {!editingId && missingStandard.map(s =>
+                        <SelectItem key={s.name} value={`std:${s.name}`}>{s.name}</SelectItem>)}
+                      {!editingId && <SelectItem value="custom">+ Custom category…</SelectItem>}
                     </SelectContent>
                   </Select>
+                  {categoryId === "custom" && (
+                    <Input className="mt-2" value={customName} maxLength={40} onChange={e => setCustomName(e.target.value)} placeholder="Category name" />
+                  )}
                 </div>
                 <div>
                   <Label>Monthly safe limit</Label>
                   <Input type="number" min="0" step="0.01" value={limit} onChange={e => setLimit(e.target.value)} placeholder="e.g. 3000" />
                   <p className="mt-1 text-xs text-muted-foreground">We'll warn you at 80% usage.</p>
                 </div>
-                <Button type="submit" className="w-full bg-gradient-primary">{editingId ? "Update" : "Save"}</Button>
+                <Button type="submit" disabled={saving} className="w-full bg-gradient-primary">{editingId ? "Update" : "Save"}</Button>
               </form>
             </DialogContent>
           </Dialog>
         }
       />
 
+      <Dialog open={draftOpen} onOpenChange={setDraftOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{draftTitle}</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">{draftNote}</p>
+          <div className="space-y-2">
+            {draft.map((r, i) => (
+              <div key={r.key} className="flex items-center gap-2">
+                <span className="min-w-0 flex-1 truncate text-sm">{r.name}{!r.categoryId && <span className="text-xs text-muted-foreground"> (new)</span>}</span>
+                <Input type="number" min="0" step="0.01" className="w-28" aria-label={`${r.name} limit`} value={r.amount}
+                  onChange={e => setDraft(d => d.map((x, j) => j === i ? { ...x, amount: e.target.value } : x))} />
+                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Remove ${r.name}`}
+                  onClick={() => setDraft(d => d.filter((_, j) => j !== i))}>
+                  <X className="h-3.5 w-3.5 text-muted-foreground" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Total</span>
+            <span className="font-semibold tabular-nums">{formatCurrency(draftTotal, currency)}</span>
+          </div>
+          {income && draftTotal + planned > income && (
+            <p className="text-xs text-destructive">Planned limits would exceed your monthly salary of {formatCurrency(income, currency)}.</p>
+          )}
+          <Button className="w-full bg-gradient-primary" disabled={saving || draft.length === 0} onClick={saveDraft}>Save limits</Button>
+        </DialogContent>
+      </Dialog>
+
+      <div className="space-y-3 px-5 pt-5 md:px-10">
+        <Card className="shadow-soft">
+          <CardContent className="space-y-3 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Previous month" onClick={() => setMonth(m => shiftMonth(m, -1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Input type="month" aria-label="Budget month" className="h-8 max-w-[180px] text-center" value={month.slice(0, 7)}
+                onChange={e => { if (/^\d{4}-\d{2}$/.test(e.target.value)) setMonth(`${e.target.value}-01`); }} />
+              <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Next month" onClick={() => setMonth(m => shiftMonth(m, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div><p className="text-[11px] text-muted-foreground">Planned</p><p className="font-display text-sm font-bold tabular-nums">{formatCurrency(planned, currency)}</p></div>
+              <div><p className="text-[11px] text-muted-foreground">Spent</p><p className="font-display text-sm font-bold tabular-nums">{formatCurrency(totalSpent, currency)}</p></div>
+              <div><p className="text-[11px] text-muted-foreground">Remaining</p>
+                <p className={cn("font-display text-sm font-bold tabular-nums", planned - totalSpent < 0 && "text-destructive")}>{formatCurrency(planned - totalSpent, currency)}</p></div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={startSuggest} disabled={budgetsLoading}><Sparkles className="mr-1 h-3.5 w-3.5" />Auto-suggest</Button>
+              <Button size="sm" variant="outline" onClick={startCopy} disabled={budgetsLoading}><Copy className="mr-1 h-3.5 w-3.5" />Copy last month</Button>
+              <Button size="sm" variant="ghost" asChild><Link to="/categories">Manage categories</Link></Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid gap-3 px-5 py-5 sm:grid-cols-2 md:px-10 lg:grid-cols-3">
-        {budgets.length === 0 && (
+        {!budgetsLoading && budgets.length === 0 && (
           <Card className="shadow-soft sm:col-span-2 lg:col-span-3">
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              No safe limits yet. Set one to protect your salary.
+              No safe limits for {monthLabel(month)}. Set one to protect your salary.
             </CardContent>
           </Card>
         )}
         {budgets.map((b) => {
           const c = categories.find(x => x.id === b.category_id);
-          const spent = txs.filter(t => t.type === "expense" && t.category_id === b.category_id && t.transaction_date.startsWith(month.slice(0, 7)))
-            .reduce((s, t) => s + t.amount, 0);
-          const pct = (spent / b.monthly_limit) * 100;
+          const row = budgetRow(b.monthly_limit, spent.get(b.category_id ?? "") ?? 0);
+          const pct = row.pct ?? (row.over ? 100 : 0);
           const status: "safe" | "warning" | "critical" =
-            pct >= 100 ? "critical" : pct >= 80 ? "warning" : "safe";
+            row.over || pct >= 100 ? "critical" : pct >= 80 ? "warning" : "safe";
           const tone = {
             safe:     { dot: "bg-success",     text: "text-success",     label: "On track" },
             warning:  { dot: "bg-gold",        text: "text-gold",        label: "Slow down" },
-            critical: { dot: "bg-destructive", text: "text-destructive", label: "Over limit" },
+            critical: { dot: "bg-destructive", text: "text-destructive", label: row.over ? "Over limit" : "Limit reached" },
           }[status];
-          const remaining = Math.max(0, b.monthly_limit - spent);
           return (
             <Card key={b.id} className="shadow-soft">
               <CardContent className="p-4">
@@ -163,7 +334,7 @@ function BudgetsPage() {
                   </div>
                 </div>
                 <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <p className="font-display text-lg font-bold tabular-nums">{formatCurrency(spent, currency)}</p>
+                  <p className="font-display text-lg font-bold tabular-nums">{formatCurrency(row.spent, currency)}</p>
                   <p className="text-xs text-muted-foreground tabular-nums">/ {formatCurrency(b.monthly_limit, currency)}</p>
                 </div>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -180,10 +351,10 @@ function BudgetsPage() {
                 <div className="mt-2 flex items-center justify-between text-[11px]">
                   <span className={cn("flex items-center gap-1 font-medium", tone.text)}>
                     <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />
-                    {tone.label}
+                    {tone.label}{row.pct !== null && ` · ${Math.round(row.pct)}%`}
                   </span>
-                  <span className="text-muted-foreground tabular-nums">
-                    {status === "critical" ? `Over by ${formatCurrency(spent - b.monthly_limit, currency)}` : `${formatCurrency(remaining, currency)} left`}
+                  <span className={cn("tabular-nums", row.over ? "font-medium text-destructive" : "text-muted-foreground")}>
+                    {row.over ? `Over by ${formatCurrency(-row.remaining, currency)}` : `${formatCurrency(row.remaining, currency)} left`}
                   </span>
                 </div>
               </CardContent>
