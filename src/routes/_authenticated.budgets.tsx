@@ -297,7 +297,7 @@ function BudgetsPage() {
               <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Previous month" disabled={saving} onClick={() => setMonth(m => shiftMonth(m, -1))}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Input type="month" aria-label="Budget month" disabled={saving} className="h-8 max-w-[180px] text-center" value={month.slice(0, 7)}
+              <Input type="month" aria-label="Budget month" disabled={saving} className="h-8 max-w-[180px] text-center dark:[color-scheme:dark]" value={month.slice(0, 7)}
                 onChange={e => { if (/^\d{4}-\d{2}$/.test(e.target.value)) setMonth(`${e.target.value}-01`); }} />
               <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Next month" disabled={saving} onClick={() => setMonth(m => shiftMonth(m, 1))}>
                 <ChevronRight className="h-4 w-4" />
