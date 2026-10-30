@@ -1,3 +1,9 @@
+# Monthly budget improvements
+- [x] Preserve Budget styling and navigation while adding calendar month selection, totals, custom/standard categories and limit editing.
+- [x] Add reviewable suggestions and previous-month copy without overwriting saved plans.
+- [x] Use complete month-window transaction reads, exclusions and safe zero/overspend/loading calculations.
+- [ ] Verify signed-in persistence, transactions, copying, themes and automated checks; remove temporary records.
+
 # Monitoring calculation fixes
 - [x] Include recorded essentials during the first month without changing established-history averaging.
 - [x] Use the shared Financial Score for both purchase checkers and hypothetical purchases.

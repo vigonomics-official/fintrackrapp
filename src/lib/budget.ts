@@ -40,11 +40,13 @@ export function matchStandard(cats: BudgetCat[], standardName: string): BudgetCa
 }
 
 /** month = "YYYY-MM-01". Only expense transactions count; transfers are excluded by type. */
-export function spentByCategory(txs: BudgetTx[], month: string): Map<string, number> {
+export function spentByCategory(txs: BudgetTx[], month: string, cats: BudgetCat[] = []): Map<string, number> {
   const prefix = month.slice(0, 7);
   const out = new Map<string, number>();
   for (const t of txs) {
     if (t.type !== "expense" || !t.category_id) continue;
+    const cat = cats.find(c => c.id === t.category_id);
+    if (cat && isNonSpendingCategory(cat.name)) continue;
     if (!t.transaction_date.startsWith(prefix)) continue;
     const amt = Number(t.amount);
     if (!Number.isFinite(amt) || amt <= 0) continue;
@@ -77,7 +79,7 @@ export function suggestBudget(
 ): { items: Suggestion[]; hasHistory: boolean } {
   const totals = new Map<string, { sum: number; months: number }>();
   for (let i = 1; i <= 3; i++) {
-    for (const [cid, amt] of spentByCategory(txs, shiftMonth(month, -i))) {
+    for (const [cid, amt] of spentByCategory(txs, shiftMonth(month, -i), cats)) {
       const t = totals.get(cid) ?? { sum: 0, months: 0 };
       t.sum += amt; t.months += 1; totals.set(cid, t);
     }
@@ -103,4 +105,15 @@ export function suggestBudget(
     });
   }
   return { items, hasHistory: false };
+}
+
+/** Recorded selected-month income, then previous recorded months, then the configured salary. */
+export function budgetIncome(txs: BudgetTx[], month: string, salary: number | null): number | null {
+  const incomeFor = (m: string) => txs.filter(t => t.type === "income" && t.transaction_date.startsWith(m.slice(0, 7)))
+    .reduce((sum, t) => sum + (Number.isFinite(t.amount) && t.amount > 0 ? t.amount : 0), 0);
+  const selected = incomeFor(month);
+  if (selected > 0) return selected;
+  const historical = [1, 2, 3].map(i => incomeFor(shiftMonth(month, -i))).filter(v => v > 0);
+  if (historical.length) return historical.reduce((s, v) => s + v, 0) / historical.length;
+  return salary && Number.isFinite(salary) && salary > 0 ? salary : null;
 }

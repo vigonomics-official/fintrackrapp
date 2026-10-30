@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/error-utils";
@@ -25,7 +25,7 @@ import { PageHeader } from "@/components/finance/PageHeader";
 import { ExpensesTabs } from "@/components/finance/ExpensesTabs";
 import { cn } from "@/lib/utils";
 import {
-  STANDARD_BUDGET_CATEGORIES, budgetRow, isNonSpendingCategory, matchStandard,
+  STANDARD_BUDGET_CATEGORIES, budgetIncome, budgetRow, isNonSpendingCategory, matchStandard,
   shiftMonth, spentByCategory, suggestBudget,
 } from "@/lib/budget";
 
@@ -55,13 +55,21 @@ function BudgetsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [month, setMonth] = useState(monthKey());
-  const { data: budgets = [], isLoading: budgetsLoading } = useBudgets(month);
-  const { data: prevBudgets = [] } = useBudgets(shiftMonth(month, -1));
-  const { data: categories = [] } = useCategories();
-  const { data: txs = [], isLoading: txLoading } = useBudgetTransactions(month);
-  const { data: profile } = useProfile();
+  const budgetsQuery = useBudgets(month);
+  const previousQuery = useBudgets(shiftMonth(month, -1));
+  const categoriesQuery = useCategories();
+  const transactionsQuery = useBudgetTransactions(month);
+  const profileQuery = useProfile();
+  const budgets = budgetsQuery.data ?? [];
+  const prevBudgets = previousQuery.data ?? [];
+  const categories = categoriesQuery.data ?? [];
+  const txs = transactionsQuery.data ?? [];
+  const profile = profileQuery.data;
+  const loading = budgetsQuery.isPending || categoriesQuery.isPending || transactionsQuery.isPending || profileQuery.isPending;
+  const failed = budgetsQuery.isError || categoriesQuery.isError || transactionsQuery.isError || profileQuery.isError;
   const currency = profile?.currency ?? "INR";
-  const income = Number((profile as any)?.monthly_salary) || null;
+  const salary = profile && "monthly_salary" in profile ? Number(profile.monthly_salary) : null;
+  const income = budgetIncome(txs, month, salary);
 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -75,9 +83,14 @@ function BudgetsPage() {
   const [draftNote, setDraftNote] = useState("");
   const [draft, setDraft] = useState<DraftRow[]>([]);
 
+  useEffect(() => {
+    setOpen(false); setDraftOpen(false); setDraft([]); setEditingId(null);
+    setCategoryId(""); setCustomName(""); setLimit("");
+  }, [user?.id, month]);
+
   const expenseCats = categories.filter(c => c.type === "expense" && !isNonSpendingCategory(c.name));
   const budgetedIds = new Set(budgets.map(b => b.category_id));
-  const spent = spentByCategory(txs, month);
+  const spent = spentByCategory(txs, month, categories);
   const planned = budgets.reduce((s, b) => s + b.monthly_limit, 0);
   const totalSpent = budgets.reduce((s, b) => s + (spent.get(b.category_id ?? "") ?? 0), 0);
 
@@ -93,20 +106,21 @@ function BudgetsPage() {
 
   /** Returns an expense category id for a name, reusing an existing one (case-insensitive) before creating. */
   const ensureCategory = async (name: string): Promise<string> => {
+    if (!user) throw new Error("Sign in required");
     const clean = name.trim();
     if (isNonSpendingCategory(clean)) throw new Error("non-spending");
     const existing = categories.find(c => c.type === "expense" && c.name.trim().toLowerCase() === clean.toLowerCase())
       ?? matchStandard(categories, clean);
     if (existing) return existing.id;
     const { data, error } = await supabase.from("categories")
-      .insert({ user_id: user!.id, name: clean, type: "expense", icon: "Tag" }).select("id").single();
+      .insert({ user_id: user.id, name: clean, type: "expense", icon: "Tag" }).select("id").single();
     if (error) throw error;
     return data.id;
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || saving) return;
+    if (!user || saving || loading || failed) return;
     const num = Number(limit);
     if (!categoryId || limit === "" || !Number.isFinite(num) || num < 0) return toast.error("Pick a category and amount");
     if (categoryId === "custom" && !customName.trim()) return toast.error("Enter a category name");
@@ -116,9 +130,10 @@ function BudgetsPage() {
       if (categoryId === "custom") catId = await ensureCategory(customName);
       else if (categoryId.startsWith("std:")) catId = await ensureCategory(categoryId.slice(4));
       if (!editingId && budgetedIds.has(catId)) { toast.error("This category already has a limit this month"); return; }
-      const { error } = await supabase.from("budgets").upsert({
-        user_id: user.id, category_id: catId, monthly_limit: num, month,
-      }, { onConflict: "user_id,category_id,month" });
+      const record = { user_id: user.id, category_id: catId, monthly_limit: num, month };
+      const { error } = editingId
+        ? await supabase.from("budgets").update({ monthly_limit: num }).eq("id", editingId).eq("user_id", user.id).eq("month", month)
+        : await supabase.from("budgets").insert(record);
       if (error) throw error;
       toast.success(editingId ? "Limit updated" : "Safe limit set");
       setOpen(false); setLimit(""); setCategoryId(""); setCustomName(""); setEditingId(null);
@@ -130,7 +145,8 @@ function BudgetsPage() {
   };
 
   const remove = async (id: string) => {
-    const { error } = await supabase.from("budgets").delete().eq("id", id);
+    if (!user || saving) return;
+    const { error } = await supabase.from("budgets").delete().eq("id", id).eq("user_id", user.id).eq("month", month);
     if (error) return toast.error(friendlyError(error));
     qc.invalidateQueries({ queryKey: ["budgets"] });
   };
@@ -150,26 +166,29 @@ function BudgetsPage() {
     openDraft(
       "Suggested budget",
       hasHistory
-        ? "Based on your average spending over the last 3 months. Edit before saving. Existing limits are kept."
-        : "Starter amounts from your monthly salary (no spending history yet). Edit before saving. Existing limits are kept.",
+        ? "Based on months with recorded category spending in the previous 3 months. Existing limits are kept."
+        : "Editable starter amounts from recorded income or your configured salary—not historical spending. Existing limits are kept.",
       rows,
     );
   };
 
   const startCopy = () => {
-    const rows = prevBudgets.filter(b => b.category_id && !budgetedIds.has(b.category_id)).map(b => ({
-      key: b.category_id!, categoryId: b.category_id,
-      name: categories.find(c => c.id === b.category_id)?.name ?? "Category", amount: String(b.monthly_limit),
-    }));
+    const rows: DraftRow[] = [];
+    for (const b of prevBudgets) {
+      if (!b.category_id || budgetedIds.has(b.category_id)) continue;
+      const c = categories.find(c => c.id === b.category_id);
+      if (!c || isNonSpendingCategory(c.name)) continue;
+      rows.push({ key: b.category_id, categoryId: b.category_id, name: c.name, amount: String(b.monthly_limit) });
+    }
     if (prevBudgets.length === 0) return toast.info(`No limits were set in ${monthLabel(shiftMonth(month, -1))}.`);
     if (rows.length === 0) return toast.info("All of last month's categories already have limits this month.");
     openDraft(`Copy from ${monthLabel(shiftMonth(month, -1))}`, "Review and edit the amounts before saving. Existing limits are kept.", rows);
   };
 
   const saveDraft = async () => {
-    if (!user || saving) return;
+    if (!user || saving || loading || failed) return;
     const valid = draft.filter(r => r.amount !== "" && Number.isFinite(Number(r.amount)) && Number(r.amount) >= 0);
-    if (valid.length === 0) return toast.error("Add at least one amount");
+    if (valid.length !== draft.length || valid.length === 0) return toast.error("Enter a valid non-negative amount for every category");
     setSaving(true);
     try {
       const seen = new Set<string>();
@@ -206,7 +225,7 @@ function BudgetsPage() {
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="bg-gradient-primary" onClick={openNew}>
+              <Button size="sm" className="bg-gradient-primary" onClick={openNew} disabled={loading || failed || saving}>
                 <Plus className="mr-1 h-4 w-4" />Set limit
               </Button>
             </DialogTrigger>
@@ -275,39 +294,42 @@ function BudgetsPage() {
         <Card className="shadow-soft">
           <CardContent className="space-y-3 p-4">
             <div className="flex items-center justify-between gap-2">
-              <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Previous month" onClick={() => setMonth(m => shiftMonth(m, -1))}>
+              <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Previous month" disabled={saving} onClick={() => setMonth(m => shiftMonth(m, -1))}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Input type="month" aria-label="Budget month" className="h-8 max-w-[180px] text-center" value={month.slice(0, 7)}
+              <Input type="month" aria-label="Budget month" disabled={saving} className="h-8 max-w-[180px] text-center" value={month.slice(0, 7)}
                 onChange={e => { if (/^\d{4}-\d{2}$/.test(e.target.value)) setMonth(`${e.target.value}-01`); }} />
-              <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Next month" onClick={() => setMonth(m => shiftMonth(m, 1))}>
+              <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Next month" disabled={saving} onClick={() => setMonth(m => shiftMonth(m, 1))}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div><p className="text-[11px] text-muted-foreground">Planned</p><p className="font-display text-sm font-bold tabular-nums">{formatCurrency(planned, currency)}</p></div>
-              <div><p className="text-[11px] text-muted-foreground">Spent</p><p className="font-display text-sm font-bold tabular-nums">{formatCurrency(totalSpent, currency)}</p></div>
+              <div><p className="text-[11px] text-muted-foreground">Planned</p><p className="font-display text-sm font-bold tabular-nums">{loading || failed ? "—" : formatCurrency(planned, currency)}</p></div>
+              <div><p className="text-[11px] text-muted-foreground">Spent</p><p className="font-display text-sm font-bold tabular-nums">{loading || failed ? "—" : formatCurrency(totalSpent, currency)}</p></div>
               <div><p className="text-[11px] text-muted-foreground">Remaining</p>
-                <p className={cn("font-display text-sm font-bold tabular-nums", planned - totalSpent < 0 && "text-destructive")}>{formatCurrency(planned - totalSpent, currency)}</p></div>
+                <p className={cn("font-display text-sm font-bold tabular-nums", planned - totalSpent < 0 && "text-destructive")}>{loading || failed ? "—" : formatCurrency(planned - totalSpent, currency)}</p></div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={startSuggest} disabled={budgetsLoading || txLoading}><Sparkles className="mr-1 h-3.5 w-3.5" />Auto-suggest</Button>
-              <Button size="sm" variant="outline" onClick={startCopy} disabled={budgetsLoading}><Copy className="mr-1 h-3.5 w-3.5" />Copy last month</Button>
+              <Button size="sm" variant="outline" onClick={startSuggest} disabled={loading || failed || saving}><Sparkles className="mr-1 h-3.5 w-3.5" />Auto-suggest</Button>
+              <Button size="sm" variant="outline" onClick={startCopy} disabled={loading || failed || saving || previousQuery.isPending || previousQuery.isError}><Copy className="mr-1 h-3.5 w-3.5" />Copy last month</Button>
               <Button size="sm" variant="ghost" asChild><Link to="/categories">Manage categories</Link></Button>
             </div>
+            {failed && <div className="text-sm text-destructive">Budget data couldn't load. <Button variant="ghost" size="sm" onClick={() => { budgetsQuery.refetch(); categoriesQuery.refetch(); transactionsQuery.refetch(); profileQuery.refetch(); }}>Try again</Button></div>}
+            {previousQuery.isError && !failed && <div className="text-xs text-muted-foreground">Last month's limits couldn't load. <Button variant="ghost" size="sm" onClick={() => previousQuery.refetch()}>Retry</Button></div>}
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-3 px-5 py-5 sm:grid-cols-2 md:px-10 lg:grid-cols-3">
-        {!budgetsLoading && budgets.length === 0 && (
+        {loading && <p className="text-sm text-muted-foreground">Loading budget…</p>}
+        {!loading && !failed && budgets.length === 0 && (
           <Card className="shadow-soft sm:col-span-2 lg:col-span-3">
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
               No safe limits for {monthLabel(month)}. Set one to protect your salary.
             </CardContent>
           </Card>
         )}
-        {budgets.map((b) => {
+        {!loading && !failed && budgets.map((b) => {
           const c = categories.find(x => x.id === b.category_id);
           const row = budgetRow(b.monthly_limit, spent.get(b.category_id ?? "") ?? 0);
           const pct = row.pct ?? (row.over ? 100 : 0);
@@ -328,7 +350,7 @@ function BudgetsPage() {
                     <h3 className="truncate font-display text-sm font-semibold">{c?.name ?? "Category"}</h3>
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Edit budget" onClick={() => openEdit(b.id, b.category_id!, b.monthly_limit)}>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Edit budget" disabled={!b.category_id || saving} onClick={() => { if (b.category_id) openEdit(b.id, b.category_id, b.monthly_limit); }}>
                       <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                     </Button>
                     <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Delete budget" onClick={() => remove(b.id)}>
