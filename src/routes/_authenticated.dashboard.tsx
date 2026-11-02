@@ -570,7 +570,9 @@ function Dashboard() {
               return [...byCat.values()].slice(0, 5);
             })().map((b) => {
               const c = categories.find(x => x.id === b.category_id);
-              const name = simplifyCategory(c?.name);
+              // Budgets are per category ID — show the saved category's own name
+              // (simplifyCategory groups e.g. Grocery under "Food" for insights only).
+              const name = c?.name?.trim() || "Others";
               const spent = transactions
                 .filter(t => t.type === "expense" && t.category_id === b.category_id && t.transaction_date.startsWith(month.slice(0, 7)))
                 .reduce((s, t) => s + t.amount, 0);
